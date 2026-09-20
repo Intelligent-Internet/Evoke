@@ -64,8 +64,9 @@ input: scalar text columns are joined in definition order, while token arrays
 are joined into one token stream. `NULL` columns are skipped.
 
 Applications search with the same `ii42_query(...)` call used by a
-single-column SAE index. SAE is eventual-only, and foreground writes remain
-lexical-first while shared workers complete the changed document version.
+single-column Sparse Semantic Retrieval (SSR) index. SSR is eventual-only, and
+foreground writes remain lexical-first while shared workers complete the changed
+document version.
 
 By default, semantic-enabled multicolumn indexes do not preserve lexical field
 identity. Add `field_aware = true` to place each field's lexical and semantic
@@ -129,7 +130,7 @@ JOIN docs_text AS d ON d.ctid = h.ctid
 ORDER BY h.score DESC, d.id;
 ```
 
-The score is `sum(weight * (field_BM25 + field_SAE))`. Owner-only
+The score is `sum(weight * (field_BM25 + field_semantic))`. Owner-only
 `ii42_field_aware_query(...)` and `ii42_field_aware_query_tokens(...)` remain
 exact-BM25 diagnostic surfaces.
 
@@ -137,8 +138,8 @@ exact-BM25 diagnostic surfaces.
 `field_aware = true` indexes for token and simple raw term queries. Its public
 field-aware overload can select a field subset or custom per-field weights.
 For BM25 indexes, complex raw-query semantics such as phrases and boolean
-filters remain available on non-field-aware fused indexes. SAE text is compiled
-by the model contract, not interpreted as the BM25 raw-query language.
+filters remain available on non-field-aware fused indexes. In SSR mode, text is
+compiled by the model contract, not interpreted as the BM25 raw-query language.
 
 This is one BM25 payload with field-scoped terms, not BM25F and not
 multiple internal sub-indexes. Combined document length
@@ -150,7 +151,7 @@ The explicit-hit API for multicolumn fusion indexes is:
 
 - `ii42_query(...)`
 
-An SAE-enabled multicolumn index also supports planner-native
+An SSR multicolumn index also supports planner-native
 `ORDER BY ii42_query(...) DESC LIMIT k`. BM25 fusion indexes retain the explicit
 hit route because the existing ordinary BM25 ordering operators are
 single-column surfaces.

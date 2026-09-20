@@ -34,7 +34,7 @@ This report describes Beta 1; `0.2.5` and P2.2 remain engineering identifiers. T
 
 ## 2. System Architecture and Product Surface
 
-II-42 exposes one PostgreSQL access method, `USING ii42`. The default `sae = false` mode provides exact BM25. With `sae = true`, a qualified model adds semantic atoms to the same index. Here, SAE denotes the project's sparse semantic augmentation path; its released foundation is a Granite sparse encoder, not a newly trained general-purpose autoencoder.
+II-42 exposes one PostgreSQL access method, `USING ii42`. The default `sae = false` mode provides exact BM25. With `sae = true`, a qualified model adds semantic atoms to the same index. This report calls the product path Sparse Semantic Retrieval (SSR). The `sae` reloption remains the current SQL/catalog name; SAE is otherwise reserved for encoder or vocabulary mechanisms and historical experiment labels.
 
 ```text
                          PostgreSQL application
@@ -61,7 +61,7 @@ II-42 exposes one PostgreSQL access method, `USING ii42`. The default `sae = fal
       + pending semantic work          + shared model runtime
 ```
 
-`ii42_query` has explicit-hit overloads for both modes. SAE additionally supports planner-native scalar markers: the planner turns an eligible ranked table query into a custom scan rather than calling a model once per row. BM25 also retains its native operator and ordered index-scan surfaces. `ctid` and index-local `doc_id` are execution identities, not durable application keys.
+`ii42_query` has explicit-hit overloads for both modes. SSR additionally supports planner-native scalar markers: the planner turns an eligible ranked table query into a custom scan rather than calling a model once per row. BM25 also retains its native operator and ordered index-scan surfaces. `ctid` and index-local `doc_id` are execution identities, not durable application keys.
 
 For a table `docs(id, title, body)`, after installing the extension and configuring the shared runtime and qualified model checkout:
 
@@ -201,7 +201,7 @@ The compiler/runtime contract binds the interpretation of atom IDs and values. A
 
 ### 4.2 Runtime Ownership and Optional Remote Encoding
 
-Model sessions belong to shared runtime workers, not to every SQL backend or a shared ONNX session in the arena. Backends submit bounded requests and receive sparse results. SAE requires the configured shared runtime; it does not silently fall back to a private per-backend model. With query-lane reservation enabled and at least two healthy local workers, a reserved lane protects query encoding admission from document batches.
+Model sessions belong to shared runtime workers, not to every SQL backend or a shared ONNX session in the arena. Backends submit bounded requests and receive sparse results. SSR requires the configured shared runtime; it does not silently fall back to a private per-backend model. With query-lane reservation enabled and at least two healthy local workers, a reserved lane protects query encoding admission from document batches.
 
 Optional remote runtime services add **document encoding capacity** for builds and maintenance. They do not own PostgreSQL pages, execute database queries, or replace the local query lane. The dispatcher considers outstanding requests, service batch limits, observed latency, and backoff. Out-of-order batch completion can release runtime slots while publication preserves document ordering.
 
@@ -289,12 +289,12 @@ Reclamation is a separate phase within the same relation lifecycle. Superseded o
 
 ### 6.1 Initial Build and Publication
 
-An initial build follows PostgreSQL's `table_index_build_scan` visibility protocol, assigns document identities, and compiles lexical evidence. SAE builds additionally encode documents through bounded runtime batches. The builder emits canonical posting objects and COW metadata, validates their closure, and publishes the checked root. The same representation is the target of `REINDEX`; a healthy current-format index does not need a corpus rebuild merely to refresh a compatible derived accelerator.
+An initial build follows PostgreSQL's `table_index_build_scan` visibility protocol, assigns document identities, and compiles lexical evidence. SSR builds additionally encode documents through bounded runtime batches. The builder emits canonical posting objects and COW metadata, validates their closure, and publishes the checked root. The same representation is the target of `REINDEX`; a healthy current-format index does not need a corpus rebuild merely to refresh a compatible derived accelerator.
 
 ```text
   PostgreSQL build protocol -> heap scan -> lexical compilation
                          |
-                         +-> SAE document batches -> model runtime
+                         +-> SSR document batches -> model runtime
                          |                              |
                          +--------- unified atoms <-----+
                                          |
@@ -311,7 +311,7 @@ An initial build follows PostgreSQL's `table_index_build_scan` visibility protoc
 
 ### 6.2 Lexical-First Writes
 
-For an SAE index, foreground DML records lexical changes and a pending semantic identity. It does not run document inference inside the write transaction. Background completion checks that the document version, source text, and model contract still match; stale results are discarded rather than attached to a replacement row. Repeated row-specific failures are surfaced and quarantined instead of silently blocking the queue forever.
+For an SSR index, foreground DML records lexical changes and a pending semantic identity. It does not run document inference inside the write transaction. Background completion checks that the document version, source text, and model contract still match; stale results are discarded rather than attached to a replacement row. Repeated row-specific failures are surfaced and quarantined instead of silently blocking the queue forever.
 
 ```text
   INSERT / UPDATE transaction

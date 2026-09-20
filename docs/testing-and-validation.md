@@ -23,8 +23,8 @@ git diff --check
 `pytest` owns deterministic Python units for packaging, native evaluation,
 release provenance, and maturity-runner composition. It does not claim
 PostgreSQL lifecycle coverage. The inventory gate enforces one
-rank/search/status/maintenance/drop lifecycle, eventual-only SAE, current
-page-native documentation, and absence of split storage authorities.
+rank/search/status/maintenance/drop lifecycle, eventual-only Sparse Semantic Retrieval
+(SSR), current page-native documentation, and absence of split storage authorities.
 
 All `scripts/test_*.py` entrypoints belong to the canonical product maturity
 suite. Focused invocation is supported for diagnosis, but standalone smoke
@@ -79,7 +79,7 @@ The lifecycle gate must prove:
    `ii42_query(...)`.
 2. Lexical and semantic atoms occupy one posting namespace; no second index,
    registry, or application-managed payload exists.
-3. SAE is eventual-only: foreground DML publishes lexical evidence and pending
+3. SSR is eventual-only: foreground DML publishes lexical evidence and pending
    identity with zero document inference; shared workers complete semantics.
 4. Commit, abort, savepoint, two-phase commit, old snapshots, HOT/non-HOT
    updates, delete, and TID reuse obey heap MVCC. Structured filters must keep

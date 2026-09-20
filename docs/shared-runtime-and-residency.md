@@ -46,7 +46,7 @@ ordinary dispatcher: the mask itself spans every document slot. II-42 admits
 that explicit operation only when the physical index fits the finite positive
 `ii42.workspace_cache_bytes` budget together with any other active fallback
 snapshot; otherwise it fails instead of silently materializing unbounded
-backend state. SAE rejects `weight_mask`.
+backend state. Semantic mode rejects `weight_mask`.
 
 Shared preload remains useful for proactive page warming, but its absence does
 not change BM25 rows or scores.

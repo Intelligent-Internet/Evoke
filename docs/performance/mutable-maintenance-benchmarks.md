@@ -1,8 +1,8 @@
 # Mutable Maintenance Benchmarks
 
 This page summarizes the **2026-03-23 lexical maintenance checkpoint**. Its
-measurements are historical, not a fresh Beta 1 benchmark or an SAE performance
-claim. Current lifecycle behavior is specified in
+measurements are historical, not a fresh Beta 1 benchmark or a Sparse Semantic Retrieval
+(SSR) performance claim. Current lifecycle behavior is specified in
 [Maintenance Lifecycle](../maintenance-lifecycle.md).
 
 ## Scope

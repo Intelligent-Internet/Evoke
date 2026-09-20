@@ -63,9 +63,10 @@ by the SQL helpers:
 For the index-level scalar text parameters, see
 [Index Parameters](index-parameters.md#bm25-text-processing).
 
-SAE uses the frozen model tokenizer and normalization contract for both lexical
-and semantic atoms. Text arrays are joined into model input; they do not bypass
-model tokenization or preserve arbitrary application tokens as model IDs. See
+In Sparse Semantic Retrieval (SSR) mode, the frozen model tokenizer and
+normalization contract govern both lexical and semantic atoms. Text arrays are
+joined into model input; they do not bypass model tokenization or preserve
+arbitrary application tokens as model IDs. See
 [Semantic Model Checkout](examples/semantic-model-checkout.md).
 
 ## Selection Guidance

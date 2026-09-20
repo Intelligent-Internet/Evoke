@@ -12,7 +12,7 @@ entry points for checking both against the code.
 
 ## Product Contract
 
-| Concern | BM25 | `sae = true` |
+| Concern | BM25 | `sae = true` / Sparse Semantic Retrieval (SSR) |
 | --- | --- | --- |
 | Access method | `USING ii42` | `USING ii42` |
 | Application search | `ii42_query(...)` | `ii42_query(...)` |
@@ -129,7 +129,7 @@ Foreground DML never rebuilds the corpus.
 
 ### Semantic-enabled
 
-SAE is eventual-only. Foreground `INSERT` and indexed-column `UPDATE` append:
+SSR is eventual-only. Foreground `INSERT` and indexed-column `UPDATE` append:
 
 - exact lexical posting state;
 - document/version identity;
@@ -214,12 +214,12 @@ The explicit-hit `ii42_query(..., k, ...)` route:
 4. for semantic indexes, prefers an eligible immutable accelerator baseline,
    with bounded overfetch and current-row revalidation when stale; otherwise it
    attaches a current exact-root resident fold or opens page-native posting
-   cursors; the SAE `tid[]` overload applies statement-local membership before
+   cursors; the semantic `tid[]` overload applies statement-local membership before
    accumulation;
 5. returns `(ctid, doc_id, score)` in the index's exact or declared
    bounded-approximate scoring profile.
 
-Scalar `ii42_query(...)` markers are different SQL syntax for planner-native SAE
+Scalar `ii42_query(...)` markers are different SQL syntax for planner-native SSR
 retrieval. A supported `ORDER BY score DESC LIMIT k` shape becomes
 `Custom Scan (II42 Search)`; the marker is not an ordinary per-row scorer.
 
@@ -256,9 +256,9 @@ The overloads deliberately have different fallback behavior:
 
 | Route | Scope fast path | If that path cannot satisfy the request |
 | --- | --- | --- |
-| Planner-native SAE | Fully supported predicates; one probe for up to `4 * k` candidates, then heap-qual recheck | An unavailable/unsupported scope or fewer than `k` surviving hits triggers collection of the full snapshot-visible allowed TID set and filtered scoring. |
-| Structured JSON SAE | Fully scope-backed filters; one probe for up to `4 * k`, then current-predicate recheck | A successful scope route may return fewer than `k`; underfill alone does not force full membership materialization. Partial/unavailable scope can require other routes, including SQL membership resolution. |
-| Explicit `tid[]` SAE | Caller supplies statement-local membership | The set is a hard membership boundary, but the selected scoring route can still be bounded-approximate. |
+| Planner-native SSR | Fully supported predicates; one probe for up to `4 * k` candidates, then heap-qual recheck | An unavailable/unsupported scope or fewer than `k` surviving hits triggers collection of the full snapshot-visible allowed TID set and filtered scoring. |
+| Structured JSON SSR | Fully scope-backed filters; one probe for up to `4 * k`, then current-predicate recheck | A successful scope route may return fewer than `k`; underfill alone does not force full membership materialization. Partial/unavailable scope can require other routes, including SQL membership resolution. |
+| Explicit `tid[]` SSR | Caller supplies statement-local membership | The set is a hard membership boundary, but the selected scoring route can still be bounded-approximate. |
 
 Without a usable scope, the JSON implementation first probes SQL membership
 with a 65,536-match limit plus one overflow witness. A completed probe supplies
@@ -348,7 +348,7 @@ shared arena, and increasing a workspace budget does not shrink on-disk data.
 - Runtime/model contract mismatch fails readiness and search closed.
 - A caller-supplied TID set is an exact membership boundary from the same
   indexed relation and statement snapshot: no out-of-set row can be returned.
-  Ranking still follows the selected exact or bounded-approximate SAE route, so
+  Ranking still follows the selected exact or bounded-approximate SSR route, so
   a stale accelerator may omit an allowed post-baseline row. TID membership is
   query scratch, not another durable index or lifecycle.
 - Row-level security and globally ranked partitioned-parent search remain

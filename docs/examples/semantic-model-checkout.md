@@ -98,10 +98,10 @@ must not choose or modify server-local paths.
 
 `make` compiles the extension without reading model weights, and `make install`
 does not install this checkout automatically. Exact BM25 indexes do not need
-model inference. A source-installed SAE deployment must install the validated
-checkout at the compiled default shared-data path, normally
-`$(pg_config --sharedir)/ii42/models/default`, or configure an administrator-owned
-absolute path before creating SAE indexes:
+model inference. A source-installed Sparse Semantic Retrieval (SSR) deployment
+must install the validated checkout at the compiled default shared-data path,
+normally `$(pg_config --sharedir)/ii42/models/default`, or configure an
+administrator-owned absolute path before creating SSR indexes:
 
 ```conf
 shared_preload_libraries = 'ii42'

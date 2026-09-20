@@ -6,10 +6,10 @@ This report is frozen evidence. It is not the current product contract or a
 current semantic-performance claim. A revised report requires a deliberately
 rerun experiment matrix and current raw artifacts.
 
-For the independent Beta 1 successor covering the complete BM25+SAE system,
-read the [II-42 System Technical Report](technical-report-ii42-system.md). Historical
-measurements and implementation descriptions below retain their original
-scope; they are not current operating instructions.
+For the independent Beta 1 successor covering the complete BM25 plus Sparse Semantic Retrieval (SSR) system, read the
+[II-42 System Technical Report](technical-report-ii42-system.md). Historical
+measurements and implementation descriptions below retain their original scope;
+they are not current operating instructions.
 
 Scope note (2026-07-26): this report is the lexical BM25 foundation and
 mutable-index design record. The current product additionally supports
@@ -537,10 +537,12 @@ composition layer above independently maintained indexes; one-index queries
 still use `ii42_query(...)`.
 
 For `field_aware = true` multicolumn indexes, one posting payload preserves
-field-scoped lexical terms and, in SAE mode, field-scoped semantic atoms.
+field-scoped lexical terms and, in `sae = true` / SSR mode, field-scoped
+semantic atoms.
 Applications query all indexed fields with equal weight or use the public
 `ii42_query(...)` overload for explicit whole-field weights. Each weight
-scales the field's combined BM25 and SAE evidence in one native accumulator.
+scales the field's combined BM25 and semantic evidence in one native
+accumulator.
 Semantic admission applies the configured budget ratio per field before the
 retained atoms are merged, so fields do not compete for budget before their
 query-time weights are known.
@@ -559,7 +561,7 @@ vector access method. A product SQL statement can therefore combine:
 - a final ordered candidate set for comparison or AI reranking
 
 This remains useful for controlled AI and RAG comparisons, but it is
-not the semantic-enabled product route. An SAE-enabled index compiles
+not the semantic-enabled product route. An SSR index (`sae = true`) compiles
 lexical and model evidence into one relation-owned unified posting
 generation, which applications query through `ii42_query(...)`.
 

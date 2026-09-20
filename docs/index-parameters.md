@@ -8,8 +8,8 @@ Changing an option that affects physical postings requires `REINDEX` before
 
 | Option | Default | Contract |
 | --- | --- | --- |
-| `sae` | `false` | `false` selects exact BM25. `true` selects unified lexical/semantic postings. |
-| `consistency` | `realtime` for BM25; `eventual` for SAE | BM25 accepts `realtime`, `eventual`, or `manual`. SAE is eventual-only. |
+| `sae` | `false` | `false` selects exact BM25. `true` selects Sparse Semantic Retrieval (SSR) unified lexical/semantic postings. |
+| `consistency` | `realtime` for BM25; `eventual` for SSR | BM25 accepts `realtime`, `eventual`, or `manual`. SSR is eventual-only. |
 | `auto_preload` | `0` | Best-effort warmup and shared-residency priority. A positive value first prepares compact query metadata. BM25 or semantic roots without an eligible semantic accelerator may then publish an exact-root resident fold when the converged image fits the shared arena. `0` disables proactive admission; it does not disable maintenance or explicit `ii42_index_preload(...)`. |
 
 Semantic options require explicit `sae = true`. BM25 scoring and tokenizer
@@ -37,13 +37,13 @@ These options apply only to `sae = false`.
 | `text_stopwords` | unset | Comma-separated stopword list. |
 | `text_stem_english` | `false` | Apply English Porter stemming. |
 | `text_fold_diacritics` | `false` | Fold Latin diacritics. |
-| `field_aware` | `false` | Preserve lexical column identity in a supported multicolumn text-like BM25 or SAE index. |
+| `field_aware` | `false` | Preserve lexical column identity in a supported multicolumn text-like BM25 or SSR index. |
 
 `text[]` and `varchar[]` are already tokenized inputs. `int4[]` is an
 application-owned integer token stream. See [Supported Input Types](input-types.md).
 
 `field_aware = true` requires more than one homogeneous text-like column. In
-SAE mode it expands both lexical and semantic namespaces per field. The query
+In SSR mode it expands both lexical and semantic namespaces per field. The query
 weight for a field scales both contributions in the one native scorer. Model
 normalization and atom generation still come from the checkout.
 
@@ -141,7 +141,7 @@ WITH (
 
 This is query-bounded scratch for page-native execution. Shared exact-root
 residency is controlled separately by `ii42.shared_runtime_size` and
-`auto_preload`, and is shared by BM25 and SAE indexes. The bounded backend-local
+`auto_preload`, and is shared by BM25 and SSR indexes. The bounded backend-local
 BM25 snapshot is admitted only when postmaster shared runtime is unavailable.
 When shared runtime exists, both index types use the common resident-fold or
 page-native dispatcher.
@@ -156,7 +156,7 @@ page-native dispatcher.
 | `ii42.preload_timer_interval_ms` | `1000` | SIGHUP | Independent warmup interval; effective minimum is one second. |
 | `ii42.prewarm_max_bytes` | `64MB` | SIGHUP | Per-index relation-page warming work budget. It does not cap exact-root shared residency; resident folds are admitted against the global shared arena, priority policy, and host materialization headroom. |
 | `ii42.maintenance_rebuild_memory_budget` | `32768MB` | SIGHUP | Admission budget for rebuild-like worker activity. `0` disables the guard. |
-| `ii42.sae_transaction_mutation_max_bytes` | `64MB` | User | Transaction-wide pending SAE document-copy budget; minimum `16MB`. |
+| `ii42.sae_transaction_mutation_max_bytes` | `64MB` | User | Transaction-wide pending semantic document-copy budget; minimum `16MB`. |
 
 Ordinary maintenance performs bounded semantic completion, seal, compaction,
 fold, or reclamation. The rebuild memory budget does not turn routine work into
@@ -169,7 +169,7 @@ These settings are meaningful only when `ii42` is loaded through
 
 | GUC | Default | Context | Meaning |
 | --- | ---: | --- | --- |
-| `ii42.shared_runtime_size` | `0` | Postmaster | Global shared runtime/residency arena. A positive value is mandatory for SAE; GB-scale values may also hold exact-root folds for selected converged BM25 or SAE indexes. |
+| `ii42.shared_runtime_size` | `0` | Postmaster | Global shared runtime/residency arena. A positive value is mandatory for SSR; GB-scale values may also hold exact-root folds for selected converged BM25 or SSR indexes. |
 | `ii42.control_database` | `postgres` | Postmaster | Optional override for the stable, connectable database used by cluster-level II-42 workers. |
 | `ii42.sae_model_path` | empty | SIGHUP | Optional server-wide override for the bundled milestone checkout. |
 | `ii42.runtime_worker_count` | `2` | Postmaster | Shared inference worker count. |
@@ -298,7 +298,7 @@ Release packages install their digest-locked milestone checkout under the
 target PostgreSQL shared-data directory. Resolution order is per-index
 `model_path`, `ii42.sae_model_path` (or `II42_SAE_MODEL_PATH` at process
 startup), then the package checkout. Source builds must provide one of these
-paths before creating an SAE index.
+paths before creating an SSR index.
 
 Capacity-test worker count and session cache against the selected model. Each
 runtime worker can own its own model session; application backends cannot.

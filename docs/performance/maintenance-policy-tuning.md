@@ -14,7 +14,7 @@ is [`ii42_am_get_policy_recommendation`](../../src/ii42_am_options.c).
 | --- | --- | --- |
 | BM25 | omitted, `balanced`, `query_first` | `realtime` |
 | BM25 | `write_tolerant_query_first`, `write_first` | `eventual` |
-| SAE | omitted or any of the above names | `eventual`, reported as `balanced` |
+| Sparse Semantic Retrieval (SSR, `sae = true`) | omitted or any of the above names | `eventual`, reported as `balanced` |
 
 The old `small_mixed_churn`, `heavy_mixed_churn`, `heavy_insert_skew`, and
 `longrun_mixed_churn` labels identify experiments, not current SQL profiles.

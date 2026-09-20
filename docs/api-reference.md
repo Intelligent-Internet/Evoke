@@ -3,7 +3,7 @@
 II-42 has one index lifecycle and one overloaded `ii42_query(...)` product
 family. Scalar overloads compose semantic ranking with ordinary table SQL;
 overloads with an explicit `k` return hit rows. Index options select exact BM25
-or semantic-enabled unified posting internally.
+or the Sparse Semantic Retrieval (SSR) unified-posting path internally.
 
 ## Application API
 
@@ -25,7 +25,7 @@ one logical document. `field_aware = true` preserves field identity for BM25;
 it can also be combined with `sae = true` to preserve both lexical and semantic
 field identity in one unified posting index.
 
-SAE indexes may declare ordinary table columns with PostgreSQL `INCLUDE`.
+SSR indexes may declare ordinary table columns with PostgreSQL `INCLUDE`.
 Included columns are non-scoring scope dimensions: they do not enter BM25,
 semantic encoding, field weights, or document length. On a converged root,
 exact scalar `eq`/`in`/`range` and array `overlap` predicates can resolve
@@ -110,7 +110,7 @@ ii42_query(
 RETURNS SETOF ii42_result_hit
 ```
 
-SAE-enabled indexes expose predicate-defined subset-ranking overloads:
+SSR indexes expose predicate-defined subset-ranking overloads:
 
 ```sql
 ii42_query(
@@ -176,15 +176,15 @@ exact or bounded-approximate route, so a stale accelerator may omit an allowed
 post-baseline row. Generate TIDs in the same statement and do not persist them
 across table rewrites. Null and empty sets return no rows. By default filter
 metadata remains PostgreSQL-owned.
-An SAE index can opt frequently used exact dimensions into its existing root
+An SSR index can opt frequently used exact dimensions into its existing root
 with `INCLUDE`; this adds no generation, worker, compaction, or fold lifecycle.
-Predicate-defined filtered top-k is reserved for SAE-enabled unified indexes;
+Predicate-defined filtered top-k is reserved for SSR unified indexes;
 pure BM25 continues to use PostgreSQL's ordinary predicate path.
 
 The default overload searches all fields with weight `1.0`. The field-aware
 overload searches the selected unique fields and applies each weight to the
 field's complete unified contribution:
-`sum(weight * (BM25 + SAE))`. Weights must be finite and non-negative.
+`sum(weight * (BM25 + semantic))`. Weights must be finite and non-negative.
 
 `ii42_result_hit` contains:
 
@@ -289,7 +289,7 @@ ii42_index_details(index_name regclass) RETURNS TABLE (
   artifact `bytes` remains null because calculating it requires walking every
   child reference.
 - `ii42_index_audit(...)` is the explicit heavy integrity surface. It validates
-  the complete generation closure and SHA-256 hashes every SAE model artifact.
+  the complete generation closure and SHA-256 hashes every semantic model artifact.
   Do not call it from readiness polling or request paths.
 - `ii42_index_details(...)` exposes operator-oriented root, mutation,
   maintenance, and builder details.

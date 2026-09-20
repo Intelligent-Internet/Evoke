@@ -10,9 +10,9 @@ relation-owned page-native postings
     + bounded backend query scratch
 ```
 
-This model applies to BM25 and semantic-enabled indexes. SAE additionally
-requires the shared runtime for text encoding; application backends never own
-tokenizers or model sessions.
+This model applies to BM25 and semantic-enabled indexes. Sparse Semantic Retrieval
+(SSR) additionally requires the shared runtime for text encoding; application
+backends never own tokenizers or model sessions.
 
 ## Ownership
 
@@ -30,7 +30,7 @@ No semantic posting image or model session is retained per connection. A
 selected, fully converged BM25 or semantic index may have one pointer-free
 exact-root fold in the postmaster arena. Backends lease that shared image and
 retain only query-local projections. When the postmaster shared runtime is
-available, BM25 and SAE use this same dispatcher and no backend-local index
+available, BM25 and SSR use this same dispatcher and no backend-local index
 snapshot is admitted for ordinary queries. Only a pure BM25 deployment without
 shared runtime may use the bounded fallback when its physical size fits the
 workspace budget. The explicit BM25-only `weight_mask` API is the sole
@@ -73,7 +73,7 @@ The relevant postmaster settings are:
 
 | Setting | Default | Meaning |
 | --- | ---: | --- |
-| `ii42.shared_runtime_size` | `0` | Shared runtime/residency arena; must be positive for SAE. The arena is not posting authority. |
+| `ii42.shared_runtime_size` | `0` | Shared runtime/residency arena; must be positive for SSR. The arena is not posting authority. |
 | `ii42.runtime_worker_count` | `2` | Parallel inference workers, from 1 through 16. |
 | `ii42.runtime_reserve_query_lane` | `on` | Reserve one runtime lane for foreground queries; disable only for controlled offline rebuilds. |
 | `ii42.runtime_max_batch_size` | `128` | Local runtime text batch limit and default remote service batch cap. This is a deployment throughput knob, not model identity. |
@@ -130,7 +130,7 @@ A converged index selected by `auto_preload > 0`, or explicitly preloaded, uses
 an exact-root resident fold when its source relation fits the global
 `ii42.shared_runtime_size` arena, the priority-aware arena admission policy,
 and host materialization headroom. `ii42.prewarm_max_bytes` does not cap shared
-residency; it bounds only relation-page warming work. BM25 and SAE use the same
+residency; it bounds only relation-page warming work. BM25 and SSR use the same
 format and scorer. Indexes not admitted to the shared arena record a
 checked-root marker and warm relation pages through PostgreSQL shared buffers.
 They use a bounded roots-and-payload pass so startup cannot cycle the entire
@@ -178,7 +178,7 @@ required RAM ~= PostgreSQL baseline
 ```
 
 For large connection pools, reduce `workspace_cache_bytes` before reducing the
-shared runtime required by SAE. Increase worker count only after measuring both
+shared runtime required by SSR. Increase worker count only after measuring both
 throughput and session RSS.
 
 ## Diagnostics

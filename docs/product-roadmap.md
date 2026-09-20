@@ -66,8 +66,8 @@ checked publication authority and exact page-native scoring.
 
 - PostgreSQL owns relation lifecycle; ordinary `DROP INDEX` removes every II-42
   payload owned by that relation.
-- SAE remains lexical-first and eventual-only, with one unified posting index
-  and no sidecar mutation lifecycle.
+- Sparse Semantic Retrieval (SSR) remains lexical-first and eventual-only, with
+  one unified posting index and no sidecar mutation lifecycle.
 - Approximate semantic precision is an immutable per-index choice and must not
   weaken lexical exactness, filtering membership, MVCC visibility, or result
   completeness silently.

@@ -6,9 +6,9 @@ Design version: 1.60. Reviewed against the source tree on 2026-09-04.
 
 This document is the current design authority for II-42 storage, mutation,
 query, and maintenance. It describes one PostgreSQL index relation containing
-BM25 evidence and optional SAE semantic postings, with one checked publication
-lineage. It is not a deployment inventory or a claim that every workload has
-passed a fresh performance qualification.
+BM25 evidence and optional Sparse Semantic Retrieval (SSR) semantic postings,
+with one checked publication lineage. It is not a deployment inventory or a
+claim that every workload has passed a fresh performance qualification.
 
 [Architecture and design](architecture-and-design.md) provides the system
 overview. [Query semantics](query-semantics.md) defines the public retrieval
@@ -54,7 +54,7 @@ PostgreSQL heap + transaction visibility
     `-- optional semantic accelerator + scope baseline references
             |
             +-- exact read plan: folds + extents + visible linked L0
-            `-- eligible bounded SAE plan: compatible baseline candidates
+            `-- eligible bounded SSR plan: compatible baseline candidates
                          |
                  current-snapshot heap/TID recheck
                          |
@@ -65,7 +65,7 @@ They do not own posting facts and do not publish a second index root.
 ```
 
 The ordinary exact route can read committed lexical changes without waiting
-for semantic inference or a seal. The default bounded SAE route may instead
+for semantic inference or a seal. The default bounded SSR route may instead
 continue using a compatible older accelerator baseline. Its returned rows
 must pass current-snapshot validation, but newer matching rows can wait for
 background convergence. Exactness of the durable posting representation does
@@ -256,7 +256,7 @@ lose the new visible row.
 INSERT / indexed UPDATE / non-HOT replacement
     -> tokenize indexed values
     -> append txn-owned lexical record and document identity to active L0
-    -> for SAE, record semantic-pending fingerprint (no document inference)
+    -> for sae=true, record semantic-pending fingerprint (no document inference)
     -> PostgreSQL COMMIT / ABORT / PREPARE decides visibility
     -> commit hint makes background work discoverable
 ```
@@ -266,7 +266,7 @@ transaction and heap visibility; aborted records are physical cleanup debt,
 not searchable facts. Prepared transactions and savepoint rollback follow
 PostgreSQL rules.
 
-SAE mutations are eventual-only. Pure BM25 also supports realtime and manual
+SSR mutations are eventual-only. Pure BM25 also supports realtime and manual
 policies. Manual mode is not the automatic incremental path: it can mark an
 index stale and explicit maintenance can rebuild from the heap under stronger
 relation locks. Do not apply automatic-DML latency claims to that operation.
@@ -274,7 +274,7 @@ relation locks. Do not apply automatic-DML latency claims to that operation.
 ### Initial Build
 
 `CREATE INDEX` and `REINDEX` use PostgreSQL's `table_index_build_scan` protocol.
-The builder collects lexical evidence and, for SAE, uses shared runtime
+The builder collects lexical evidence and, for SSR, uses shared runtime
 workers for document encoding. It writes the initial native payload/COW
 closure before publishing a usable root. Heap scan at 100 percent does not
 mean serialization, validation, publication, or transaction completion is
@@ -335,7 +335,7 @@ remain eligible across later writes and statistics changes.
 ## Exact Read Shapes And Fold Invariants
 
 The following is the exact-route submodel, not a description of default
-bounded SAE candidate selection:
+bounded SSR candidate selection:
 
 ```text
 read_plan(key, snapshot)
@@ -363,7 +363,7 @@ $$
 Here `tf` is term frequency, `IDF` is the configured inverse document
 frequency, and `avgdl` is average document length. This convention omits the
 global `(k1 + 1)` multiplier; other supported variants have their own scoring
-rules. For an SAE-enabled unified representation, query and document weights address
+rules. For an SSR unified representation, query and document weights address
 the same lexical/semantic posting namespace:
 
 $$
@@ -511,7 +511,7 @@ supported ranked SQL -> CustomScan        structured JSON / TID / unfiltered
                              v
            validate relation + index/model/field contract
                              |
-           encode SAE query through shared runtime if needed
+           encode semantic query through shared runtime if needed
                              |
           choose filter membership and eligible serving baseline
                              |
@@ -528,7 +528,7 @@ forward / transpose / residual              resident or page-native
                            results
 ```
 
-The scalar ranked-table form is SAE-specific and requires a supported
+The scalar ranked-table form is SSR-specific and requires a supported
 planner shape. Explicit-hit APIs also serve BM25. Unsupported SQL shapes do
 not acquire the CustomScan optimization merely because they mention the
 marker. Full public signatures and restrictions are in
@@ -538,10 +538,10 @@ marker. Full public signatures and restrictions are in
 
 | Entry path | Fast membership route | Underfill or unsupported case |
 | --- | --- | --- |
-| Planner-native SAE SQL | All eligible AND predicates translated to baseline scope; bounded overfetch and current heap recheck | Can resolve the complete visible TID subset and score within it |
+| Planner-native SSR SQL | All eligible AND predicates translated to baseline scope; bounded overfetch and current heap recheck | Can resolve the complete visible TID subset and score within it |
 | Fully scope-backed structured JSON | Baseline scope, bounded overfetch, current recheck | May return fewer than `k`; no automatic complete-universe expansion just to fill it |
 | JSON without a fully eligible scope | Bounded SQL membership probe; if complete, score its TIDs | Overflow may try an admitted global candidate prefix, otherwise use full SQL resolution |
-| Explicit statement-local TIDs | Caller supplies membership for the current statement | Membership does not itself guarantee exact global SAE ranking |
+| Explicit statement-local TIDs | Caller supplies membership for the current statement | Membership does not itself guarantee exact global SSR ranking |
 
 Eligible JSON operations include `eq`, `in`, `overlap`, `range`, `ilike`, and
 `ilike_any`. Native supported scalar `ILIKE` and JSON pattern predicates can
@@ -675,7 +675,7 @@ volatile state but does not remove compatible durable acceleration.
 - An SQL/API-only deployment with a compatible native root need not rebuild
   data. A model, scoring, or physical-format incompatibility requires its
   explicit migration/rebuild procedure, not optimistic fallback decoding.
-- SAE is eventual-only. Pure BM25 retains realtime, eventual, and manual
+- SSR is eventual-only. Pure BM25 retains realtime, eventual, and manual
   policies; manual rebuild behavior is not the automatic incremental contract.
 - Partitioned-parent global ranking and row-level security are unsupported.
 - Parallel heap build, AM scan, and VACUUM discovery remain future scale work.
@@ -731,7 +731,7 @@ today's accelerator construction is incremental. The
 [development record](archive/engineering/convergent-segmented-index-development-record.md)
 also preserves fixed-live-set reuse, exact-fold, lifecycle, and fragmentation
 experiments. Its early 1.05x/1.10x/1.15x fragmentation budgets apply to that
-measured exact-path matrix, not arbitrary SAE/filter latency.
+measured exact-path matrix, not arbitrary SSR/filter latency.
 
 The archived [query-first report](archive/engineering/query-first-eventual-background-maintenance.md)
 preserves the early motivation for foreground/background separation. Its old
@@ -744,7 +744,7 @@ guidance. System and model experiments are summarized independently in the
 
 1. Compare exact fragmented, compacted, and folded results with the same
    stored-representation oracle, including ties and retirement statistics.
-2. Test bounded SAE routes for current row/predicate membership, expected
+2. Test bounded SSR routes for current row/predicate membership, expected
    candidate staleness, and full filtered top-k quality. Do not substitute a
    small membership-only test for a representative ranking oracle.
 3. Exercise INSERT, non-HOT/HOT UPDATE, DELETE/VACUUM, abort, savepoint, 2PC,

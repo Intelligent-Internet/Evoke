@@ -9,9 +9,9 @@ manual refresh has an explicit heap-rebuild path.
 | Mode | `realtime` | `eventual` | `manual` |
 | --- | --- | --- | --- |
 | BM25 | Supported; default | Supported | Supported |
-| `sae = true` | Rejected | Supported; default | Rejected |
+| `sae = true` / Sparse Semantic Retrieval (SSR) | Rejected | Supported; default | Rejected |
 
-SAE is eventual-only because document inference belongs to shared workers, not
+SSR is eventual-only because document inference belongs to shared workers, not
 foreground DML.
 
 ## BM25 Policies
@@ -127,7 +127,7 @@ SELECT * FROM ii42_index_maintain_due(4);
 - `maintain_due` is revoked from `PUBLIC`; run it as a trusted role that owns
   its target indexes.
 - `ii42_index_policy_recommend(...)` is advisory and does not mutate options.
-  For SAE it always recommends eventual.
+  For SSR it always recommends eventual.
 
 The built-in worker already handles automatic policies. `pg_cron` is optional
 and useful only when an operator wants an additional time-based wakeup:

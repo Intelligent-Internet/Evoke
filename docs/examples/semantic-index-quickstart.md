@@ -52,8 +52,9 @@ ORDER BY hit.score DESC, source.id;
 ```
 
 `sae = true` does not create a vector side index. Lexical and semantic
-postings share one checked root and scorer. SAE is eventual-only: mutation is
-lexical-first and semantic evidence is completed by shared workers.
+postings share one checked root and scorer. Sparse Semantic Retrieval (SSR) is
+eventual-only: mutation is lexical-first and semantic evidence is completed by
+shared workers.
 
 Check readiness with:
 

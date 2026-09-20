@@ -2,7 +2,8 @@
 
 ## Canonical Retrieval
 
-For an SAE-enabled index, canonical retrieval is ordinary table SQL:
+For a Sparse Semantic Retrieval (SSR) index, enabled with `sae = true`,
+canonical retrieval is ordinary table SQL:
 
 ```sql
 SELECT d.*,
@@ -63,7 +64,7 @@ and one top-k result. There is no ANN query or post-retrieval fusion stage.
 On `field_aware = true` indexes, lexical and semantic atoms are namespaced per
 field. The ordinary `ii42_query(index, query, k)` overload searches every
 field with weight `1.0`; the field-aware overload selects fields and computes
-`sum(field_weight * (field_BM25 + field_SAE))`. Both forms traverse the same
+`sum(field_weight * (field_BM25 + field_semantic))`. Both forms traverse the same
 physical posting index and use the same accumulator.
 
 BM25-only query overrides and `weight_mask` are rejected. Query encoding,
@@ -153,7 +154,7 @@ index's page-native scorer or lifecycle.
 
 - prepared values bind normalization and index context;
 - ranked values bundle prepared input, order tokens, `k`, and optional mask;
-- field-aware search varies whole-field weights inside one BM25 or SAE index;
+- field-aware search varies whole-field weights inside one BM25 or SSR index;
 - fusion/hybrid APIs combine already retrieved candidate rows.
 
 Application code should prefer planner-native SQL for one semantic index and
@@ -172,7 +173,7 @@ Semantic-enabled search does not accept `weight_mask`.
 
 ## Filtering
 
-SAE-enabled indexes support predicate-defined filtered top-k through ordinary
+SSR indexes support predicate-defined filtered top-k through ordinary
 PostgreSQL predicates:
 
 ```sql
@@ -272,7 +273,7 @@ same-root scope bitmap supplies a `work_mem`-bounded result ceiling, II42 uses
 one materialized SPI execution so PostgreSQL can retain a parallel predicate
 plan, then intersects the exact TIDs with the scope bitmap.
 
-An SAE index can place frequently used exact dimensions in the same II42 root:
+An SSR index can place frequently used exact dimensions in the same II42 root:
 
 ```sql
 CREATE INDEX docs_search_idx
@@ -452,7 +453,7 @@ resolution from eligible exact filters. Any future block bounds must remain
 part of the same semantic accelerator root and lifecycle rather than becoming
 a separately maintained artifact.
 
-For an SAE-enabled field-aware index, use the overload with field names,
+For an SSR field-aware index, use the overload with field names,
 weights, filters, and `k`. Field weights are applied before subset top-k.
 
 The `tid[]` overload remains available when an application already owns an

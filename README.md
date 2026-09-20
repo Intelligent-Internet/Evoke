@@ -1,7 +1,7 @@
 # II-42
 
-**The fastest PostgreSQL BM25 engine, now with SAE semantic postings in the
-same index.**
+**The fastest PostgreSQL BM25 engine, now with Sparse Semantic Retrieval
+(SSR) postings in the same index.**
 
 <img width="1500" height="600" alt="commons-banner-github" src="docs/banner.png" />
 
@@ -11,19 +11,24 @@ high-throughput, PostgreSQL-native BM25 access method. See the
 [PG18 15 x 5 benchmark](docs/performance/README.md) for the measured engines,
 datasets, query shapes, and reproducibility boundary behind this claim.
 
-On top of that BM25 foundation, II-42 innovatively fuses SAE semantic postings
-with lexical evidence inside one page-native PostgreSQL index. For AI-era RAG,
-this provides a more convenient, precise, and integrated retrieval solution:
-exact lexical ranking and semantic recall through one SQL interface, one
-transactional relation, and one maintenance and replication lifecycle.
+On top of that BM25 foundation, II-42 fuses Sparse Semantic Retrieval (SSR)
+postings with lexical evidence inside one page-native PostgreSQL index. For
+AI-era RAG, this provides a more convenient, precise, and integrated retrieval
+solution: exact lexical ranking and semantic recall through one SQL interface,
+one transactional relation, and one maintenance and replication lifecycle.
 
 One `USING ii42` index can run in either of two modes:
 
 - **Exact BM25** is the default and the performance foundation. It provides
   corpus-statistics-based lexical ranking without model inference.
-- **BM25 + SAE** is enabled with `sae = true`. A model emits semantic atoms
+- **BM25 + SSR** is enabled with `sae = true`. A model emits semantic atoms
   that share one posting space, scorer, relation, and lifecycle with lexical
   evidence.
+
+The SQL reloption remains `sae` for the current ABI and catalog contract. In
+prose, this documentation uses SSR for the product retrieval path and reserves
+SAE for model/encoder vocabulary mechanisms, historical experiment names, and
+literal API or GUC names.
 
 Both modes use the same index and lifecycle APIs. BM25 keeps its ordinary
 PostgreSQL operator/index-scan surface. RAG and semantic applications use one
@@ -67,7 +72,7 @@ The current storage path is page-native v3:
   optional query-accelerator refresh can traverse a complete stored baseline
   without re-encoding unchanged documents.
 
-Exact reads include visible lexical L0. Bounded SAE queries may keep using a
+Exact reads include visible lexical L0. Bounded SSR queries may keep using a
 compatible older accelerator and scope baseline, with current-row recheck,
 until background refresh publishes a replacement. Warmness, baseline freshness,
 and semantic completeness are separate states.
@@ -224,12 +229,12 @@ make PG_CONFIG=/path/to/pg_config installcheck
 ```
 
 Source builds require ONNX Runtime by default so a query-serving installation
-cannot silently omit SAE inference. A lexical-only diagnostic build must opt
+cannot silently omit semantic inference. A lexical-only diagnostic build must opt
 out explicitly with `II42_ENABLE_ONNXRUNTIME=0`; do not install that build on a
 PostgreSQL server that serves `sae = true` indexes. See
 [Contributing](CONTRIBUTING.md) for build and validation details.
 Source installs do not download a model implicitly; install a checkout at the
-compiled shared-data path or configure an override before using SAE. The
+compiled shared-data path or configure an override before using SSR. The
 weights are not required to compile the extension or use exact BM25; see
 [source-install model setup](docs/examples/semantic-model-checkout.md#source-installation).
 
@@ -295,7 +300,7 @@ ORDER BY score DESC
 LIMIT 10;
 ```
 
-SAE is eventual-only. A foreground write publishes lexical evidence and a
+SSR is eventual-only. A foreground write publishes lexical evidence and a
 semantic-pending document version without running model inference. Shared
 workers later add semantic atoms in bounded batches. Both states are read by
 the same page-native scorer.

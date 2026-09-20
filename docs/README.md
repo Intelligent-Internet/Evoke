@@ -4,14 +4,19 @@ II-42 exposes one PostgreSQL access method and one product lifecycle. The index
 contract is selected at `CREATE INDEX` time:
 
 - `sae = false` (default): exact BM25;
-- `sae = true`: lexical and semantic atoms in one unified posting index.
+- `sae = true`: Sparse Semantic Retrieval (SSR), with lexical and semantic
+  atoms in one unified posting index.
+
+The `sae` reloption is the current SQL/catalog name. In prose, the current
+product retrieval path is SSR; SAE is reserved for encoder/vocabulary
+mechanisms, historical experiment names, and literal API or GUC names.
 
 Both modes share `ii42_index_status(...)` and common maintenance functions.
 PostgreSQL `DROP INDEX` owns teardown for both modes. BM25 keeps its ordinary
 index-scan surface. Semantic ranking uses one overloaded `ii42_query(...)`
 family for both ordinary ranked table SQL and explicit hit rows. The current
 implementation is page-native v3.
-SAE is eventual-only and lexical-first; shared workers complete semantic
+SSR is eventual-only and lexical-first; shared workers complete semantic
 postings without creating a second index or mutation lifecycle.
 
 ## Start
@@ -53,7 +58,7 @@ postings without creating a second index or mutation lifecycle.
   diagnostic SQL surfaces.
 - [Function index](functions.md): compact function lookup.
 - [Index parameters](index-parameters.md): reloptions and server settings.
-- [Index policy](index-policy.md): BM25 consistency and eventual-only SAE.
+- [Index policy](index-policy.md): BM25 consistency and eventual-only SSR.
 - [Semantic query API](examples/semantic-query-api.md): how the
   unified application route dispatches.
 - [Multi-index fusion](multi-index-fusion.md): public composition of separate

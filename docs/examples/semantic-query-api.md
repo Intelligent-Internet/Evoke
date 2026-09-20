@@ -72,10 +72,11 @@ BM25.
 
 ## Progressive Visibility
 
-SAE is eventual-only and lexical-first. A committed changed row can be
-lexical-searchable through the exact route before shared workers add semantic
-atoms. Both states live under the same root/linked-L0 authority. A compatible
-bounded accelerator may continue serving its older baseline and temporarily
+Sparse Semantic Retrieval (SSR) is eventual-only and lexical-first. A committed
+changed row can be lexical-searchable through the exact route before shared
+workers add semantic atoms. Both states live under the same root/linked-L0
+authority. A compatible bounded accelerator may continue serving its older
+baseline and temporarily
 omit post-baseline rows while workers converge.
 
 Heap MVCC hides aborted, superseded, and deleted rows. Maintenance completion

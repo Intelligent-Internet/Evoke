@@ -6,7 +6,7 @@ This page is the default performance entry point for `ii42`.
 
 - [Testing and Validation](../testing-and-validation.md): current release gates and reproduction commands.
 - [II-42 System Technical Report (Beta 1)](../technical-report-ii42-system.md): current architecture and engineering evidence.
-- [II-42 Model Technical Report (Beta 1)](../technical-report-ii42-model.md): SAE relevance experiments and their scope.
+- [II-42 Model Technical Report (Beta 1)](../technical-report-ii42-model.md): semantic relevance experiments and their scope.
 - [Maintenance Policy Tuning](maintenance-policy-tuning.md): supported policy choices and current scheduling behavior.
 - [BM25 Page-Native Regression](reports/bm25-page-native-regression-2026-08-18.md): dated lexical regression evidence for the page-native transition.
 - [Mutable Maintenance Benchmarks](mutable-maintenance-benchmarks.md): historical lexical maintenance checkpoint.
@@ -442,7 +442,7 @@ Quality readout:
   [Supported Input Types](../input-types.md), not an owner-only diagnostic API
   merely because it labels a benchmark series.
 - This historical comparison covers pretokenized `int4[]` and `text[]`, not
-  raw-text tokenization or the SAE runtime. Its suite-median throughput ranking
+  raw-text tokenization or the semantic runtime. Its suite-median throughput ranking
   is token IDs, token streams, `vchord_bm25`, then `pg_search`; individual
   workloads can have a different ordering.
 - Qualify a new package with current correctness, lifecycle, and workload

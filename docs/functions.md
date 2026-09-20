@@ -3,6 +3,9 @@
 This is a compact lookup. [API Reference](api-reference.md) is authoritative
 for contracts, privileges, and examples.
 
+SSR means Sparse Semantic Retrieval, the semantic-enabled `sae = true`
+product path.
+
 ## Product Functions
 
 | Function | Purpose |
@@ -12,7 +15,7 @@ for contracts, privileges, and examples.
 | `ii42_index_status(regclass)` | Report query readiness and blocker state. |
 | `ii42_index_audit(regclass)` | Run the explicit heavy integrity and model-artifact audit. |
 | `ii42_index_details(regclass)` | Report operator-level physical and maintenance state. |
-| `ii42_index_policy_recommend(regclass, text)` | Return advisory BM25/SAE policy options. |
+| `ii42_index_policy_recommend(regclass, text)` | Return advisory BM25/SSR policy options. |
 | `ii42_index_refresh(regclass)` | Request explicit index refresh. |
 | `ii42_index_maintain(regclass)` | Perform one blocking maintenance attempt. |
 | `ii42_index_try_maintain(regclass)` | Skip a busy maintenance lock; an admitted maintenance action can still take time. |
@@ -22,7 +25,7 @@ for contracts, privileges, and examples.
 | `ii42_hybrid_bm25_candidates(...)` | Adapt an II-42 source to hybrid candidates. |
 | `ii42_hybrid_fuse_candidates(...)` | Fuse II-42 and external candidate sets. |
 
-SAE is eventual-only. Single-index functions act on one page-native v3 index
+SSR is eventual-only. Single-index functions act on one page-native v3 index
 relation; composition functions combine independently maintained sources above
 that layer. There is no model-specific search or maintenance API. Removal uses
 PostgreSQL `DROP INDEX`.

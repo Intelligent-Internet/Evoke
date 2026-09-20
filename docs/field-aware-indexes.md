@@ -18,7 +18,7 @@ Use a field-aware index when:
 - one index object is operationally simpler than several field indexes
 - applications need weights such as `title^3 + body^1`
 - BM25F-style per-field length normalization is not required
-- an SAE-enabled index should keep lexical field identity while sharing one
+- a Sparse Semantic Retrieval (SSR) index should keep lexical field identity while sharing one
   physical index and lifecycle
 
 To weight independently maintained indexes at query time, keep separate field
@@ -119,7 +119,7 @@ ORDER BY h.score DESC, d.id;
 The score is:
 
 ```text
-sum(field_weight * (field_BM25 + field_SAE))
+sum(field_weight * (field_BM25 + field_semantic))
 ```
 
 This is one native accumulation over one posting index. It is not score fusion
@@ -127,9 +127,9 @@ between independent BM25 and semantic indexes. Field names must be unique and
 belong to the index. Weights must be finite and non-negative. Passing `NULL`
 weights uses `1.0` for every selected field.
 
-The query expands lexical and, for SAE, semantic atoms into field-scoped terms
+The query expands lexical and, for SSR, semantic atoms into field-scoped terms
 with the selected field weight, then uses the same route dispatcher as a
-single-column index. BM25 uses resident-fold or page-native execution; SAE can
+single-column index. BM25 uses resident-fold or page-native execution; SSR can
 use the published semantic accelerator. It does not materialize one corpus score array per field
 or retain a private index snapshot in each backend when shared runtime exists.
 
@@ -174,7 +174,7 @@ Pass `NULL` for weights, or omit the argument, to use equal weights.
 
 The public `ii42_query(...)` family searches all indexed fields with equal
 weight by default. Its field-aware overload selects a field subset and optional
-weights for either BM25 or SAE indexes.
+weights for either BM25 or SSR indexes.
 
 The owner-only `ii42_query_tokens(...)` diagnostic also searches every indexed
 field with equal weight on BM25 indexes. Explicit field-aware diagnostics can
@@ -183,8 +183,9 @@ select fields and weights; they are not the public semantic query route.
 For BM25, complex raw-query semantics such as phrase and boolean filters remain
 available on non-field-aware fused indexes. Field-aware BM25 generic raw queries
 reject complex forms rather than silently using non-field-aware planning.
-SAE input is model-compiled text, not the BM25 raw-query language; its tokenizer
-and normalization come from the model checkout rather than BM25 text reloptions.
+In SSR mode, input is model-compiled text, not the BM25 raw-query language; its
+tokenizer and normalization come from the model checkout rather than BM25 text
+reloptions.
 
 ## Internal Semantics
 

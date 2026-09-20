@@ -5,9 +5,10 @@ retrieval engines such as pgvector or VectorChord. This composition layer is a
 product capability above the unified single-index design; it does not split or
 modify an II-42 index internally.
 
-Hybrid search combines BM25 or unified SAE candidates with external vector
-candidates inside PostgreSQL. A single SAE index already combines lexical and
-sparse semantic evidence; this API is only for additional independent sources.
+Hybrid search combines BM25 or unified Sparse Semantic Retrieval (SSR)
+candidates with external vector candidates inside PostgreSQL. A single SSR
+index already combines lexical and sparse semantic evidence; this API is only
+for additional independent sources.
 The implementation is intentionally a late
 fusion layer: each source keeps its own best index access path, and
 `ii42` only combines already-retrieved candidates.
@@ -237,7 +238,7 @@ ORDER BY h.score DESC, d.id;
 
 The final `WHERE` keeps the returned rows aligned with the requested time
 window, but runs after fusion's `k` cutoff and can underfill. Push the predicate
-into each source when supported. For an SAE source, use a filtered
+into each source when supported. For an SSR source, use a filtered
 `ii42_query(...)` overload or planner-native query before constructing hybrid
 candidates; increasing each source's candidate budget is only a recall tradeoff.
 

@@ -47,8 +47,9 @@ ON docs USING ii42 (body)
 WITH (sae = true);
 ```
 
-SAE is eventual-only. Foreground writes become lexically searchable first and
-shared workers complete semantic postings through the same index lifecycle.
+Sparse Semantic Retrieval (SSR) is eventual-only. Foreground writes become
+lexically searchable first and shared workers complete semantic postings through
+the same index lifecycle.
 
 Do not mutate the old index in place or reinterpret its relation pages. The
 new index is derived from the source table by the current writer.

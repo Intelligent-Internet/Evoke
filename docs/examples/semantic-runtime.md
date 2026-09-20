@@ -1,10 +1,11 @@
 # Semantic Runtime
 
-The shared runtime converts text into sparse atoms for `sae = true` indexes.
+The shared runtime converts text into sparse atoms for Sparse Semantic Retrieval
+(SSR, `sae = true`) indexes.
 It is an execution service for one relation-owned index lifecycle, not a model
 database or posting authority.
 
-SAE is eventual-only: foreground writes publish lexical state and pending
+SSR is eventual-only: foreground writes publish lexical state and pending
 document identity; shared workers perform bounded semantic completion.
 
 ## Ownership

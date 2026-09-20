@@ -36,9 +36,9 @@ WITH (
 );
 ```
 
-SAE is eventual-only. Omitting `consistency` selects `eventual`; explicit
-`realtime` and `manual` are rejected. BM25-only indexes retain their supported
-consistency policies.
+Sparse Semantic Retrieval (SSR) is eventual-only. Omitting `consistency`
+selects `eventual`; explicit `realtime` and `manual` are rejected. BM25-only
+indexes retain their supported consistency policies.
 
 Use ordinary `CREATE INDEX` for an offline build. Use PostgreSQL's standard
 concurrent form outside an explicit transaction when the table must remain
@@ -150,7 +150,7 @@ If maintenance workers are unavailable but query inference remains healthy,
 committed changes remain lexical-visible through the exact route and semantic
 debt accumulates in linked L0. A compatible accelerator can keep serving its
 prior baseline, with declared post-baseline omissions, while maintenance is
-restored. SAE queries still need a live shared runtime to encode query text:
+restored. SSR queries still need a live shared runtime to encode query text:
 an unavailable inference pool fails closed, even with a resident accelerator.
 Search never falls back to an independent BM25 index.
 
@@ -171,7 +171,7 @@ rows.
 
 ## Memory And Security
 
-SAE requires `shared_preload_libraries = 'ii42'` and a positive
+SSR requires `shared_preload_libraries = 'ii42'` and a positive
 `ii42.shared_runtime_size`. This is the bounded shared runtime and residency
 arena. Runtime workers own tokenizer and ONNX sessions; query backends keep
 only bounded request and scoring scratch.

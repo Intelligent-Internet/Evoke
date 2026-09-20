@@ -166,7 +166,7 @@ DROP INDEX docs_body_idx;
 
 | Error or symptom | What to check |
 | --- | --- |
-| SAE reports that the shared runtime is unavailable | Configure `shared_preload_libraries`, a positive shared runtime size, and restart PostgreSQL. Verify the configured control database is connectable. |
+| Semantic search reports that the shared runtime is unavailable | Configure `shared_preload_libraries`, a positive shared runtime size, and restart PostgreSQL. Verify the configured control database is connectable. |
 | Model or artifact mismatch | Poll `ii42_index_status(...)`, then run `ii42_index_audit(...)` explicitly. `REINDEX` if the immutable model contract changed. |
 | A joined query returns fewer than `k` rows | Check whether a SQL filter was applied after hit generation. For semantic indexes, put it on the base table with planner-native `ORDER BY ii42_query(...) DESC LIMIT k`, or use a supported filtered overload. A scope-backed approximate baseline can also underfill during convergence; see the query contract. |
 | Search is rejected on an RLS table or partitioned parent | Those shapes cannot provide a safe globally exact `ii42_query(...)` result in the current release. |

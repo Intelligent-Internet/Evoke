@@ -6,8 +6,8 @@ and use this engine only when they intentionally combine sources.
 
 The hybrid fusion engine is the implementation layer behind
 [Hybrid Vector/II-42 Search](hybrid-search.md). It lets PostgreSQL combine
-BM25 or unified SAE candidates, vector candidates, and other ranked candidate sources
-into one weighted top-k result set.
+BM25 or unified Sparse Semantic Retrieval (SSR) candidates, vector candidates,
+and other ranked candidate sources into one weighted top-k result set.
 
 The feature is intentionally a late-fusion layer. Each retrieval source keeps
 its own best access path:

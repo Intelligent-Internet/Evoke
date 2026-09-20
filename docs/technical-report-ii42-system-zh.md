@@ -34,7 +34,7 @@ BM25 基礎承接 eager sparse scoring 的思路：預先準備 term 貢獻值�
 
 ## 2. 系統架構與產品介面
 
-II-42 提供單一 PostgreSQL access method：`USING ii42`。預設 `sae = false` 模式提供精確 BM25；設為 `sae = true` 時，合格模型將語意 atom 加入同一索引。本文以 SAE 指稱專案的稀疏語意增強路徑；目前發布版本的基礎是 Granite sparse encoder，而不是另行從零訓練的通用自編碼器。
+II-42 提供單一 PostgreSQL access method：`USING ii42`。預設 `sae = false` 模式提供精確 BM25；設為 `sae = true` 時，合格模型將語意 atom 加入同一索引。本文以 Sparse Semantic Retrieval（SSR）指稱產品層的稀疏語意檢索路徑；`sae` reloption 保留為目前 SQL/catalog 名稱，SAE 則保留給 encoder／vocabulary 機制與歷史實驗名稱。
 
 ```text
                          PostgreSQL application
@@ -61,7 +61,7 @@ II-42 提供單一 PostgreSQL access method：`USING ii42`。預設 `sae = false
       + pending semantic work          + shared model runtime
 ```
 
-`ii42_query` 的 explicit-hit overload 同時服務兩種模式。SAE 另支援 planner-native scalar marker：planner 將符合條件的排名查詢轉為 custom scan，而不是逐列呼叫模型。BM25 也保留原生 operator 與有序 index scan 介面。`ctid` 和索引內部 `doc_id` 是執行身分，不是可長期保存的應用主鍵。
+`ii42_query` 的 explicit-hit overload 同時服務兩種模式。SSR 另支援 planner-native scalar marker：planner 將符合條件的排名查詢轉為 custom scan，而不是逐列呼叫模型。BM25 也保留原生 operator 與有序 index scan 介面。`ctid` 和索引內部 `doc_id` 是執行身分，不是可長期保存的應用主鍵。
 
 對於資料表 `docs(id, title, body)`，安裝 extension 並設定共用 runtime 與合格模型 checkout 後：
 
@@ -201,7 +201,7 @@ P2.2 採用確定性的 ABI-v2 分窗，編譯完整 query 與 document 文字�
 
 ### 4.2 Runtime 所有權與遠端編碼
 
-模型 session 由共用 runtime worker 各自擁有，不會為每個 SQL backend 各載入一份模型，也不是 arena 中共享的 ONNX session。Backend 提交有界請求並取得稀疏結果。SAE 必須使用已設定的共用 runtime，不會靜默退回 backend 私有模型。啟用 query-lane reservation 且至少有兩個健康的本地 worker 時，保留的 lane 使文件批次不會耗盡查詢編碼的准入名額。
+模型 session 由共用 runtime worker 各自擁有，不會為每個 SQL backend 各載入一份模型，也不是 arena 中共享的 ONNX session。Backend 提交有界請求並取得稀疏結果。SSR 必須使用已設定的共用 runtime，不會靜默退回 backend 私有模型。啟用 query-lane reservation 且至少有兩個健康的本地 worker 時，保留的 lane 使文件批次不會耗盡查詢編碼的准入名額。
 
 可選的遠端 runtime service 為構建與維護增加**文件編碼能力**。它們不擁有 PostgreSQL page、不執行資料庫查詢，也不取代本地 query lane。Dispatcher 會考慮未完成請求數、服務 batch 上限、已觀測延遲與退避；批次可以亂序完成並釋放 runtime slot，而發布仍維持文件順序。
 
@@ -289,12 +289,12 @@ COW 構建是準備，不是發布。Publisher 先驗證 staged closure 與來�
 
 ### 6.1 初始構建與發布
 
-初始構建遵循 PostgreSQL 的 `table_index_build_scan` 可見性協定、指派文件身分，並編譯詞法證據；SAE 構建另透過有界 runtime batch 編碼文件。Builder 產生權威 posting 物件與 COW 中繼資料，驗證其 closure 後發布 checked root。`REINDEX` 也以相同表示為目標；健康的當前格式索引，不必只因更新相容衍生加速器就重建整個語料。
+初始構建遵循 PostgreSQL 的 `table_index_build_scan` 可見性協定、指派文件身分，並編譯詞法證據；SSR 構建另透過有界 runtime batch 編碼文件。Builder 產生權威 posting 物件與 COW 中繼資料，驗證其 closure 後發布 checked root。`REINDEX` 也以相同表示為目標；健康的當前格式索引，不必只因更新相容衍生加速器就重建整個語料。
 
 ```text
   PostgreSQL build protocol -> heap scan -> lexical compilation
                          |
-                         +-> SAE document batches -> model runtime
+                         +-> SSR document batches -> model runtime
                          |                              |
                          +--------- unified atoms <-----+
                                          |
@@ -311,7 +311,7 @@ COW 構建是準備，不是發布。Publisher 先驗證 staged closure 與來�
 
 ### 6.2 詞法優先的寫入
 
-對 SAE 索引，前台 DML 記錄詞法變化與待完成語意身分，不在寫入交易內執行文件推理。背景完成時會檢查 document version、來源文字與模型契約仍相符；過期結果會捨棄，不會被接到替代資料列上。重複的單列失敗會被呈現並隔離，而不是靜默阻擋整個佇列。
+對 SSR 索引，前台 DML 記錄詞法變化與待完成語意身分，不在寫入交易內執行文件推理。背景完成時會檢查 document version、來源文字與模型契約仍相符；過期結果會捨棄，不會被接到替代資料列上。重複的單列失敗會被呈現並隔離，而不是靜默阻擋整個佇列。
 
 ```text
   INSERT / UPDATE transaction
