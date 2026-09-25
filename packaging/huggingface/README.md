@@ -43,10 +43,10 @@ identity as the index.
 | Model API | `evoke_model_v1` |
 | Runtime ABI | `evoke_p2_unified_text_atoms_v2` |
 | Upstream revision | `ad82b1fd09541c998c8d45045d601c51fdb8a9b7` |
-| Manifest SHA-256 | `dd0993f0638a3f683fbb6475a8509c228d8f6547aab90a0b762b1ff6fd7d0041` |
-| ZIP SHA-256 | `b202ca7e80b219a2540bf75365a3df8b81cf638b6c8c2207ed4ea8ba93f212d1` |
+| Manifest SHA-256 | `760f57eb9230b3d20f04315f2a4cd29a4c9967123dbc29f85656c27f91cbbf86` |
+| ZIP SHA-256 | `5e12de3b23663d7e9d6d9b21cbd619b03a2d229ba2ed497602ded860841b5061` |
 | Total atom dimensions | 79,787: 29,522 lexical + 50,265 semantic |
-| Uncompressed checkout | 400,908,113 bytes; manifest + 13 artifacts |
+| Uncompressed checkout | 400,907,949 bytes; manifest + 13 artifacts |
 | Evoke build dependency | ONNX Runtime 1.29.0, C API 29 |
 
 The `_smoke` suffix is part of the frozen model ID, not a placeholder to edit.
@@ -89,8 +89,8 @@ source repository's content lock.
 
 Model-card, license, Hub cache, and Git metadata are intentionally **outside**
 `checkout/`: the release validator requires an exact model file inventory.
-Historical local paths in the frozen provenance metadata record export
-origins; they are not runtime dependencies or additional required downloads.
+Frozen provenance labels record the source audit fixture identity; they are
+not runtime dependencies or additional required downloads.
 
 ## Download And Build
 

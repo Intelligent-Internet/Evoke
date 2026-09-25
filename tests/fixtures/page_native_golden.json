@@ -148,7 +148,7 @@
     }
   },
   "semantic": {
-    "manifest_sha256": "dd0993f0638a3f683fbb6475a8509c228d8f6547aab90a0b762b1ff6fd7d0041",
+    "manifest_sha256": "760f57eb9230b3d20f04315f2a4cd29a4c9967123dbc29f85656c27f91cbbf86",
     "runtime_signature": "30b3296dacd2c0d2a4db403cc7eb5836",
     "surfaces": {
       "alpha cuda": [

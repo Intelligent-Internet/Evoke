@@ -82,7 +82,7 @@ Beta 1 保留 P2.2 工程識別與 extension 版本 v0.2.5。
 | --- | --- |
 | Bundle | `evoke-p2.2-nfcorpus-v2` |
 | Model ID | `evoke_p2_p22_nfcorpus_v2_smoke` |
-| Manifest SHA-256 | `dd0993f0638a3f683fbb6475a8509c228d8f6547aab90a0b762b1ff6fd7d0041` |
+| Manifest SHA-256 | `760f57eb9230b3d20f04315f2a4cd29a4c9967123dbc29f85656c27f91cbbf86` |
 | Runtime ABI | `evoke_p2_unified_text_atoms_v2` |
 | ONNX Runtime | 1.29.0，由[依賴鎖定檔](../packaging/onnxruntime.version)指定 |
 

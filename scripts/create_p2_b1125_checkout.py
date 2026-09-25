@@ -92,6 +92,16 @@ def checkout_signature(
     return payload
 
 
+def source_signature(
+    path: Path,
+    public_reference: str,
+) -> dict[str, Any]:
+    payload = signature(path)
+    payload['path'] = public_reference
+    payload['source_kind'] = 'frozen_query_atom_audit_fixture'
+    return payload
+
+
 def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding='utf-8'))
 
@@ -402,7 +412,10 @@ def main() -> int:
         },
         'product_name': 'P2',
         'qrels_usage': 'evaluation_only_after_frozen_transform',
-        'query_atoms': signature(args.query_atoms),
+        'query_atoms': source_signature(
+            args.query_atoms,
+            f'frozen-provenance/{dataset_key}/query_atoms.jsonl',
+        ),
         'query_stats': query_stats,
         'route': 'M1934-b1.125-rms_m4',
         'selection_surface': 'M1933 selection plus M1934 unseen transfer',

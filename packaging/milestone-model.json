@@ -6,7 +6,7 @@
     "revision": "ad82b1fd09541c998c8d45045d601c51fdb8a9b7",
     "license": "Apache-2.0"
   },
-  "manifest_sha256": "dd0993f0638a3f683fbb6475a8509c228d8f6547aab90a0b762b1ff6fd7d0041",
+  "manifest_sha256": "760f57eb9230b3d20f04315f2a4cd29a4c9967123dbc29f85656c27f91cbbf86",
   "manifest_contract": {
     "api_version": "evoke_model_v1",
     "model_id": "evoke_p2_p22_nfcorpus_v2_smoke",
@@ -31,7 +31,7 @@
     },
     "p2_contract": {
       "path": "provenance/p2_contract.json",
-      "sha256": "3a786c143a10f064963a9ec083ef9b413ccd13d61e8b37ffdd5bf553e34c164d"
+      "sha256": "0f5c88958f8908bd824dcdc220339269cc07d2b565110af4f180c117c0cc2fb8"
     },
     "query_calibration_runtime": {
       "path": "calibration/query_calibration_rms.f32",

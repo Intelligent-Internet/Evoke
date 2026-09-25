@@ -20,9 +20,9 @@ From the Evoke repository root, download the immutable archive and validate it:
 
 ```bash
 model_repo='Intelligent-Internet/Evoke-Model-Beta-1'
-model_revision='1bcccd7bb028a09b1c5897fc361e7a54ad01c965'
+model_revision='3d9d1adb88454e873ce0eaa35ce33176dde38ad9'
 model_archive='evoke-p2.2-nfcorpus-v2.zip'
-model_sha256='b202ca7e80b219a2540bf75365a3df8b81cf638b6c8c2207ed4ea8ba93f212d1'
+model_sha256='5e12de3b23663d7e9d6d9b21cbd619b03a2d229ba2ed497602ded860841b5061'
 model_url="https://huggingface.co/${model_repo}/resolve/${model_revision}/${model_archive}"
 
 python3 scripts/fetch_milestone_model.py \

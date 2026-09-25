@@ -167,7 +167,7 @@ The packaged model is bound by [the model lock](../packaging/milestone-model.jso
 | Bundle | `evoke-p2.2-nfcorpus-v2` |
 | Model ID | `evoke_p2_p22_nfcorpus_v2_smoke` |
 | Runtime ABI | `evoke_p2_unified_text_atoms_v2` |
-| Manifest SHA-256 | `dd0993f0638a3f683fbb6475a8509c228d8f6547aab90a0b762b1ff6fd7d0041` |
+| Manifest SHA-256 | `760f57eb9230b3d20f04315f2a4cd29a4c9967123dbc29f85656c27f91cbbf86` |
 | ONNX Runtime | `1.29.0` |
 
 The identical frozen checkout is available as [Evoke Model (Beta 1)](https://huggingface.co/Intelligent-Internet/Evoke-Model-Beta-1). The [download guide](examples/semantic-model-checkout.md#download-the-default-model) pins its revision and archive checksum; distribution does not change the model or the historical evaluation identity.

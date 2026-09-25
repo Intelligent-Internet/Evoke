@@ -167,7 +167,7 @@ S_{fields}(q,d)=\sum_f a_f S_f(q,d).
 | Bundle | `evoke-p2.2-nfcorpus-v2` |
 | Model ID | `evoke_p2_p22_nfcorpus_v2_smoke` |
 | Runtime ABI | `evoke_p2_unified_text_atoms_v2` |
-| Manifest SHA-256 | `dd0993f0638a3f683fbb6475a8509c228d8f6547aab90a0b762b1ff6fd7d0041` |
+| Manifest SHA-256 | `760f57eb9230b3d20f04315f2a4cd29a4c9967123dbc29f85656c27f91cbbf86` |
 | ONNX Runtime | `1.29.0` |
 
 完全相同的凍結 checkout 已發布為 [Evoke Model (Beta 1)](https://huggingface.co/Intelligent-Internet/Evoke-Model-Beta-1)。[下載指南](examples/semantic-model-checkout.md#download-the-default-model)固定 revision 與 archive checksum；此次分發不改變模型或歷史評估身分。

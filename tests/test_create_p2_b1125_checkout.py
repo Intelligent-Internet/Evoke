@@ -87,6 +87,13 @@ def test_create_p2_b1125_checkout_artifacts(tmp_path: Path) -> None:
     assert atom_space['semantic']['start'] == 3
     assert atom_space['semantic']['end_exclusive'] == 7
     assert contract['query_stats']['rows'] == 1
+    assert contract['query_atoms']['path'] == (
+        'frozen-provenance/smoke/query_atoms.jsonl'
+    )
+    assert contract['query_atoms']['source_kind'] == (
+        'frozen_query_atom_audit_fixture'
+    )
+    assert str(tmp_path) not in contract['query_atoms']['path']
     assert contract['route'] == 'M1934-b1.125-rms_m4'
     assert contract['m1914_transform']['selected_branch'] == 'global_power'
 
