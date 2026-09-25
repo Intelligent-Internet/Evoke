@@ -759,7 +759,7 @@ def main() -> int:
             ],
         ),
         (
-            'convergent SAE lexical-first lifecycle smoke',
+            'convergent SSR lexical-first lifecycle smoke',
             [
                 sys.executable,
                 'scripts/test_convergent_sae_lifecycle_smoke.py',
@@ -903,7 +903,7 @@ def main() -> int:
             ],
         ),
         (
-            'SAE two-phase transaction lifecycle smoke',
+            'SSR two-phase transaction lifecycle smoke',
             [
                 sys.executable,
                 'scripts/test_transactional_delta_lifecycle.py',
@@ -919,7 +919,7 @@ def main() -> int:
             ],
         ),
         (
-            'SAE page-native transaction memory and RSS smoke',
+            'SSR page-native transaction memory and RSS smoke',
             [
                 sys.executable,
                 'scripts/test_sae_transaction_many_index_budget.py',

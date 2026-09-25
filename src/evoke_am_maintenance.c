@@ -371,7 +371,7 @@ evoke_am_pin_maintenance_xact(Relation index_relation)
      * BM25-only realtime queries rebuild exact corpus statistics from a stable
      * committed sealed-root-plus-linked-L0 snapshot, so one writer transaction
      * owns the barrier until commit, abort, or prepared-transaction resolution.
-     * SAE writes are exact through heap-MVCC-filtered linked L0 and therefore
+     * SSR writes are exact through heap-MVCC-filtered linked L0 and therefore
      * share the transaction barrier, serializing only their physical append.
      */
     lock_mode =

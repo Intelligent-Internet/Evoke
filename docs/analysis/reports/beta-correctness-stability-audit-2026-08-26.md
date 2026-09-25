@@ -10,7 +10,7 @@ policy, or performance thresholds. The review is limited to correctness,
 lifecycle closure, failure safety, resource ownership, and product boundaries.
 
 The product still has one relation-owned root, one mutation lifecycle, one
-maintenance authority, and one public `evoke_query(...)` entry point. SAE
+maintenance authority, and one public `evoke_query(...)` entry point. SSR
 remains lexical-first and eventual-only. Shared workers own model sessions;
 backends do not retain index-sized semantic state.
 
@@ -23,7 +23,7 @@ generation identity, row ranges, and current scope identity before use.
 
 One test-coverage gap was found: structured filters and long
 `REPEATABLE READ` snapshots were each covered independently, but not together.
-The convergent SAE lifecycle now verifies that a metadata update is visible to
+The convergent SSR lifecycle now verifies that a metadata update is visible to
 a fresh statement while an older transaction keeps the old metadata view. It
 also verifies that the temporary metadata value disappears after restoration
 and maintenance convergence. This adds no product path or compatibility code.
@@ -45,7 +45,7 @@ regression, runtime, preload, schema, privilege, and corruption logs.
 | Python suite | 437 passed, 1 skipped |
 | Product convergence inventory | passed |
 | Unified lifecycle | 74/74 passed |
-| Convergent SAE lifecycle | 71/71 passed after the new snapshot gate |
+| Convergent SSR lifecycle | 71/71 passed after the new snapshot gate |
 | Transactional delta and 2PC | 21/21 passed |
 | Empty and UNLOGGED lifecycle | 7/7 passed |
 | Same-index reader/writer concurrency | passed |

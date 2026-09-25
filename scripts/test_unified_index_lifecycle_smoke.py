@@ -1994,7 +1994,7 @@ def run_temporary_relation_policy_audit(
     except psycopg.errors.FeatureNotSupported as error:
         sae_error = str(error)
         sae_rejected = (
-            'temporary evoke indexes do not support SAE' in sae_error
+            'temporary evoke indexes do not support SSR' in sae_error
         )
 
     with connection.cursor() as cursor:
@@ -6293,7 +6293,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
 
     return {
         'api_version': 'evoke_index_v1',
-        'route': 'unified relation-owned P2 SAE index lifecycle',
+        'route': 'unified relation-owned P2 SSR index lifecycle',
         'extension_binding': {
             'mode': (
                 'staged'

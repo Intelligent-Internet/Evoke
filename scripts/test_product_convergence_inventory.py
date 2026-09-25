@@ -6125,12 +6125,12 @@ def check_arch3_legacy_runtime_absent(errors: list[str]) -> None:
     )[0]
     if 'evoke_segment_pages_load_maintenance_manifest(' not in mapper_source:
         errors.append(
-            f'{AM_SOURCE_PATH.name}: the SAE lexical mapper must use the '
+            f'{AM_SOURCE_PATH.name}: the SSR lexical mapper must use the '
             'bounded published-manifest loader'
         )
     if 'evoke_segment_pages_load_sealed_manifest(' in mapper_source:
         errors.append(
-            f'{AM_SOURCE_PATH.name}: the SAE lexical mapper validates the '
+            f'{AM_SOURCE_PATH.name}: the SSR lexical mapper validates the '
             'full COW closure on the query hot path'
         )
     page_query_source = PAGE_QUERY_SOURCE_PATH.read_text(encoding='utf-8')
@@ -6694,16 +6694,16 @@ def check_product_docs(errors: list[str]) -> None:
     for relative in SAE_EVENTUAL_ONLY_DOCS:
         path = REPO_ROOT / relative
         if not path.is_file():
-            errors.append(f'{relative}: missing SAE contract documentation')
+            errors.append(f'{relative}: missing SSR contract documentation')
             continue
         text = path.read_text(encoding='utf-8')
         if re.search(r'\beventual[- ]only\b', text, re.IGNORECASE) is None:
             errors.append(
-                f'{relative}: does not state that SAE is eventual-only'
+                f'{relative}: does not state that SSR is eventual-only'
             )
         if UNSUPPORTED_SAE_INDEX_SQL_RE.search(text) is not None:
             errors.append(
-                f'{relative}: contains an SAE realtime/manual CREATE INDEX '
+                f'{relative}: contains an SSR realtime/manual CREATE INDEX '
                 'example'
             )
 

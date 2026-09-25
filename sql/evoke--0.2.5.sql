@@ -746,10 +746,10 @@ BEGIN
             (index_options->>'semantic_configuration_ready')::boolean,
             false
         ) THEN
-            RAISE EXCEPTION 'evoke SAE index % is not ready', index_name
+            RAISE EXCEPTION 'evoke SSR index % is not ready', index_name
                 USING DETAIL = COALESCE(
                     index_options->>'semantic_configuration_error',
-                    'default SAE model configuration is unavailable'
+                    'default SSR model configuration is unavailable'
                 ),
                 HINT =
                     'Install the bundled milestone checkout or set model_path '
@@ -781,8 +781,8 @@ BEGIN
             'filtered top-k currently requires sae=true'
             USING ERRCODE = 'feature_not_supported',
                 HINT =
-                    'Use an SAE-enabled unified index for predicate-defined '
-                    || 'ranking.';
+                    'Use an SSR-enabled unified index (sae=true) for '
+                    || 'predicate-defined ranking.';
     END IF;
 
     IF field_names IS NOT NULL THEN
@@ -1016,9 +1016,9 @@ $evoke_comment$
 Search an evoke index with one string-first API. Ordinary indexes use exact
 BM25 retrieval. Indexes created with sae=true use the model runtime and
 unified-posting route, whose detailed result is projected to evoke_result_hit.
-SAE normalization and weighting belong to the model manifest and scoring
-profile; BM25-only query overrides are rejected instead of ignored. SAE
-options never implicitly change an index type: sae=true is required.
+SSR normalization and weighting belong to the model manifest and scoring
+profile; BM25-only query overrides are rejected instead of ignored. Semantic
+mode never implicitly changes an index type: sae=true is required.
 $evoke_comment$;
 
 COMMENT ON FUNCTION evoke_query(
@@ -1028,7 +1028,7 @@ COMMENT ON FUNCTION evoke_query(
     int4
 ) IS
 $evoke_comment$
-Search an SAE-enabled unified index with structured predicate-defined top-k.
+Search an SSR-enabled unified index with structured predicate-defined top-k.
 Filters are ANDed by column and support eq, in, overlap, ilike, ilike_any, and
 range. An eligible same-root scope may rank a compatible published baseline;
 every returned row is rechecked under the current MVCC snapshot, while
@@ -1046,7 +1046,7 @@ COMMENT ON FUNCTION evoke_query(
     int4
 ) IS
 $evoke_comment$
-Apply structured predicate-defined top-k to an SAE-enabled field-aware index.
+Apply structured predicate-defined top-k to an SSR-enabled field-aware index.
 Field weights apply to the complete lexical and semantic field contribution;
 scope, ranked-prefix, or current SQL resolution defines the filtered candidate
 universe before top-k selection. Serving-scope results are current-row checked
@@ -1060,7 +1060,7 @@ COMMENT ON FUNCTION evoke_query(
     int4
 ) IS
 $evoke_comment$
-Search an SAE-enabled unified index while restricting the ranking competition
+Search an SSR-enabled unified index while restricting the ranking competition
 to the supplied heap TIDs. Membership is a hard boundary, but ranking still uses
 the selected exact or bounded-approximate index route; a stale accelerator may
 omit an allowed post-baseline row. Build the TID set in the same statement and
@@ -1077,7 +1077,7 @@ COMMENT ON FUNCTION evoke_query(
     int4
 ) IS
 $evoke_comment$
-Search selected fields in an SAE-enabled field-aware index while ranking only
+Search selected fields in an SSR-enabled field-aware index while ranking only
 the supplied heap TIDs. Field weights apply to the complete lexical and
 semantic contribution before predicate-defined subset top-k selection.
 $evoke_comment$;
@@ -1092,7 +1092,7 @@ COMMENT ON FUNCTION evoke_query(
 $evoke_comment$
 Search selected fields through the same evoke product API. For field-aware
 indexes each weight multiplies the complete field contribution after lexical
-BM25 and semantic SAE postings are accumulated. BM25-only and SAE-enabled
+BM25 and SSR semantic postings are accumulated. BM25-only and SSR-enabled
 indexes therefore share the same field selection and weighting semantics.
 $evoke_comment$;
 
@@ -1683,7 +1683,7 @@ AS 'MODULE_PATHNAME', 'evoke_runtime_service_status'
 LANGUAGE C VOLATILE PARALLEL UNSAFE;
 
 COMMENT ON FUNCTION evoke_runtime_service_status() IS
-'Inspect the shared evoke SAE runtime worker, model ownership, bounded FIFO request queue, and recovery counters.';
+'Inspect the shared evoke SSR runtime worker, model ownership, bounded FIFO request queue, and recovery counters.';
 
 CREATE FUNCTION evoke_runtime_service_query_atoms(
     model_path text,
@@ -2607,7 +2607,7 @@ END;
 $$;
 
 COMMENT ON FUNCTION evoke_index_runtime_plan_internal(text, jsonb) IS
-'Internal runtime plan derived directly from an SAE-enabled index checkout.';
+'Internal runtime plan derived directly from an SSR-enabled index checkout.';
 
 CREATE FUNCTION evoke_index_options_internal(
     index_name regclass
@@ -2726,10 +2726,10 @@ BEGIN
 
         IF effective_model_path IS NULL THEN
             semantic_configuration_error :=
-                'no bundled or configured SAE model checkout is available';
+                'no bundled or configured SSR model checkout is available';
         ELSIF index_owner_is_superuser IS DISTINCT FROM true THEN
             semantic_configuration_error :=
-                'SAE indexes using server-local models must be owned by '
+                'SSR indexes using server-local models must be owned by '
                 || 'a superuser';
         ELSE
             BEGIN
@@ -2963,7 +2963,7 @@ BEGIN
         RAISE EXCEPTION 'index % must use evoke access method', index_name;
     END IF;
     IF NOT COALESCE((options->>'sae_enabled')::boolean, false) THEN
-        RAISE EXCEPTION 'index % is not SAE-enabled', index_name;
+        RAISE EXCEPTION 'index % is not SSR-enabled', index_name;
     END IF;
     IF NULLIF(options->>'semantic_configuration_error', '') IS NOT NULL THEN
         RAISE EXCEPTION '%', options->>'semantic_configuration_error';
@@ -3399,7 +3399,7 @@ END;
 $$;
 
 COMMENT ON FUNCTION evoke_encode_document_batch_internal(regclass, text[]) IS
-'Internal bounded document batch encoder used by evoke build, REINDEX, lifecycle rebuild, and mutable SAE DML.';
+'Internal bounded document batch encoder used by evoke build, REINDEX, lifecycle rebuild, and mutable SSR DML.';
 
 CREATE FUNCTION evoke_index_semantic_query_native_internal(
     index_name regclass,
@@ -3989,7 +3989,7 @@ $$;
 COMMENT ON FUNCTION evoke_index_audit(regclass) IS
 $evoke_comment$
 Run the explicit relation-sized integrity audit for an evoke index. This walks
-the complete generation closure and, for SAE indexes, SHA-256 validates every
+the complete generation closure and, for SSR indexes, SHA-256 validates every
 model artifact. Use evoke_index_status for bounded readiness polling.
 $evoke_comment$;
 

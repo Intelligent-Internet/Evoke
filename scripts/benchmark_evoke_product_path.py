@@ -1198,7 +1198,7 @@ def setup_semantic(
     try:
         results['index_seconds'] = timed(
             cur,
-            'create unified SAE index',
+            'create unified SSR index',
             f"""
                 CREATE INDEX docs_body_semantic_idx
                 ON bench.docs

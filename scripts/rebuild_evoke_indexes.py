@@ -1606,13 +1606,13 @@ def main():
         '--runtime-precision',
         choices=('fp16', 'fp32'),
         default='fp16',
-        help='Runtime precision for rebuilt semantic SAE indexes.',
+        help='Runtime precision for rebuilt SSR indexes.',
     )
     parser.add_argument(
         '--semantic-impact-precision',
         choices=('f32', 'fp16', 'u8'),
         help=(
-            'Override stored semantic impact precision for rebuilt SAE '
+            'Override stored semantic impact precision for rebuilt SSR '
             'indexes; omit to preserve each index setting.'
         ),
     )
@@ -1620,7 +1620,7 @@ def main():
         '--semantic-alpha-mass',
         type=float,
         help=(
-            'Override retained semantic impact mass for rebuilt SAE '
+            'Override retained semantic impact mass for rebuilt SSR '
             'indexes; omit to preserve each index setting.'
         ),
     )

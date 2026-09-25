@@ -22,7 +22,7 @@ QUERY = 'obsidian hummingbird quantum relay exact sentinel'
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            'Validate empty and UNLOGGED evoke BM25/SAE index lifecycle.'
+            'Validate empty and UNLOGGED evoke BM25/SSR index lifecycle.'
         ),
     )
     parser.add_argument(

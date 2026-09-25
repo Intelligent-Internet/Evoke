@@ -287,7 +287,7 @@ evoke_am_get_policy_recommendation(
                 "WITH (consistency = 'eventual')";
             recommendation->recommended_consistency = "eventual";
             recommendation->reason =
-                "SAE always publishes lexical evidence first and completes "
+                "SSR always publishes lexical evidence first and completes "
                 "semantic postings through bounded page-native maintenance";
             recommendation->confidence = "high";
             recommendation->matches_current =
@@ -306,7 +306,7 @@ evoke_am_get_policy_recommendation(
                     profile
                 ),
                 errhint(
-                    "Use the \"balanced\" profile for SAE indexes."
+                    "Use the \"balanced\" profile for SSR indexes."
                 )
             )
         );
@@ -551,10 +551,10 @@ evoke_am_validate_policy_reloptions(
             (
                 errcode(ERRCODE_INVALID_PARAMETER_VALUE),
                 errmsg(
-                    "evoke SAE options require reloption \"sae=true\""
+                    "evoke SSR options require reloption \"sae=true\""
                 ),
                 errhint(
-                    "Remove the SAE options or explicitly set \"sae=true\"."
+                    "Remove the SSR options or explicitly set \"sae=true\"."
                 )
             )
         );
@@ -568,10 +568,10 @@ evoke_am_validate_policy_reloptions(
                 (
                     errcode(ERRCODE_INVALID_PARAMETER_VALUE),
                     errmsg(
-                        "evoke SAE indexes require consistency = 'eventual'"
+                        "evoke SSR indexes require consistency = 'eventual'"
                     ),
                     errdetail(
-                        "Foreground SAE writes publish lexical evidence "
+                        "Foreground SSR writes publish lexical evidence "
                         "without document inference; semantic completion is "
                         "owned by background maintenance."
                     ),
@@ -722,7 +722,7 @@ evoke_init_reloptions(void)
     add_bool_reloption(
         evoke_relopt_kind,
         "sae",
-        "Enable the model-backed unified BM25+SAE index contract",
+        "Enable the model-backed unified BM25+SSR index contract",
         false,
         AccessExclusiveLock
     );
@@ -757,7 +757,7 @@ evoke_init_reloptions(void)
     add_enum_reloption(
         evoke_relopt_kind,
         "runtime_precision",
-        "Model runtime precision for SAE index build and query encoding",
+        "Model runtime precision for SSR index build and query encoding",
         (relopt_enum_elt_def *) evoke_runtime_precision_members,
         EVOKE_AM_RUNTIME_PRECISION_FP16,
         NULL,
@@ -792,7 +792,7 @@ evoke_init_reloptions(void)
     add_string_reloption(
         evoke_relopt_kind,
         "model",
-        "Optional manifest model-id override for this SAE index",
+        "Optional manifest model-id override for this SSR index",
         NULL,
         NULL,
         AccessExclusiveLock
@@ -800,7 +800,7 @@ evoke_init_reloptions(void)
     add_string_reloption(
         evoke_relopt_kind,
         "model_path",
-        "Optional server-local SAE checkout override for this index",
+        "Optional server-local SSR checkout override for this index",
         NULL,
         NULL,
         AccessExclusiveLock
@@ -808,7 +808,7 @@ evoke_init_reloptions(void)
     add_string_reloption(
         evoke_relopt_kind,
         "atom_space",
-        "Optional manifest atom-space override for this SAE index",
+        "Optional manifest atom-space override for this SSR index",
         NULL,
         NULL,
         AccessExclusiveLock
@@ -816,7 +816,7 @@ evoke_init_reloptions(void)
     add_string_reloption(
         evoke_relopt_kind,
         "scoring_profile",
-        "Optional manifest scoring-profile override for this SAE index",
+        "Optional manifest scoring-profile override for this SSR index",
         NULL,
         NULL,
         AccessExclusiveLock
@@ -1061,14 +1061,14 @@ evoke_am_validate_relation_policy(Relation index_relation)
             (
                 errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
                 errmsg(
-                    "temporary evoke indexes do not support SAE"
+                    "temporary evoke indexes do not support SSR"
                 ),
                 errdetail(
                     "The shared model and generation runtime cannot own "
                     "another backend's temporary relation."
                 ),
                 errhint(
-                    "Use a permanent or unlogged relation for SAE indexes."
+                    "Use a permanent or unlogged relation for SSR indexes."
                 )
             )
         );

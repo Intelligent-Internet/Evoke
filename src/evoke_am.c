@@ -5175,7 +5175,7 @@ evoke_am_init_gucs(void)
         );
         DefineCustomStringVariable(
             "evoke.sae_model_path",
-            "Sets the deployment default SAE model checkout path.",
+            "Sets the deployment default SSR model checkout path.",
             "When set, indexes created with sae=true use this checkout when "
             "model_path is not specified. An empty value uses the bundled "
             "milestone checkout. The checkout manifest supplies the model "
@@ -5630,8 +5630,8 @@ evoke_am_init_gucs(void)
         );
         DefineCustomIntVariable(
             "evoke.sae_transaction_mutation_max_bytes",
-            "Sets the transaction-wide pending SAE mutation byte budget.",
-            "Pending document copies are bounded across all SAE indexes in "
+            "Sets the transaction-wide pending SSR mutation byte budget.",
+            "Pending document copies are bounded across all SSR indexes in "
             "one transaction. The largest active batch is serialized and "
             "flushed before a new mutation would cross this limit.",
             &evoke_transaction_mutation_max_bytes,
@@ -6003,7 +6003,7 @@ evoke_am_runtime_signature_for_contract(
         ereport(
             ERROR,
             (
-                errmsg("evoke SAE model checkout is not configured"),
+                errmsg("evoke SSR model checkout is not configured"),
                 errhint(
                     "Install the bundled milestone checkout, set model_path "
                     "on the index, or configure evoke.sae_model_path."
@@ -7655,7 +7655,7 @@ evoke_am_get_sae_lexical_mapper(Relation indexRelation)
 
     candidate_context = AllocSetContextCreate(
         TopMemoryContext,
-        "evoke SAE lexical mapper",
+        "evoke SSR lexical mapper",
         ALLOCSET_START_SMALL_SIZES
     );
     old_context = MemoryContextSwitchTo(candidate_context);
@@ -7736,7 +7736,7 @@ evoke_am_get_sae_lexical_mapper(Relation indexRelation)
         {
             ereport(
                 ERROR,
-                (errmsg("invalid evoke convergent SAE read root"))
+                (errmsg("invalid evoke convergent SSR read root"))
             );
         }
         /*
@@ -7760,7 +7760,7 @@ evoke_am_get_sae_lexical_mapper(Relation indexRelation)
         {
             ereport(
                 ERROR,
-                (errmsg("evoke SAE lexical mapper does not match the index"))
+                (errmsg("evoke SSR lexical mapper does not match the index"))
             );
         }
     }
@@ -7810,7 +7810,7 @@ evoke_am_semantic_builder_begin(
     }
     if (!evoke_am_source_type_is_textlike(build_state->source_type))
     {
-        ereport(ERROR, (errmsg("evoke SAE indexes require text-like columns")));
+        ereport(ERROR, (errmsg("evoke SSR indexes require text-like columns")));
     }
 
     builder = palloc0(sizeof(*builder));
@@ -10631,7 +10631,7 @@ evoke_am_append_convergent_l0_upsert(
             ERROR,
             (
                 errmsg(
-                    "convergent evoke SAE writes require eventual "
+                    "convergent evoke SSR writes require eventual "
                     "consistency"
                 ),
                 errhint(
@@ -19910,7 +19910,7 @@ evoke_am_get_cached_index(
 /*
  * Preserve the old small-index fallback only when postmaster shared runtime
  * is unavailable. Admission is charged to the existing per-backend workspace
- * budget using physical relation size. With shared runtime, BM25 and SAE both
+ * budget using physical relation size. With shared runtime, BM25 and SSR both
  * use the common resident-fold/page-native dispatcher.
  */
 static bool
@@ -20115,11 +20115,11 @@ evoke_am_require_semantic_index_superuser_owner(Relation indexRelation)
             (
                 errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
                 errmsg(
-                    "SAE indexes using server-local models must be owned "
+                    "SSR indexes using server-local models must be owned "
                     "by a superuser"
                 ),
                 errhint(
-                    "Create the SAE index as a superuser, then grant "
+                    "Create the SSR index as a superuser, then grant "
                     "ordinary roles access to the indexed table and search "
                     "functions."
                 )
@@ -21371,7 +21371,7 @@ evoke_am_semantic_failure_is_global(
         (sqlstate[0] == '5' && sqlstate[1] == '8') ||
         sqlstate[0] == 'F' ||
         sqlstate[0] == 'X' ||
-        strstr(message, "all evoke SAE runtime workers") != NULL ||
+        strstr(message, "all evoke SSR runtime workers") != NULL ||
         strstr(message, "runtime request was canceled") != NULL ||
         strstr(message, "liveness limit") != NULL ||
         strstr(message, "checkout changed") != NULL ||
@@ -24121,7 +24121,7 @@ evoke_aminsert(
                 ERROR,
                 (
                     errmsg(
-                        "convergent evoke SAE writes require eventual "
+                        "convergent evoke SSR writes require eventual "
                         "consistency"
                     )
                 )
@@ -41954,7 +41954,7 @@ evoke_maintain_index(PG_FUNCTION_ARGS)
 
     /*
      * Automatic policies share one incremental convergence state machine with
-     * the built-in worker. In particular, an eventual SAE completion must
+     * the built-in worker. In particular, an eventual SSR completion must
      * commit before a later transaction can compact it. Full heap re-encoding
      * is reserved for REINDEX and evoke_index_refresh().
      */
@@ -41978,7 +41978,7 @@ evoke_maintain_index(PG_FUNCTION_ARGS)
     heap_oid = evoke_am_owned_index_heap_oid(index_oid);
 
     /*
-     * Automatic BM25 and SAE writes publish only append-only transaction
+     * Automatic BM25 and SSR writes publish only append-only transaction
      * records. Replacement generations are relation-owned maintenance work
      * after commit. This probe avoids taking AccessExclusiveLock when that
      * maintenance path has no work.

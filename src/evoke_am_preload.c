@@ -1963,7 +1963,7 @@ evoke_am_preload_define_gucs(void)
         "reserves shared memory for runtime queues, exact-root markers, and "
         "optional HOT_FOLD and exact-root resident projections. Durable "
         "posting authority remains in relation pages. A positive value is "
-        "required for SAE indexes; BM25-only indexes remain page-native "
+        "required for SSR indexes; BM25-only indexes remain page-native "
         "when it is 0.",
         &evoke_shared_runtime_size_mb,
         0,

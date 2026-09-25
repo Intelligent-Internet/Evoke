@@ -807,24 +807,24 @@ def run_accelerator_build_cancellation_probe(
             build = executor.submit(build_index)
             if not proxy.partial_response_event.wait(timeout=30):
                 raise AssertionError(
-                    'SAE build did not receive a partial accelerator response'
+                    'SSR build did not receive a partial accelerator response'
                 )
             time.sleep(0.1)
             with control.cursor() as cursor:
                 cursor.execute('SELECT pg_cancel_backend(%s)', (victim_pid,))
                 if cursor.fetchone()[0] is not True:
-                    raise AssertionError('failed to cancel partial SAE build')
+                    raise AssertionError('failed to cancel partial SSR build')
             try:
                 build.result(timeout=30)
             except psycopg.errors.QueryCanceled:
                 pass
             except psycopg.Error as exc:
                 raise AssertionError(
-                    'SAE build cancellation replaced QueryCanceled with '
+                    'SSR build cancellation replaced QueryCanceled with '
                     f'{exc.sqlstate}: {exc}'
                 ) from exc
             else:
-                raise AssertionError('partial SAE build ignored cancellation')
+                raise AssertionError('partial SSR build ignored cancellation')
 
         with victim.cursor() as cursor:
             cursor.execute('SELECT 1')
@@ -1397,7 +1397,7 @@ def runtime_service_sql(
             OR options->>'runtime_precision' <> 'fp16'
             OR options->>'payload_owner' <> 'index_relation'
             OR options->>'lifecycle' <> 'postgresql_index' THEN
-            RAISE EXCEPTION 'unified SAE options mismatch: %', options;
+            RAISE EXCEPTION 'unified SSR options mismatch: %', options;
         END IF;
 
         EXECUTE format(
@@ -3381,7 +3381,7 @@ def run_semantic_product_contract_probe(
             automatic_details = cursor.fetchone()
             if automatic_details != ('eventual', 0, 0, 0, 0):
                 raise AssertionError(
-                    'SAE eventual details do not expose clean durable debt: '
+                    'SSR eventual details do not expose clean durable debt: '
                     f'{automatic_details}'
                 )
             cursor.execute('DROP INDEX valid_sae_automatic_idx')
@@ -3426,7 +3426,7 @@ def run_semantic_product_contract_probe(
                 or posting_bytes > primary_bytes
             ):
                 raise AssertionError(
-                    'SAE index_bytes does not bound the authoritative v3 '
+                    'SSR index_bytes does not bound the authoritative v3 '
                     f'working set: details={reported_bytes} '
                     f'primary={primary_bytes} '
                     f'posting={posting_bytes} '
@@ -3450,7 +3450,7 @@ def run_semantic_product_contract_probe(
                 'eventual',
             ):
                 raise AssertionError(
-                    f'illegal SAE balanced recommendation: {balanced}'
+                    f'illegal SSR balanced recommendation: {balanced}'
                 )
 
             cursor.execute(
@@ -3470,7 +3470,7 @@ def run_semantic_product_contract_probe(
                 'eventual',
             ):
                 raise AssertionError(
-                    f'illegal SAE query-first recommendation: {query_first}'
+                    f'illegal SSR query-first recommendation: {query_first}'
                 )
 
             expect_database_error(
@@ -3501,7 +3501,7 @@ def run_semantic_product_contract_probe(
                     ON semantic_policy_docs USING evoke (body)
                     WITH (sae = true, consistency = {consistency})
                     """,
-                    "SAE indexes require consistency = 'eventual'",
+                    "SSR indexes require consistency = 'eventual'",
                 )
             cursor.execute(
                 """
@@ -3515,7 +3515,7 @@ def run_semantic_product_contract_probe(
             )
             if int(cursor.fetchone()[0]) != 0:
                 raise AssertionError(
-                    'rejected SAE policy left an index relation'
+                    'rejected SSR policy left an index relation'
                 )
             cursor.execute('DROP TABLE semantic_policy_docs')
 
@@ -4361,7 +4361,7 @@ def run_semantic_generation_reuse_probe(
         after_initial_build = wait_runtime_idle()
         if after_initial_build - before_initial_build != 8:
             raise AssertionError(
-                'initial SAE build did not encode each source document once: '
+                'initial SSR build did not encode each source document once: '
                 f'before={before_initial_build}, '
                 f'after={after_initial_build}'
             )
@@ -4506,7 +4506,7 @@ def run_semantic_generation_reuse_probe(
                 after_insert = wait_runtime_idle()
                 if after_insert != before_insert:
                     raise AssertionError(
-                        'eventual SAE insert performed foreground inference: '
+                        'eventual SSR insert performed foreground inference: '
                         f'before={before_insert}, '
                         f'after={after_insert}'
                     )
@@ -4543,7 +4543,7 @@ def run_semantic_generation_reuse_probe(
                     or expected_doc_id not in pending_result_ids
                 ):
                     raise AssertionError(
-                        'pending SAE mutation did not expose one unified '
+                        'pending SSR mutation did not expose one unified '
                         f'delta: status={pending_status}, '
                         f'results={pending_result_ids}'
                     )
@@ -4653,7 +4653,7 @@ def run_semantic_generation_reuse_probe(
                 or 2 not in update_result_ids
             ):
                 raise AssertionError(
-                    'eventual SAE update did not expose one lexical pending '
+                    'eventual SSR update did not expose one lexical pending '
                     'record without foreground inference: '
                     f'before={before_update}, after={after_update}, '
                     f'status={pending_update_status}, '
@@ -4700,7 +4700,7 @@ def run_semantic_generation_reuse_probe(
             or int(updated_status['details']['delta_records']) != 0
         ):
             raise AssertionError(
-                'eventual SAE update did not complete exactly once before '
+                'eventual SSR update did not complete exactly once before '
                 'compaction: '
                 f'results={update_maintenance_results}, '
                 f'status={updated_status}, '
@@ -4715,7 +4715,7 @@ def run_semantic_generation_reuse_probe(
         after_delete = wait_runtime_idle()
         if after_delete != before_delete:
             raise AssertionError(
-                'SAE delete unexpectedly invoked document inference: '
+                'SSR delete unexpectedly invoked document inference: '
                 f'before={before_delete}, after={after_delete}'
             )
 
@@ -4749,7 +4749,7 @@ def run_semantic_generation_reuse_probe(
                 or 1 in deleted_result_ids
             ):
                 raise AssertionError(
-                    'SAE delete/vacuum did not expose the relation-owned '
+                    'SSR delete/vacuum did not expose the relation-owned '
                     f'tombstone delta: status={pending_delete_status}, '
                     f'results={deleted_result_ids}, '
                     f'encoded_before={before_delete}, '
@@ -4794,7 +4794,7 @@ def run_semantic_generation_reuse_probe(
             or final_pages > max(final_reachable_blocks * 3 + 16, 32)
         ):
             raise AssertionError(
-                'SAE delete/vacuum did not converge atomically: '
+                'SSR delete/vacuum did not converge atomically: '
                 f'results={delete_maintenance_summary}, '
                 f'status={final_status}, '
                 f'pages={final_pages}, '
@@ -4808,7 +4808,7 @@ def run_semantic_generation_reuse_probe(
         after_reindex = wait_runtime_idle()
         if after_reindex - before_reindex != 11:
             raise AssertionError(
-                'explicit SAE REINDEX did not globally re-encode the live '
+                'explicit SSR REINDEX did not globally re-encode the live '
                 f'corpus: before={before_reindex}, after={after_reindex}'
             )
 

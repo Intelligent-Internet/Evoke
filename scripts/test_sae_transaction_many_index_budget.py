@@ -33,7 +33,7 @@ DEFAULT_RSS_GROWTH_LIMIT_KIB = 96 * 1024
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            'Prove the transaction-wide SAE mutation budget across indexes.'
+            'Prove the transaction-wide SSR mutation budget across indexes.'
         ),
     )
     parser.add_argument(

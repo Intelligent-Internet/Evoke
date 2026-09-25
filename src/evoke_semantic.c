@@ -8266,9 +8266,9 @@ evoke_unified_require_shared_runtime(void)
         ereport(
             ERROR,
             (
-                errmsg("evoke SAE runtime service is not available"),
+                errmsg("evoke SSR runtime service is not available"),
                 errdetail(
-                    "SAE indexes require shared_preload_libraries='evoke' "
+                    "SSR indexes require shared_preload_libraries='evoke' "
                     "so the runtime worker pool owns model sessions."
                 ),
                 errhint(
@@ -8283,9 +8283,9 @@ evoke_unified_require_shared_runtime(void)
         ereport(
             ERROR,
             (
-                errmsg("evoke SAE shared arena is not available"),
+                errmsg("evoke SSR shared arena is not available"),
                 errdetail(
-                    "SAE indexes require a positive "
+                    "SSR indexes require a positive "
                     "evoke.shared_runtime_size so exact-root "
                     "residency and page-native preload state remain "
                     "postmaster-owned."
@@ -8458,7 +8458,7 @@ evoke_runtime_service_ready_worker_count(void)
                     i,
                     worker_pids[i],
                     worker_proc_numbers[i],
-                    "evoke SAE runtime worker exited while processing request",
+                    "evoke SSR runtime worker exited while processing request",
                     &interrupted_owner_proc_numbers[i]
                 );
             LWLockRelease(evoke_runtime_service_lock);
@@ -10135,7 +10135,7 @@ evoke_runtime_service_enqueue(
         ereport(
             ERROR,
             (
-                errmsg("evoke SAE runtime service is not available"),
+                errmsg("evoke SSR runtime service is not available"),
                 errdetail(
                     "Load evoke through shared_preload_libraries so the "
                     "shared runtime worker pool owns model sessions.")
@@ -10152,7 +10152,7 @@ evoke_runtime_service_enqueue(
             ereport(
                 ERROR,
                 (
-                    errmsg("no evoke SAE runtime worker is ready"),
+                    errmsg("no evoke SSR runtime worker is ready"),
                     errhint(
                         "Retry after a shared runtime worker has started "
                         "or restarted."
@@ -11292,7 +11292,7 @@ evoke_runtime_service_wait_async(EvokeRuntimeRequestHandle *handle)
                 ereport(
                     ERROR,
                     (
-                        errmsg("all evoke SAE runtime workers became unavailable"),
+                        errmsg("all evoke SSR runtime workers became unavailable"),
                         errhint(
                             "Retry after a shared runtime worker has "
                             "restarted."
@@ -11327,7 +11327,7 @@ evoke_runtime_service_wait_async(EvokeRuntimeRequestHandle *handle)
         ereport(
             ERROR,
             (
-                errmsg("evoke SAE runtime service failed"),
+                errmsg("evoke SSR runtime service failed"),
                 errdetail("%s", error_message)
             )
         );
@@ -12054,7 +12054,7 @@ evoke_runtime_worker_shmem_exit(int code, Datum arg)
             worker_id,
             MyProcPid,
             MyProcNumber,
-            "evoke SAE runtime worker exited while processing request",
+            "evoke SSR runtime worker exited while processing request",
             &interrupted_owner_proc_number
         );
     LWLockRelease(evoke_runtime_service_lock);
@@ -12121,7 +12121,7 @@ evoke_runtime_worker_main(Datum main_arg)
                 worker_id,
                 0,
                 INVALID_PROC_NUMBER,
-                "evoke SAE runtime worker restarted while processing request",
+                "evoke SSR runtime worker restarted while processing request",
                 &interrupted_owner_proc_number
             );
         worker = &evoke_runtime_service->workers[worker_id];

@@ -1775,7 +1775,7 @@ def main() -> None:
         bm25_to_sae_pending = wait_until_timed(
             summary,
             'bm25_to_sae_layout_mismatch',
-            'BM25-to-SAE mismatch replay',
+            'BM25-to-SSR mismatch replay',
             lambda: conversion_mismatch(
                 {
                     'matches': False,
@@ -1833,7 +1833,7 @@ def main() -> None:
         converted_semantic = wait_until_timed(
             summary,
             'bm25_to_sae_reindex',
-            'BM25-to-SAE reindex replay',
+            'BM25-to-SSR reindex replay',
             bm25_to_sae_replay,
             started_at=bm25_to_sae_reindex_started,
         )
@@ -1851,7 +1851,7 @@ def main() -> None:
         sae_to_bm25_pending = wait_until_timed(
             summary,
             'sae_to_bm25_layout_mismatch',
-            'SAE-to-BM25 mismatch replay',
+            'SSR-to-BM25 mismatch replay',
             lambda: conversion_mismatch(
                 {
                     'matches': False,
@@ -1912,7 +1912,7 @@ def main() -> None:
         converted_bm25 = wait_until_timed(
             summary,
             'sae_to_bm25_reindex',
-            'SAE-to-BM25 reindex replay',
+            'SSR-to-BM25 reindex replay',
             sae_to_bm25_replay,
             started_at=sae_to_bm25_reindex_started,
         )

@@ -21,7 +21,7 @@ MAINTENANCE_TIMEOUT_SECONDS = 60.0
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description='Run a medium native BM25+SAE lifecycle/perf smoke.',
+        description='Run a medium native BM25+SSR lifecycle/perf smoke.',
     )
     parser.add_argument(
         '--pg-bin',

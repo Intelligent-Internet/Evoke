@@ -148,10 +148,10 @@ def runtime_required_sql(model_path: Path) -> str:
             '{escaped_path}'
         );
         RAISE EXCEPTION
-            'SAE index build should require the shared runtime service';
+            'SSR index build should require the shared runtime service';
     EXCEPTION WHEN others THEN
         IF position(
-            'evoke SAE runtime service is not available'
+            'evoke SSR runtime service is not available'
             IN SQLERRM
         ) = 0 THEN
             RAISE EXCEPTION
@@ -165,7 +165,7 @@ def runtime_required_sql(model_path: Path) -> str:
     BEGIN
         IF to_regclass('docs_body_idx') IS NOT NULL THEN
             RAISE EXCEPTION
-                'failed SAE build left a partial index relation';
+                'failed SSR build left a partial index relation';
         END IF;
     END;
     $$;
@@ -210,10 +210,10 @@ def arena_required_sql(model_path: Path) -> str:
             '{escaped_path}'
         );
         RAISE EXCEPTION
-            'SAE index build should require the shared arena';
+            'SSR index build should require the shared arena';
     EXCEPTION WHEN others THEN
         IF position(
-            'evoke SAE shared arena is not available'
+            'evoke SSR shared arena is not available'
             IN SQLERRM
         ) = 0 THEN
             RAISE EXCEPTION
@@ -227,7 +227,7 @@ def arena_required_sql(model_path: Path) -> str:
     BEGIN
         IF to_regclass('docs_body_idx') IS NOT NULL THEN
             RAISE EXCEPTION
-                'failed SAE arena check left a partial index relation';
+                'failed SSR arena check left a partial index relation';
         END IF;
     END;
     $$;
@@ -302,7 +302,7 @@ def runtime_enabled_sql(model_path: Path) -> str:
             OR index_status#>>'{{generation,primary,role}}'
                 <> 'unified_posting' THEN
             RAISE EXCEPTION
-                'SAE v3 relation-page contract changed: %',
+                'SSR v3 relation-page contract changed: %',
                 index_status;
         END IF;
         IF (
@@ -333,7 +333,7 @@ def runtime_enabled_sql(model_path: Path) -> str:
         )::boolean IS DISTINCT FROM true
             OR (cache_state#>>'{{shared_preload,arena_size}}')::int8 <= 0 THEN
             RAISE EXCEPTION
-                'SAE shared arena is not active: %',
+                'SSR shared arena is not active: %',
                 cache_state;
         END IF;
     END;

@@ -1001,7 +1001,7 @@ def privilege_sql(model_path: Path) -> str:
             '{escaped_path}'
         );
         RAISE EXCEPTION
-            'ordinary-owned SAE index should not read server-local model';
+            'ordinary-owned SSR index should not read server-local model';
     EXCEPTION WHEN others THEN
         IF position(
             'must be owned by a superuser'
@@ -1018,7 +1018,7 @@ def privilege_sql(model_path: Path) -> str:
     BEGIN
         IF to_regclass('app_owned.docs_body_idx') IS NOT NULL THEN
             RAISE EXCEPTION
-                'failed ordinary-owned SAE build left a partial index';
+                'failed ordinary-owned SSR build left a partial index';
         END IF;
     END;
     $$;

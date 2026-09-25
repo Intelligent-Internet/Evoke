@@ -45,7 +45,7 @@ RECLAIM_RETIRED_BLOCK_THRESHOLD = 8192
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            'Validate convergent SAE lexical-first CRUD and worker '
+            'Validate convergent SSR lexical-first CRUD and worker '
             'completion in isolated PostgreSQL 18.'
         ),
     )
@@ -1430,7 +1430,7 @@ def maintain_until_converged(
             time.sleep(0.01)
 
     raise AssertionError(
-        'convergent SAE maintenance did not drain after '
+        'convergent SSR maintenance did not drain after '
         f'{max_rounds} rounds: {phases}'
     )
 
@@ -1884,7 +1884,7 @@ def assert_initial_status(status: dict[str, Any]) -> None:
         and completion['enabled'] is True
         and is_converged(status)
     ):
-        raise AssertionError(f'invalid initial SAE v3 status: {status}')
+        raise AssertionError(f'invalid initial SSR v3 status: {status}')
 
 
 def assert_pending_lexical_status(status: dict[str, Any]) -> None:
@@ -2025,13 +2025,13 @@ def run_owner_bm25_diagnostic_contract_audit(
                 or 'Use evoke_query' not in message
             ):
                 raise AssertionError(
-                    f'unexpected {case_name} SAE diagnostic error: '
+                    f'unexpected {case_name} SSR diagnostic error: '
                     f'{message}'
                 ) from error
             rejected[case_name] = message
         else:
             raise AssertionError(
-                f'{case_name} exact BM25 diagnostic accepted an SAE index'
+                f'{case_name} exact BM25 diagnostic accepted an SSR index'
             )
     return rejected
 
@@ -2078,16 +2078,16 @@ def run_consistency_contract_audit(
             message = str(error)
             if (
                 error.sqlstate != '22023'
-                or "SAE indexes require consistency = 'eventual'"
+                or "SSR indexes require consistency = 'eventual'"
                 not in message
             ):
                 raise AssertionError(
-                    f'unexpected SAE {consistency} error: {message}'
+                    f'unexpected SSR {consistency} error: {message}'
                 ) from error
             rejected[consistency] = message
         else:
             raise AssertionError(
-                f'SAE consistency={consistency} was not rejected'
+                f'SSR consistency={consistency} was not rejected'
             )
 
     statuses = {
@@ -2123,7 +2123,7 @@ def run_consistency_contract_audit(
     )
     if not passed:
         raise AssertionError(
-            'SAE/BM25 consistency contract mismatch: '
+            'SSR/BM25 consistency contract mismatch: '
             f'{consistency}, rejected={rejected}, '
             f'residue={rejected_index_count}'
         )
@@ -2202,7 +2202,7 @@ def run_multicolumn_sae_contract_audit(
         and status['query_ready'] is True
     ):
         raise AssertionError(
-            f'invalid multicolumn SAE status: {status}'
+            f'invalid multicolumn SSR status: {status}'
         )
 
     with connection.cursor() as cursor:
@@ -2272,7 +2272,7 @@ def run_multicolumn_sae_contract_audit(
             ]
     if not same_hits(field_hits, weighted_field_hits['equal']):
         raise AssertionError(
-            'default field-aware SAE scores differ from explicit equal '
+            'default field-aware SSR scores differ from explicit equal '
             f'weights: {field_hits} != {weighted_field_hits["equal"]}'
         )
     score_maps = {
@@ -2358,7 +2358,7 @@ def run_multicolumn_sae_contract_audit(
             abs_tol=1e-5,
         ):
             raise AssertionError(
-                'field-aware SAE score is not linearly field weighted: '
+                'field-aware SSR score is not linearly field weighted: '
                 f'doc={document_id} actual='
                 f'{score_maps["weighted"][document_id]} '
                 f'expected={expected_score}'
@@ -2644,7 +2644,7 @@ def run_multicolumn_sae_contract_audit(
         ]
     if not same_hits(field_hits, field_reindexed_hits):
         raise AssertionError(
-            'field-aware SAE REINDEX changed rows or scores: '
+            'field-aware SSR REINDEX changed rows or scores: '
             f'{field_hits} != {field_reindexed_hits}'
         )
     score_for_id(field_insert_hits, 3)
@@ -2656,7 +2656,7 @@ def run_multicolumn_sae_contract_audit(
         field_updated_reindexed_hits,
     ):
         raise AssertionError(
-            'field-aware SAE settled UPDATE and REINDEX diverged: '
+            'field-aware SSR settled UPDATE and REINDEX diverged: '
             f'{field_updated_settled_hits} != '
             f'{field_updated_reindexed_hits}; components '
             f'{field_updated_settled_components} != '
@@ -2664,7 +2664,7 @@ def run_multicolumn_sae_contract_audit(
         )
     if any(row_id == 3 for row_id, _score in field_deleted_hits):
         raise AssertionError(
-            'deleted field-aware SAE row remained query-visible'
+            'deleted field-aware SSR row remained query-visible'
         )
     if not (
         field_status['index_type'] == 'semantic'
@@ -2673,7 +2673,7 @@ def run_multicolumn_sae_contract_audit(
         and field_status['query_ready'] is True
     ):
         raise AssertionError(
-            f'invalid field-aware SAE status: {field_status}'
+            f'invalid field-aware SSR status: {field_status}'
         )
 
     with connection.cursor() as cursor:
@@ -3992,7 +3992,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         assert_initial_status(reindexed_status)
         if not same_hits(pre_reindex_hits, reindexed_hits):
             raise AssertionError(
-                'default SAE REINDEX changed rows or scores: '
+                'default SSR REINDEX changed rows or scores: '
                 f'{pre_reindex_hits} != {reindexed_hits}'
             )
         gates['default_sae_reindex_preserves_rows_and_scores'] = True
@@ -5307,7 +5307,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
 
     return {
         'api_version': 'evoke_index_v1',
-        'route': 'convergent SAE lexical-first lifecycle',
+        'route': 'convergent SSR lexical-first lifecycle',
         'model_path': str(model_path),
         'model_id': manifest['model_id'],
         'runtime_abi': manifest['runtime_abi'],

@@ -696,7 +696,7 @@ evoke_am_rebuild_memory_budget_choose(
      * serialized bytes live at overlapping points. Compact removes the
      * doc_terms/COO overlap. Spill moves term entries to PostgreSQL temp files
      * and streams publish, leaving final arrays as the main memory consumer.
-     * SAE builds return above: posting pairs and impact-head starts spill for
+     * SSR builds return above: posting pairs and impact-head starts spill for
      * every builder, so only document maps, work_mem, and bounded batch state
      * count toward backend memory admission.
      */

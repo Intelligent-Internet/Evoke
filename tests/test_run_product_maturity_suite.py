@@ -431,7 +431,7 @@ def test_maturity_suite_uses_only_current_catalog_stages(
         f'PG_CONFIG={args.pg_bin / "pg_config"}',
     ]
     assert 'independent page-native golden' in commands
-    assert 'convergent SAE lexical-first lifecycle smoke' in commands
+    assert 'convergent SSR lexical-first lifecycle smoke' in commands
     assert 'backend memory ownership smoke' in commands
     assert 'eventual semantic maintenance fairness smoke' in commands
     assert 'compact maintenance builder smoke' in commands
@@ -459,8 +459,8 @@ def test_maturity_suite_uses_only_current_catalog_stages(
         'isolated ONNX Runtime ABI smoke',
         'empty and UNLOGGED lifecycle smoke',
         'same-index writer concurrency smoke',
-        'SAE two-phase transaction lifecycle smoke',
-        'SAE page-native transaction memory and RSS smoke',
+        'SSR two-phase transaction lifecycle smoke',
+        'SSR page-native transaction memory and RSS smoke',
         'eventual semantic quarantine smoke',
         'cache publication and allocation failure-safety smoke',
         'runtime service required smoke',
