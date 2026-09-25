@@ -119,13 +119,18 @@ docker build \
 
 docker save "${image_tag}" | gzip -c >"${archive_path}"
 
-if command -v sha256sum >/dev/null 2>&1; then
-    sha256sum "$archive_path" >"$checksum_path"
-elif command -v shasum >/dev/null 2>&1; then
-    shasum -a 256 "$archive_path" >"$checksum_path"
-else
-    echo 'no sha256 checksum tool available' >&2
-    exit 1
-fi
+archive_basename="$(basename "$archive_path")"
+checksum_basename="$(basename "$checksum_path")"
+(
+    cd "$dist_dir"
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$archive_basename" >"$checksum_basename"
+    elif command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 "$archive_basename" >"$checksum_basename"
+    else
+        echo 'no sha256 checksum tool available' >&2
+        exit 1
+    fi
+)
 
 echo "$archive_path"
