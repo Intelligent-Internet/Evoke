@@ -109,7 +109,7 @@ mkdir -p "$dist_dir"
 
 docker build \
     --pull \
-    --build-context "ii42_milestone_model=${model_checkout}" \
+    --build-context "evoke_milestone_model=${model_checkout}" \
     --build-arg "II42_VERSION=${version}" \
     --build-arg "ONNXRUNTIME_VERSION=${onnxruntime_version}" \
     --build-arg "II42_GIT_COMMIT=${git_commit}" \

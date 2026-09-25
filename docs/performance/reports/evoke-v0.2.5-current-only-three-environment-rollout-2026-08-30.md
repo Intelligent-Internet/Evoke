@@ -31,10 +31,10 @@ predicates, `field_aware` choices, and preload priorities were preserved.
 Package paths:
 
 - Shadow:
-  `/data/ii42-builds/ii42-release-e836e0d8-v1/src/dist/ii42-v0.2.5-linux-x86_64-pg18.zip`
+  `/data/evoke-builds/evoke-release-e836e0d8-v1/src/dist/evoke-v0.2.5-linux-x86_64-pg18.zip`
 - Elm:
-  `/home/leask/ii42-builds/ii42-release-7d5a1e8f-v1/dist/ii42-v0.2.5-linux-x86_64-pg18.zip`
-- Mac: `dist/ii42-v0.2.5-darwin-arm64-pg18.zip`
+  `/home/leask/evoke-builds/evoke-release-7d5a1e8f-v1/dist/evoke-v0.2.5-linux-x86_64-pg18.zip`
+- Mac: `dist/evoke-v0.2.5-darwin-arm64-pg18.zip`
 
 All three targets report extension and catalog version 0.2.5. Installed
 libraries match their qualified package artifacts. No package-contract or model
@@ -123,7 +123,7 @@ user's retain-or-delete decision.
 - Commit `e836e0d8` was packaged from an exact source archive and deployed
   standby first, then primary. PostgreSQL was stopped before each
   shared-preload library replacement. Rollback copies are retained under
-  `/data/ii42-builds/ii42-release-e836e0d8-v1/rollback-predeploy` on both
+  `/data/evoke-builds/evoke-release-e836e0d8-v1/rollback-predeploy` on both
   nodes. Both nodes now
   report the package hashes above, extension 0.2.5,
   `enabled:api=29`, and `available:linked:version=1.29.0`. Existing indexes

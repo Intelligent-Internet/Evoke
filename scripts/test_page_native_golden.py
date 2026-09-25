@@ -439,7 +439,7 @@ def run_golden(args: argparse.Namespace) -> dict[str, Any]:
         raise FileNotFoundError(f'model manifest is missing: {model_path}')
 
     pg_bin = args.pg_bin.expanduser().resolve()
-    root = create_short_socket_root('ii42-v3-golden-')
+    root = create_short_socket_root('evoke-v3-golden-')
     data_dir = root / 'data'
     socket_dir = root / 's'
     log_path = root / 'postgres.log'

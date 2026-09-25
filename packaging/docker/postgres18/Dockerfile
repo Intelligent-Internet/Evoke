@@ -36,7 +36,7 @@ COPY packaging/MILESTONE-MODEL-NOTICE \
     ./packaging/MILESTONE-MODEL-NOTICE
 COPY scripts/validate_milestone_model_checkout.py \
     ./scripts/validate_milestone_model_checkout.py
-COPY --from=ii42_milestone_model . /tmp/evoke-milestone-model
+COPY --from=evoke_milestone_model . /tmp/evoke-milestone-model
 
 RUN make clean PG_CONFIG=/usr/bin/pg_config \
     && PKG_CONFIG_PATH=/usr/local/lib/pkgconfig \

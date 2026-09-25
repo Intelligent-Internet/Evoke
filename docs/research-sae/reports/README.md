@@ -14,8 +14,8 @@ lifecycle behavior is defined by the
 [Convergent Segmented Index](../../convergent-segmented-index.md).
 
 The bilingual model technical reports have been promoted out of this archive:
-[English](../../technical-report-ii42-model.md) and
-[Traditional Chinese](../../technical-report-ii42-model-zh.md). Historical evaluation
+[English](../../technical-report-evoke-model.md) and
+[Traditional Chinese](../../technical-report-evoke-model-zh.md). Historical evaluation
 reports stay below; detailed active follow-up is in
 [Model Planning](../../model-planning.md), subordinate to the product roadmap.
 

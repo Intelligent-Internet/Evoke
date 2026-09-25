@@ -265,7 +265,7 @@ The source snapshot was checked without changing any deployed host:
 The isolated smoke covered page-native exactness, CRUD and transaction
 visibility, L0 rotation, compaction, VACUUM, restart, retirement and page reuse,
 shared workload folds, bounded top-k, and contract drift. Its local output is
-`/tmp/ii42-csg-closure-segment-smoke.json` and reports
+`/tmp/evoke-csg-closure-segment-smoke.json` and reports
 `all_gates_passed=true`.
 
 ## Evidence Index
@@ -274,7 +274,7 @@ shared workload folds, bounded top-k, and contract drift. Its local output is
 - `docs/performance/reports/semantic-essential-term-maxscore-oracle-2026-08-25.md`
 - `docs/performance/data/raw/commons-query-readiness-2026-08-26/`
 - `docs/performance/data/raw/semantic-essential-maxscore-2026-08-25/`
-- `/data/ii42-builds/cq3e-full-ort129-bound-final-qualification-v3.json`
-- `/data/ii42-builds/releases/98bb9661/cq8-shadow-inventory-preflight.json`
-- `/home/leask/ii42-builds/ii42-release-98bb9661/cq8-elm-inventory-preflight.json`
-- `/Volumes/Betty/Tmp/ii42-cq8-macos-inventory-98bb9661.json`
+- `/data/evoke-builds/cq3e-full-ort129-bound-final-qualification-v3.json`
+- `/data/evoke-builds/releases/98bb9661/cq8-shadow-inventory-preflight.json`
+- `/home/leask/evoke-builds/evoke-release-98bb9661/cq8-elm-inventory-preflight.json`
+- `/Volumes/Betty/Tmp/evoke-cq8-macos-inventory-98bb9661.json`

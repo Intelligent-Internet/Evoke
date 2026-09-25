@@ -5,8 +5,8 @@ This page is the default performance entry point for `ii42`.
 ## Current Guides And Dated Evidence
 
 - [Testing and Validation](../testing-and-validation.md): current release gates and reproduction commands.
-- [Evoke System Technical Report (Beta 1)](../technical-report-ii42-system.md): current architecture and engineering evidence.
-- [Evoke Model Technical Report (Beta 1)](../technical-report-ii42-model.md): semantic relevance experiments and their scope.
+- [Evoke System Technical Report (Beta 1)](../technical-report-evoke-system.md): current architecture and engineering evidence.
+- [Evoke Model Technical Report (Beta 1)](../technical-report-evoke-model.md): semantic relevance experiments and their scope.
 - [Maintenance Policy Tuning](maintenance-policy-tuning.md): supported policy choices and current scheduling behavior.
 - [BM25 Page-Native Regression](reports/bm25-page-native-regression-2026-08-18.md): dated lexical regression evidence for the page-native transition.
 - [Mutable Maintenance Benchmarks](mutable-maintenance-benchmarks.md): historical lexical maintenance checkpoint.

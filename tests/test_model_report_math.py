@@ -6,8 +6,8 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 REPORTS = (
-    REPO_ROOT / 'docs/technical-report-ii42-model.md',
-    REPO_ROOT / 'docs/technical-report-ii42-model-zh.md',
+    REPO_ROOT / 'docs/technical-report-evoke-model.md',
+    REPO_ROOT / 'docs/technical-report-evoke-model-zh.md',
 )
 
 

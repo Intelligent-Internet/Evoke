@@ -6,8 +6,8 @@ metadata, and reproducibility metadata together without making historical
 experiments part of the product runtime.
 
 The first-release prerelease model reports now live with the product
-documentation: [English](../technical-report-ii42-model.md) and
-[Traditional Chinese](../technical-report-ii42-model-zh.md). Their frozen P2.1
+documentation: [English](../technical-report-evoke-model.md) and
+[Traditional Chinese](../technical-report-evoke-model-zh.md). Their frozen P2.1
 evaluation sources remain here; actionable follow-up lives in
 [Model Planning](../model-planning.md) under the product roadmap.
 

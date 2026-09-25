@@ -3286,7 +3286,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     pg_ctl = args.pg_bin / 'pg_ctl'
     system_libdir = pg_config_value(args.pg_bin, '--pkglibdir')
     system_sharedir = pg_config_value(args.pg_bin, '--sharedir')
-    root = create_short_socket_root('ii42-v3-sae-')
+    root = create_short_socket_root('evoke-v3-sae-')
     data_dir = root / 'data'
     socket_dir = root / 's'
     log_path = root / 'postgres.log'

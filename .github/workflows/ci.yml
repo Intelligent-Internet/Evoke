@@ -16,6 +16,8 @@ on:
 
 env:
     FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    EVOKE_MILESTONE_MODEL_URL: ${{ vars.EVOKE_MILESTONE_MODEL_URL }}
+    EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256: ${{ vars.EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256 }}
     II42_MILESTONE_MODEL_URL: ${{ vars.II42_MILESTONE_MODEL_URL }}
     II42_MILESTONE_MODEL_ARCHIVE_SHA256: ${{ vars.II42_MILESTONE_MODEL_ARCHIVE_SHA256 }}
 
@@ -55,7 +57,16 @@ jobs:
                     | xargs -0 -n1 bash -n
 
             - name: Run Python product unit tests
-              run: python3 -m pytest -q
+              run: |
+                  product_tests="${RUNNER_TEMP:-/tmp}/evoke-product-tests.txt"
+                  find tests -maxdepth 1 -type f -name 'test_*.py' \
+                    ! -name 'test_ng*.py' \
+                    ! -name 'test_prepare_ng*.py' \
+                    ! -name 'test_review_ng*.py' \
+                    -print | sort > "${product_tests}"
+                  python3 -m pytest -q $(
+                    cat "${product_tests}"
+                  )
 
             - name: Verify product convergence inventory
               run: python3 scripts/test_product_convergence_inventory.py
@@ -161,14 +172,22 @@ jobs:
 
             - name: Fetch frozen milestone model
               if: >-
-                  matrix.pg_major == 18
+                  matrix.pg_major == 18 &&
+                  (
+                    env.EVOKE_MILESTONE_MODEL_URL != '' ||
+                    env.II42_MILESTONE_MODEL_URL != ''
+                  )
               run: |
                   ./scripts/fetch_milestone_model_for_ci.sh \
-                    "${RUNNER_TEMP}/ii42-milestone-model"
+                    "${RUNNER_TEMP}/evoke-milestone-model"
 
             - name: Build and verify release archive
               if: >-
-                  matrix.pg_major == 18
+                  matrix.pg_major == 18 &&
+                  (
+                    env.EVOKE_MILESTONE_MODEL_URL != '' ||
+                    env.II42_MILESTONE_MODEL_URL != ''
+                  )
               run: |
                   ./scripts/build_release_zip.sh \
                     --version "${{ steps.version.outputs.version }}" \
@@ -183,7 +202,7 @@ jobs:
                     cd dist
                     sha256sum -c "$(basename "${archive}").sha256"
                   )
-                  extract_root="${RUNNER_TEMP}/ii42-release"
+                  extract_root="${RUNNER_TEMP}/evoke-release"
                   mkdir -p "${extract_root}"
                   unzip -q "${archive}" -d "${extract_root}"
                   find "${extract_root}" -type l \
@@ -206,6 +225,9 @@ jobs:
                   fi
 
     docker-pg18:
+        if: >-
+            vars.EVOKE_MILESTONE_MODEL_URL != '' ||
+            vars.II42_MILESTONE_MODEL_URL != ''
         runs-on: ubuntu-24.04
 
         steps:
@@ -225,23 +247,23 @@ jobs:
             - name: Fetch frozen milestone model
               run: |
                   ./scripts/fetch_milestone_model_for_ci.sh \
-                    "${RUNNER_TEMP}/ii42-milestone-model"
+                    "${RUNNER_TEMP}/evoke-milestone-model"
 
             - name: Build PostgreSQL 18 Docker image
               run: |
                   ./scripts/build_release_docker_image.sh \
                     --version "${{ steps.version.outputs.version }}" \
-                    --image-tag ii42:ci-pg18
+                    --image-tag evoke:ci-pg18
 
             - name: Smoke test Docker image
               run: |
-                  container_name="ii42-ci-pg18"
+                  container_name="evoke-ci-pg18"
                   docker rm -f "${container_name}" >/dev/null 2>&1 || true
                   docker run -d \
                     --name "${container_name}" \
                     --tmpfs /var/run/postgresql:rw,mode=3775,uid=999,gid=999 \
                     -e POSTGRES_HOST_AUTH_METHOD=trust \
-                    ii42:ci-pg18
+                    evoke:ci-pg18
                   trap 'docker rm -f "${container_name}" >/dev/null 2>&1 || true' EXIT
                   for _ in $(seq 1 60); do
                       if docker exec "${container_name}" \

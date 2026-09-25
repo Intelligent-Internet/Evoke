@@ -6,13 +6,13 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 REPORT_HEADINGS = {
-    'docs/technical-report-ii42-model.md':
+    'docs/technical-report-evoke-model.md':
         '# Evoke Model Technical Report (Beta 1)',
-    'docs/technical-report-ii42-model-zh.md':
+    'docs/technical-report-evoke-model-zh.md':
         '# Evoke 模型技術報告 (Beta 1)',
-    'docs/technical-report-ii42-system.md':
+    'docs/technical-report-evoke-system.md':
         '## System Technical Report (Beta 1)',
-    'docs/technical-report-ii42-system-zh.md':
+    'docs/technical-report-evoke-system-zh.md':
         '## 系統技術報告 (Beta 1)',
 }
 

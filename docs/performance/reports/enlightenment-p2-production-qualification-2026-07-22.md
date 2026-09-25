@@ -67,8 +67,8 @@ is not an external BM25 plus ANN fusion path.
 | Extension | `ii42` 0.2.0 in schema `ii42_ext` |
 | Preloads | `vchord,psql_bm25s,pg_prewarm,ii42` |
 | Runtime provider | ONNX Runtime CPU |
-| P2 model | `ii42_p2_m1934_b1125_nfcorpus_full_b2` |
-| Baseline package | `ii42-v0.1.2-linux-x86_64-pg18.zip` |
+| P2 model | `evoke_p2_m1934_b1125_nfcorpus_full_b2` |
+| Baseline package | `evoke-v0.1.2-linux-x86_64-pg18.zip` |
 | Baseline package SHA-256 | `47eb3219e0eb4583768d184043379fec25ceb11012193e649dd6b8db6ff86762` |
 | P2.2 final package | `0.2.0-20260723-p22-final-v3` |
 | Final package ZIP SHA-256 | `39373a3c8920a64656322f5fee56ab1a786da7d337e45d16c39d4dc52b4c478e` |

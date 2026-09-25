@@ -76,7 +76,7 @@ def test_build_entrypoints_link_public_model_and_canonical_instructions() -> Non
             '#download-the-default-model'
         ) in doc
     for name in (
-        'docs/technical-report-ii42-model.md',
-        'docs/technical-report-ii42-model-zh.md',
+        'docs/technical-report-evoke-model.md',
+        'docs/technical-report-evoke-model-zh.md',
     ):
         assert HUB_URL in (REPO_ROOT / name).read_text()

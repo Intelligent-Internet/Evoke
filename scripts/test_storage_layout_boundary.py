@@ -459,7 +459,7 @@ def main() -> int:
     )
 
     work_root = Path(tempfile.mkdtemp(
-        prefix='ii42-v3-storage-boundary-',
+        prefix='evoke-v3-storage-boundary-',
         dir='/tmp',
     ))
     pgdata = work_root / 'pgdata'

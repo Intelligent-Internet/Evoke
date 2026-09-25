@@ -4,7 +4,7 @@
 
 **Edition:** 2026-09-03. **Implementation baseline:** `9a658b63`, extension `0.2.5`, page-native v3, packaged P2.2 model.
 
-[繁體中文版](technical-report-ii42-system-zh.md)
+[繁體中文版](technical-report-evoke-system-zh.md)
 
 ### Abstract
 
@@ -18,7 +18,7 @@ This report presents the architecture, scoring model, storage protocol, executio
 
 ## 1. Scope, Lineage, and Contributions
 
-The original [lexical technical report](technical-report-psql_bm25s.md) records the BM25 foundation and earlier mutable-index engineering. The separate [model technical report](technical-report-ii42-model.md) documents model compilation, calibration, and detailed quality results. This new report connects those subjects to the current Evoke system; it replaces neither document.
+The original [lexical technical report](technical-report-psql_bm25s.md) records the BM25 foundation and earlier mutable-index engineering. The separate [model technical report](technical-report-evoke-model.md) documents model compilation, calibration, and detailed quality results. This new report connects those subjects to the current Evoke system; it replaces neither document.
 
 The BM25 foundation draws on eager sparse scoring: repeated query-time work can be reduced by preparing term contributions and using sparse accumulation. [BM25S](https://arxiv.org/abs/2407.03618) develops this approach for Python sparse matrices. A transactional PostgreSQL engine faces additional requirements: corpus statistics change, tuple versions disappear, writes race with readers, and an index must survive crash recovery. Evoke therefore treats precomputation as a reusable representation of evidence, not as a permanently frozen corpus matrix.
 
@@ -219,7 +219,7 @@ The frozen P2.1 experiment separates representation learning from lightweight re
 
 Support membership remains fixed at query top-50 and document top-192 before the publication policy. The historical b1.125 policy allocates semantic postings relative to lexical posting count; it is not the current per-field alpha-mass option. Query-local RMS calibration then aligns lexical and semantic activation scales without inference-time qrels. This provides a small, inspectable adaptation surface instead of introducing another large model into the serving stack.
 
-The upstream foundation uses both public and non-public training material. Reproducibility here covers the fixed checkpoint and the downstream compiler/evaluation pipeline. Current P2.2 identity and historical P2.1 measurements remain separate; full training objectives, selection caveats, and artifact references are in the [model report](technical-report-ii42-model.md).
+The upstream foundation uses both public and non-public training material. Reproducibility here covers the fixed checkpoint and the downstream compiler/evaluation pipeline. Current P2.2 identity and historical P2.1 measurements remain separate; full training objectives, selection caveats, and artifact references are in the [model report](technical-report-evoke-model.md).
 
 ## 5. Physical Index and Copy-on-Write
 
@@ -484,7 +484,7 @@ G_R=\frac{R_{P2.1}-R_{BM25}}{R_{dense}-R_{BM25}}.
 
 The main milestone is semantic candidate coverage close to the dense reference within one sparse posting index, with higher reported candidate upper bounds on these macro aggregates. Improving early ranking remains a clear direction: NDCG@10 is below the dense reference even where Recall@100 is close.
 
-These results use the historical P2.1 support, calibration, publication budget, and text limits. They are not a P2.2 full-text/U8/alpha-0.50 benchmark. Thirteen BEIR dense rows were reused from earlier VectorChord results and two were freshly collected; dense query-encoder latency is not included as a comparable end-to-end cost. Some calibration/policy selection used BEIR evidence, so this is not an entirely untouched zero-shot evaluation. The [model report](technical-report-ii42-model.md) supplies per-dataset values, methodology, and artifact links.
+These results use the historical P2.1 support, calibration, publication budget, and text limits. They are not a P2.2 full-text/U8/alpha-0.50 benchmark. Thirteen BEIR dense rows were reused from earlier VectorChord results and two were freshly collected; dense query-encoder latency is not included as a comparable end-to-end cost. Some calibration/policy selection used BEIR evidence, so this is not an entirely untouched zero-shot evaluation. The [model report](technical-report-evoke-model.md) supplies per-dataset values, methodology, and artifact links.
 
 ### 9.4 Derived-Executor Evidence and Rejected Shortcuts
 
@@ -554,10 +554,10 @@ For code-oriented review, start with the following map:
 
 | Area | Primary references |
 | --- | --- |
-| Lineage and model results | [Lexical report](technical-report-psql_bm25s.md), [model report](technical-report-ii42-model.md) |
+| Lineage and model results | [Lexical report](technical-report-psql_bm25s.md), [model report](technical-report-evoke-model.md) |
 | Index layout and COW | [Storage design](convergent-segmented-index.md), [term COW header](../src/ii42_term_cow.h), [segment pages](../src/ii42_segment_pages.c) |
 | Query and filters | [Query contract](query-semantics.md), [page query](../src/ii42_page_query.c), [scope](../src/ii42_scope.c), [filter](../src/ii42_filter.c) |
-| Model execution | [P2 runtime](../src/ii42_p2_runtime.c), [runtime contract](shared-runtime-and-residency.md), [model lock](../packaging/milestone-model.json) |
+| Model execution | P2 runtime implementation, [runtime contract](shared-runtime-and-residency.md), [model lock](../packaging/milestone-model.json) |
 | Acceleration | [Builder](../src/ii42_am_accelerator.c), [directory](../src/ii42_semantic_accelerator_directory.c), [forward format](../src/ii42_semantic_forward.c), [execution evidence](performance/reports/semantic-accelerator-bounded-execution.md) |
 | Concurrency and qualification | [Lifecycle](maintenance-lifecycle.md), [scheduler](../src/ii42_am_scheduler.c), [validation](testing-and-validation.md) |
 

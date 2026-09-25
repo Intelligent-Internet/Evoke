@@ -372,7 +372,7 @@ $$
 
 The scorer's normalization and model/precision contract determine those
 weights; this is not BM25 plus an independently retrieved semantic top-k with
-late fusion. See the [model report](technical-report-ii42-model.md) for derivation.
+late fusion. See the [model report](technical-report-evoke-model.md) for derivation.
 "Exact" refers to the selected stored representation and visibility/statistics
 contract. It does not undo `u8` quantization or alpha-mass pruning.
 
@@ -737,8 +737,8 @@ The archived [query-first report](archive/engineering/query-first-eventual-backg
 preserves the early motivation for foreground/background separation. Its old
 worker mechanism and benchmark commands are historical, not installation
 guidance. System and model experiments are summarized independently in the
-[system report](technical-report-ii42-system.md) and
-[model report](technical-report-ii42-model.md).
+[system report](technical-report-evoke-system.md) and
+[model report](technical-report-evoke-model.md).
 
 ### Current Verification Obligations
 

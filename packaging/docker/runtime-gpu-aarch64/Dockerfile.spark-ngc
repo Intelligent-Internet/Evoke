@@ -15,7 +15,7 @@ RUN set -eux; \
         pkg-config; \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=ii42_onnxruntime_pkg . /tmp/ort_pkg/
+COPY --from=evoke_onnxruntime_pkg . /tmp/ort_pkg/
 COPY packaging/onnxruntime.version /tmp/ii42-onnxruntime.version
 RUN set -eux; \
     expected_version="$(tr -d '[:space:]' \
@@ -51,16 +51,16 @@ WORKDIR /src
 COPY Makefile CMakeLists.txt ii42.control LICENSE README.md ./
 COPY src ./src
 COPY packaging ./packaging
-COPY --from=ii42_milestone_model . /usr/local/share/ii42/models/default/
+COPY --from=evoke_milestone_model . /usr/local/share/ii42/models/default/
 
 RUN PKG_CONFIG_PATH=/usr/local/lib/pkgconfig \
         make runtime-server PG_CONFIG=/no/such/pg_config \
     && install -D -m 0755 build/ii42-runtime-server \
         /usr/local/bin/ii42-runtime-server \
     && install -D -m 0755 \
-        packaging/docker/runtime-gpu-aarch64/ii42-gpu-runtime-entrypoint \
-        /usr/local/bin/ii42-gpu-runtime-entrypoint \
+        packaging/docker/runtime-gpu-aarch64/evoke-gpu-runtime-entrypoint \
+        /usr/local/bin/evoke-gpu-runtime-entrypoint \
     && rm -rf /src/build
 
 EXPOSE 8042
-ENTRYPOINT ["/usr/local/bin/ii42-gpu-runtime-entrypoint"]
+ENTRYPOINT ["/usr/local/bin/evoke-gpu-runtime-entrypoint"]

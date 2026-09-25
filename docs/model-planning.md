@@ -6,8 +6,8 @@ Status: active model follow-up plan subordinate to the
 Updated: 2026-09-20
 
 This document owns the detailed follow-up work removed from the Beta 1 model
-technical reports ([English](technical-report-ii42-model.md),
-[Traditional Chinese](technical-report-ii42-model-zh.md)). The reports retain model
+technical reports ([English](technical-report-evoke-model.md),
+[Traditional Chinese](technical-report-evoke-model-zh.md)). The reports retain model
 design, frozen evaluation results, limitations, and broad future directions.
 This plan is neither a list of shipped improvements nor a new model release
 contract. It does not authorize a model replacement, index rebuild, deployment,

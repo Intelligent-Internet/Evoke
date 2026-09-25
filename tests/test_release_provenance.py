@@ -67,7 +67,7 @@ def test_release_builders_require_locked_milestone_model() -> None:
         assert 'II42_MILESTONE_MODEL_CHECKOUT' in script
         assert 'validate_milestone_model_checkout.py' in script
     assert 'ii42/models/default' in zip_script
-    assert 'ii42_milestone_model' in docker_script
+    assert 'evoke_milestone_model' in docker_script
     assert 'ii42/models/default' in dockerfile
 
 

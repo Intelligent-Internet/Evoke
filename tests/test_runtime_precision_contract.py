@@ -881,7 +881,7 @@ def test_onnxruntime_telemetry_is_disabled_before_initialization() -> None:
     server_cc = read_text('src/ii42_runtime_server.cc')
     entrypoint = read_text(
         'packaging/docker/runtime-gpu-aarch64/'
-        'ii42-gpu-runtime-entrypoint'
+        'evoke-gpu-runtime-entrypoint'
     )
 
     api_start = semantic_c.index('ii42_ort_api(void)')

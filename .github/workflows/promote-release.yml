@@ -54,12 +54,12 @@ jobs:
                   jq -e --arg tag "${TAG_NAME}" '
                     (.draft == false) and (.tag_name == $tag) and
                     ([.assets[].name] | sort) == ([
-                      "ii42-\($tag)-linux-x86_64-pg17.zip",
-                      "ii42-\($tag)-linux-x86_64-pg17.zip.sha256",
-                      "ii42-\($tag)-linux-x86_64-pg18.zip",
-                      "ii42-\($tag)-linux-x86_64-pg18.zip.sha256",
-                      "ii42-\($tag)-docker-pg18-linux-x86_64.tar.gz",
-                      "ii42-\($tag)-docker-pg18-linux-x86_64.tar.gz.sha256"
+                      "evoke-\($tag)-linux-x86_64-pg17.zip",
+                      "evoke-\($tag)-linux-x86_64-pg17.zip.sha256",
+                      "evoke-\($tag)-linux-x86_64-pg18.zip",
+                      "evoke-\($tag)-linux-x86_64-pg18.zip.sha256",
+                      "evoke-\($tag)-docker-pg18-linux-x86_64.tar.gz",
+                      "evoke-\($tag)-docker-pg18-linux-x86_64.tar.gz.sha256"
                     ] | sort) and
                     all(.assets[]; .state == "uploaded" and .size > 0 and
                       (.digest | test("^sha256:[0-9a-f]{64}$")))

@@ -275,7 +275,7 @@ def main() -> int:
         )
     vocabulary_fingerprint = sha256_file(args.lexical_vocabulary)
     dataset_key = safe_name(args.dataset)
-    model_id = args.model_id or f'ii42_p2_m1934_b1125_{dataset_key}'
+    model_id = args.model_id or f'evoke_p2_m1934_b1125_{dataset_key}'
     atom_space = args.atom_space or (
         f'p2_m1934_b1125_{dataset_key}_{vocabulary_fingerprint[:12]}'
     )

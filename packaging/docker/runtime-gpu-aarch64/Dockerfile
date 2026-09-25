@@ -13,7 +13,7 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=ii42_gpu_rootfs . /
-COPY --from=ii42_onnxruntime_headers include/ /usr/local/include/
+COPY --from=evoke_onnxruntime_headers include/ /usr/local/include/
 
 WORKDIR /src
 
@@ -39,14 +39,14 @@ RUN set -eux; \
 COPY --from=ii42_gpu_rootfs . /
 COPY --from=build /src/build/ii42-runtime-server \
     /usr/local/bin/ii42-runtime-server
-COPY --from=ii42_milestone_model . \
+COPY --from=evoke_milestone_model . \
     /usr/local/share/ii42/models/default/
-COPY packaging/docker/runtime-gpu-aarch64/ii42-gpu-runtime-entrypoint \
-    /usr/local/bin/ii42-gpu-runtime-entrypoint
+COPY packaging/docker/runtime-gpu-aarch64/evoke-gpu-runtime-entrypoint \
+    /usr/local/bin/evoke-gpu-runtime-entrypoint
 
 RUN set -eux; \
     chmod 0755 /usr/local/bin/ii42-runtime-server; \
-    chmod 0755 /usr/local/bin/ii42-gpu-runtime-entrypoint; \
+    chmod 0755 /usr/local/bin/evoke-gpu-runtime-entrypoint; \
     printf '%s\n' \
         /usr/local/lib \
         /usr/local/cuda/targets/sbsa-linux/lib \
@@ -57,4 +57,4 @@ ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/cuda/targets/sbsa-linux/lib:/usr/l
 
 EXPOSE 8042
 
-ENTRYPOINT ["/usr/local/bin/ii42-gpu-runtime-entrypoint"]
+ENTRYPOINT ["/usr/local/bin/evoke-gpu-runtime-entrypoint"]

@@ -128,8 +128,8 @@ encoding. Its lexical vocabulary and calibration are frozen from NFCorpus, so
 deployments may override it with their own qualified checkout. The Beta 1
 model report separates this current package contract from the frozen
 P2.1 BEIR15/MTEB10 single-index evidence and documents the known limitations:
-[English](docs/technical-report-ii42-model.md) and
-[Traditional Chinese](docs/technical-report-ii42-model-zh.md).
+[English](docs/technical-report-evoke-model.md) and
+[Traditional Chinese](docs/technical-report-evoke-model-zh.md).
 
 The frozen [Evoke Model (Beta 1)](https://huggingface.co/Intelligent-Internet/Evoke-Model-Beta-1)
 is publicly available on Hugging Face, including the ONNX artifacts, model
@@ -383,8 +383,8 @@ DROP INDEX docs_body_idx;
 
 - [Getting started](docs/getting-started.md)
 - [Documentation map](docs/README.md)
-- [System technical report](docs/technical-report-ii42-system.md)
-  ([繁體中文](docs/technical-report-ii42-system-zh.md))
+- [System technical report](docs/technical-report-evoke-system.md)
+  ([繁體中文](docs/technical-report-evoke-system-zh.md))
 - [Architecture](docs/architecture-and-design.md)
 - [Convergent segmented index](docs/convergent-segmented-index.md)
 - [API reference](docs/api-reference.md)

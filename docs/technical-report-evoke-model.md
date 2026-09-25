@@ -7,7 +7,7 @@
 - Evaluation form: Native single unified posting index
 - Comparisons: BM25 and PPLX dense (VectorChord)
 - Frozen evaluation version: P2.1 / b1.125
-- Language: English | [Traditional Chinese](technical-report-ii42-model-zh.md)
+- Language: English | [Traditional Chinese](technical-report-evoke-model-zh.md)
 
 ## Executive Summary
 
@@ -677,6 +677,6 @@ in the future directions above.
 - [M1931 query-local calibration](research-sae/reports/m1900-m1999/ii42-m1931-query-local-source-calibration-report.md)
 - [M1933 semantic budget frontier](research-sae/reports/m1900-m1999/ii42-m1933-semantic-budget-frontier-report.md)
 - [M1934 unseen transfer](research-sae/reports/m1900-m1999/ii42-m1934-fixed-budget-unseen-transfer-report.md)
-- BEIR15 JSON: `runs/ii42-p2-beir15-native-full-v1/ii42_p2_1_beir15_native_full_matrix.json`
-- MTEB10 JSON: `runs/ii42-p2-mteb10-native-v1/ii42_p2_1_mteb10_native_matrix.json`
+- BEIR15 JSON: `runs/evoke-p2-beir15-native-full-v1/evoke_p2_1_beir15_native_full_matrix.json`
+- MTEB10 JSON: `runs/evoke-p2-mteb10-native-v1/evoke_p2_1_mteb10_native_matrix.json`
 - ClearML M1914 task: `72d822802e104fa09a0e555c1a93533a`

@@ -4,7 +4,7 @@
 
 **版本日期：** 2026-09-03。**實作基線：** `9a658b63`、extension `0.2.5`、page-native v3、隨套件發布的 P2.2 模型。
 
-[English version](technical-report-ii42-system.md)
+[English version](technical-report-evoke-system.md)
 
 ### 摘要
 
@@ -18,7 +18,7 @@ Evoke 是 PostgreSQL 檢索引擎，在 `psql_bm25s` 的詞法檢索基礎上加
 
 ## 1. 範圍、沿革與主要貢獻
 
-原有的[詞法技術報告](technical-report-psql_bm25s.md)記錄 BM25 基礎與早期可變索引工程；獨立的[模型技術報告](technical-report-ii42-model-zh.md)說明模型編譯、校準與詳細品質結果。本報告將兩者連接到目前的 Evoke 系統，不覆蓋其中任何一份文件。
+原有的[詞法技術報告](technical-report-psql_bm25s.md)記錄 BM25 基礎與早期可變索引工程；獨立的[模型技術報告](technical-report-evoke-model-zh.md)說明模型編譯、校準與詳細品質結果。本報告將兩者連接到目前的 Evoke 系統，不覆蓋其中任何一份文件。
 
 BM25 基礎承接 eager sparse scoring 的思路：預先準備 term 貢獻值，再使用稀疏累加，減少重複的查詢時計算。[BM25S](https://arxiv.org/abs/2407.03618) 將此方法用於 Python 稀疏矩陣。交易型 PostgreSQL 引擎還必須處理語料統計變化、tuple 版本消失、讀寫競爭與崩潰恢復。因此，Evoke 將預計算視為可重用的證據表示，而不是永遠不再變動的整體語料矩陣。
 
@@ -219,7 +219,7 @@ P2.2 採用確定性的 ABI-v2 分窗，編譯完整 query 與 document 文字�
 
 發布策略之前，support membership 固定為 query top-50、document top-192。歷史 b1.125 策略按詞法 posting 數配置語意 posting，並非目前逐欄位 alpha-mass 選項。Query-local RMS 校準接著對齊詞法與語意 activation 尺度，推理時不需要 qrels。這提供了小而可檢查的適配面，而不是在服務架構中再加入一個大型模型。
 
-上游基礎模型使用公開與非公開訓練材料；此處的可重現性涵蓋固定 checkpoint 及其下游編譯／評估管線。當前 P2.2 身分與歷史 P2.1 量測保持分開；完整訓練目標、選擇過程的注意事項與 artifact 參照，見[模型報告](technical-report-ii42-model-zh.md)。
+上游基礎模型使用公開與非公開訓練材料；此處的可重現性涵蓋固定 checkpoint 及其下游編譯／評估管線。當前 P2.2 身分與歷史 P2.1 量測保持分開；完整訓練目標、選擇過程的注意事項與 artifact 參照，見[模型報告](technical-report-evoke-model-zh.md)。
 
 ## 5. 實體索引與 COW 實作
 
@@ -484,7 +484,7 @@ G_R=\frac{R_{P2.1}-R_{BM25}}{R_{dense}-R_{BM25}}.
 
 主要階段成果是在單一稀疏 posting 索引內取得接近 dense 參考的語意候選召回，並在這些 macro 統計上得到更高的候選上界。更好的前段排名是清楚的改進方向：即使 Recall@100 接近，NDCG@10 仍低於 dense 參考。
 
-這些結果使用歷史 P2.1 support、校準、發布 budget 與文字長度限制，不是 P2.2 全文／U8／alpha-0.50 基準。BEIR dense 的十三列沿用先前 VectorChord 結果，兩列重新收集；dense query encoder 延遲未作為可比的端到端成本包含在內。部分校準／策略選擇使用過 BEIR 證據，因此不能稱為完全未接觸評估集的 zero-shot 評估。[模型報告](technical-report-ii42-model-zh.md)提供逐資料集數字、方法與 artifact 連結。
+這些結果使用歷史 P2.1 support、校準、發布 budget 與文字長度限制，不是 P2.2 全文／U8／alpha-0.50 基準。BEIR dense 的十三列沿用先前 VectorChord 結果，兩列重新收集；dense query encoder 延遲未作為可比的端到端成本包含在內。部分校準／策略選擇使用過 BEIR 證據，因此不能稱為完全未接觸評估集的 zero-shot 評估。[模型報告](technical-report-evoke-model-zh.md)提供逐資料集數字、方法與 artifact 連結。
 
 ### 9.4 衍生執行器成果與被否決的捷徑
 
@@ -554,10 +554,10 @@ Evoke 的工程主張是：詞法與學習式稀疏檢索不只可以共用分�
 
 | 領域 | 主要參考 |
 | --- | --- |
-| 沿革與模型成果 | [詞法報告](technical-report-psql_bm25s.md)、[模型報告](technical-report-ii42-model-zh.md) |
+| 沿革與模型成果 | [詞法報告](technical-report-psql_bm25s.md)、[模型報告](technical-report-evoke-model-zh.md) |
 | 索引版面與 COW | [儲存設計](convergent-segmented-index.md)、[term COW header](../src/ii42_term_cow.h)、[segment pages](../src/ii42_segment_pages.c) |
 | 查詢與 filter | [查詢契約](query-semantics.md)、[page query](../src/ii42_page_query.c)、[scope](../src/ii42_scope.c)、[filter](../src/ii42_filter.c) |
-| 模型執行 | [P2 runtime](../src/ii42_p2_runtime.c)、[runtime 契約](shared-runtime-and-residency.md)、[模型 lock](../packaging/milestone-model.json) |
+| 模型執行 | P2 runtime 實作、[runtime 契約](shared-runtime-and-residency.md)、[模型 lock](../packaging/milestone-model.json) |
 | 加速器 | [Builder](../src/ii42_am_accelerator.c)、[directory](../src/ii42_semantic_accelerator_directory.c)、[forward format](../src/ii42_semantic_forward.c)、[執行證據](performance/reports/semantic-accelerator-bounded-execution.md) |
 | 並發與准入 | [Lifecycle](maintenance-lifecycle.md)、[scheduler](../src/ii42_am_scheduler.c)、[validation](testing-and-validation.md) |
 

@@ -131,7 +131,7 @@ corpora.
 
 The canonical quality and product reports are:
 
-- [Model technical report, including frozen P2.1 evidence](../../../technical-report-ii42-model-zh.md);
+- [Model technical report, including frozen P2.1 evidence](../../../technical-report-evoke-model-zh.md);
 - [P2.1 BEIR15 native full matrix](../m1900-m1999/ii42-p2.1-beir15-native-full-matrix-report.md);
 - [P2.1 MTEB10 native matrix](../m1900-m1999/ii42-p2.1-mteb10-native-matrix-report.md);
 - [P2.1 end-to-end product health audit](../m1900-m1999/ii42-p2.1-end-to-end-product-health-audit-report.md);

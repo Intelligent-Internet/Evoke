@@ -27,7 +27,7 @@ complete replacement profile or an application-level tuning configuration:
 The manifest names the profile and declares the artifact path and SHA-256. The
 index validates the manifest, artifact, atom namespace, and profile as one
 checkout contract. See the model technical report for
-[the complete scoring design](../technical-report-ii42-model.md).
+[the complete scoring design](../technical-report-evoke-model.md).
 The full artifact also records calibration provenance and encoder settings.
 Its `candidate_k` records the evaluation configuration, not the SQL API's
 default result limit. Encoder `max_length` is a window limit; P2.2 document

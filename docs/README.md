@@ -34,11 +34,11 @@ postings without creating a second index or mutation lifecycle.
 
 ## Understand
 
-- [System technical report](technical-report-ii42-system.md)
-  ([Traditional Chinese](technical-report-ii42-system-zh.md)): overall Beta 1
+- [System technical report](technical-report-evoke-system.md)
+  ([Traditional Chinese](technical-report-evoke-system-zh.md)): overall Beta 1
   design, COW storage, model integration, accelerators, lifecycle, and evidence.
-- [Model technical report](technical-report-ii42-model.md)
-  ([Traditional Chinese](technical-report-ii42-model-zh.md)): Beta 1 model design,
+- [Model technical report](technical-report-evoke-model.md)
+  ([Traditional Chinese](technical-report-evoke-model-zh.md)): Beta 1 model design,
   current package identity, frozen evaluation evidence, and limits.
 - [Architecture](architecture-and-design.md): product boundaries, storage,
   query, mutation, maintenance, and process ownership.

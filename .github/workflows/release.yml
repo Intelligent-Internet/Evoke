@@ -14,6 +14,8 @@ on:
 
 env:
     FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    EVOKE_MILESTONE_MODEL_URL: ${{ vars.EVOKE_MILESTONE_MODEL_URL }}
+    EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256: ${{ vars.EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256 }}
     II42_MILESTONE_MODEL_URL: ${{ vars.II42_MILESTONE_MODEL_URL }}
     II42_MILESTONE_MODEL_ARCHIVE_SHA256: ${{ vars.II42_MILESTONE_MODEL_ARCHIVE_SHA256 }}
 
@@ -82,7 +84,7 @@ jobs:
             - name: Fetch frozen milestone model
               run: |
                   ./scripts/fetch_milestone_model_for_ci.sh \
-                    "${RUNNER_TEMP}/ii42-milestone-model"
+                    "${RUNNER_TEMP}/evoke-milestone-model"
 
             - name: Build release zip
               run: |
@@ -95,7 +97,7 @@ jobs:
               run: |
                   shopt -s nullglob
                   version="${{ steps.version.outputs.version }}"
-                  files=(dist/ii42-v${version}-*-pg${{ matrix.pg_major }}.zip)
+                  files=(dist/evoke-v${version}-*-pg${{ matrix.pg_major }}.zip)
                   if [ "${#files[@]}" -ne 1 ]; then
                       printf 'expected one release zip, found %s\n' \
                         "${#files[@]}" >&2
@@ -109,7 +111,7 @@ jobs:
                   unzip -l "${files[0]}" \
                     | grep -q 'LICENSES/ONNXRUNTIME-LICENSE'
                   unzip -l "${files[0]}" \
-                    | grep -q 'LICENSES/II42-LICENSE'
+                    | grep -q 'LICENSES/EVOKE-LICENSE'
                   unzip -l "${files[0]}" \
                     | grep -q 'ii42/models/default/manifest\.json'
                   unzip -l "${files[0]}" \
@@ -155,23 +157,23 @@ jobs:
             - name: Fetch frozen milestone model
               run: |
                   ./scripts/fetch_milestone_model_for_ci.sh \
-                    "${RUNNER_TEMP}/ii42-milestone-model"
+                    "${RUNNER_TEMP}/evoke-milestone-model"
 
             - name: Build PostgreSQL 18 Docker image
               run: |
                   ./scripts/build_release_docker_image.sh \
                     --version "${{ steps.version.outputs.version }}" \
-                    --image-tag ii42:release-pg18
+                    --image-tag evoke:release-pg18
 
             - name: Smoke test Docker image
               run: |
-                  container_name="ii42-release-pg18"
+                  container_name="evoke-release-pg18"
                   docker rm -f "${container_name}" >/dev/null 2>&1 || true
                   docker run -d \
                     --name "${container_name}" \
                     --tmpfs /var/run/postgresql:rw,mode=3775,uid=999,gid=999 \
                     -e POSTGRES_HOST_AUTH_METHOD=trust \
-                    ii42:release-pg18
+                    evoke:release-pg18
                   trap 'docker rm -f "${container_name}" >/dev/null 2>&1 || true' EXIT
                   for _ in $(seq 1 60); do
                       if docker exec "${container_name}" \
@@ -234,7 +236,7 @@ jobs:
               id: publish
               run: |
                   ./scripts/publish_docker_image.sh \
-                    --source-tag ii42:release-pg18 \
+                    --source-tag evoke:release-pg18 \
                     --target-image "ghcr.io/${GITHUB_REPOSITORY,,}" \
                     --tag "pg18-v${{ steps.version.outputs.version }}"
                   image="ghcr.io/${GITHUB_REPOSITORY,,}"

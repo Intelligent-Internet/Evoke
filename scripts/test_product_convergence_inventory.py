@@ -975,7 +975,7 @@ def check_install_contract(errors: list[str]) -> None:
         'refusing to build a release from a dirty Git worktree',
         'II42_GIT_COMMIT=${git_commit}',
         'II42_GIT_TREE_STATE=${git_tree_state}',
-        'ii42_milestone_model=${model_checkout}',
+        'evoke_milestone_model=${model_checkout}',
         'II42_MODEL_MANIFEST_SHA256=${model_manifest_sha256}',
     ):
         if required_release_item not in release_docker:
@@ -7123,8 +7123,8 @@ def check_engineering_plan_authority(errors: list[str]) -> None:
         for contract in (
             'subordinate to the',
             '[Product Roadmap](product-roadmap.md)',
-            '[English](technical-report-ii42-model.md)',
-            '[Traditional Chinese](technical-report-ii42-model-zh.md)',
+            '[English](technical-report-evoke-model.md)',
+            '[Traditional Chinese](technical-report-evoke-model-zh.md)',
         ):
             if contract not in model_plan:
                 errors.append(

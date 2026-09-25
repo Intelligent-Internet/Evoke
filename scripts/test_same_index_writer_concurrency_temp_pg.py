@@ -2407,7 +2407,7 @@ def exercise_model_eventual_concurrency(
         calls = 0
         try:
             with connect(socket_dir, port, autocommit=True) as connection:
-                configure(connection, 'ii42-vacuum')
+                configure(connection, 'evoke-vacuum')
                 start_barrier.wait()
                 while not stop_event.is_set():
                     with connection.cursor() as cursor:

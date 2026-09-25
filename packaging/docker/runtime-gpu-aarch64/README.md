@@ -13,9 +13,9 @@ then copies only:
   `/usr/local/share/ii42/models/default`;
 - a Linux aarch64 CUDA 13 / SM121 ONNX Runtime 1.29 C artifact and CUDA runtime
   libraries from the `ii42_gpu_rootfs` named build context;
-- the matching ONNX Runtime headers from the `ii42_onnxruntime_headers` named
+- the matching ONNX Runtime headers from the `evoke_onnxruntime_headers` named
   build context;
-- `ii42-gpu-runtime-entrypoint`, which starts the direct HTTP service.
+- `evoke-gpu-runtime-entrypoint`, which starts the direct HTTP service.
 
 The `ii42_gpu_rootfs` build context must provide GPU ONNX Runtime and CUDA
 libraries using the target filesystem layout. Microsoft does not publish a
@@ -38,13 +38,13 @@ ONNX Runtime headers, and exact milestone checkout as named contexts:
 docker build \
     -f packaging/docker/runtime-gpu-aarch64/Dockerfile \
     --build-context ii42_gpu_rootfs=/tmp/ii42-gpu-rootfs \
-    --build-context ii42_onnxruntime_headers=/path/to/onnxruntime-1.29.0 \
-    --build-context ii42_milestone_model=/path/to/evoke-milestone-model \
+    --build-context evoke_onnxruntime_headers=/path/to/onnxruntime-1.29.0 \
+    --build-context evoke_milestone_model=/path/to/evoke-milestone-model \
     -t evoke-runtime-gpu:direct-cuda13 \
     .
 ```
 
-The `ii42_onnxruntime_headers` context must expose
+The `evoke_onnxruntime_headers` context must expose
 `include/onnxruntime/onnxruntime_c_api.h` for the same ONNX Runtime build as
 the runtime libraries in `ii42_gpu_rootfs`.
 

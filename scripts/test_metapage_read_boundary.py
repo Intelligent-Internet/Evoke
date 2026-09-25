@@ -284,7 +284,7 @@ def main() -> int:
         else system_sharedir
     )
     work_root = Path(tempfile.mkdtemp(
-        prefix='ii42-v3-metapage-read-',
+        prefix='evoke-v3-metapage-read-',
         dir='/tmp',
     ))
     pgdata = work_root / 'pgdata'

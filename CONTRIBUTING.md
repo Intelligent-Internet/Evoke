@@ -125,7 +125,7 @@ coverage, and benchmark validation gates, see
   guide should be reachable from it, directly or through a focused guide.
 - Keep BM25-first quickstarts short. Put complete signatures, defaults,
   lifecycle boundaries, and deployment procedures in their canonical guides.
-- Keep `technical-report-ii42-model` and `technical-report-ii42-system` as the
+- Keep `technical-report-evoke-model` and `technical-report-evoke-system` as the
   bilingual Beta 1 reports; `technical-report-psql_bm25s` is lexical history.
   Change both language editions together, including formulas and evidence.
 - Separate current contracts, dated experimental evidence, and future plans.

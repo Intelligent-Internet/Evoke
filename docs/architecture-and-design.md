@@ -401,7 +401,7 @@ codecs, selection, locking, and execution components.
 - [Shared runtime and residency](shared-runtime-and-residency.md)
 - [API reference](api-reference.md)
 - [Testing and validation](testing-and-validation.md)
-- [System technical report](technical-report-ii42-system.md)
+- [System technical report](technical-report-evoke-system.md)
 
 Research, performance, and technical-report documents are maintained as
 separate evidence surfaces. Product architecture changes only when current

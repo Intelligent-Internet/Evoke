@@ -35,7 +35,7 @@ seconds.
 The evidence is retained at:
 
 ```text
-/data/ii42-builds/ii42-cq3-b64-oracle-1/
+/data/evoke-builds/evoke-cq3-b64-oracle-1/
 pubmed-500k-addressable-oracle.json
 ```
 
