@@ -83,7 +83,7 @@ def test_publication_stability_requires_generation_and_relation() -> None:
     relation = {
         'oid': 42,
         'relkind': 'i',
-        'access_method': 'ii42',
+        'access_method': 'evoke',
         'relative_path': 'base/1/42',
         'main_fork_bytes': 8192,
     }
@@ -110,8 +110,8 @@ def test_publication_stability_requires_generation_and_relation() -> None:
 
 def test_catalog_text_normalizes_sql_ascii_values() -> None:
     assert MODULE.catalog_text(b'i') == 'i'
-    assert MODULE.catalog_text(b'ii42') == 'ii42'
-    assert MODULE.catalog_text('ii42') == 'ii42'
+    assert MODULE.catalog_text(b'evoke') == 'evoke'
+    assert MODULE.catalog_text('evoke') == 'evoke'
 
 
 def test_residency_gate_requires_ratio_and_absolute_bound() -> None:

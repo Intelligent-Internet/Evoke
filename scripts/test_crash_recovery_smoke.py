@@ -69,7 +69,7 @@ def maintenance_state(cur: psycopg.Cursor, index_name: str) -> str:
             delta_bytes,
             stale
         )
-        FROM public.ii42_index_details(%s::regclass)
+        FROM public.evoke_index_details(%s::regclass)
         ''',
         (index_name,),
     )
@@ -83,7 +83,7 @@ def top_hit_id(cur: psycopg.Cursor, index_name: str, table_name: str) -> int:
     cur.execute(
         f'''
         SELECT d.id
-        FROM public.ii42_query_ids(
+        FROM public.evoke_query_ids(
             %s::regclass,
             ARRAY[0,4]::int4[],
             1,
@@ -107,7 +107,7 @@ def matching_ids(
     cur.execute(
         f'''
         SELECT d.id
-        FROM public.ii42_query_ids(
+        FROM public.evoke_query_ids(
             %s::regclass,
             %s::int4[],
             8,
@@ -131,7 +131,7 @@ def main() -> None:
     initdb = bindir / 'initdb'
     pg_ctl = bindir / 'pg_ctl'
 
-    tempdir = Path(tempfile.mkdtemp(prefix='ii42_crash_recovery_'))
+    tempdir = Path(tempfile.mkdtemp(prefix='evoke_crash_recovery_'))
     data_dir = tempdir / 'data'
     socket_dir = tempdir / 'socket'
     logfile = tempdir / 'postgres.log'
@@ -172,7 +172,7 @@ def main() -> None:
         dsn = f'dbname=postgres user=postgres host={socket_dir} port={port}'
         with psycopg.connect(dsn) as conn:
             with conn.cursor() as cur:
-                cur.execute('CREATE EXTENSION ii42')
+                cur.execute('CREATE EXTENSION evoke')
                 cur.execute(
                     '''
                     CREATE TABLE docs (
@@ -193,7 +193,7 @@ def main() -> None:
                 cur.execute(
                     '''
                     CREATE INDEX docs_bm25_idx
-                        ON docs USING ii42 (token_ids)
+                        ON docs USING evoke (token_ids)
                         WITH (
                             method = 'bm25+',
                             idf_method = 'bm25+'
@@ -224,7 +224,7 @@ def main() -> None:
                 cur.execute(
                     '''
                     CREATE INDEX docs_update_bm25_idx
-                        ON docs_update USING ii42 (token_ids)
+                        ON docs_update USING evoke (token_ids)
                         WITH (
                             method = 'bm25+',
                             idf_method = 'bm25+'
@@ -255,7 +255,7 @@ def main() -> None:
                 cur.execute(
                     '''
                     CREATE INDEX docs_delete_bm25_idx
-                        ON docs_delete USING ii42 (token_ids)
+                        ON docs_delete USING evoke (token_ids)
                         WITH (
                             method = 'bm25+',
                             idf_method = 'bm25+'

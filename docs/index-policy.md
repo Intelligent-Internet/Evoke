@@ -24,7 +24,7 @@ bounded maintenance later improves physical read shape.
 
 ```sql
 CREATE INDEX docs_body_idx
-ON docs USING ii42 (body)
+ON docs USING evoke (body)
 WITH (consistency = 'realtime');
 ```
 
@@ -38,7 +38,7 @@ convergence can lag; status exposes the outstanding work.
 
 ```sql
 CREATE INDEX docs_body_idx
-ON docs USING ii42 (body)
+ON docs USING evoke (body)
 WITH (consistency = 'eventual');
 ```
 
@@ -52,7 +52,7 @@ seal.
 
 ```sql
 CREATE INDEX docs_body_idx
-ON docs USING ii42 (body)
+ON docs USING evoke (body)
 WITH (consistency = 'manual');
 ```
 
@@ -62,7 +62,7 @@ Omitting `consistency` with `sae = true` selects `eventual`:
 
 ```sql
 CREATE INDEX docs_semantic_idx
-ON docs USING ii42 (body)
+ON docs USING evoke (body)
 WITH (sae = true);
 ```
 
@@ -109,16 +109,16 @@ reconciliation rediscovers automatic-policy debt after restart or lost hints.
 ## Operator Functions
 
 ```sql
-SELECT ii42_index_status('docs_body_idx'::regclass);
-SELECT * FROM ii42_index_details('docs_body_idx'::regclass);
-SELECT ii42_index_policy_recommend(
+SELECT evoke_index_status('docs_body_idx'::regclass);
+SELECT * FROM evoke_index_details('docs_body_idx'::regclass);
+SELECT evoke_index_policy_recommend(
     'docs_body_idx'::regclass,
     'balanced'
 );
 
-SELECT ii42_index_try_maintain('docs_body_idx'::regclass);
-SELECT ii42_index_maintain('docs_body_idx'::regclass);
-SELECT * FROM ii42_index_maintain_due(4);
+SELECT evoke_index_try_maintain('docs_body_idx'::regclass);
+SELECT evoke_index_maintain('docs_body_idx'::regclass);
+SELECT * FROM evoke_index_maintain_due(4);
 ```
 
 - Prefer `try_maintain` for unattended work because it does not wait on a busy
@@ -126,14 +126,14 @@ SELECT * FROM ii42_index_maintain_due(4);
 - Use `maintain` when the caller is allowed to wait.
 - `maintain_due` is revoked from `PUBLIC`; run it as a trusted role that owns
   its target indexes.
-- `ii42_index_policy_recommend(...)` is advisory and does not mutate options.
+- `evoke_index_policy_recommend(...)` is advisory and does not mutate options.
   For SSR it always recommends eventual.
 
 The built-in worker already handles automatic policies. `pg_cron` is optional
 and useful only when an operator wants an additional time-based wakeup:
 
 ```sql
-SELECT ii42_index_maintain_due(2);
+SELECT evoke_index_maintain_due(2);
 ```
 
 List manual indexes explicitly; they are never selected by `maintain_due`.
@@ -171,8 +171,8 @@ Semantic indexes require shared preload for model execution regardless of
 - Use BM25 `manual` only when an external refresh contract is intentional.
 - Use the default eventual-only semantic policy; size shared runtime and worker
   throughput from measured completion backlog.
-- Monitor `ii42_index_status(...)` for readiness and blocker state, then use
-  `ii42_index_details(...)` for diagnosis.
+- Monitor `evoke_index_status(...)` for readiness and blocker state, then use
+  `evoke_index_details(...)` for diagnosis.
 - Treat warm residency as acceleration, never as correctness evidence.
 
 For exact reloptions and GUCs see [Index Parameters](index-parameters.md). For

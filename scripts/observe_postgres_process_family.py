@@ -59,7 +59,7 @@ def observer_dsn(args: argparse.Namespace) -> str:
         f'port={args.port}',
         f'user={args.user}',
         f'dbname={args.database}',
-        'application_name=ii42_process_family_observer',
+        'application_name=evoke_process_family_observer',
     ])
 
 

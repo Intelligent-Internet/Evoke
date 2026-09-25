@@ -32,7 +32,7 @@ Three corrections were made:
 1. page-native top-k projection groups ranked documents by COW block and loads
    each block once while retaining MVCC/HOT visibility checks;
 2. when postmaster shared runtime is unavailable, a pure BM25 relation that
-   fits `ii42.workspace_cache_bytes` may use a bounded resident sparse scorer;
+   fits `evoke.workspace_cache_bytes` may use a bounded resident sparse scorer;
 3. when shared runtime is available, selected converged BM25 and SAE roots use
    the same pointer-free exact-root resident fold, otherwise both remain
    page-native;
@@ -114,7 +114,7 @@ baseline.
 
 ## Product Boundary
 
-- `ii42.workspace_cache_bytes = 0` forces page-native BM25 execution.
+- `evoke.workspace_cache_bytes = 0` forces page-native BM25 execution.
 - With no postmaster shared runtime, the default 32 MB budget admits only a
   pure BM25 relation whose complete physical size fits the bound. A zero or
   negative budget disables this fallback.

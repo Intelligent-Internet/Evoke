@@ -52,7 +52,7 @@ POLICIES = [
 SCENARIOS = [
     ScenarioConfig(
         name='small',
-        db_name='ii42_maintenance_policy_sweep_small',
+        db_name='evoke_maintenance_policy_sweep_small',
         doc_count=5000,
         query_count=100,
         cycle_count=6,
@@ -62,7 +62,7 @@ SCENARIOS = [
     ),
     ScenarioConfig(
         name='heavy',
-        db_name='ii42_maintenance_policy_sweep_heavy',
+        db_name='evoke_maintenance_policy_sweep_heavy',
         doc_count=10000,
         query_count=150,
         cycle_count=8,
@@ -156,7 +156,7 @@ def main() -> None:
     }
 
     with tempfile.TemporaryDirectory(
-        prefix='ii42_maintenance_policy_sweep_'
+        prefix='evoke_maintenance_policy_sweep_'
     ) as td:
         tmpdir = Path(td)
         for scenario in SCENARIOS:

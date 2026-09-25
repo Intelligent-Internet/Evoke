@@ -1,6 +1,6 @@
 # API Reference
 
-Evoke has one index lifecycle and one overloaded `ii42_query(...)` product
+Evoke has one index lifecycle and one overloaded `evoke_query(...)` product
 family. Scalar overloads compose semantic ranking with ordinary table SQL;
 overloads with an explicit `k` return hit rows. Index options select exact BM25
 or the Sparse Semantic Retrieval (SSR) unified-posting path internally.
@@ -11,7 +11,7 @@ or the Sparse Semantic Retrieval (SSR) unified-posting path internally.
 
 ```sql
 CREATE INDEX index_name
-ON table_name USING ii42 (column_name [, ...])
+ON table_name USING evoke (column_name [, ...])
 WITH (...);
 ```
 
@@ -44,9 +44,9 @@ See [Getting Started](getting-started.md) for the canonical first-use flow and
 ### Planner-Native Semantic Search
 
 ```sql
-ii42_query(index_name regclass, query_text text) RETURNS real
+evoke_query(index_name regclass, query_text text) RETURNS real
 
-ii42_query(
+evoke_query(
     index_name regclass,
     query_text text,
     field_names text[],
@@ -54,7 +54,7 @@ ii42_query(
 ) RETURNS real
 ```
 
-The two- and four-argument scalar `ii42_query(...)` overloads are planner
+The two- and four-argument scalar `evoke_query(...)` overloads are planner
 markers, not row-local scoring functions. They must appear as the only
 descending sort key over one base table with a bounded `LIMIT`. PostgreSQL
 owns final `WHERE` evaluation under the statement snapshot. For predicates
@@ -68,7 +68,7 @@ complete current subset.
 
 ```sql
 SELECT source.*,
-       ii42_query('docs_search_idx'::regclass, 'graph retrieval') AS score
+       evoke_query('docs_search_idx'::regclass, 'graph retrieval') AS score
 FROM docs AS source
 WHERE source.publish_date >= DATE '2026-01-01'
   AND source.categories && ARRAY['cs.LG']
@@ -84,7 +84,7 @@ use the Evoke custom executor.
 ### Explicit Hit Search
 
 ```sql
-ii42_query(
+evoke_query(
     index_name regclass,
     query_text text,
     k int4,
@@ -94,33 +94,33 @@ ii42_query(
     stem_english boolean DEFAULT NULL,
     fold_diacritics boolean DEFAULT NULL
 )
-RETURNS SETOF ii42_result_hit
+RETURNS SETOF evoke_result_hit
 ```
 
 Field-aware indexes also expose an overload through the same product name:
 
 ```sql
-ii42_query(
+evoke_query(
     index_name regclass,
     query_text text,
     field_names text[],
     field_weights real[],
     k int4
 )
-RETURNS SETOF ii42_result_hit
+RETURNS SETOF evoke_result_hit
 ```
 
 SSR indexes expose predicate-defined subset-ranking overloads:
 
 ```sql
-ii42_query(
+evoke_query(
     index_name regclass,
     query_text text,
     filters jsonb,
     k int4 DEFAULT 10
 )
 
-ii42_query(
+evoke_query(
     index_name regclass,
     query_text text,
     field_names text[],
@@ -129,14 +129,14 @@ ii42_query(
     k int4 DEFAULT 10
 )
 
-ii42_query(
+evoke_query(
     index_name regclass,
     query_text text,
     allowed_tids tid[],
     k int4 DEFAULT 10
 )
 
-ii42_query(
+evoke_query(
     index_name regclass,
     query_text text,
     field_names text[],
@@ -146,7 +146,7 @@ ii42_query(
 )
 ```
 
-Each predicate-defined overload returns `SETOF ii42_result_hit`.
+Each predicate-defined overload returns `SETOF evoke_result_hit`.
 
 The JSON overload is the explicit structured-predicate API. Filters are ANDed
 by column. Each column specifies exactly one operation: `eq`, `in`, `overlap`,
@@ -186,7 +186,7 @@ overload searches the selected unique fields and applies each weight to the
 field's complete unified contribution:
 `sum(weight * (BM25 + semantic))`. Weights must be finite and non-negative.
 
-`ii42_result_hit` contains:
+`evoke_result_hit` contains:
 
 | Field | Meaning |
 | --- | --- |
@@ -198,7 +198,7 @@ Example:
 
 ```sql
 SELECT source.id, source.body, hit.score
-FROM ii42_query(
+FROM evoke_query(
     'docs_body_idx'::regclass,
     'postgres index maintenance',
     20
@@ -216,10 +216,10 @@ lexical and semantic evidence after model encoding.
 `weight_mask` is an exact-BM25 diagnostic surface and is inherently a
 document-slot-sized operation. It is therefore admitted only when the
 physical index and all other active fallback snapshots fit the finite positive
-per-backend `ii42.workspace_cache_bytes` budget. Ordinary queries should omit
+per-backend `evoke.workspace_cache_bytes` budget. Ordinary queries should omit
 it and use the shared resident-fold/page-native route.
 
-The caller needs `SELECT` on the indexed table. `ii42_query(...)` rejects
+The caller needs `SELECT` on the indexed table. `evoke_query(...)` rejects
 row-level-security tables and partitioned parent indexes. An explicit TID set
 provides predicate-defined subset ranking, but it is not an RLS policy boundary
 and cannot combine independently ranked child corpora into one global top-k.
@@ -227,10 +227,10 @@ and cannot combine independently ranked child corpora into one global top-k.
 ### Inspect
 
 ```sql
-ii42_index_options(index_name regclass) RETURNS jsonb
-ii42_index_status(index_name regclass) RETURNS jsonb
-ii42_index_audit(index_name regclass) RETURNS jsonb
-ii42_index_details(index_name regclass) RETURNS TABLE (
+evoke_index_options(index_name regclass) RETURNS jsonb
+evoke_index_status(index_name regclass) RETURNS jsonb
+evoke_index_audit(index_name regclass) RETURNS jsonb
+evoke_index_details(index_name regclass) RETURNS TABLE (
     index_name regclass,
     source_type text,
     docs int8,
@@ -246,13 +246,13 @@ ii42_index_details(index_name regclass) RETURNS TABLE (
 )
 ```
 
-- `ii42_index_options(...)` reports effective type, source shape, reloptions,
+- `evoke_index_options(...)` reports effective type, source shape, reloptions,
   and semantic configuration. Semantic indexes report
   `semantic_impact_precision`, `semantic_alpha_mass`, and an `exact` or
   `approximate` `semantic_accuracy_profile`; defaults are `f32` and `1.0`.
   The packed semantic authority always uses 64-document blocks; precision is
   selectable per index, but block geometry is not.
-- `ii42_index_status(...)` is the application readiness surface. Check
+- `evoke_index_status(...)` is the application readiness surface. Check
   `query_ready` and `blocker` rather than interpreting internal counters.
   `query_usable` and `query_ready` mean the exact fallback remains correct.
   For semantic indexes, `performance_ready` additionally requires either a
@@ -263,10 +263,10 @@ ii42_index_details(index_name regclass) RETURNS TABLE (
   rows may be temporarily omitted under the declared approximate profile. This
   is an expected online state, not a fallback or an invalid accelerator, and it
   has no maximum serving age. Small debt is still scheduled periodically by
-  `ii42.maintenance_low_debt_interval_ms`; record and byte high-water marks
+  `evoke.maintenance_low_debt_interval_ms`; record and byte high-water marks
   bypass that interval. Status exposes `periodic_refresh_eligible` separately
   from immediate `refresh_due`. Failed publication or a concurrent builder is
-  retried no sooner than `ii42.maintenance_timer_interval_ms`; that internal
+  retried no sooner than `evoke.maintenance_timer_interval_ms`; that internal
   cooldown applies only to accelerator construction and never invalidates the
   serving baseline. It becomes
   `state=ready` and `baseline_current=true` after sealing and derived
@@ -288,10 +288,10 @@ ii42_index_details(index_name regclass) RETURNS TABLE (
   authenticated fixed-header metadata and `directory_bytes`; aggregate
   artifact `bytes` remains null because calculating it requires walking every
   child reference.
-- `ii42_index_audit(...)` is the explicit heavy integrity surface. It validates
+- `evoke_index_audit(...)` is the explicit heavy integrity surface. It validates
   the complete generation closure and SHA-256 hashes every semantic model artifact.
   Do not call it from readiness polling or request paths.
-- `ii42_index_details(...)` exposes operator-oriented root, mutation,
+- `evoke_index_details(...)` exposes operator-oriented root, mutation,
   maintenance, and builder details.
 
 These functions enforce access to the indexed table. Status validates bounded
@@ -302,21 +302,21 @@ extension-owner boundary; callers cannot supply arbitrary paths.
 ### Maintain
 
 ```sql
-ii42_index_refresh(index_name regclass)
-ii42_index_maintain(index_name regclass)
-ii42_index_try_maintain(index_name regclass)
-ii42_index_maintain_due(max_indexes integer DEFAULT 1)
+evoke_index_refresh(index_name regclass)
+evoke_index_maintain(index_name regclass)
+evoke_index_try_maintain(index_name regclass)
+evoke_index_maintain_due(max_indexes integer DEFAULT 1)
 ```
 
-- `ii42_index_maintain(...)` may wait and performs one needed bounded action or
+- `evoke_index_maintain(...)` may wait and performs one needed bounded action or
   returns a no-op.
-- `ii42_index_try_maintain(...)` avoids waiting on a busy publication boundary
+- `evoke_index_try_maintain(...)` avoids waiting on a busy publication boundary
   and returns retryable no-op results when necessary. This is non-blocking lock
   admission, not a deadline on the maintenance action once admitted.
-- `ii42_index_maintain_due(...)` uses the same native selector for a bounded
+- `evoke_index_maintain_due(...)` uses the same native selector for a bounded
   number of automatic-policy indexes. It is revoked from `PUBLIC` and is meant
   for a trusted maintenance role.
-- `ii42_index_refresh(...)` is an explicit operator refresh surface. Use
+- `evoke_index_refresh(...)` is an explicit operator refresh surface. Use
   `REINDEX` when options or model contract changed.
 
 Per-index mutation and maintenance require index ownership. Semantic
@@ -337,10 +337,10 @@ or external cleanup step.
 
 The public value-local helpers are:
 
-- `ii42_tokenize_text(text, ...)`;
-- `ii42_normalize_tokens(text[], ...)`;
-- `ii42_highlight(text[] | text | varchar, query_text, ...)`;
-- `ii42_snippet(text[] | text | varchar, query_text, ...)`.
+- `evoke_tokenize_text(text, ...)`;
+- `evoke_normalize_tokens(text[], ...)`;
+- `evoke_highlight(text[] | text | varchar, query_text, ...)`;
+- `evoke_snippet(text[] | text | varchar, query_text, ...)`.
 
 They operate on supplied values. They do not perform index retrieval.
 
@@ -349,13 +349,13 @@ They operate on supplied values. They do not perform index retrieval.
 BM25 indexes support PostgreSQL operator integration:
 
 - `tokens @@ 'query text'` for `text[]` and `varchar[]` predicates;
-- `value @@@ ii42_prepared_query(...)` for owner diagnostics and scalar text;
+- `value @@@ evoke_prepared_query(...)` for owner diagnostics and scalar text;
 - `ORDER BY value <=> query_tokens ASC LIMIT k` for index-ordered retrieval.
 
 `@@` is a boolean predicate, not a ranking API. `<=>` has index ranking
-semantics only when PostgreSQL chooses an actual `ii42` index scan. Application
-code that needs an explicit hit set can use `ii42_query(...)`; semantic table
-queries should prefer `ii42_query(...)`.
+semantics only when PostgreSQL chooses an actual `evoke` index scan. Application
+code that needs an explicit hit set can use `evoke_query(...)`; semantic table
+queries should prefer `evoke_query(...)`.
 
 These operators are BM25 surfaces. They do not dispatch to semantic scoring.
 
@@ -364,9 +364,9 @@ These operators are BM25 surfaces. They do not dispatch to semantic scoring.
 The extension owner can use exact BM25 functions for regression, benchmark,
 and implementation diagnostics:
 
-- `ii42_query_ids(...)`;
-- `ii42_query_tokens(...)`;
-- `ii42_prepared_query(...)`, `ii42_order_tokens(...)`, and local match/score
+- `evoke_query_ids(...)`;
+- `evoke_query_tokens(...)`;
+- `evoke_prepared_query(...)`, `evoke_order_tokens(...)`, and local match/score
   helpers;
 - single-index token-level field-weight helpers.
 
@@ -378,13 +378,13 @@ Evoke does not wrap or execute caller-supplied SQL text.
 
 ## Public Composition APIs
 
-The `ii42_fusion_*` family combines top-k results from multiple independently
-maintained `ii42` indexes. The `ii42_hybrid_*` family combines Evoke candidates
+The `evoke_fusion_*` family combines top-k results from multiple independently
+maintained `evoke` indexes. The `evoke_hybrid_*` family combines Evoke candidates
 with externally retrieved candidates such as vector-index distances. These
 families are granted to `PUBLIC`; each Evoke source still enforces source-table
-`SELECT` through `ii42_query(...)`.
+`SELECT` through `evoke_query(...)`.
 
-Fusion hit rows are keyed by `ctid`, so both `ii42_fusion_*` and `ii42_hybrid_*`
+Fusion hit rows are keyed by `ctid`, so both `evoke_fusion_*` and `evoke_hybrid_*`
 sources must belong to the same base table and SQL snapshot. For different
 tables or partitions, map hits to stable document IDs and aggregate in
 application SQL outside these helpers. Both families fuse finite source
@@ -394,7 +394,7 @@ recall. See [Multi-Index Fusion](multi-index-fusion.md) and
 
 Composition is a product layer above single-index retrieval. It does not alter
 an index's unified posting layout, mutation lifecycle, maintenance policy, or
-native scorer. Use planner-native SQL or `ii42_query(...)` when one index is
+native scorer. Use planner-native SQL or `evoke_query(...)` when one index is
 sufficient; use fusion or hybrid APIs only when the product intentionally
 combines independent indexes or retrieval engines.
 
@@ -403,46 +403,46 @@ combines independent indexes or retrieval engines.
 Runtime and residency surfaces include:
 
 ```sql
-ii42_index_runtime_state(index_name regclass)
-ii42_index_runtime_state_json(index_name regclass)
-ii42_index_preload(index_name regclass)
-ii42_runtime_cache_clear()
-ii42_runtime_service_status()
+evoke_index_runtime_state(index_name regclass)
+evoke_index_runtime_state_json(index_name regclass)
+evoke_index_preload(index_name regclass)
+evoke_runtime_cache_clear()
+evoke_runtime_service_status()
 ```
 
 The state functions require `SELECT` on the indexed table.
-`ii42_index_preload(...)` requires index ownership, while cache clearing and
+`evoke_index_preload(...)` requires index ownership, while cache clearing and
 runtime-service status are extension-owner diagnostics revoked from `PUBLIC`.
 These functions report or control checked-root markers, relation page warming,
 optional HOT_FOLD and exact-root resident-fold state, bounded workspace, and
 shared runtime state. They do not expose posting storage or a second mutation
-authority. `ii42_index_runtime_state_json(...)` reports
+authority. `evoke_index_runtime_state_json(...)` reports
 `resident_fold_current`, `resident_fold_entries`, and `resident_fold_bytes`.
 The text and JSON forms use the same C snapshot collector; JSON diagnostics do
 not parse the human-readable state string.
 
-`ii42_index_preload(...)` first attempts to publish one pointer-free exact-root
+`evoke_index_preload(...)` first attempts to publish one pointer-free exact-root
 fold when the index is converged and the complete image fits
-`ii42.shared_runtime_size`. Its result then reports
+`evoke.shared_runtime_size`. Its result then reports
 `tier=shared_resident_fold`, `prewarm_scope=exact`, and `resident_bytes`.
 Otherwise it performs exact relation-page warming within
-`ii42.prewarm_max_bytes` or bounded roots-and-payload warming for a larger
+`evoke.prewarm_max_bytes` or bounded roots-and-payload warming for a larger
 index. Query readers still validate the checked root; durable authority never
 moves out of the index relation.
 
-`ii42_runtime_cache_clear()` is revoked from `PUBLIC`. Clearing disposable
+`evoke_runtime_cache_clear()` is revoked from `PUBLIC`. Clearing disposable
 residency may change cold latency but cannot change results.
 
 ## Privilege Summary
 
 | Surface | Intended caller |
 | --- | --- |
-| `ii42_query` | Application role with source-table `SELECT`. |
-| `ii42_fusion_*`, `ii42_hybrid_*` | Application role; source queries retain their own authorization. |
+| `evoke_query` | Application role with source-table `SELECT`. |
+| `evoke_fusion_*`, `evoke_hybrid_*` | Application role; source queries retain their own authorization. |
 | Options/status/details | Role allowed to inspect the source relation. |
 | Per-index maintenance | Index owner. |
 | PostgreSQL `DROP INDEX` | Index owner under the normal PostgreSQL lifecycle. |
-| `ii42_index_maintain_due` | Trusted maintenance role. |
+| `evoke_index_maintain_due` | Trusted maintenance role. |
 | Text utilities | Application role. |
 | Runtime state | Role allowed to inspect the source relation. |
 | Per-index preload | Index owner. |

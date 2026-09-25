@@ -153,7 +153,7 @@ def main():
                       CLEARML_CACHE_DIR=str(out / 'tracking-cache'))
     from clearml import Task
     Task.set_offline(True)
-    task = Task.init(project_name='II42-NG', task_name='NG-0070/positive-provenance',
+    task = Task.init(project_name='Evoke-NG', task_name='NG-0070/positive-provenance',
                      task_type=Task.TaskTypes.data_processing, reuse_last_task_id=False,
                      auto_connect_frameworks=False, auto_connect_arg_parser=False,
                      auto_connect_streams=False, auto_resource_monitoring=False)

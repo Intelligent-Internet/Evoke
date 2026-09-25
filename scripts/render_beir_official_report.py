@@ -9,8 +9,8 @@ from pathlib import Path
 
 
 PATH_SPECS = (
-    ('ii42_ids', 'ids'),
-    ('ii42_text', 'text'),
+    ('evoke_ids', 'ids'),
+    ('evoke_text', 'text'),
 )
 
 
@@ -99,7 +99,7 @@ def build_query_header(path_specs: list[tuple[str, str]]) -> list[str]:
     ]
     for _path_key, label in path_specs:
         columns.extend([
-            f'Local ii42 {label} QPS',
+            f'Local evoke {label} QPS',
             f'{label} vs official',
             'gap vs official',
             f'{label} vs local upstream',
@@ -156,8 +156,8 @@ def build_build_header(path_specs: list[tuple[str, str]]) -> list[str]:
     columns = ['Dataset', 'Local upstream build ms']
     for _path_key, label in path_specs:
         columns.extend([
-            f'ii42 {label} build ms',
-            f'ii42 {label} bytes',
+            f'evoke {label} build ms',
+            f'evoke {label} bytes',
         ])
     columns.append('Wall time s')
     return columns

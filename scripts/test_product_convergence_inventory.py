@@ -12,7 +12,7 @@ from urllib.parse import unquote
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-CONTROL_PATH = REPO_ROOT / 'ii42.control'
+CONTROL_PATH = REPO_ROOT / 'evoke.control'
 CONTROL_TEXT = CONTROL_PATH.read_text(encoding='utf-8')
 VERSION_MATCH = re.search(
     r"^default_version = '([^']+)'$",
@@ -20,9 +20,9 @@ VERSION_MATCH = re.search(
     re.MULTILINE,
 )
 if VERSION_MATCH is None:
-    raise RuntimeError('ii42.control has no default_version')
+    raise RuntimeError('evoke.control has no default_version')
 CURRENT_VERSION = VERSION_MATCH.group(1)
-CURRENT_SQL_PATH = REPO_ROOT / f'sql/ii42--{CURRENT_VERSION}.sql'
+CURRENT_SQL_PATH = REPO_ROOT / f'sql/evoke--{CURRENT_VERSION}.sql'
 MAKEFILE_PATH = REPO_ROOT / 'Makefile'
 CMAKE_PATH = REPO_ROOT / 'CMakeLists.txt'
 DOCKERFILE_PATH = (
@@ -49,36 +49,36 @@ ONNXRUNTIME_VERSION_PATH = REPO_ROOT / 'packaging/onnxruntime.version'
 ONNXRUNTIME_CHECKSUM_PATH = REPO_ROOT / 'packaging/onnxruntime.sha256'
 ONNXRUNTIME_INSTALLER_PATH = REPO_ROOT / 'scripts/install_onnxruntime_c.sh'
 POSTGRES_APT_INSTALLER_PATH = REPO_ROOT / 'scripts/install_postgres_apt.sh'
-AM_SOURCE_PATH = REPO_ROOT / 'src/ii42_am.c'
-AM_BUILD_SOURCE_PATH = REPO_ROOT / 'src/ii42_am_build.c'
-AM_BUILD_HEADER_PATH = REPO_ROOT / 'src/ii42_am_build.h'
-AM_HOT_FOLD_SOURCE_PATH = REPO_ROOT / 'src/ii42_am_hot_fold.c'
-AM_HOT_FOLD_HEADER_PATH = REPO_ROOT / 'src/ii42_am_hot_fold.h'
-AM_MAINTENANCE_SOURCE_PATH = REPO_ROOT / 'src/ii42_am_maintenance.c'
-AM_MAINTENANCE_HEADER_PATH = REPO_ROOT / 'src/ii42_am_maintenance.h'
-AM_META_SOURCE_PATH = REPO_ROOT / 'src/ii42_am_meta.c'
-AM_META_HEADER_PATH = REPO_ROOT / 'src/ii42_am_meta.h'
-AM_MUTATION_SOURCE_PATH = REPO_ROOT / 'src/ii42_am_mutation.c'
-AM_MUTATION_HEADER_PATH = REPO_ROOT / 'src/ii42_am_mutation.h'
-AM_OPTIONS_SOURCE_PATH = REPO_ROOT / 'src/ii42_am_options.c'
-AM_OPTIONS_HEADER_PATH = REPO_ROOT / 'src/ii42_am_options.h'
-AM_PRELOAD_SOURCE_PATH = REPO_ROOT / 'src/ii42_am_preload.c'
-AM_PRELOAD_HEADER_PATH = REPO_ROOT / 'src/ii42_am_preload.h'
-AM_RECLAMATION_SOURCE_PATH = REPO_ROOT / 'src/ii42_am_reclamation.c'
-AM_RECLAMATION_HEADER_PATH = REPO_ROOT / 'src/ii42_am_reclamation.h'
-AM_SCHEDULER_SOURCE_PATH = REPO_ROOT / 'src/ii42_am_scheduler.c'
-AM_SCHEDULER_HEADER_PATH = REPO_ROOT / 'src/ii42_am_scheduler.h'
-AM_SCAN_SOURCE_PATH = REPO_ROOT / 'src/ii42_am_scan.c'
-AM_SCAN_HEADER_PATH = REPO_ROOT / 'src/ii42_am_scan.h'
-AM_SQL_SOURCE_PATH = REPO_ROOT / 'src/ii42_am_sql.c'
-AM_TEST_SUPPORT_SOURCE_PATH = REPO_ROOT / 'src/ii42_am_test_support.c'
-AM_TEST_SUPPORT_HEADER_PATH = REPO_ROOT / 'src/ii42_am_test_support.h'
-PG_COMMON_SOURCE_PATH = REPO_ROOT / 'src/ii42_pg_common.c'
-PG_COMMON_HEADER_PATH = REPO_ROOT / 'src/ii42_pg_common.h'
-SEMANTIC_SOURCE_PATH = REPO_ROOT / 'src/ii42_semantic.c'
-SEMANTIC_HEADER_PATH = REPO_ROOT / 'src/ii42_semantic.h'
-P2_RUNTIME_SOURCE_PATH = REPO_ROOT / 'src/ii42_p2_runtime.c'
-RUNTIME_SERVICE_HEADER_PATH = REPO_ROOT / 'src/ii42_runtime_service.h'
+AM_SOURCE_PATH = REPO_ROOT / 'src/evoke_am.c'
+AM_BUILD_SOURCE_PATH = REPO_ROOT / 'src/evoke_am_build.c'
+AM_BUILD_HEADER_PATH = REPO_ROOT / 'src/evoke_am_build.h'
+AM_HOT_FOLD_SOURCE_PATH = REPO_ROOT / 'src/evoke_am_hot_fold.c'
+AM_HOT_FOLD_HEADER_PATH = REPO_ROOT / 'src/evoke_am_hot_fold.h'
+AM_MAINTENANCE_SOURCE_PATH = REPO_ROOT / 'src/evoke_am_maintenance.c'
+AM_MAINTENANCE_HEADER_PATH = REPO_ROOT / 'src/evoke_am_maintenance.h'
+AM_META_SOURCE_PATH = REPO_ROOT / 'src/evoke_am_meta.c'
+AM_META_HEADER_PATH = REPO_ROOT / 'src/evoke_am_meta.h'
+AM_MUTATION_SOURCE_PATH = REPO_ROOT / 'src/evoke_am_mutation.c'
+AM_MUTATION_HEADER_PATH = REPO_ROOT / 'src/evoke_am_mutation.h'
+AM_OPTIONS_SOURCE_PATH = REPO_ROOT / 'src/evoke_am_options.c'
+AM_OPTIONS_HEADER_PATH = REPO_ROOT / 'src/evoke_am_options.h'
+AM_PRELOAD_SOURCE_PATH = REPO_ROOT / 'src/evoke_am_preload.c'
+AM_PRELOAD_HEADER_PATH = REPO_ROOT / 'src/evoke_am_preload.h'
+AM_RECLAMATION_SOURCE_PATH = REPO_ROOT / 'src/evoke_am_reclamation.c'
+AM_RECLAMATION_HEADER_PATH = REPO_ROOT / 'src/evoke_am_reclamation.h'
+AM_SCHEDULER_SOURCE_PATH = REPO_ROOT / 'src/evoke_am_scheduler.c'
+AM_SCHEDULER_HEADER_PATH = REPO_ROOT / 'src/evoke_am_scheduler.h'
+AM_SCAN_SOURCE_PATH = REPO_ROOT / 'src/evoke_am_scan.c'
+AM_SCAN_HEADER_PATH = REPO_ROOT / 'src/evoke_am_scan.h'
+AM_SQL_SOURCE_PATH = REPO_ROOT / 'src/evoke_am_sql.c'
+AM_TEST_SUPPORT_SOURCE_PATH = REPO_ROOT / 'src/evoke_am_test_support.c'
+AM_TEST_SUPPORT_HEADER_PATH = REPO_ROOT / 'src/evoke_am_test_support.h'
+PG_COMMON_SOURCE_PATH = REPO_ROOT / 'src/evoke_pg_common.c'
+PG_COMMON_HEADER_PATH = REPO_ROOT / 'src/evoke_pg_common.h'
+SEMANTIC_SOURCE_PATH = REPO_ROOT / 'src/evoke_semantic.c'
+SEMANTIC_HEADER_PATH = REPO_ROOT / 'src/evoke_semantic.h'
+P2_RUNTIME_SOURCE_PATH = REPO_ROOT / 'src/evoke_p2_runtime.c'
+RUNTIME_SERVICE_HEADER_PATH = REPO_ROOT / 'src/evoke_runtime_service.h'
 ARCHIVED_DEVELOPMENT_RECORD_PATH = (
     REPO_ROOT
     / 'docs/archive/engineering/'
@@ -92,17 +92,17 @@ ARCHIVED_RELEASE_READINESS_PATH = (
 CONVERGENT_DESIGN_PATH = (
     REPO_ROOT / 'docs/convergent-segmented-index.md'
 )
-STORAGE_SOURCE_PATH = REPO_ROOT / 'src/ii42_storage.c'
-STORAGE_HEADER_PATH = REPO_ROOT / 'src/ii42_storage.h'
-QUERY_SOURCE_PATH = REPO_ROOT / 'src/ii42_query.c'
-QUERY_HEADER_PATH = REPO_ROOT / 'src/ii42_query.h'
-CORE_SOURCE_PATH = REPO_ROOT / 'src/ii42_core.c'
-CORE_HEADER_PATH = REPO_ROOT / 'src/ii42_core.h'
-SEGMENTS_SOURCE_PATH = REPO_ROOT / 'src/ii42_segments.c'
-SEGMENTS_HEADER_PATH = REPO_ROOT / 'src/ii42_segments.h'
-SEGMENT_PAGES_SOURCE_PATH = REPO_ROOT / 'src/ii42_segment_pages.c'
-PAGE_QUERY_SOURCE_PATH = REPO_ROOT / 'src/ii42_page_query.c'
-DOCUMENT_COW_SOURCE_PATH = REPO_ROOT / 'src/ii42_document_cow.c'
+STORAGE_SOURCE_PATH = REPO_ROOT / 'src/evoke_storage.c'
+STORAGE_HEADER_PATH = REPO_ROOT / 'src/evoke_storage.h'
+QUERY_SOURCE_PATH = REPO_ROOT / 'src/evoke_query.c'
+QUERY_HEADER_PATH = REPO_ROOT / 'src/evoke_query.h'
+CORE_SOURCE_PATH = REPO_ROOT / 'src/evoke_core.c'
+CORE_HEADER_PATH = REPO_ROOT / 'src/evoke_core.h'
+SEGMENTS_SOURCE_PATH = REPO_ROOT / 'src/evoke_segments.c'
+SEGMENTS_HEADER_PATH = REPO_ROOT / 'src/evoke_segments.h'
+SEGMENT_PAGES_SOURCE_PATH = REPO_ROOT / 'src/evoke_segment_pages.c'
+PAGE_QUERY_SOURCE_PATH = REPO_ROOT / 'src/evoke_page_query.c'
+DOCUMENT_COW_SOURCE_PATH = REPO_ROOT / 'src/evoke_document_cow.c'
 LIFECYCLE_SMOKE_PATH = (
     REPO_ROOT / 'scripts/test_unified_index_lifecycle_smoke.py'
 )
@@ -136,7 +136,7 @@ SOURCE_MIGRATION_SMOKE_PATH = (
 )
 MATURITY_SUITE_PATH = REPO_ROOT / 'scripts/run_product_maturity_suite.py'
 BUMP_VERSION_PATH = REPO_ROOT / 'scripts/bump_extension_version.py'
-REBUILD_INDEXES_PATH = REPO_ROOT / 'scripts/rebuild_ii42_indexes.py'
+REBUILD_INDEXES_PATH = REPO_ROOT / 'scripts/rebuild_evoke_indexes.py'
 COMMONS_MATRIX_PATH = (
     REPO_ROOT / 'scripts/benchmark_commons_query_matrix.py'
 )
@@ -144,7 +144,7 @@ PRIVILEGE_SMOKE_PATH = (
     REPO_ROOT / 'scripts/test_runtime_service_privilege_smoke.py'
 )
 MODEL_MANIFEST_ENTRYPOINTS = (
-    REPO_ROOT / 'scripts/benchmark_ii42_product_path.py',
+    REPO_ROOT / 'scripts/benchmark_evoke_product_path.py',
     REPO_ROOT / 'scripts/compile_p2_b1125_query.py',
     REPO_ROOT / 'scripts/create_p2_runtime_variant.py',
     REPO_ROOT / 'scripts/test_concurrent_ddl_lifecycle_smoke.py',
@@ -255,146 +255,146 @@ UNSUPPORTED_SAE_INDEX_SQL_RE = re.compile(
 )
 
 REQUIRED_PRODUCT_FUNCTIONS = (
-    'ii42_query',
-    'ii42_index_options',
-    'ii42_index_status',
-    'ii42_index_maintain',
-    'ii42_index_maintain_due',
+    'evoke_query',
+    'evoke_index_options',
+    'evoke_index_status',
+    'evoke_index_maintain',
+    'evoke_index_maintain_due',
 )
 
 RESTRICTED_QUERY_SIGNATURES = (
-    'ii42_query_ids(regclass,int4[],int4,real[])',
-    'ii42_query_tokens(regclass,text[],int4,real[])',
-    'ii42_field_aware_query_tokens(regclass,text[],text[],real[],int4)',
-    'ii42_field_aware_query(regclass,text,text[],real[],int4)',
+    'evoke_query_ids(regclass,int4[],int4,real[])',
+    'evoke_query_tokens(regclass,text[],int4,real[])',
+    'evoke_field_aware_query_tokens(regclass,text[],text[],real[],int4)',
+    'evoke_field_aware_query(regclass,text,text[],real[],int4)',
     (
-        'ii42_query_bm25_internal('
+        'evoke_query_bm25_internal('
         'regclass,text,int4,real[],boolean,text[],boolean,boolean)'
     ),
-    'ii42_prepared_query(regclass,text,boolean,text[],boolean,boolean)',
-    'ii42_order_tokens(ii42_result_prepared_query)',
-    'ii42_order_tokens(regclass,text,boolean,text[],boolean,boolean)',
+    'evoke_prepared_query(regclass,text,boolean,text[],boolean,boolean)',
+    'evoke_order_tokens(evoke_result_prepared_query)',
+    'evoke_order_tokens(regclass,text,boolean,text[],boolean,boolean)',
     (
-        'ii42_op_match_prepared_query('
-        'text[],ii42_result_prepared_query)'
+        'evoke_op_match_prepared_query('
+        'text[],evoke_result_prepared_query)'
     ),
     (
-        'ii42_op_match_prepared_query('
-        'varchar[],ii42_result_prepared_query)'
+        'evoke_op_match_prepared_query('
+        'varchar[],evoke_result_prepared_query)'
     ),
     (
-        'ii42_op_match_prepared_query_scalar('
-        'text,ii42_result_prepared_query)'
+        'evoke_op_match_prepared_query_scalar('
+        'text,evoke_result_prepared_query)'
     ),
     (
-        'ii42_op_match_prepared_query_scalar('
-        'varchar,ii42_result_prepared_query)'
+        'evoke_op_match_prepared_query_scalar('
+        'varchar,evoke_result_prepared_query)'
     ),
-    'ii42_match_prepared_query(text[],ii42_result_prepared_query)',
-    'ii42_match_prepared_query(varchar[],ii42_result_prepared_query)',
-    'ii42_match_prepared_query(text,ii42_result_prepared_query)',
-    'ii42_match_prepared_query(varchar,ii42_result_prepared_query)',
+    'evoke_match_prepared_query(text[],evoke_result_prepared_query)',
+    'evoke_match_prepared_query(varchar[],evoke_result_prepared_query)',
+    'evoke_match_prepared_query(text,evoke_result_prepared_query)',
+    'evoke_match_prepared_query(varchar,evoke_result_prepared_query)',
     (
-        'ii42_match_query('
+        'evoke_match_query('
         'text[],regclass,text,boolean,text[],boolean,boolean)'
     ),
     (
-        'ii42_match_query('
+        'evoke_match_query('
         'varchar[],regclass,text,boolean,text[],boolean,boolean)'
     ),
     (
-        'ii42_match_query('
+        'evoke_match_query('
         'text,regclass,text,boolean,text[],boolean,boolean)'
     ),
     (
-        'ii42_match_query('
+        'evoke_match_query('
         'varchar,regclass,text,boolean,text[],boolean,boolean)'
     ),
-    'ii42_score_prepared_query(text[],ii42_result_prepared_query)',
-    'ii42_score_prepared_query(varchar[],ii42_result_prepared_query)',
-    'ii42_score_prepared_query(text,ii42_result_prepared_query)',
-    'ii42_score_prepared_query(varchar,ii42_result_prepared_query)',
+    'evoke_score_prepared_query(text[],evoke_result_prepared_query)',
+    'evoke_score_prepared_query(varchar[],evoke_result_prepared_query)',
+    'evoke_score_prepared_query(text,evoke_result_prepared_query)',
+    'evoke_score_prepared_query(varchar,evoke_result_prepared_query)',
     (
-        'ii42_score_query('
+        'evoke_score_query('
         'text[],regclass,text,boolean,text[],boolean,boolean)'
     ),
     (
-        'ii42_score_query('
+        'evoke_score_query('
         'varchar[],regclass,text,boolean,text[],boolean,boolean)'
     ),
     (
-        'ii42_score_query('
+        'evoke_score_query('
         'text,regclass,text,boolean,text[],boolean,boolean)'
     ),
     (
-        'ii42_score_query('
+        'evoke_score_query('
         'varchar,regclass,text,boolean,text[],boolean,boolean)'
     ),
 )
 
 PUBLIC_COMPOSITION_SIGNATURES = (
-    'ii42_fusion_weighted_query(ii42_result_prepared_query,real)',
+    'evoke_fusion_weighted_query(evoke_result_prepared_query,real)',
     (
-        'ii42_fusion_weighted_query('
+        'evoke_fusion_weighted_query('
         'regclass,text,real,boolean,text[],boolean,boolean)'
     ),
     (
-        'ii42_fusion_weighted_queries('
+        'evoke_fusion_weighted_queries('
         'regclass[],text,real[],boolean,text[],boolean,boolean)'
     ),
     (
-        'ii42_fusion_field_query('
-        'text,ii42_result_fusion_weighted_query)'
+        'evoke_fusion_field_query('
+        'text,evoke_result_fusion_weighted_query)'
     ),
-    'ii42_fusion_field_query(text,ii42_result_prepared_query,real)',
+    'evoke_fusion_field_query(text,evoke_result_prepared_query,real)',
     (
-        'ii42_fusion_field_query('
+        'evoke_fusion_field_query('
         'text,regclass,text,real,boolean,text[],boolean,boolean)'
     ),
     (
-        'ii42_fusion_field_queries('
+        'evoke_fusion_field_queries('
         'text[],regclass[],text,real[],boolean,text[],boolean,boolean)'
     ),
-    'ii42_fusion(ii42_result_hit[],real,ii42_result_hit[],real,int4)',
+    'evoke_fusion(evoke_result_hit[],real,evoke_result_hit[],real,int4)',
     (
-        'ii42_fusion_query('
+        'evoke_fusion_query('
         'text[],regclass[],text,real[],int4,int4,real[],boolean,text[],'
         'boolean,boolean)'
     ),
     (
-        'ii42_fusion_query('
+        'evoke_fusion_query('
         'regclass[],text,real[],int4,int4,real[],boolean,text[],boolean,'
         'boolean)'
     ),
     (
-        'ii42_fusion_query_fields('
-        'ii42_result_fusion_field_query[],int4,int4,real[])'
+        'evoke_fusion_query_fields('
+        'evoke_result_fusion_field_query[],int4,int4,real[])'
     ),
     (
-        'ii42_fusion_query_weighted('
-        'ii42_result_fusion_weighted_query[],int4,int4,real[])'
+        'evoke_fusion_query_weighted('
+        'evoke_result_fusion_weighted_query[],int4,int4,real[])'
     ),
     (
-        'ii42_fusion_query_weighted('
-        'ii42_result_fusion_weighted_query[],text,int4,int4,real[])'
+        'evoke_fusion_query_weighted('
+        'evoke_result_fusion_weighted_query[],text,int4,int4,real[])'
     ),
-    'ii42_hybrid_candidate(text,tid,real,int4,real,text,text)',
-    'ii42_hybrid_bm25_candidate(text,tid,real,int4,real,text)',
-    'ii42_hybrid_vector_candidate(text,tid,real,int4,real,text)',
+    'evoke_hybrid_candidate(text,tid,real,int4,real,text,text)',
+    'evoke_hybrid_bm25_candidate(text,tid,real,int4,real,text)',
+    'evoke_hybrid_vector_candidate(text,tid,real,int4,real,text)',
     (
-        'ii42_hybrid_bm25_candidates('
+        'evoke_hybrid_bm25_candidates('
         'text,regclass,text,real,int4,text,boolean,text[],boolean,boolean)'
     ),
     (
-        'ii42_hybrid_fuse_candidates('
-        'ii42_result_hybrid_candidate[],int4,text,real,real)'
+        'evoke_hybrid_fuse_candidates('
+        'evoke_result_hybrid_candidate[],int4,text,real,real)'
     ),
 )
 
 DISALLOWED_SPLIT_API_PREFIXES = (
-    'ii42_model_',
-    'ii42_sae_',
-    'ii42_index_model_',
+    'evoke_model_',
+    'evoke_sae_',
+    'evoke_index_model_',
 )
 
 DISALLOWED_SPLIT_LIFECYCLE_OPTIONS = (
@@ -415,14 +415,14 @@ RETIRED_PRODUCT_RELOPTIONS = (
 )
 
 RETIRED_PRODUCT_GUCS = (
-    'ii42.sae_delta_cache_wait_timeout',
-    'ii42.sae_delta_cache_headroom_percent',
-    'ii42.sae_local_delta_cache_max_records',
-    'ii42.sae_local_delta_cache_max_bytes',
+    'evoke.sae_delta_cache_wait_timeout',
+    'evoke.sae_delta_cache_headroom_percent',
+    'evoke.sae_local_delta_cache_max_records',
+    'evoke.sae_local_delta_cache_max_bytes',
 )
 
 ROOT_RESEARCH_ARTIFACT_RE = re.compile(
-    r'(?:ii42-m.*\.(?:json|jsonl|md|sha256|txt)|m[0-9].*\.json)'
+    r'(?:evoke-m.*\.(?:json|jsonl|md|sha256|txt)|m[0-9].*\.json)'
 )
 RESEARCH_ARTIFACT_MANIFEST_SHA256 = (
     '50eff315e36899bed4f96560486ab68a7ac5b505bd2d557d445d70a629eaa65e'
@@ -448,7 +448,7 @@ RETIRED_SOURCE_PATHS = {
     Path('docs/examples/model-backed-query-api-reference.md'),
     Path('docs/examples/model-checkout-contract.md'),
     Path('docs/examples/model-runtime-contract.md'),
-    Path('scripts/collect_ii42_official_beir15_comparison.py'),
+    Path('scripts/collect_evoke_official_beir15_comparison.py'),
     Path('scripts/benchmark_hybrid_fusion.py'),
     Path('scripts/summarize_p2_beir15_native_matrix.py'),
     Path('scripts/summarize_p2_mteb10_native_matrix.py'),
@@ -458,7 +458,7 @@ RETIRED_SOURCE_PATHS = {
 }
 
 RETIRED_LOCAL_SOURCE_ROOTS = (
-    '/Users/' 'leask/Documents/II/ii42',
+    '/Users/' 'leask/Documents/II/evoke',
 )
 RETIRED_RUNTIME_NAME = 'u' + 'bmx'
 ACTIVE_TEXT_SUFFIXES = {
@@ -521,7 +521,7 @@ RESEARCH_REPORT_NUMBER_RE = re.compile(
     re.IGNORECASE,
 )
 ROOT_NUMBERED_RESEARCH_RE = re.compile(
-    r'^(?:ii42|sae)-m(\d{3,4})(?:-|_)',
+    r'^(?:evoke|sae)-m(\d{3,4})(?:-|_)',
     re.IGNORECASE,
 )
 
@@ -546,13 +546,13 @@ def compact_sql(sql: str) -> str:
 
 def check_sql_contract(errors: list[str]) -> None:
     sql = CURRENT_SQL_PATH.read_text(encoding='utf-8')
-    catalog_contract = "ii42_catalog_v1"
+    catalog_contract = "evoke_catalog_v1"
     if (
-        'CREATE FUNCTION ii42_catalog_contract_internal()' not in sql
+        'CREATE FUNCTION evoke_catalog_contract_internal()' not in sql
         or f"SELECT '{catalog_contract}'::text" not in sql
         or (
             'REVOKE EXECUTE ON FUNCTION '
-            'ii42_catalog_contract_internal() FROM PUBLIC;'
+            'evoke_catalog_contract_internal() FROM PUBLIC;'
         ) not in sql
     ):
         errors.append(
@@ -573,7 +573,7 @@ def check_sql_contract(errors: list[str]) -> None:
 
     for name in REQUIRED_PRODUCT_FUNCTIONS:
         count = function_definition_count(sql, name)
-        expected_count = 8 if name == 'ii42_query' else 1
+        expected_count = 8 if name == 'evoke_query' else 1
         if count != expected_count:
             errors.append(
                 f'{CURRENT_SQL_PATH.name}: expected {expected_count} '
@@ -581,15 +581,15 @@ def check_sql_contract(errors: list[str]) -> None:
             )
 
     removed_sql_apis = (
-        'ii42_search',
-        'ii42_index_drop',
-        'ii42_fast_path_advice',
-        'ii42_fast_path_plan',
-        'ii42_fast_path_explain',
-        'ii42_ranked_query',
-        'ii42_query_prepared',
-        'ii42_filter_query',
-        'ii42_result_ranked_query',
+        'evoke_search',
+        'evoke_index_drop',
+        'evoke_fast_path_advice',
+        'evoke_fast_path_plan',
+        'evoke_fast_path_explain',
+        'evoke_ranked_query',
+        'evoke_query_prepared',
+        'evoke_filter_query',
+        'evoke_result_ranked_query',
     )
     for name in removed_sql_apis:
         if name in sql:
@@ -598,8 +598,8 @@ def check_sql_contract(errors: list[str]) -> None:
             )
 
     single_input_fusion = re.compile(
-        r'CREATE\s+FUNCTION\s+ii42_fusion\s*\(\s*'
-        r'hits\s+ii42_result_hit\[\]',
+        r'CREATE\s+FUNCTION\s+evoke_fusion\s*\(\s*'
+        r'hits\s+evoke_result_hit\[\]',
         re.IGNORECASE,
     )
     if single_input_fusion.search(sql):
@@ -610,44 +610,44 @@ def check_sql_contract(errors: list[str]) -> None:
     required = (
         'Unified sparse posting access method for exact BM25 and '
         'model-backed search',
-        'CREATE FUNCTION ii42_index_generation_status_internal(',
+        'CREATE FUNCTION evoke_index_generation_status_internal(',
         "AS 'MODULE_PATHNAME', "
-        "'ii42_index_generation_readiness_internal_c'",
-        'CREATE FUNCTION ii42_index_generation_audit_internal(',
+        "'evoke_index_generation_readiness_internal_c'",
+        'CREATE FUNCTION evoke_index_generation_audit_internal(',
         "AS 'MODULE_PATHNAME', "
-        "'ii42_index_generation_audit_internal_c'",
+        "'evoke_index_generation_audit_internal_c'",
         "'payload_owner', 'index_relation'",
         "'lifecycle', 'postgresql_index'",
         "WHEN sae_enabled THEN 'semantic'",
         "ELSE 'bm25'",
-        'REVOKE EXECUTE ON FUNCTION ii42_runtime_service_query_atoms(',
+        'REVOKE EXECUTE ON FUNCTION evoke_runtime_service_query_atoms(',
         'REVOKE EXECUTE ON FUNCTION '
-        'ii42_runtime_service_atoms_batch_internal(',
-        'REVOKE EXECUTE ON FUNCTION ii42_runtime_cache_clear()',
-        'REVOKE EXECUTE ON FUNCTION ii42_index_touch_maintenance()',
-        'REVOKE EXECUTE ON FUNCTION ii42_index_maintain_due(integer)',
-        'REVOKE EXECUTE ON FUNCTION ii42_index_try_maintenance_lock(',
-        'REVOKE EXECUTE ON FUNCTION ii42_index_runtime_plan_internal(',
+        'evoke_runtime_service_atoms_batch_internal(',
+        'REVOKE EXECUTE ON FUNCTION evoke_runtime_cache_clear()',
+        'REVOKE EXECUTE ON FUNCTION evoke_index_touch_maintenance()',
+        'REVOKE EXECUTE ON FUNCTION evoke_index_maintain_due(integer)',
+        'REVOKE EXECUTE ON FUNCTION evoke_index_try_maintenance_lock(',
+        'REVOKE EXECUTE ON FUNCTION evoke_index_runtime_plan_internal(',
         'REVOKE EXECUTE ON FUNCTION '
-        'ii42_index_checkout_validate_internal(',
+        'evoke_index_checkout_validate_internal(',
         'REVOKE EXECUTE ON FUNCTION '
-        'ii42_checkout_manifest_signature_internal(',
-        'REVOKE EXECUTE ON FUNCTION ii42_index_options_internal(',
-        'REVOKE EXECUTE ON FUNCTION ii42_index_runtime_signature_internal(',
-        'REVOKE EXECUTE ON FUNCTION ii42_index_generation_status_internal(',
-        'REVOKE EXECUTE ON FUNCTION ii42_index_generation_audit_internal(',
-        'REVOKE EXECUTE ON FUNCTION ii42_index_generation_signature_internal(',
-        'REVOKE EXECUTE ON FUNCTION ii42_encode_text_internal(',
-        'REVOKE EXECUTE ON FUNCTION ii42_encode_document_batch_internal(',
+        'evoke_checkout_manifest_signature_internal(',
+        'REVOKE EXECUTE ON FUNCTION evoke_index_options_internal(',
+        'REVOKE EXECUTE ON FUNCTION evoke_index_runtime_signature_internal(',
+        'REVOKE EXECUTE ON FUNCTION evoke_index_generation_status_internal(',
+        'REVOKE EXECUTE ON FUNCTION evoke_index_generation_audit_internal(',
+        'REVOKE EXECUTE ON FUNCTION evoke_index_generation_signature_internal(',
+        'REVOKE EXECUTE ON FUNCTION evoke_encode_text_internal(',
+        'REVOKE EXECUTE ON FUNCTION evoke_encode_document_batch_internal(',
         'REVOKE EXECUTE ON FUNCTION '
-        'ii42_index_semantic_query_native_internal(',
-        'REVOKE EXECUTE ON FUNCTION ii42_query_semantic_internal(',
-        'REVOKE EXECUTE ON FUNCTION ii42_query_internal(',
-        'FROM ii42_index_semantic_query_native_internal(',
+        'evoke_index_semantic_query_native_internal(',
+        'REVOKE EXECUTE ON FUNCTION evoke_query_semantic_internal(',
+        'REVOKE EXECUTE ON FUNCTION evoke_query_internal(',
+        'FROM evoke_index_semantic_query_native_internal(',
         'field_names text[]',
         'field_weights real[]',
         'LANGUAGE plpgsql SECURITY DEFINER VOLATILE PARALLEL UNSAFE',
-        'PERFORM ii42_index_options(index_name);',
+        'PERFORM evoke_index_options(index_name);',
     )
     for needle in required:
         if needle not in sql:
@@ -655,14 +655,14 @@ def check_sql_contract(errors: list[str]) -> None:
                 f'{CURRENT_SQL_PATH.name}: unified contract lacks {needle!r}'
             )
     sql_checkout_contracts = (
-        'ii42_checkout_manifest_signature_internal(manifest)',
+        'evoke_checkout_manifest_signature_internal(manifest)',
         "onnx_result->>'checkout_signature'",
         "'runtime_signature', runtime_signature",
         "encoded->>'runtime_signature'",
         "'$1, $2, $3, $4, $5, $6, $7, $8, $9, $10) AS q '",
-        'ii42_index_runtime_signature_internal(index_name)',
-        'ii42 model checkout changed during query encoding',
-        'ii42 model checkout changed during batch encoding',
+        'evoke_index_runtime_signature_internal(index_name)',
+        'evoke model checkout changed during query encoding',
+        'evoke model checkout changed during batch encoding',
     )
     for contract in sql_checkout_contracts:
         if contract not in sql:
@@ -671,16 +671,16 @@ def check_sql_contract(errors: list[str]) -> None:
                 f'missing {contract!r}'
             )
 
-    if 'CREATE FUNCTION ii42_index_semantic_query_internal(' in sql:
+    if 'CREATE FUNCTION evoke_index_semantic_query_internal(' in sql:
         errors.append(
             f'{CURRENT_SQL_PATH.name}: legacy semantic scorer is installed'
         )
 
     semantic_dispatch_start = sql.find(
-        'CREATE FUNCTION ii42_query_semantic_internal('
+        'CREATE FUNCTION evoke_query_semantic_internal('
     )
     semantic_dispatch_end = sql.find(
-        'COMMENT ON FUNCTION ii42_query_semantic_internal(',
+        'COMMENT ON FUNCTION evoke_query_semantic_internal(',
         semantic_dispatch_start,
     )
     if semantic_dispatch_start < 0 or semantic_dispatch_end < 0:
@@ -692,9 +692,9 @@ def check_sql_contract(errors: list[str]) -> None:
             semantic_dispatch_start:semantic_dispatch_end
         ]
         for forbidden in (
-            'ii42_index_generation_status_internal(index_name)',
+            'evoke_index_generation_status_internal(index_name)',
             'semantic_executor',
-            "ELSE 'ii42_index_semantic_query_internal'",
+            "ELSE 'evoke_index_semantic_query_internal'",
         ):
             if forbidden in semantic_dispatch:
                 errors.append(
@@ -751,11 +751,11 @@ def check_sql_contract(errors: list[str]) -> None:
         )
     status_block = function_block(
         sql,
-        'ii42_index_status',
-        'ii42_index_audit',
+        'evoke_index_status',
+        'evoke_index_audit',
     )
     if not status_block:
-        errors.append(f'{CURRENT_SQL_PATH.name}: missing ii42_index_status')
+        errors.append(f'{CURRENT_SQL_PATH.name}: missing evoke_index_status')
     else:
         for stale_override in (
             "(details->>'pending_writes')::int8",
@@ -763,7 +763,7 @@ def check_sql_contract(errors: list[str]) -> None:
         ):
             if stale_override in status_block:
                 errors.append(
-                    f'{CURRENT_SQL_PATH.name}: ii42_index_status rebuilds '
+                    f'{CURRENT_SQL_PATH.name}: evoke_index_status rebuilds '
                     'generation debt from a separate details snapshot: '
                     f'{stale_override}'
                 )
@@ -775,36 +775,36 @@ def check_sql_contract(errors: list[str]) -> None:
         ):
             if authoritative_projection not in status_block:
                 errors.append(
-                    f'{CURRENT_SQL_PATH.name}: ii42_index_status does not '
+                    f'{CURRENT_SQL_PATH.name}: evoke_index_status does not '
                     'project generation debt into details: '
                     f'{authoritative_projection}'
                 )
 
     options_block = function_block(
         sql,
-        'ii42_index_options_internal',
-        'ii42_index_options',
+        'evoke_index_options_internal',
+        'evoke_index_options',
     )
     query_block = function_block(
         sql,
-        'ii42_query',
-        'ii42_prepared_query',
+        'evoke_query',
+        'evoke_prepared_query',
     )
     maintain_block = function_block(
         sql,
-        'ii42_index_maintain_due',
-        'ii42_op_score_ids',
+        'evoke_index_maintain_due',
+        'evoke_op_score_ids',
     )
     if not query_block:
-        errors.append(f'{CURRENT_SQL_PATH.name}: missing ii42_query')
+        errors.append(f'{CURRENT_SQL_PATH.name}: missing evoke_query')
     elif 'SECURITY DEFINER' not in query_block:
         errors.append(
-            f'{CURRENT_SQL_PATH.name}: ii42_query cannot reach revoked '
+            f'{CURRENT_SQL_PATH.name}: evoke_query cannot reach revoked '
             'internal helpers safely'
         )
     for block_name, block in (
-        ('ii42_index_options_internal', options_block),
-        ('ii42_index_maintain_due', maintain_block),
+        ('evoke_index_options_internal', options_block),
+        ('evoke_index_maintain_due', maintain_block),
     ):
         if not block:
             errors.append(f'{CURRENT_SQL_PATH.name}: missing {block_name}')
@@ -815,7 +815,7 @@ def check_sql_contract(errors: list[str]) -> None:
                     f'{CURRENT_SQL_PATH.name}: {block_name} still depends '
                     f'on {option}'
                 )
-        if 'ii42_model_semantic_' in block or 'ii42_sae_' in block:
+        if 'evoke_model_semantic_' in block or 'evoke_sae_' in block:
             errors.append(
                 f'{CURRENT_SQL_PATH.name}: {block_name} still invokes a '
                 'split lifecycle family'
@@ -825,19 +825,19 @@ def check_sql_contract(errors: list[str]) -> None:
 def check_install_contract(errors: list[str]) -> None:
     makefile = MAKEFILE_PATH.read_text(encoding='utf-8')
     required_makefile_contract = (
-        'II42_EXTENSION_VERSION := $(shell sed -n',
-        'sql/ii42--$(II42_EXTENSION_VERSION).sql',
-        'II42_ENABLE_ONNXRUNTIME ?= 1',
-        'II42_ENABLE_ONNXRUNTIME must be 0 or 1',
-        'II42_CLEAN_ONLY_GOALS := clean clean-ii42-runtime-server',
-        '$(filter-out $(II42_CLEAN_ONLY_GOALS),$(MAKECMDGOALS))',
+        'EVOKE_EXTENSION_VERSION := $(shell sed -n',
+        'sql/evoke--$(EVOKE_EXTENSION_VERSION).sql',
+        'EVOKE_ENABLE_ONNXRUNTIME ?= 1',
+        'EVOKE_ENABLE_ONNXRUNTIME must be 0 or 1',
+        'EVOKE_CLEAN_ONLY_GOALS := clean clean-evoke-runtime-server',
+        '$(filter-out $(EVOKE_CLEAN_ONLY_GOALS),$(MAKECMDGOALS))',
     )
     if not all(item in makefile for item in required_makefile_contract):
         errors.append(
             f'{MAKEFILE_PATH.name}: current-only install SQL contract is '
             'incomplete'
         )
-    if 'II42_ENABLE_ONNXRUNTIME ?= auto' in makefile:
+    if 'EVOKE_ENABLE_ONNXRUNTIME ?= auto' in makefile:
         errors.append(
             f'{MAKEFILE_PATH.name}: product builds may silently omit ONNX '
             'Runtime'
@@ -850,7 +850,7 @@ def check_install_contract(errors: list[str]) -> None:
             )
     versioned_sql = {
         path.name
-        for path in (REPO_ROOT / 'sql').glob('ii42--*.sql')
+        for path in (REPO_ROOT / 'sql').glob('evoke--*.sql')
     }
     if CURRENT_SQL_PATH.name not in versioned_sql:
         errors.append(
@@ -925,10 +925,10 @@ def check_install_contract(errors: list[str]) -> None:
         errors.append('ONNX Runtime installer ignores pinned checksums')
     makefile_runtime = MAKEFILE_PATH.read_text(encoding='utf-8')
     for required_make_contract in (
-        'II42_ONNXRUNTIME_REQUIRED_VERSION',
+        'EVOKE_ONNXRUNTIME_REQUIRED_VERSION',
         'pkg-config --modversion libonnxruntime',
         'ifneq ($(ONNXRUNTIME_VERSION),'
-        '$(II42_ONNXRUNTIME_REQUIRED_VERSION))',
+        '$(EVOKE_ONNXRUNTIME_REQUIRED_VERSION))',
     ):
         if required_make_contract not in makefile_runtime:
             errors.append(
@@ -951,13 +951,13 @@ def check_install_contract(errors: list[str]) -> None:
     for required_release_item in (
         'runtime_stage_dir',
         '--onnxruntime-prefix',
-        'II42_ONNXRUNTIME_PREFIX',
+        'EVOKE_ONNXRUNTIME_PREFIX',
         'scripts/install_onnxruntime_c.sh',
         'onnxruntime_pkg_config_path',
         'EVOKE-LICENSE',
         'ONNXRUNTIME-LICENSE',
         'validate_milestone_model_checkout.py',
-        'ii42/models/default',
+        'evoke/models/default',
         'MILESTONE-MODEL-NOTICE',
         'Git tree: ${git_tree_state}',
         '--allow-dirty',
@@ -973,10 +973,10 @@ def check_install_contract(errors: list[str]) -> None:
     for required_release_item in (
         '--allow-dirty',
         'refusing to build a release from a dirty Git worktree',
-        'II42_GIT_COMMIT=${git_commit}',
-        'II42_GIT_TREE_STATE=${git_tree_state}',
+        'EVOKE_GIT_COMMIT=${git_commit}',
+        'EVOKE_GIT_TREE_STATE=${git_tree_state}',
         'evoke_milestone_model=${model_checkout}',
-        'II42_MODEL_MANIFEST_SHA256=${model_manifest_sha256}',
+        'EVOKE_MODEL_MANIFEST_SHA256=${model_manifest_sha256}',
     ):
         if required_release_item not in release_docker:
             errors.append(
@@ -984,9 +984,9 @@ def check_install_contract(errors: list[str]) -> None:
                 f'{required_release_item}'
             )
     for required_label in (
-        'org.opencontainers.image.revision="${II42_GIT_COMMIT}"',
-        'io.evoke.git-tree-state="${II42_GIT_TREE_STATE}"',
-        'io.evoke.milestone-model.id="${II42_MODEL_ID}"',
+        'org.opencontainers.image.revision="${EVOKE_GIT_COMMIT}"',
+        'io.evoke.git-tree-state="${EVOKE_GIT_TREE_STATE}"',
+        'io.evoke.milestone-model.id="${EVOKE_MODEL_ID}"',
     ):
         if required_label not in dockerfile:
             errors.append(
@@ -1014,7 +1014,7 @@ def check_install_contract(errors: list[str]) -> None:
                 f'{milestone_path.relative_to(REPO_ROOT)}: packaging '
                 'entrypoint is not executable'
             )
-    if 'II42_PACKAGED_MODEL_PATH' not in makefile:
+    if 'EVOKE_PACKAGED_MODEL_PATH' not in makefile:
         errors.append(
             f'{MAKEFILE_PATH.name}: bundled model location is not compiled '
             'into the extension'
@@ -1072,7 +1072,7 @@ def check_active_scripts(errors: list[str]) -> None:
     retired_call = re.compile(
         r'\b(?:SELECT|FROM|PERFORM|CALL)\s+'
         r'(?:[A-Za-z_][A-Za-z0-9_$]*\.)?'
-        r'ii42_(?:model_|sae_generation_|index_model_)'
+        r'evoke_(?:model_|sae_generation_|index_model_)'
     )
     for path in sorted((REPO_ROOT / 'scripts').glob('*')):
         if not path.is_file() or path.suffix not in {'.py', '.sh'}:
@@ -1175,15 +1175,15 @@ def check_c_contract(errors: list[str]) -> None:
         encoding='utf-8'
     )
     required = (
-        'ii42_am_semantic_builder_begin(',
-        'ii42_am_semantic_builder_finish(',
-        'ii42_am_lock_maintenance_xact(',
-        'ii42_am_lock_writer_barrier_oid(',
-        'ii42_am_schedule_background_maintenance(indexRelation)',
+        'evoke_am_semantic_builder_begin(',
+        'evoke_am_semantic_builder_finish(',
+        'evoke_am_lock_maintenance_xact(',
+        'evoke_am_lock_writer_barrier_oid(',
+        'evoke_am_schedule_background_maintenance(indexRelation)',
         'AND NOT COALESCE(c.reloptions, ARRAY[]::text[])',
         "@> ARRAY['consistency=manual']::text[]",
-        'must be superuser to clear the ii42 runtime cache',
-        'ii42.onnxruntime_intra_op_threads',
+        'must be superuser to clear the evoke runtime cache',
+        'evoke.onnxruntime_intra_op_threads',
     )
     for needle in required:
         if needle not in source:
@@ -1195,10 +1195,10 @@ def check_c_contract(errors: list[str]) -> None:
         )
 
     vacuum_discovery_start = source.find(
-        '\nstatic uint32\nii42_am_record_convergent_deletes('
+        '\nstatic uint32\nevoke_am_record_convergent_deletes('
     )
     vacuum_discovery_end = source.find(
-        '\nstatic IndexBulkDeleteResult *\nii42_ambulkdelete(',
+        '\nstatic IndexBulkDeleteResult *\nevoke_ambulkdelete(',
         vacuum_discovery_start,
     )
     if vacuum_discovery_start < 0 or vacuum_discovery_end < 0:
@@ -1210,16 +1210,16 @@ def check_c_contract(errors: list[str]) -> None:
             vacuum_discovery_start:vacuum_discovery_end
         ]
         lock_at = vacuum_discovery.find(
-            'ii42_am_lock_maintenance_xact('
+            'evoke_am_lock_maintenance_xact('
         )
         writer_pin_at = vacuum_discovery.find(
-            'ii42_am_pin_maintenance_xact(indexRelation)'
+            'evoke_am_pin_maintenance_xact(indexRelation)'
         )
         root_read_at = vacuum_discovery.find(
-            'ii42_am_read_meta(indexRelation, &meta)'
+            'evoke_am_read_meta(indexRelation, &meta)'
         )
         l0_read_at = vacuum_discovery.find(
-            'ii42_segment_pages_load_l0_snapshot('
+            'evoke_segment_pages_load_l0_snapshot('
         )
         if not (
             0 <= lock_at < writer_pin_at < root_read_at < l0_read_at
@@ -1230,10 +1230,10 @@ def check_c_contract(errors: list[str]) -> None:
             )
 
     longjmp_ownership_required = (
-        'struct ii42_am_convergent_completion_cleanup',
-        'ii42_am_query_operator_cleanup_create(void)',
-        'ii42_am_visibility_ctx visibility;',
-        'ii42_am_semantic_builder contract;',
+        'struct evoke_am_convergent_completion_cleanup',
+        'evoke_am_query_operator_cleanup_create(void)',
+        'evoke_am_visibility_ctx visibility;',
+        'evoke_am_semantic_builder contract;',
     )
     for needle in longjmp_ownership_required:
         if needle not in source:
@@ -1242,10 +1242,10 @@ def check_c_contract(errors: list[str]) -> None:
                 f'missing {needle!r}'
             )
     reindex_start = source.find(
-        '\nstatic void\nii42_am_reindex_relation('
+        '\nstatic void\nevoke_am_reindex_relation('
     )
     reindex_end = source.find(
-        '\ntypedef enum ii42_am_convergent_tail_cleanup_outcome',
+        '\ntypedef enum evoke_am_convergent_tail_cleanup_outcome',
         reindex_start,
     )
     if reindex_start < 0 or reindex_end < 0:
@@ -1258,7 +1258,7 @@ def check_c_contract(errors: list[str]) -> None:
             'Relation volatile heapRelation = NULL;',
             'PG_FINALLY();',
             'table_close(heapRelation, AccessShareLock);',
-            'ii42_am_unlock_generation_barrier(indexRelation);',
+            'evoke_am_unlock_generation_barrier(indexRelation);',
         ):
             if needle not in reindex_block:
                 errors.append(
@@ -1266,10 +1266,10 @@ def check_c_contract(errors: list[str]) -> None:
                     f'missing {needle!r}'
                 )
     operator_start = source.find(
-        'PG_FUNCTION_INFO_V1(ii42_match_query_tokens_op)'
+        'PG_FUNCTION_INFO_V1(evoke_match_query_tokens_op)'
     )
     operator_end = source.find(
-        'PG_FUNCTION_INFO_V1(ii42_normalize_tokens_sql)',
+        'PG_FUNCTION_INFO_V1(evoke_normalize_tokens_sql)',
         operator_start,
     )
     if operator_start < 0 or operator_end < 0:
@@ -1279,9 +1279,9 @@ def check_c_contract(errors: list[str]) -> None:
     else:
         operator_block = source[operator_start:operator_end]
         for stack_state in (
-            'ii42_query query;',
+            'evoke_query query;',
             'char **doc_tokens;',
-            'ii42_am_visibility_ctx visibility = {0};',
+            'evoke_am_visibility_ctx visibility = {0};',
         ):
             if stack_state in operator_block:
                 errors.append(
@@ -1289,7 +1289,7 @@ def check_c_contract(errors: list[str]) -> None:
                     f'longjmp-unsafe stack state {stack_state!r}'
                 )
         if operator_block.count(
-            'cleanup = ii42_am_query_operator_cleanup_create();'
+            'cleanup = evoke_am_query_operator_cleanup_create();'
         ) != 4:
             errors.append(
                 f'{AM_SOURCE_PATH.name}: not every query operator uses the '
@@ -1297,10 +1297,10 @@ def check_c_contract(errors: list[str]) -> None:
             )
 
     maintenance_start = source.find(
-        '\nstatic text *\nii42_am_try_maintain_index_oid('
+        '\nstatic text *\nevoke_am_try_maintain_index_oid('
     )
     maintenance_end = source.find(
-        '\nPG_FUNCTION_INFO_V1(ii42_try_maintain_index)',
+        '\nPG_FUNCTION_INFO_V1(evoke_try_maintain_index)',
         maintenance_start,
     )
     if maintenance_start < 0 or maintenance_end < 0:
@@ -1310,12 +1310,12 @@ def check_c_contract(errors: list[str]) -> None:
     else:
         maintenance_block = source[maintenance_start:maintenance_end]
         for needle in (
-            'ii42_am_require_convergent_segment_storage(&initial_meta)',
-            'ii42_am_rotate_convergent_active_l0(indexRelation)',
-            'ii42_am_try_seal_pending_l0(',
-            'ii42_am_complete_convergent_semantic(',
-            'ii42_am_try_reclaim_retired_pages(',
-            'ii42_am_try_compact_segments(',
+            'evoke_am_require_convergent_segment_storage(&initial_meta)',
+            'evoke_am_rotate_convergent_active_l0(indexRelation)',
+            'evoke_am_try_seal_pending_l0(',
+            'evoke_am_complete_convergent_semantic(',
+            'evoke_am_try_reclaim_retired_pages(',
+            'evoke_am_try_compact_segments(',
             'reason=no_pending, mode=convergent_segment',
         ):
             if needle not in maintenance_block:
@@ -1324,10 +1324,10 @@ def check_c_contract(errors: list[str]) -> None:
                     f'missing {needle!r}'
                 )
         for forbidden in (
-            'ii42_am_online_maintain_relation(',
-            'ii42_am_reindex_relation(',
-            'ii42_am_note_delta_record',
-            'ii42_am_complete_pending_semantic(',
+            'evoke_am_online_maintain_relation(',
+            'evoke_am_reindex_relation(',
+            'evoke_am_note_delta_record',
+            'evoke_am_complete_pending_semantic(',
         ):
             if forbidden in maintenance_block:
                 errors.append(
@@ -1335,9 +1335,9 @@ def check_c_contract(errors: list[str]) -> None:
                     f'legacy dispatch {forbidden!r}'
                 )
 
-    insert_start = source.find('\nstatic bool\nii42_aminsert(')
+    insert_start = source.find('\nstatic bool\nevoke_aminsert(')
     insert_end = source.find(
-        '\nstatic void\nii42_aminsertcleanup(',
+        '\nstatic void\nevoke_aminsertcleanup(',
         insert_start,
     )
     if insert_start < 0 or insert_end < 0:
@@ -1345,18 +1345,18 @@ def check_c_contract(errors: list[str]) -> None:
     else:
         insert_block = source[insert_start:insert_end]
         for needle in (
-            'ii42_am_require_convergent_segment_storage(&meta)',
-            'ii42_am_append_convergent_l0_upsert(',
-            'ii42_am_schedule_background_maintenance(indexRelation)',
+            'evoke_am_require_convergent_segment_storage(&meta)',
+            'evoke_am_append_convergent_l0_upsert(',
+            'evoke_am_schedule_background_maintenance(indexRelation)',
         ):
             if needle not in insert_block:
                 errors.append(
                     f'{AM_SOURCE_PATH.name}: v3 insert is missing {needle!r}'
                 )
         for forbidden in (
-            'ii42_am_note_delta_record',
-            'ii42_am_queue_sae_mutation',
-            'ii42_am_reindex_relation(',
+            'evoke_am_note_delta_record',
+            'evoke_am_queue_sae_mutation',
+            'evoke_am_reindex_relation(',
         ):
             if forbidden in insert_block:
                 errors.append(
@@ -1365,10 +1365,10 @@ def check_c_contract(errors: list[str]) -> None:
                 )
 
     bulkdelete_start = source.find(
-        '\nstatic IndexBulkDeleteResult *\nii42_ambulkdelete('
+        '\nstatic IndexBulkDeleteResult *\nevoke_ambulkdelete('
     )
     bulkdelete_end = source.find(
-        '\nstatic IndexBulkDeleteResult *\nii42_amvacuumcleanup(',
+        '\nstatic IndexBulkDeleteResult *\nevoke_amvacuumcleanup(',
         bulkdelete_start,
     )
     if bulkdelete_start < 0 or bulkdelete_end < 0:
@@ -1376,16 +1376,16 @@ def check_c_contract(errors: list[str]) -> None:
     else:
         bulkdelete_block = source[bulkdelete_start:bulkdelete_end]
         for needle in (
-            'ii42_am_require_convergent_segment_storage(&meta)',
-            'ii42_am_record_convergent_deletes(',
-            'ii42_am_schedule_background_maintenance(info->index)',
+            'evoke_am_require_convergent_segment_storage(&meta)',
+            'evoke_am_record_convergent_deletes(',
+            'evoke_am_schedule_background_maintenance(info->index)',
         ):
             if needle not in bulkdelete_block:
                 errors.append(
                     f'{AM_SOURCE_PATH.name}: v3 bulk-delete is missing '
                     f'{needle!r}'
                 )
-        if 'ii42_am_record_exact_deletes(' in bulkdelete_block:
+        if 'evoke_am_record_exact_deletes(' in bulkdelete_block:
             errors.append(
                 f'{AM_SOURCE_PATH.name}: v3 bulk-delete retains the retired '
                 'generation-relative tombstone writer'
@@ -1398,7 +1398,7 @@ def check_c_contract(errors: list[str]) -> None:
 
     vacuum_start = bulkdelete_end
     vacuum_end = source.find(
-        '\nstatic bool\nii42_amcanreturn(',
+        '\nstatic bool\nevoke_amcanreturn(',
         vacuum_start,
     )
     if vacuum_start < 0 or vacuum_end < 0:
@@ -1406,8 +1406,8 @@ def check_c_contract(errors: list[str]) -> None:
     else:
         vacuum_block = source[vacuum_start:vacuum_end]
         for needle in (
-            'ii42_am_require_convergent_segment_storage(&meta)',
-            'ii42_am_get_stats(info->index, stats)',
+            'evoke_am_require_convergent_segment_storage(&meta)',
+            'evoke_am_get_stats(info->index, stats)',
         ):
             if needle not in vacuum_block:
                 errors.append(
@@ -1415,8 +1415,8 @@ def check_c_contract(errors: list[str]) -> None:
                     f'{needle!r}'
                 )
         for forbidden in (
-            'ii42_am_freeze_delta_record_xids(',
-            'ii42_am_reindex_relation(',
+            'evoke_am_freeze_delta_record_xids(',
+            'evoke_am_reindex_relation(',
         ):
             if forbidden in vacuum_block:
                 errors.append(
@@ -1425,10 +1425,10 @@ def check_c_contract(errors: list[str]) -> None:
                 )
 
     root_store_start = mutation_source.find(
-        '\nvoid\nii42_am_l0_store_root('
+        '\nvoid\nevoke_am_l0_store_root('
     )
     root_store_end = mutation_source.find(
-        '\nXLogRecPtr\nii42_am_l0_rotate_active_locked(',
+        '\nXLogRecPtr\nevoke_am_l0_rotate_active_locked(',
         root_store_start,
     )
     if root_store_start < 0 or root_store_end < 0:
@@ -1452,10 +1452,10 @@ def check_c_contract(errors: list[str]) -> None:
                 )
 
     callback_start = source.find(
-        '\nstatic void\nii42_am_xact_callback('
+        '\nstatic void\nevoke_am_xact_callback('
     )
     callback_end = source.find(
-        '\nstatic bool\nii42_am_semantic_signature_valid(',
+        '\nstatic bool\nevoke_am_semantic_signature_valid(',
         callback_start,
     )
     if callback_start < 0 or callback_end < 0:
@@ -1463,8 +1463,8 @@ def check_c_contract(errors: list[str]) -> None:
     else:
         callback_block = source[callback_start:callback_end]
         for required in (
-            'ii42_am_touch_background_maintenance()',
-            'ii42_am_clear_pinned_maintenances()',
+            'evoke_am_touch_background_maintenance()',
+            'evoke_am_clear_pinned_maintenances()',
         ):
             if required not in callback_block:
                 errors.append(
@@ -1473,11 +1473,11 @@ def check_c_contract(errors: list[str]) -> None:
                 )
         for forbidden in (
             'pending_maintenance_activity',
-            'ii42_am_note_maintenance_activity(',
-            'ii42_am_reindex_relation(',
-            'ii42_am_publish_replacement_generation(',
-            'ii42_am_flush_all_pending_sae_mutations()',
-            'ii42_am_compile_pending_sae_batch(',
+            'evoke_am_note_maintenance_activity(',
+            'evoke_am_reindex_relation(',
+            'evoke_am_publish_replacement_generation(',
+            'evoke_am_flush_all_pending_sae_mutations()',
+            'evoke_am_compile_pending_sae_batch(',
         ):
             if forbidden in callback_block:
                 errors.append(
@@ -1490,20 +1490,20 @@ def check_c_contract(errors: list[str]) -> None:
             f'{SEMANTIC_SOURCE_PATH.name}: missing ONNX CPU thread control'
         )
 
-    if '#define II42_RUNTIME_SERVICE_RESTART_SECONDS 5' not in runtime_header:
+    if '#define EVOKE_RUNTIME_SERVICE_RESTART_SECONDS 5' not in runtime_header:
         errors.append(
             f'{RUNTIME_SERVICE_HEADER_PATH.name}: runtime restart bound is '
             'missing'
         )
     if (
         'worker.bgw_restart_time = '
-        'II42_RUNTIME_SERVICE_RESTART_SECONDS;' not in source
+        'EVOKE_RUNTIME_SERVICE_RESTART_SECONDS;' not in source
     ):
         errors.append(
             f'{AM_SOURCE_PATH.name}: runtime worker does not use the '
             'bounded restart interval'
         )
-    if 'ii42_runtime_service_worker_is_ready(' not in semantic_source:
+    if 'evoke_runtime_service_worker_is_ready(' not in semantic_source:
         errors.append(
             f'{SEMANTIC_SOURCE_PATH.name}: stale worker PID guard is missing'
         )
@@ -1514,13 +1514,13 @@ def check_c_contract(errors: list[str]) -> None:
         'ProcNumber processing_owner_proc_number;',
     )
     runtime_source_admission_contracts = (
-        'ii42_runtime_service_document_response_slots_locked(void)',
-        'ii42_runtime_service_max_document_workers_locked(void)',
+        'evoke_runtime_service_document_response_slots_locked(void)',
+        'evoke_runtime_service_max_document_workers_locked(void)',
         'response->request_kind = 0;',
         '].request_kind = request_kind;',
         'ProcNumberGetProc(owner_proc_number);',
         'response->owner_proc_number == MyProcNumber',
-        'ii42_runtime_service->workers[i].proc_number ==\n'
+        'evoke_runtime_service->workers[i].proc_number ==\n'
         '                    MyProcNumber',
         'worker->proc_number != expected_proc_number',
         '\\"document_response_slots_in_use\\":%u,',
@@ -1529,15 +1529,15 @@ def check_c_contract(errors: list[str]) -> None:
     for contract in runtime_header_admission_contracts:
         if contract not in runtime_header:
             errors.append(
-                f'ii42 runtime ownership header is missing {contract!r}'
+                f'evoke runtime ownership header is missing {contract!r}'
             )
     for contract in runtime_source_admission_contracts:
         if contract not in semantic_source:
             errors.append(
-                f'ii42 runtime document admission is missing {contract!r}'
+                f'evoke runtime document admission is missing {contract!r}'
             )
     shared_preload_version = re.search(
-        r'^#define II42_AM_PRELOAD_VERSION (\d+)$',
+        r'^#define EVOKE_AM_PRELOAD_VERSION (\d+)$',
         preload_source,
         re.MULTILINE,
     )
@@ -1550,17 +1550,17 @@ def check_c_contract(errors: list[str]) -> None:
             'allocation tracking'
         )
     scheduler_start = scheduler_source.find(
-        'typedef struct ii42_am_scheduler_control'
+        'typedef struct evoke_am_scheduler_control'
     )
     scheduler_end = scheduler_source.find(
-        '} ii42_am_scheduler_control;',
+        '} evoke_am_scheduler_control;',
         scheduler_start,
     )
     preload_start = preload_source.find(
-        'typedef struct ii42_am_preload_control'
+        'typedef struct evoke_am_preload_control'
     )
     preload_end = preload_source.find(
-        '} ii42_am_preload_control;',
+        '} evoke_am_preload_control;',
         preload_start,
     )
     scheduler_body = (
@@ -1575,10 +1575,10 @@ def check_c_contract(errors: list[str]) -> None:
     )
     for required in (
         'active_background_workers',
-        'work_hints[II42_AM_WORK_HINT_CAPACITY]',
-        'reconcile_dbs[II42_AM_RECONCILE_DB_CAPACITY]',
-        'semantic_telemetry[II42_AM_SEMANTIC_TELEMETRY_CAPACITY]',
-        'posting_heat[II42_AM_POSTING_HEAT_CAPACITY]',
+        'work_hints[EVOKE_AM_WORK_HINT_CAPACITY]',
+        'reconcile_dbs[EVOKE_AM_RECONCILE_DB_CAPACITY]',
+        'semantic_telemetry[EVOKE_AM_SEMANTIC_TELEMETRY_CAPACITY]',
+        'posting_heat[EVOKE_AM_POSTING_HEAT_CAPACITY]',
     ):
         if required not in scheduler_body:
             errors.append(
@@ -1589,7 +1589,7 @@ def check_c_contract(errors: list[str]) -> None:
     for forbidden in (
         'arena_size',
         'entry_capacity',
-        'ii42_am_shared_preload_entry entries',
+        'evoke_am_shared_preload_entry entries',
     ):
         if forbidden in scheduler_body:
             errors.append(
@@ -1601,7 +1601,7 @@ def check_c_contract(errors: list[str]) -> None:
         'Size used;',
         'uint32 entry_capacity;',
         'uint32 hash_capacity;',
-        'ii42_am_preload_entry entries[FLEXIBLE_ARRAY_MEMBER];',
+        'evoke_am_preload_entry entries[FLEXIBLE_ARRAY_MEMBER];',
     ):
         if required not in preload_body:
             errors.append(
@@ -1622,10 +1622,10 @@ def check_c_contract(errors: list[str]) -> None:
                 f'scheduler authority {forbidden!r}'
             )
     for required in (
-        '#define II42_AM_SCHEDULER_MAGIC',
-        '#define II42_AM_SCHEDULER_VERSION',
-        '"ii42 scheduler state",',
-        'static ii42_am_scheduler_control *ii42_scheduler = NULL;',
+        '#define EVOKE_AM_SCHEDULER_MAGIC',
+        '#define EVOKE_AM_SCHEDULER_VERSION',
+        '"evoke scheduler state",',
+        'static evoke_am_scheduler_control *evoke_scheduler = NULL;',
     ):
         if required not in scheduler_source:
             errors.append(
@@ -1635,7 +1635,7 @@ def check_c_contract(errors: list[str]) -> None:
             )
     for required in (
         'TimestampTz maintenance_first_marked_at;',
-        'ii42_am_scheduler_work_hint_reset_age(',
+        'evoke_am_scheduler_work_hint_reset_age(',
     ):
         if required not in scheduler_header:
             errors.append(
@@ -1643,12 +1643,12 @@ def check_c_contract(errors: list[str]) -> None:
                 f'contract is missing {required!r}'
             )
     for required in (
-        '#define II42_AM_SCHEDULER_VERSION 3',
+        '#define EVOKE_AM_SCHEDULER_VERSION 3',
         '!maintenance_was_pending',
         'hint->maintenance_first_marked_at = GetCurrentTimestamp();',
-        'ii42_am_scheduler_work_hint_reset_age(',
+        'evoke_am_scheduler_work_hint_reset_age(',
         'hint->accelerator_retry_after = retry_after;',
-        'ii42_am_scheduler_work_hint_defer_accelerator(',
+        'evoke_am_scheduler_work_hint_defer_accelerator(',
     ):
         if required not in scheduler_source:
             errors.append(
@@ -1656,16 +1656,16 @@ def check_c_contract(errors: list[str]) -> None:
                 f'authority is missing {required!r}'
             )
     for required in (
-        'ii42.maintenance_low_debt_interval_ms',
-        'ii42_am_work_hint_low_debt_due(',
+        'evoke.maintenance_low_debt_interval_ms',
+        'evoke_am_work_hint_low_debt_due(',
         'allow_periodic_low_debt && low_debt',
         'allow_periodic_low_debt && refresh.periodic_eligible',
         'candidate_out->action_class = !strict_due',
         'semantic_accelerator_strict_due_raw',
-        'ii42_am_work_hint_accelerator_retry_allowed(hint_token)',
-        'ii42_am_work_hint_defer_accelerator(index_oid)',
+        'evoke_am_work_hint_accelerator_retry_allowed(hint_token)',
+        'evoke_am_work_hint_defer_accelerator(index_oid)',
         'candidate->allow_accelerator_build',
-        'ii42_am_maintenance_result_resets_low_debt_age(',
+        'evoke_am_maintenance_result_resets_low_debt_age(',
         '\\"refresh_max_age_ms\\\":null',
     ):
         if required not in source:
@@ -1673,7 +1673,7 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{AM_SOURCE_PATH.name}: periodic low-debt scheduling is '
                 f'missing {required!r}'
             )
-    if 'RequestAddinShmemSpace(ii42_am_scheduler_shmem_size());' not in source:
+    if 'RequestAddinShmemSpace(evoke_am_scheduler_shmem_size());' not in source:
         errors.append(
             f'{AM_SOURCE_PATH.name}: scheduler shmem request is missing'
         )
@@ -1682,10 +1682,10 @@ def check_c_contract(errors: list[str]) -> None:
             f'{AM_SOURCE_PATH.name}: retired preload warning state remains'
         )
     exit_start = source.find(
-        '\nstatic void\nii42_am_cache_shmem_exit('
+        '\nstatic void\nevoke_am_cache_shmem_exit('
     )
     exit_end = source.find(
-        '\n\nstatic void\nii42_am_search_state_reset(',
+        '\n\nstatic void\nevoke_am_search_state_reset(',
         exit_start,
     )
     exit_block = (
@@ -1694,8 +1694,8 @@ def check_c_contract(errors: list[str]) -> None:
         else ''
     )
     for required in (
-        'ii42_am_local_posting_heat_query_count > 0',
-        'ii42_am_posting_heat_flush_local();',
+        'evoke_am_local_posting_heat_query_count > 0',
+        'evoke_am_posting_heat_flush_local();',
     ):
         if required not in exit_block:
             errors.append(
@@ -1703,10 +1703,10 @@ def check_c_contract(errors: list[str]) -> None:
                 f'posting heat; missing {required!r}'
             )
     heat_start = source.find(
-        '\nstatic void\nii42_am_posting_heat_observe_page_native('
+        '\nstatic void\nevoke_am_posting_heat_observe_page_native('
     )
     heat_end = source.find(
-        '\n\nstatic bool\nii42_am_posting_heat_candidate_snapshot(',
+        '\n\nstatic bool\nevoke_am_posting_heat_candidate_snapshot(',
         heat_start,
     )
     heat_block = (
@@ -1715,7 +1715,7 @@ def check_c_contract(errors: list[str]) -> None:
         else ''
     )
     for forbidden in (
-        'ii42_am_posting_heat_namespace',
+        'evoke_am_posting_heat_namespace',
         'term_id >= lexical_term_limit',
     ):
         if forbidden in heat_block:
@@ -1723,8 +1723,8 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{AM_SOURCE_PATH.name}: page-native posting heat excludes '
                 f'semantic atoms through {forbidden!r}'
             )
-    identity_definition = 'bool\nii42_am_generation_identity_matches('
-    identity_declaration = 'bool ii42_am_generation_identity_matches('
+    identity_definition = 'bool\nevoke_am_generation_identity_matches('
+    identity_declaration = 'bool evoke_am_generation_identity_matches('
     if AM_SOURCE_PATH.read_text(encoding='utf-8').count(
         identity_definition
     ) != 0:
@@ -1750,9 +1750,9 @@ def check_c_contract(errors: list[str]) -> None:
         'entry->mapped_size > entry->allocation_size',
         'entry->allocation_size >= payload_size',
         'allocation_size =\n'
-        '            ii42_preload->entries[free_slot].allocation_size;',
-        'ii42_preload->entries[free_slot].allocation_size = allocation_size;',
-        '!entry->in_use && !ii42_am_preload_entry_has_block(entry) &&\n'
+        '            evoke_preload->entries[free_slot].allocation_size;',
+        'evoke_preload->entries[free_slot].allocation_size = allocation_size;',
+        '!entry->in_use && !evoke_am_preload_entry_has_block(entry) &&\n'
         '            free_slot < 0',
     )
     for contract in am_allocator_contracts:
@@ -1763,15 +1763,15 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{contract!r}'
             )
     session_cache_identity_contracts = (
-        '#define II42_CHECKOUT_VALIDATION_CACHE_LIMIT 16',
-        'ii42_checkout_validation_cache['
-        'II42_CHECKOUT_VALIDATION_CACHE_LIMIT]',
-        'ii42_checkout_validation_cache_access_seq',
-        'char checkout_signature[II42_CHECKOUT_SIGNATURE_HEX_LEN + 1];',
-        'ii42_checkout_manifest_signature(manifest, checkout_signature);',
+        '#define EVOKE_CHECKOUT_VALIDATION_CACHE_LIMIT 16',
+        'evoke_checkout_validation_cache['
+        'EVOKE_CHECKOUT_VALIDATION_CACHE_LIMIT]',
+        'evoke_checkout_validation_cache_access_seq',
+        'char checkout_signature[EVOKE_CHECKOUT_SIGNATURE_HEX_LEN + 1];',
+        'evoke_checkout_manifest_signature(manifest, checkout_signature);',
         'entry->checkout_signature,',
         'sizeof(entry->checkout_signature)',
-        'ii42_checkout_validate_manifest(manifest, NULL, model_path);',
+        'evoke_checkout_validate_manifest(manifest, NULL, model_path);',
         '",\\"checkout_signature\\":"',
         'entry->document_mode == document_mode',
         'entry->document_mode = document_mode;',
@@ -1787,9 +1787,9 @@ def check_c_contract(errors: list[str]) -> None:
                 f'is missing {contract!r}'
             )
     compiler_cache_identity_contracts = (
-        'char checkout_signature[II42_P2_CACHE_IDENTITY_BYTES];',
-        'ii42_p2_tokenizer_cache->checkout_signature',
-        'ii42_p2_compiler_cache->checkout_signature',
+        'char checkout_signature[EVOKE_P2_CACHE_IDENTITY_BYTES];',
+        'evoke_p2_tokenizer_cache->checkout_signature',
+        'evoke_p2_compiler_cache->checkout_signature',
         'invalid P2 tokenizer cache identity',
         'invalid P2 compiler cache identity',
     )
@@ -1802,11 +1802,11 @@ def check_c_contract(errors: list[str]) -> None:
     checkout_generation_contracts = (
         "config->>'checkout_signature'",
         "config#>>'{index,runtime_signature}'",
-        'ii42_am_semantic_builder_require_current_contract(',
+        'evoke_am_semantic_builder_require_current_contract(',
         '"batch submission"',
         '"batch completion"',
         '"generation publication"',
-        'checkout_signature = ii42_am_jsonb_object_get(',
+        'checkout_signature = evoke_am_jsonb_object_get(',
         'builder->checkout_signature',
     )
     for contract in checkout_generation_contracts:
@@ -1816,7 +1816,7 @@ def check_c_contract(errors: list[str]) -> None:
                 f'missing {contract!r}'
             )
     if (
-        'ii42_runtime_service_outstanding_document_requests_locked'
+        'evoke_runtime_service_outstanding_document_requests_locked'
         in semantic_source
     ):
         errors.append(
@@ -1825,10 +1825,10 @@ def check_c_contract(errors: list[str]) -> None:
         )
 
     drain_start = source.find(
-        '\nstatic void\nii42_am_semantic_builder_drain_one('
+        '\nstatic void\nevoke_am_semantic_builder_drain_one('
     )
     drain_end = source.find(
-        '\nstatic void\nii42_am_semantic_builder_drain_all(',
+        '\nstatic void\nevoke_am_semantic_builder_drain_all(',
         drain_start,
     )
     if drain_start < 0 or drain_end < 0:
@@ -1841,11 +1841,11 @@ def check_c_contract(errors: list[str]) -> None:
             'rowset lifetime'
         )
     for lock_contract in (
-        '#define II42_LWLOCK_TRANCHE_NAME "ii42"',
-        '#define II42_LWLOCK_TRANCHE_COUNT 2',
-        'extern LWLock *ii42_runtime_service_lock;',
-        'extern Size ii42_runtime_service_shmem_size(void);',
-        'extern void ii42_runtime_service_shmem_startup(LWLock *lock);',
+        '#define EVOKE_LWLOCK_TRANCHE_NAME "evoke"',
+        '#define EVOKE_LWLOCK_TRANCHE_COUNT 2',
+        'extern LWLock *evoke_runtime_service_lock;',
+        'extern Size evoke_runtime_service_shmem_size(void);',
+        'extern void evoke_runtime_service_shmem_startup(LWLock *lock);',
     ):
         if lock_contract not in runtime_header:
             errors.append(
@@ -1853,8 +1853,8 @@ def check_c_contract(errors: list[str]) -> None:
                 f'lock contract {lock_contract!r}'
             )
     for definition in (
-        'ii42_runtime_service_control *ii42_runtime_service = NULL;',
-        'LWLock *ii42_runtime_service_lock = NULL;',
+        'evoke_runtime_service_control *evoke_runtime_service = NULL;',
+        'LWLock *evoke_runtime_service_lock = NULL;',
     ):
         if definition in source:
             errors.append(
@@ -1866,8 +1866,8 @@ def check_c_contract(errors: list[str]) -> None:
                 f'mismatch for {definition!r}'
             )
     for function, return_type in (
-        ('ii42_runtime_service_shmem_size', 'Size'),
-        ('ii42_runtime_service_shmem_startup', 'void'),
+        ('evoke_runtime_service_shmem_size', 'Size'),
+        ('evoke_runtime_service_shmem_startup', 'void'),
     ):
         definition = f'\n{return_type}\n{function}('
         if definition in source:
@@ -1880,15 +1880,15 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{SEMANTIC_SOURCE_PATH.name}: runtime shmem authority '
                 f'mismatch for {function}'
             )
-    if 'ii42_runtime_service->' in source or \
-            'ii42_runtime_service_lock' in source:
+    if 'evoke_runtime_service->' in source or \
+            'evoke_runtime_service_lock' in source:
         errors.append(
             f'{AM_SOURCE_PATH.name}: runtime shared layout remains visible '
             'to the AM entry module'
         )
     for startup_contract in (
-        'RequestAddinShmemSpace(ii42_runtime_service_shmem_size());',
-        'ii42_runtime_service_shmem_startup(runtime_service_lock);',
+        'RequestAddinShmemSpace(evoke_runtime_service_shmem_size());',
+        'evoke_runtime_service_shmem_startup(runtime_service_lock);',
     ):
         if source.count(startup_contract) != 1:
             errors.append(
@@ -1904,7 +1904,7 @@ def check_c_contract(errors: list[str]) -> None:
             f'{SEMANTIC_SOURCE_PATH.name}: shared preload membership is not '
             'parsed as a PostgreSQL library list'
         )
-    if 'strstr(preload, "ii42")' in semantic_source:
+    if 'strstr(preload, "evoke")' in semantic_source:
         errors.append(
             f'{SEMANTIC_SOURCE_PATH.name}: shared preload membership still '
             'uses substring matching'
@@ -1934,7 +1934,7 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{exact_manifest_contract!r}'
             )
     if re.search(
-        r'ii42_(?:onnx_text_atoms|p2_unified_text_atoms)_v1',
+        r'evoke_(?:onnx_text_atoms|p2_unified_text_atoms)_v1',
         semantic_source,
     ):
         errors.append(
@@ -1947,9 +1947,9 @@ def check_c_contract(errors: list[str]) -> None:
     for retired_semantic_pattern in (
         r'\bEATMH\d{3}\b',
         r'\bEATM_[A-Z0-9_]*(?:COMPACT|LEGACY|COMPAT)[A-Z0-9_]*\b',
-        r'\bii42_semantic_[a-z0-9_]*'
+        r'\bevoke_semantic_[a-z0-9_]*'
         r'(?:compact|legacy|compat)[a-z0-9_]*\b',
-        r'\bII42_AM_GENERATION_CONTRACT_'
+        r'\bEVOKE_AM_GENERATION_CONTRACT_'
         r'(?:LEGACY|COMPAT)[A-Z0-9_]*\b',
     ):
         if any(
@@ -1961,25 +1961,25 @@ def check_c_contract(errors: list[str]) -> None:
                 f'matching {retired_semantic_pattern!r}'
             )
     eventual_completion_contracts = (
-        'ii42_am_complete_convergent_semantic(',
-        'ii42_am_semantic_frontier_load(',
-        'ii42_am_semantic_frontier_classify(',
-        'ii42_am_append_convergent_semantic_complete(',
-        'ii42_am_append_convergent_semantic_quarantine(',
-        'II42_L0_RECORD_SEMANTIC_COMPLETE',
-        'II42_L0_RECORD_SEMANTIC_QUARANTINE',
+        'evoke_am_complete_convergent_semantic(',
+        'evoke_am_semantic_frontier_load(',
+        'evoke_am_semantic_frontier_classify(',
+        'evoke_am_append_convergent_semantic_complete(',
+        'evoke_am_append_convergent_semantic_quarantine(',
+        'EVOKE_L0_RECORD_SEMANTIC_COMPLETE',
+        'EVOKE_L0_RECORD_SEMANTIC_QUARANTINE',
         'semantic_completion_due',
-        'II42_ACTIVE_L0_MAX_RECORDS',
-        'II42_ACTIVE_L0_MAX_PAGES',
-        'ii42 active L0 hard frontier is exhausted',
+        'EVOKE_ACTIVE_L0_MAX_RECORDS',
+        'EVOKE_ACTIVE_L0_MAX_PAGES',
+        'evoke active L0 hard frontier is exhausted',
         '\\"semantic_completion\\":{\\"enabled\\":%s,',
         'mode=semantic_completion',
     )
     for contract in eventual_completion_contracts:
         owner_source = mutation_source if contract in (
-            'II42_ACTIVE_L0_MAX_RECORDS',
-            'II42_ACTIVE_L0_MAX_PAGES',
-            'ii42 active L0 hard frontier is exhausted',
+            'EVOKE_ACTIVE_L0_MAX_RECORDS',
+            'EVOKE_ACTIVE_L0_MAX_PAGES',
+            'evoke active L0 hard frontier is exhausted',
         ) else source
         owner_path = (
             AM_MUTATION_SOURCE_PATH
@@ -1992,11 +1992,11 @@ def check_c_contract(errors: list[str]) -> None:
                 f'missing {contract!r}'
             )
     quarantine_projection_contracts = (
-        'ii42_am_semantic_quarantine_scan_v3(',
-        'ii42_segment_pages_visit_document_records(',
+        'evoke_am_semantic_quarantine_scan_v3(',
+        'evoke_segment_pages_visit_document_records(',
         'view->semantic_pending_since',
         'view->semantic_error_hash',
-        'ii42_am_delta_record_states(',
+        'evoke_am_delta_record_states(',
     )
     for contract in quarantine_projection_contracts:
         if contract not in source:
@@ -2005,7 +2005,7 @@ def check_c_contract(errors: list[str]) -> None:
                 f'missing {contract!r}'
             )
     required_storage_contract = (
-        '#define II42_STORAGE_CURRENT_VERSION 2U',
+        '#define EVOKE_STORAGE_CURRENT_VERSION 2U',
     )
     for contract in required_storage_contract:
         if contract not in storage_header:
@@ -2013,18 +2013,18 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{STORAGE_HEADER_PATH.name}: missing exact storage boundary '
                 f'{contract!r}'
             )
-    if 'version != II42_STORAGE_CURRENT_VERSION' not in storage_source:
+    if 'version != EVOKE_STORAGE_CURRENT_VERSION' not in storage_source:
         errors.append(
             f'{STORAGE_SOURCE_PATH.name}: current-only storage boundary '
             'is missing'
         )
     cache_dispatch_start = source.find(
-        '\nstatic ii42_am_cache_entry *\n'
-        'ii42_am_get_cached_index_internal('
+        '\nstatic evoke_am_cache_entry *\n'
+        'evoke_am_get_cached_index_internal('
     )
     cache_dispatch_end = source.find(
-        '\nstatic ii42_am_cache_entry *\n'
-        'ii42_am_get_cached_index(',
+        '\nstatic evoke_am_cache_entry *\n'
+        'evoke_am_get_cached_index(',
         cache_dispatch_start,
     )
     if cache_dispatch_start < 0 or cache_dispatch_end < 0:
@@ -2034,8 +2034,8 @@ def check_c_contract(errors: list[str]) -> None:
     else:
         cache_dispatch = source[cache_dispatch_start:cache_dispatch_end]
         for contract in (
-            'ii42_am_require_convergent_segment_storage(&meta);',
-            'return ii42_am_get_cached_segment_index(',
+            'evoke_am_require_convergent_segment_storage(&meta);',
+            'return evoke_am_get_cached_segment_index(',
         ):
             if contract not in cache_dispatch:
                 errors.append(
@@ -2047,14 +2047,14 @@ def check_c_contract(errors: list[str]) -> None:
         (AM_SOURCE_PATH, source),
     ):
         if re.search(
-            r'\bII42_STORAGE_[A-Z0-9_]*(?:COMPAT|LEGACY)[A-Z0-9_]*\b',
+            r'\bEVOKE_STORAGE_[A-Z0-9_]*(?:COMPAT|LEGACY)[A-Z0-9_]*\b',
             storage_contract_source,
         ):
             errors.append(
                 f'{path.name}: historical storage decoder remains'
             )
     if re.search(
-        r'\bII42_STORAGE_[A-Z0-9_]*(?:COMPAT|LEGACY)[A-Z0-9_]*\b',
+        r'\bEVOKE_STORAGE_[A-Z0-9_]*(?:COMPAT|LEGACY)[A-Z0-9_]*\b',
         storage_header,
     ):
         errors.append(
@@ -2080,44 +2080,44 @@ def check_c_contract(errors: list[str]) -> None:
             )
 
     ambuildempty = re.search(
-        r'static void\s+ii42_ambuildempty\([^)]*\)\s*\{'
+        r'static void\s+evoke_ambuildempty\([^)]*\)\s*\{'
         r'(?P<body>[\s\S]*?)\n\}\n\nstatic ',
         source,
     )
     if ambuildempty is None:
-        errors.append(f'{AM_SOURCE_PATH.name}: ii42_ambuildempty not found')
+        errors.append(f'{AM_SOURCE_PATH.name}: evoke_ambuildempty not found')
     else:
         empty_body = ambuildempty.group('body')
-        if 'ii42_checkout_unified_contract(' not in empty_body:
+        if 'evoke_checkout_unified_contract(' not in empty_body:
             errors.append(
                 f'{AM_SOURCE_PATH.name}: empty semantic init does not use '
                 'the current unified checkout contract'
             )
-        if 'ii42_am_semantic_builder_begin(' in empty_body:
+        if 'evoke_am_semantic_builder_begin(' in empty_body:
             errors.append(
                 f'{AM_SOURCE_PATH.name}: empty semantic init invokes the '
                 'semantic builder'
             )
 
     retired_active_patterns = (
-        r'\bii42_am_[a-z0-9_]*sql_semantic[a-z0-9_]*\b',
-        r'\bii42_am_[a-z0-9_]*(?:semantic|model)_delta[a-z0-9_]*\b',
-        r'\bii42_index_(?:model|semantic)_delta[a-z0-9_]*\b',
+        r'\bevoke_am_[a-z0-9_]*sql_semantic[a-z0-9_]*\b',
+        r'\bevoke_am_[a-z0-9_]*(?:semantic|model)_delta[a-z0-9_]*\b',
+        r'\bevoke_index_(?:model|semantic)_delta[a-z0-9_]*\b',
         r'\b(?:model|semantic)_delta_generation\b',
-        r'\bII42_AM_SHARED_GENERATION_(?:SEMANTIC|MODEL)_DELTA\b',
+        r'\bEVOKE_AM_SHARED_GENERATION_(?:SEMANTIC|MODEL)_DELTA\b',
         r'\bshared_preload_(?:semantic|model)_delta_entries\b',
-        r'\bii42_am_publish_tail_generation[a-z0-9_]*\b',
-        r'\bii42_am_semantic_bridge_[a-z0-9_]*\b',
-        r'\bII42_AM_DESCRIPTOR_(?:MAGIC|VERSION)\b',
-        r'\bii42_am_generation_descriptor[a-z0-9_]*\b',
-        r'\bII42_AM_SHARED_GENERATION_'
+        r'\bevoke_am_publish_tail_generation[a-z0-9_]*\b',
+        r'\bevoke_am_semantic_bridge_[a-z0-9_]*\b',
+        r'\bEVOKE_AM_DESCRIPTOR_(?:MAGIC|VERSION)\b',
+        r'\bevoke_am_generation_descriptor[a-z0-9_]*\b',
+        r'\bEVOKE_AM_SHARED_GENERATION_'
         r'(?:BASE|LEXICAL_DELTA_CACHE|TOMBSTONE)\b',
-        r'\bii42_am_shared_(?:lexical_delta_cache|tombstone)_state\b',
-        r'\bii42_am_generation_wait_event\b',
-        r'\bii42_am_shared_preload_waiter[a-z0-9_]*\b',
-        r'\bii42_am_eventual_backlog_limits\b',
-        r'\bii42_am_cache_release_shared_preload_leases\b',
-        r'\bii42_am_shared_preload_note_admission_miss\b',
+        r'\bevoke_am_shared_(?:lexical_delta_cache|tombstone)_state\b',
+        r'\bevoke_am_generation_wait_event\b',
+        r'\bevoke_am_shared_preload_waiter[a-z0-9_]*\b',
+        r'\bevoke_am_eventual_backlog_limits\b',
+        r'\bevoke_am_cache_release_shared_preload_leases\b',
+        r'\bevoke_am_shared_preload_note_admission_miss\b',
     )
     for retired_active_pattern in retired_active_patterns:
         if re.search(retired_active_pattern, source):
@@ -2131,9 +2131,9 @@ def check_c_contract(errors: list[str]) -> None:
         (SEMANTIC_SOURCE_PATH, semantic_source),
     ):
         for prefix in (
-            'PG_FUNCTION_INFO_V1(ii42_model_',
-            'PG_FUNCTION_INFO_V1(ii42_sae_',
-            'PG_FUNCTION_INFO_V1(ii42_index_model_',
+            'PG_FUNCTION_INFO_V1(evoke_model_',
+            'PG_FUNCTION_INFO_V1(evoke_sae_',
+            'PG_FUNCTION_INFO_V1(evoke_index_model_',
         ):
             if prefix in worker_source:
                 errors.append(
@@ -2145,40 +2145,40 @@ def check_c_contract(errors: list[str]) -> None:
             )
 
     makefile = MAKEFILE_PATH.read_text(encoding='utf-8')
-    if 'ii42_sae_blockmax' in makefile:
+    if 'evoke_sae_blockmax' in makefile:
         errors.append('Makefile: retired SAE implementation module remains')
-    if makefile.count('src/ii42_am_build.o') != 1:
+    if makefile.count('src/evoke_am_build.o') != 1:
         errors.append('Makefile: build authority does not have one owner')
-    if makefile.count('src/ii42_am_hot_fold.o') != 1:
+    if makefile.count('src/evoke_am_hot_fold.o') != 1:
         errors.append('Makefile: HOT_FOLD authority does not have one owner')
-    if 'src/ii42_am_options.o' not in makefile:
+    if 'src/evoke_am_options.o' not in makefile:
         errors.append('Makefile: reloption authority module is missing')
-    if makefile.count('src/ii42_am_meta.o') != 1:
+    if makefile.count('src/evoke_am_meta.o') != 1:
         errors.append('Makefile: metapage authority does not have one owner')
-    if makefile.count('src/ii42_am_preload.o') != 1:
+    if makefile.count('src/evoke_am_preload.o') != 1:
         errors.append('Makefile: preload authority does not have one owner')
-    if makefile.count('src/ii42_am_reclamation.o') != 1:
+    if makefile.count('src/evoke_am_reclamation.o') != 1:
         errors.append('Makefile: reclamation authority has no sole owner')
-    if makefile.count('src/ii42_am_scheduler.o') != 1:
+    if makefile.count('src/evoke_am_scheduler.o') != 1:
         errors.append('Makefile: scheduler authority does not have one owner')
-    if makefile.count('src/ii42_am_sql.o') != 1:
+    if makefile.count('src/evoke_am_sql.o') != 1:
         errors.append('Makefile: SQL authority module does not have one owner')
-    if makefile.count('src/ii42_am_test_support.o') != 1:
+    if makefile.count('src/evoke_am_test_support.o') != 1:
         errors.append('Makefile: test-support authority has no sole owner')
 
-    if '#include "ii42_am_preload.h"' not in source:
+    if '#include "evoke_am_preload.h"' not in source:
         errors.append(f'{AM_SOURCE_PATH.name}: preload API is not included')
-    if '#include "ii42_am_scheduler.h"' not in source:
+    if '#include "evoke_am_scheduler.h"' not in source:
         errors.append(f'{AM_SOURCE_PATH.name}: scheduler API is not included')
-    if '#include "ii42_am_hot_fold.h"' not in source:
+    if '#include "evoke_am_hot_fold.h"' not in source:
         errors.append(f'{AM_SOURCE_PATH.name}: HOT_FOLD API is not included')
     for forbidden in (
-        'ii42_am_hot_fold_checksum(',
-        'ii42_am_hot_fold_block_header_validate(',
-        'ii42_am_hot_fold_block_validate(',
-        'ii42_am_hot_fold_build_block(',
-        'ii42_am_shared_hot_fold_attach(',
-        'ii42_am_shared_hot_fold_publish(',
+        'evoke_am_hot_fold_checksum(',
+        'evoke_am_hot_fold_block_header_validate(',
+        'evoke_am_hot_fold_block_validate(',
+        'evoke_am_hot_fold_build_block(',
+        'evoke_am_shared_hot_fold_attach(',
+        'evoke_am_shared_hot_fold_publish(',
         '.private_header',
         '.private_terms',
         '.private_entries',
@@ -2194,13 +2194,13 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{forbidden!r}'
             )
     for required in (
-        '\nstatic uint64\nii42_am_hot_fold_checksum(',
-        '\nstatic bool\nii42_am_hot_fold_block_header_validate(',
-        '\nstatic bool\nii42_am_hot_fold_block_validate(',
-        '\nstatic bool\nii42_am_hot_fold_build_block(',
-        '\nbool\nii42_am_hot_fold_attach(',
-        '\nbool\nii42_am_hot_fold_publish(',
-        '\nvoid\nii42_am_hot_fold_view_release(',
+        '\nstatic uint64\nevoke_am_hot_fold_checksum(',
+        '\nstatic bool\nevoke_am_hot_fold_block_header_validate(',
+        '\nstatic bool\nevoke_am_hot_fold_block_validate(',
+        '\nstatic bool\nevoke_am_hot_fold_build_block(',
+        '\nbool\nevoke_am_hot_fold_attach(',
+        '\nbool\nevoke_am_hot_fold_publish(',
+        '\nvoid\nevoke_am_hot_fold_view_release(',
     ):
         if hot_fold_source.count(required) != 1:
             errors.append(
@@ -2208,12 +2208,12 @@ def check_c_contract(errors: list[str]) -> None:
                 f'own one {required!r}'
             )
     for required in (
-        'typedef struct ii42_am_hot_fold_header',
-        'typedef struct ii42_am_hot_fold_term',
-        'typedef struct ii42_am_hot_fold_entry',
-        'typedef struct ii42_am_hot_fold_view',
-        'ii42_am_hot_fold_attach(',
-        'ii42_am_hot_fold_publish(',
+        'typedef struct evoke_am_hot_fold_header',
+        'typedef struct evoke_am_hot_fold_term',
+        'typedef struct evoke_am_hot_fold_entry',
+        'typedef struct evoke_am_hot_fold_view',
+        'evoke_am_hot_fold_attach(',
+        'evoke_am_hot_fold_publish(',
     ):
         if hot_fold_header.count(required) != 1:
             errors.append(
@@ -2221,11 +2221,11 @@ def check_c_contract(errors: list[str]) -> None:
                 f'must declare one {required!r}'
             )
     for forbidden in (
-        'typedef struct ii42_am_preload_entry',
-        'typedef struct ii42_am_preload_control',
-        'ii42_preload->',
-        'ii42_am_preload_publisher_active',
-        'ii42_am_reserved_preload_slot',
+        'typedef struct evoke_am_preload_entry',
+        'typedef struct evoke_am_preload_control',
+        'evoke_preload->',
+        'evoke_am_preload_publisher_active',
+        'evoke_am_reserved_preload_slot',
     ):
         if forbidden in source:
             errors.append(
@@ -2233,14 +2233,14 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{forbidden!r}'
             )
     for required in (
-        'typedef struct ii42_am_preload_entry',
-        'typedef struct ii42_am_preload_control',
-        'static ii42_am_preload_control *ii42_preload = NULL;',
-        'static LWLock *ii42_preload_lock = NULL;',
-        'ii42_am_preload_shmem_startup(',
-        'ii42_am_preload_reserve(',
-        'ii42_am_preload_attach(',
-        'ii42_am_preload_status_snapshot(',
+        'typedef struct evoke_am_preload_entry',
+        'typedef struct evoke_am_preload_control',
+        'static evoke_am_preload_control *evoke_preload = NULL;',
+        'static LWLock *evoke_preload_lock = NULL;',
+        'evoke_am_preload_shmem_startup(',
+        'evoke_am_preload_reserve(',
+        'evoke_am_preload_attach(',
+        'evoke_am_preload_status_snapshot(',
     ):
         if preload_source.count(required) != 1:
             errors.append(
@@ -2264,19 +2264,19 @@ def check_c_contract(errors: list[str]) -> None:
                     f'{path.name}: preload handle internals escaped typed API: '
                     f'{private_field!r}'
                 )
-    if 'ii42_am_preload_cache_available(' not in semantic_source:
+    if 'evoke_am_preload_cache_available(' not in semantic_source:
         errors.append(
             f'{SEMANTIC_SOURCE_PATH.name}: semantic runtime does not use '
             'preload availability API'
         )
-    if 'ii42_shared_preload_available(' in semantic_header:
+    if 'evoke_shared_preload_available(' in semantic_header:
         errors.append(
             f'{SEMANTIC_HEADER_PATH.name}: retired AM preload wrapper remains'
         )
     for forbidden in (
-        'typedef struct ii42_am_scheduler_control',
-        'ii42_shared_scheduler',
-        'ii42_shared_state_lock',
+        'typedef struct evoke_am_scheduler_control',
+        'evoke_shared_scheduler',
+        'evoke_shared_state_lock',
         '->work_hints[',
         '->reconcile_dbs[',
         '->semantic_telemetry[',
@@ -2288,12 +2288,12 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{forbidden!r}'
             )
     for required in (
-        'typedef struct ii42_am_scheduler_control',
-        'static ii42_am_scheduler_control *ii42_scheduler = NULL;',
-        'static LWLock *ii42_scheduler_lock = NULL;',
-        'ii42_am_scheduler_shmem_startup(',
-        'ii42_am_scheduler_database_hint_snapshot(',
-        'ii42_am_scheduler_status_snapshot(',
+        'typedef struct evoke_am_scheduler_control',
+        'static evoke_am_scheduler_control *evoke_scheduler = NULL;',
+        'static LWLock *evoke_scheduler_lock = NULL;',
+        'evoke_am_scheduler_shmem_startup(',
+        'evoke_am_scheduler_database_hint_snapshot(',
+        'evoke_am_scheduler_status_snapshot(',
     ):
         if scheduler_source.count(required) != 1:
             errors.append(
@@ -2312,10 +2312,10 @@ def check_c_contract(errors: list[str]) -> None:
     for required in (
         'if (configured <= 0)',
         'worker_limit <= 0 ||',
-        'ii42_am_scheduler_set_worker_limit((uint32) Max(newval, 0));',
-        'II42_AM_DEFAULT_MAINTENANCE_WORKER_LIMIT,\n            0,',
-        'ii42_am_forget_background_launch_stamp(InvalidOid);',
-        'ii42_am_scheduler_database_hint_snapshot(',
+        'evoke_am_scheduler_set_worker_limit((uint32) Max(newval, 0));',
+        'EVOKE_AM_DEFAULT_MAINTENANCE_WORKER_LIMIT,\n            0,',
+        'evoke_am_forget_background_launch_stamp(InvalidOid);',
+        'evoke_am_scheduler_database_hint_snapshot(',
     ):
         if required not in source:
             errors.append(
@@ -2323,9 +2323,9 @@ def check_c_contract(errors: list[str]) -> None:
                 f'misses {required!r}'
             )
     for required in (
-        'typedef struct ii42_am_scheduler_status',
-        'ii42_am_scheduler_shmem_startup(',
-        'ii42_am_scheduler_status_snapshot(',
+        'typedef struct evoke_am_scheduler_status',
+        'evoke_am_scheduler_shmem_startup(',
+        'evoke_am_scheduler_status_snapshot(',
     ):
         if scheduler_header.count(required) != 1:
             errors.append(
@@ -2333,22 +2333,22 @@ def check_c_contract(errors: list[str]) -> None:
                 f'must declare one {required!r}'
             )
     scheduler_process_retired = (
-        'ii42_am_background_worker_phase',
-        'II42_AM_WORKER_PHASE_',
-        'ii42_am_maintenance_worker_counted_active',
-        'ii42_am_maintenance_worker_launch_reserved',
-        'ii42_am_maintenance_worker_exit_registered',
-        'ii42_am_maintenance_launch_exit_registered',
-        'ii42_am_current_worker_phase',
-        'ii42_am_register_maintenance_launch_exit',
-        'ii42_am_note_background_worker_phase',
-        'ii42_am_register_maintenance_worker_exit',
-        'ii42_am_release_current_maintenance_worker_launch',
-        'ii42_am_note_maintenance_worker_started',
-        'ii42_am_note_maintenance_worker_finished',
-        'ii42_am_active_background_workers',
-        'ii42_am_last_maintenance_db_oid',
-        'ii42_am_set_last_maintenance_db_oid',
+        'evoke_am_background_worker_phase',
+        'EVOKE_AM_WORKER_PHASE_',
+        'evoke_am_maintenance_worker_counted_active',
+        'evoke_am_maintenance_worker_launch_reserved',
+        'evoke_am_maintenance_worker_exit_registered',
+        'evoke_am_maintenance_launch_exit_registered',
+        'evoke_am_current_worker_phase',
+        'evoke_am_register_maintenance_launch_exit',
+        'evoke_am_note_background_worker_phase',
+        'evoke_am_register_maintenance_worker_exit',
+        'evoke_am_release_current_maintenance_worker_launch',
+        'evoke_am_note_maintenance_worker_started',
+        'evoke_am_note_maintenance_worker_finished',
+        'evoke_am_active_background_workers',
+        'evoke_am_last_maintenance_db_oid',
+        'evoke_am_set_last_maintenance_db_oid',
     )
     for retired in scheduler_process_retired:
         if retired in source:
@@ -2357,14 +2357,14 @@ def check_c_contract(errors: list[str]) -> None:
                 f'into AM: {retired!r}'
             )
     for required in (
-        'static bool ii42_scheduler_process_counted_active = false;',
-        'static bool ii42_scheduler_process_launch_reserved = false;',
+        'static bool evoke_scheduler_process_counted_active = false;',
+        'static bool evoke_scheduler_process_launch_reserved = false;',
         'static bool '
-        'ii42_scheduler_process_worker_exit_registered = false;',
+        'evoke_scheduler_process_worker_exit_registered = false;',
         'static bool '
-        'ii42_scheduler_process_launch_exit_registered = false;',
-        'static ii42_am_scheduler_worker_phase '
-        'ii42_scheduler_process_phase =',
+        'evoke_scheduler_process_launch_exit_registered = false;',
+        'static evoke_am_scheduler_worker_phase '
+        'evoke_scheduler_process_phase =',
     ):
         if scheduler_source.count(required) != 1:
             errors.append(
@@ -2372,12 +2372,12 @@ def check_c_contract(errors: list[str]) -> None:
                 f'must own one {required!r}'
             )
     scheduler_process_apis = (
-        'ii42_am_scheduler_process_adopt_worker_launch',
-        'ii42_am_scheduler_process_release_worker_launch',
-        'ii42_am_scheduler_process_initialize',
-        'ii42_am_scheduler_process_note_started',
-        'ii42_am_scheduler_process_set_phase',
-        'ii42_am_scheduler_process_note_finished',
+        'evoke_am_scheduler_process_adopt_worker_launch',
+        'evoke_am_scheduler_process_release_worker_launch',
+        'evoke_am_scheduler_process_initialize',
+        'evoke_am_scheduler_process_note_started',
+        'evoke_am_scheduler_process_set_phase',
+        'evoke_am_scheduler_process_note_finished',
     )
     for function in scheduler_process_apis:
         definition = re.compile(
@@ -2394,10 +2394,10 @@ def check_c_contract(errors: list[str]) -> None:
                 f'declare one {function}'
             )
     adopt_start = scheduler_source.find(
-        '\nvoid\nii42_am_scheduler_process_adopt_worker_launch(void)'
+        '\nvoid\nevoke_am_scheduler_process_adopt_worker_launch(void)'
     )
     adopt_end = scheduler_source.find(
-        '\nvoid\nii42_am_scheduler_status_snapshot(',
+        '\nvoid\nevoke_am_scheduler_status_snapshot(',
         adopt_start,
     )
     adopt_body = (
@@ -2406,10 +2406,10 @@ def check_c_contract(errors: list[str]) -> None:
         else ''
     )
     for required in (
-        'ii42_scheduler_process_launch_reserved = true;',
-        'ii42_am_scheduler_process_note_started();',
-        'before_shmem_exit(ii42_am_scheduler_process_worker_exit, 0);',
-        'before_shmem_exit(ii42_am_scheduler_process_launch_exit, 0);',
+        'evoke_scheduler_process_launch_reserved = true;',
+        'evoke_am_scheduler_process_note_started();',
+        'before_shmem_exit(evoke_am_scheduler_process_worker_exit, 0);',
+        'before_shmem_exit(evoke_am_scheduler_process_launch_exit, 0);',
     ):
         if required not in adopt_body:
             errors.append(
@@ -2418,12 +2418,12 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{required!r}'
             )
     scheduler_process_calls = {
-        'ii42_am_scheduler_process_adopt_worker_launch(': 1,
-        'ii42_am_scheduler_process_release_worker_launch(': 4,
-        'ii42_am_scheduler_process_initialize(': 1,
-        'ii42_am_scheduler_process_note_started(': 1,
-        'ii42_am_scheduler_process_set_phase(': 2,
-        'ii42_am_scheduler_process_note_finished(': 2,
+        'evoke_am_scheduler_process_adopt_worker_launch(': 1,
+        'evoke_am_scheduler_process_release_worker_launch(': 4,
+        'evoke_am_scheduler_process_initialize(': 1,
+        'evoke_am_scheduler_process_note_started(': 1,
+        'evoke_am_scheduler_process_set_phase(': 2,
+        'evoke_am_scheduler_process_note_finished(': 2,
     }
     for function, expected in scheduler_process_calls.items():
         if source.count(function) != expected:
@@ -2432,14 +2432,14 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{function!r} changed from {expected}'
             )
     scheduler_contract_counts = {
-        'appname = "ii42 background";': 1,
-        'appname = "ii42 preload";': 1,
-        'appname = "ii42 maintenance";': 1,
+        'appname = "evoke background";': 1,
+        'appname = "evoke preload";': 1,
+        'appname = "evoke maintenance";': 1,
         'activity = "idle";': 1,
         'activity = "auto-preload";': 1,
         'activity = "index maintenance";': 1,
-        'before_shmem_exit(ii42_am_scheduler_process_worker_exit, 0);': 2,
-        'before_shmem_exit(ii42_am_scheduler_process_launch_exit, 0);': 1,
+        'before_shmem_exit(evoke_am_scheduler_process_worker_exit, 0);': 2,
+        'before_shmem_exit(evoke_am_scheduler_process_launch_exit, 0);': 1,
     }
     for required, expected in scheduler_contract_counts.items():
         if scheduler_source.count(required) != expected:
@@ -2455,10 +2455,10 @@ def check_c_contract(errors: list[str]) -> None:
         (SEMANTIC_HEADER_PATH, semantic_header),
     ):
         for retired_internal_pattern in (
-            r'\bii42_model_(?!v1\b)',
-            r'\bii42_sae_[a-z0-9_]*\b',
-            r'\bIi42Model[A-Za-z0-9_]*\b',
-            r'\bII42_MODEL_[A-Z0-9_]*\b',
+            r'\bevoke_model_(?!v1\b)',
+            r'\bevoke_sae_[a-z0-9_]*\b',
+            r'\bEvokeModel[A-Za-z0-9_]*\b',
+            r'\bEVOKE_MODEL_[A-Z0-9_]*\b',
         ):
             if re.search(retired_internal_pattern, implementation_source):
                 errors.append(
@@ -2473,7 +2473,7 @@ def check_c_contract(errors: list[str]) -> None:
                 )
 
     relopt_table = re.search(
-        r'static const relopt_parse_elt ii42_relopt_elems\[\][\s\S]*?\n\};',
+        r'static const relopt_parse_elt evoke_relopt_elems\[\][\s\S]*?\n\};',
         options_source,
     )
     if relopt_table is None:
@@ -2495,15 +2495,15 @@ def check_c_contract(errors: list[str]) -> None:
                     'remains: '
                     f'{option}'
                 )
-    if 'static const relopt_parse_elt ii42_relopt_elems' in source:
+    if 'static const relopt_parse_elt evoke_relopt_elems' in source:
         errors.append(
             f'{AM_SOURCE_PATH.name}: duplicate reloption table remains'
         )
     for retired_options_owner in (
-        'static relopt_kind ii42_relopt_kind',
-        'static bool ii42_relopts_initialized',
-        'ii42_am_validate_policy_reloptions(',
-        'ii42_am_apply_reloption_defaults_and_flags(',
+        'static relopt_kind evoke_relopt_kind',
+        'static bool evoke_relopts_initialized',
+        'evoke_am_validate_policy_reloptions(',
+        'evoke_am_apply_reloption_defaults_and_flags(',
     ):
         if retired_options_owner in source:
             errors.append(
@@ -2511,14 +2511,14 @@ def check_c_contract(errors: list[str]) -> None:
                 f'the AM entry module: {retired_options_owner}'
             )
     for option_projection in (
-        'ii42_am_relation_has_explicit_reloptions',
-        'ii42_am_get_consistency',
-        'ii42_am_validate_relation_policy',
-        'ii42_am_auto_preload_priority',
-        'ii42_am_field_aware_enabled',
-        'ii42_am_sae_enabled',
-        'ii42_am_read_params',
-        'ii42_am_read_text_policy',
+        'evoke_am_relation_has_explicit_reloptions',
+        'evoke_am_get_consistency',
+        'evoke_am_validate_relation_policy',
+        'evoke_am_auto_preload_priority',
+        'evoke_am_field_aware_enabled',
+        'evoke_am_sae_enabled',
+        'evoke_am_read_params',
+        'evoke_am_read_text_policy',
     ):
         definition = re.compile(
             rf'\n(?:static )?(?:bool|int|void)\n'
@@ -2535,7 +2535,7 @@ def check_c_contract(errors: list[str]) -> None:
                 f'the AM entry module: {option_projection}'
             )
     model_path_projection = re.compile(
-        r'\nconst char \*\nii42_am_relation_model_path\('
+        r'\nconst char \*\nevoke_am_relation_model_path\('
     )
     if len(model_path_projection.findall(options_source)) != 1:
         errors.append(
@@ -2564,14 +2564,14 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{AM_SOURCE_PATH.name}: direct option projection remains: '
                 f'{direct_option_field}'
             )
-    if 'typedef struct ii42_am_options' in options_header:
+    if 'typedef struct evoke_am_options' in options_header:
         errors.append(
             f'{AM_OPTIONS_HEADER_PATH.name}: parsed reloption layout is public'
         )
     private_layout_patterns = (
-        r'\bii42_am_options\s*\*',
-        r'\bsizeof\s*\(\s*ii42_am_options\s*\)',
-        r'\boffsetof\s*\(\s*ii42_am_options\s*,',
+        r'\bevoke_am_options\s*\*',
+        r'\bsizeof\s*\(\s*evoke_am_options\s*\)',
+        r'\boffsetof\s*\(\s*evoke_am_options\s*,',
         r'\bGET_STRING_RELOPTION\s*\(',
         r'->rd_options\b',
     )
@@ -2585,7 +2585,7 @@ def check_c_contract(errors: list[str]) -> None:
                     f'{path.name}: private reloption layout escaped options '
                     f'authority, matching {private_layout_pattern!r}'
                 )
-    for sql_symbol in ('ii42_score_ids_op', 'ii42_score_tokens_op'):
+    for sql_symbol in ('evoke_score_ids_op', 'evoke_score_tokens_op'):
         info = f'PG_FUNCTION_INFO_V1({sql_symbol});'
         definition = re.compile(
             rf'\nDatum\n{re.escape(sql_symbol)}\(PG_FUNCTION_ARGS\)'
@@ -2601,9 +2601,9 @@ def check_c_contract(errors: list[str]) -> None:
                 f'the AM entry module: {sql_symbol}'
             )
     for sql_helper in (
-        'ii42_am_text_array_element_type',
-        'ii42_am_score_overlap_int4',
-        'ii42_am_score_overlap_text',
+        'evoke_am_text_array_element_type',
+        'evoke_am_score_overlap_int4',
+        'evoke_am_score_overlap_text',
     ):
         if sql_source.count(f'{sql_helper}(') < 1:
             errors.append(
@@ -2615,7 +2615,7 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{AM_SOURCE_PATH.name}: immutable SQL helper returned to the '
                 f'AM entry module: {sql_helper}'
             )
-    hybrid_symbol = 'ii42_hybrid_fuse_candidates'
+    hybrid_symbol = 'evoke_hybrid_fuse_candidates'
     hybrid_info = f'PG_FUNCTION_INFO_V1({hybrid_symbol});'
     hybrid_definition = re.compile(
         rf'\nDatum\n{re.escape(hybrid_symbol)}\(PG_FUNCTION_ARGS\)'
@@ -2631,16 +2631,16 @@ def check_c_contract(errors: list[str]) -> None:
     for path in sorted((REPO_ROOT / 'src').glob('*.c')):
         if path == AM_SQL_SOURCE_PATH:
             continue
-        if 'ii42_hybrid_' in path.read_text(encoding='utf-8'):
+        if 'evoke_hybrid_' in path.read_text(encoding='utf-8'):
             errors.append(
                 f'{path.name}: value-only hybrid fusion escaped the '
                 'SQL-value module'
             )
     for hybrid_state in (
-        'ii42_hybrid_candidate_state',
-        'ii42_hybrid_source_state',
-        'ii42_hybrid_hit_state',
-        'ii42_hybrid_search_state',
+        'evoke_hybrid_candidate_state',
+        'evoke_hybrid_source_state',
+        'evoke_hybrid_hit_state',
+        'evoke_hybrid_search_state',
     ):
         if sql_source.count(f'typedef struct {hybrid_state}') != 1:
             errors.append(
@@ -2648,15 +2648,15 @@ def check_c_contract(errors: list[str]) -> None:
                 f'private owner: {hybrid_state}'
             )
     for hybrid_helper in (
-        'ii42_hybrid_tid_text',
-        'ii42_hybrid_parse_fusion',
-        'ii42_hybrid_parse_normalizer',
-        'ii42_hybrid_parse_direction',
-        'ii42_hybrid_deform_candidate',
-        'ii42_hybrid_prepare_candidates',
-        'ii42_hybrid_deduplicate_candidates',
-        'ii42_hybrid_build_hits',
-        'ii42_hybrid_prepare_search_state',
+        'evoke_hybrid_tid_text',
+        'evoke_hybrid_parse_fusion',
+        'evoke_hybrid_parse_normalizer',
+        'evoke_hybrid_parse_direction',
+        'evoke_hybrid_deform_candidate',
+        'evoke_hybrid_prepare_candidates',
+        'evoke_hybrid_deduplicate_candidates',
+        'evoke_hybrid_build_hits',
+        'evoke_hybrid_prepare_search_state',
     ):
         if sql_source.count(f'{hybrid_helper}(') < 1:
             errors.append(
@@ -2675,20 +2675,20 @@ def check_c_contract(errors: list[str]) -> None:
         'Snapshot',
         'BackgroundWorker',
         'SPI_',
-        'ii42_am_cache',
-        'ii42_semantic',
-        'ii42_runtime',
-        'ii42_segment',
-        'ii42_storage',
-        'ii42_posting',
-        'ii42_page',
-        'ii42_query',
-        '"ii42_am_options.h"',
-        '"ii42_page_query.h"',
-        '"ii42_runtime_service.h"',
-        '"ii42_segment_pages.h"',
-        '"ii42_semantic.h"',
-        '"ii42_storage.h"',
+        'evoke_am_cache',
+        'evoke_semantic',
+        'evoke_runtime',
+        'evoke_segment',
+        'evoke_storage',
+        'evoke_posting',
+        'evoke_page',
+        'evoke_query',
+        '"evoke_am_options.h"',
+        '"evoke_page_query.h"',
+        '"evoke_runtime_service.h"',
+        '"evoke_segment_pages.h"',
+        '"evoke_semantic.h"',
+        '"evoke_storage.h"',
     ):
         if forbidden_sql_dependency in sql_source:
             errors.append(
@@ -2696,15 +2696,15 @@ def check_c_contract(errors: list[str]) -> None:
                 f'forbidden authority: {forbidden_sql_dependency!r}'
             )
     array_constructors = (
-        'ii42_array_from_float4_values',
-        'ii42_array_from_int4_values',
-        'ii42_array_from_cstrings',
+        'evoke_array_from_float4_values',
+        'evoke_array_from_int4_values',
+        'evoke_array_from_cstrings',
     )
     all_c_sources = {
         path: path.read_text(encoding='utf-8')
         for path in sorted((REPO_ROOT / 'src').glob('*.c'))
     }
-    visibility_layout = 'typedef struct ii42_am_visibility_ctx'
+    visibility_layout = 'typedef struct evoke_am_visibility_ctx'
     visibility_layout_owners = [
         path
         for path in sorted((REPO_ROOT / 'src').glob('*.[ch]'))
@@ -2719,11 +2719,11 @@ def check_c_contract(errors: list[str]) -> None:
             f'header owner: {owner_names or "<none>"}'
         )
     scan_authorities = (
-        ('ii42_am_visibility_begin', 'void', 5),
-        ('ii42_am_visibility_begin_with_snapshot', 'void', 8),
-        ('ii42_am_tid_visible', 'bool', 1),
-        ('ii42_am_tid_visible_as', 'bool', 6),
-        ('ii42_am_visibility_end', 'void', 7),
+        ('evoke_am_visibility_begin', 'void', 5),
+        ('evoke_am_visibility_begin_with_snapshot', 'void', 8),
+        ('evoke_am_tid_visible', 'bool', 1),
+        ('evoke_am_tid_visible_as', 'bool', 6),
+        ('evoke_am_visibility_end', 'void', 7),
     )
     for authority, return_type, am_caller_count in scan_authorities:
         definition = re.compile(
@@ -2794,73 +2794,73 @@ def check_c_contract(errors: list[str]) -> None:
         'GenericXLog',
         'XLog',
         'LockRelation',
-        'ii42_am_build',
-        'ii42_am_maintenance',
-        'ii42_am_meta',
-        'ii42_am_mutation',
-        'ii42_am_options',
-        'ii42_page_query',
-        'ii42_posting',
-        'ii42_runtime',
-        'ii42_segment',
-        'ii42_semantic',
-        'ii42_storage',
+        'evoke_am_build',
+        'evoke_am_maintenance',
+        'evoke_am_meta',
+        'evoke_am_mutation',
+        'evoke_am_options',
+        'evoke_page_query',
+        'evoke_posting',
+        'evoke_runtime',
+        'evoke_segment',
+        'evoke_semantic',
+        'evoke_storage',
     ):
         if forbidden in scan_source:
             errors.append(
                 f'{AM_SCAN_SOURCE_PATH.name}: visibility slice acquired '
                 f'forbidden authority {forbidden!r}'
             )
-    if '#include "ii42_am_scan.h"' not in source:
+    if '#include "evoke_am_scan.h"' not in source:
         errors.append(
             f'{AM_SOURCE_PATH.name}: scan visibility contract is not included'
         )
     makefile = MAKEFILE_PATH.read_text(encoding='utf-8')
-    if makefile.count('src/ii42_am_scan.o') != 1:
+    if makefile.count('src/evoke_am_scan.o') != 1:
         errors.append('Makefile: scan visibility authority has no sole object')
     cmake = CMAKE_PATH.read_text(encoding='utf-8')
-    if 'src/ii42_am_scan.c' in cmake:
+    if 'src/evoke_am_scan.c' in cmake:
         errors.append(
             'CMakeLists.txt: PostgreSQL scan authority entered core target'
         )
     maintenance_authorities = {
-        'ii42_am_try_maintenance_lock': 2,
-        'ii42_am_lock_maintenance_xact': 1,
-        'ii42_am_try_accelerator_build_lock': 1,
-        'ii42_am_accelerator_build_unlock': 1,
-        'ii42_am_try_session_maintenance_lock': 3,
-        'ii42_am_maintenance_lock_held': 1,
-        'ii42_am_maintenance_unlock': 5,
-        'ii42_am_session_maintenance_unlock': 4,
-        'ii42_am_lock_append': 5,
-        'ii42_am_unlock_append': 7,
-        'ii42_am_lock_writer_barrier_oid': 3,
-        'ii42_am_unlock_writer_barrier_oid': 4,
-        'ii42_am_pin_maintenance_xact': 5,
-        'ii42_am_pinned_maintenance_mode': 3,
-        'ii42_am_pinned_maintenances_present': 1,
-        'ii42_am_reparent_pinned_maintenances': 1,
-        'ii42_am_clear_pinned_maintenances': 2,
-        'ii42_am_maintenance_tracking_enabled': 5,
-        'ii42_am_eventual_policy_enabled': 9,
-        'ii42_am_automatic_policy_enabled': 1,
-        'ii42_am_foreground_maintenance_enabled': 1,
-        'ii42_am_maintenance_codec_error': 15,
+        'evoke_am_try_maintenance_lock': 2,
+        'evoke_am_lock_maintenance_xact': 1,
+        'evoke_am_try_accelerator_build_lock': 1,
+        'evoke_am_accelerator_build_unlock': 1,
+        'evoke_am_try_session_maintenance_lock': 3,
+        'evoke_am_maintenance_lock_held': 1,
+        'evoke_am_maintenance_unlock': 5,
+        'evoke_am_session_maintenance_unlock': 4,
+        'evoke_am_lock_append': 5,
+        'evoke_am_unlock_append': 7,
+        'evoke_am_lock_writer_barrier_oid': 3,
+        'evoke_am_unlock_writer_barrier_oid': 4,
+        'evoke_am_pin_maintenance_xact': 5,
+        'evoke_am_pinned_maintenance_mode': 3,
+        'evoke_am_pinned_maintenances_present': 1,
+        'evoke_am_reparent_pinned_maintenances': 1,
+        'evoke_am_clear_pinned_maintenances': 2,
+        'evoke_am_maintenance_tracking_enabled': 5,
+        'evoke_am_eventual_policy_enabled': 9,
+        'evoke_am_automatic_policy_enabled': 1,
+        'evoke_am_foreground_maintenance_enabled': 1,
+        'evoke_am_maintenance_codec_error': 15,
     }
     maintenance_meta_callers = {
-        'ii42_am_lock_append': 2,
-        'ii42_am_unlock_append': 4,
-        'ii42_am_pin_maintenance_xact': 1,
-        'ii42_am_maintenance_tracking_enabled': 1,
+        'evoke_am_lock_append': 2,
+        'evoke_am_unlock_append': 4,
+        'evoke_am_pin_maintenance_xact': 1,
+        'evoke_am_maintenance_tracking_enabled': 1,
     }
     maintenance_mutation_callers = {
-        'ii42_am_lock_append': 2,
-        'ii42_am_unlock_append': 2,
-        'ii42_am_pin_maintenance_xact': 1,
-        'ii42_am_maintenance_codec_error': 2,
+        'evoke_am_lock_append': 2,
+        'evoke_am_unlock_append': 2,
+        'evoke_am_pin_maintenance_xact': 1,
+        'evoke_am_maintenance_codec_error': 2,
     }
     maintenance_reclamation_callers = {
-        'ii42_am_maintenance_codec_error': 1,
+        'evoke_am_maintenance_codec_error': 1,
     }
     for authority, am_caller_count in maintenance_authorities.items():
         definition = re.compile(
@@ -2918,11 +2918,11 @@ def check_c_contract(errors: list[str]) -> None:
                 f'count changed from {reclamation_caller_count}'
             )
     for layout in (
-        '#define II42_AM_APPEND_LOCK_TAG UINT32_C(0x32534241)',
-        '#define II42_AM_MAINTENANCE_LOCK_TAG UINT32_C(0x3253424D)',
-        '#define II42_AM_WRITER_BARRIER_LOCK_TAG UINT32_C(0x32534242)',
-        'typedef struct ii42_am_scoped_index',
-        'static List *ii42_am_pinned_maintenances = NIL;',
+        '#define EVOKE_AM_APPEND_LOCK_TAG UINT32_C(0x32534241)',
+        '#define EVOKE_AM_MAINTENANCE_LOCK_TAG UINT32_C(0x3253424D)',
+        '#define EVOKE_AM_WRITER_BARRIER_LOCK_TAG UINT32_C(0x32534242)',
+        'typedef struct evoke_am_scoped_index',
+        'static List *evoke_am_pinned_maintenances = NIL;',
     ):
         owners = [
             path
@@ -2943,21 +2943,21 @@ def check_c_contract(errors: list[str]) -> None:
         'LockRelease(&tag, ExclusiveLock, false)',
         'LockRelease(&tag, ExclusiveLock, true)',
         'RelationGetRelid(index_relation)',
-        'errmsg("ii42 append lock is not held")',
+        'errmsg("evoke append lock is not held")',
         'LockAcquire(&tag, lock_mode, false, dont_wait)',
         'LockRelease(&tag, lock_mode, false)',
         'MemoryContextSwitchTo(TopTransactionContext)',
         'GetCurrentSubTransactionId()',
         'entry->index_oid = InvalidOid;',
         'entry->subxid = parent_subid;',
-        'ii42_am_pinned_maintenances = NIL;',
-        'ii42_am_foreground_maintenance_enabled(index_relation)',
-        '!ii42_am_sae_enabled(index_relation)',
-        'ii42_am_validate_relation_policy(index_relation);',
-        'II42_AM_CONSISTENCY_EVENTUAL',
-        'II42_AM_CONSISTENCY_MANUAL',
-        'II42_AM_CONSISTENCY_REALTIME',
-        'failed to %s during ii42 segment maintenance',
+        'evoke_am_pinned_maintenances = NIL;',
+        'evoke_am_foreground_maintenance_enabled(index_relation)',
+        '!evoke_am_sae_enabled(index_relation)',
+        'evoke_am_validate_relation_policy(index_relation);',
+        'EVOKE_AM_CONSISTENCY_EVENTUAL',
+        'EVOKE_AM_CONSISTENCY_MANUAL',
+        'EVOKE_AM_CONSISTENCY_REALTIME',
+        'failed to %s during evoke segment maintenance',
         'Validation failed: %s.',
     ):
         if required not in maintenance_source:
@@ -2966,8 +2966,8 @@ def check_c_contract(errors: list[str]) -> None:
                 f'maintenance authority is missing {required!r}'
             )
     for function in (
-        'ii42_segment_object_ref_equal',
-        'ii42_active_l0_frontier_equal',
+        'evoke_segment_object_ref_equal',
+        'evoke_active_l0_frontier_equal',
     ):
         definition = re.compile(
             rf'\nbool\n{re.escape(function)}\('
@@ -2988,9 +2988,9 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{SEGMENTS_HEADER_PATH.name}: {function} does not have '
                 'one declaration'
             )
-    identity_builder = 'ii42_segment_manifest_build_identity'
+    identity_builder = 'evoke_segment_manifest_build_identity'
     identity_definition = re.compile(
-        rf'\nii42_status\n{identity_builder}\('
+        rf'\nevoke_status\n{identity_builder}\('
     )
     identity_owners = [
         path
@@ -3013,7 +3013,7 @@ def check_c_contract(errors: list[str]) -> None:
             f'{AM_SOURCE_PATH.name}: identity-manifest caller count changed '
             'from 4'
         )
-    saturating_add = 'ii42_u32_saturating_add'
+    saturating_add = 'evoke_u32_saturating_add'
     saturating_definition = re.compile(
         rf'\nuint32_t\n{saturating_add}\('
     )
@@ -3044,8 +3044,8 @@ def check_c_contract(errors: list[str]) -> None:
             'changed from 4'
         )
     saturating_u64_functions = (
-        ('ii42_u64_saturating_add', 95, 3, 1, 4),
-        ('ii42_u64_saturating_mul', 14, 6, 0, 0),
+        ('evoke_u64_saturating_add', 95, 3, 1, 4),
+        ('evoke_u64_saturating_mul', 14, 6, 0, 0),
     )
     for function, am_callers, build_callers, meta_callers, scheduler_callers in (
         saturating_u64_functions
@@ -3086,18 +3086,18 @@ def check_c_contract(errors: list[str]) -> None:
                     f'{expected}'
                 )
     for retired_name in (
-        'ii42_am_segment_object_ref_equal',
-        'ii42_am_l0_frontier_equal',
-        'ii42_am_segment_maintenance_codec_error',
-        'ii42_am_segment_identity_build_manifest',
-        'ii42_am_saturating_add_u32',
-        'ii42_am_meta_saturating_add_u32',
-        'ii42_am_rebuild_estimate',
-        'ii42_am_rebuild_estimate_add',
-        'ii42_am_posting_heat_add_saturating',
-        'ii42_am_posting_heat_multiply_saturating',
-        'ii42_am_u64_saturating_add',
-        'ii42_am_u64_saturating_mul',
+        'evoke_am_segment_object_ref_equal',
+        'evoke_am_l0_frontier_equal',
+        'evoke_am_segment_maintenance_codec_error',
+        'evoke_am_segment_identity_build_manifest',
+        'evoke_am_saturating_add_u32',
+        'evoke_am_meta_saturating_add_u32',
+        'evoke_am_rebuild_estimate',
+        'evoke_am_rebuild_estimate_add',
+        'evoke_am_posting_heat_add_saturating',
+        'evoke_am_posting_heat_multiply_saturating',
+        'evoke_am_u64_saturating_add',
+        'evoke_am_u64_saturating_mul',
     ):
         owners = [
             path
@@ -3112,25 +3112,25 @@ def check_c_contract(errors: list[str]) -> None:
             )
     for required in (
         'bool modified_delta = '
-        'ii42_am_pinned_maintenances_present();',
-        'ii42_am_reparent_pinned_maintenances(',
+        'evoke_am_pinned_maintenances_present();',
+        'evoke_am_reparent_pinned_maintenances(',
     ):
         if required not in source:
             errors.append(
                 f'{AM_SOURCE_PATH.name}: transaction callback is missing '
                 f'typed maintenance coordination {required!r}'
             )
-    if source.count('ii42_am_clear_pinned_maintenances();') != 2:
+    if source.count('evoke_am_clear_pinned_maintenances();') != 2:
         errors.append(
             f'{AM_SOURCE_PATH.name}: top-level transaction cleanup does not '
             'clear maintenance pins on both terminal paths'
         )
     for forbidden in (
-        'ii42_am_pinned_maintenances =',
-        'typedef struct ii42_am_scoped_index',
-        'II42_AM_MAINTENANCE_LOCK_TAG',
-        'II42_AM_WRITER_BARRIER_LOCK_TAG',
-        'II42_AM_APPEND_LOCK_TAG',
+        'evoke_am_pinned_maintenances =',
+        'typedef struct evoke_am_scoped_index',
+        'EVOKE_AM_MAINTENANCE_LOCK_TAG',
+        'EVOKE_AM_WRITER_BARRIER_LOCK_TAG',
+        'EVOKE_AM_APPEND_LOCK_TAG',
     ):
         if forbidden in source:
             errors.append(
@@ -3138,7 +3138,7 @@ def check_c_contract(errors: list[str]) -> None:
                 f'authority {forbidden!r}'
             )
     for forbidden in (
-        'II42_AM_MAINTENANCE_WORKER_LOCK_TAG',
+        'EVOKE_AM_MAINTENANCE_WORKER_LOCK_TAG',
         'BackgroundWorker',
         'PG_FUNCTION_INFO',
         'SPI_',
@@ -3146,13 +3146,13 @@ def check_c_contract(errors: list[str]) -> None:
         'ReadBuffer',
         'GenericXLog',
         'XLog',
-        'ii42_am_read_meta',
-        'ii42_am_publish',
-        'ii42_am_work_hint',
-        'ii42_segment_',
-        'ii42_page_query',
-        'ii42_semantic',
-        'ii42_runtime',
+        'evoke_am_read_meta',
+        'evoke_am_publish',
+        'evoke_am_work_hint',
+        'evoke_segment_',
+        'evoke_page_query',
+        'evoke_semantic',
+        'evoke_runtime',
     ):
         if forbidden in maintenance_source:
             errors.append(
@@ -3160,11 +3160,11 @@ def check_c_contract(errors: list[str]) -> None:
                 f'forbidden authority {forbidden!r}'
             )
     makefile = MAKEFILE_PATH.read_text(encoding='utf-8')
-    if 'src/ii42_am_maintenance.o \\' not in makefile:
+    if 'src/evoke_am_maintenance.o \\' not in makefile:
         errors.append('Makefile: maintenance module is not linked')
-    fence_authority = 'ii42_am_acquire_convergent_reader_fence_internal'
-    required_fence = 'ii42_am_acquire_convergent_reader_fence'
-    if 'ii42_am_prepare_convergent_reuse_arena' in source:
+    fence_authority = 'evoke_am_acquire_convergent_reader_fence_internal'
+    required_fence = 'evoke_am_acquire_convergent_reader_fence'
+    if 'evoke_am_prepare_convergent_reuse_arena' in source:
         errors.append(
             f'{AM_SOURCE_PATH.name}: retired-page reuse keeps the old '
             'non-owning helper contract'
@@ -3180,7 +3180,7 @@ def check_c_contract(errors: list[str]) -> None:
             'must have one definition and one narrow wrapper'
         )
     if any(
-        'ii42_am_acquire_convergent_reuse_arena' in implementation_source
+        'evoke_am_acquire_convergent_reuse_arena' in implementation_source
         for implementation_source in all_c_sources.values()
     ):
         errors.append(
@@ -3201,9 +3201,9 @@ def check_c_contract(errors: list[str]) -> None:
         )
     for function, return_type in (
         (required_fence, 'bool'),
-        ('ii42_am_test_setting_enabled', 'bool'),
-        ('ii42_am_test_pause_ms', 'void'),
-        ('ii42_am_test_error_if_enabled', 'void'),
+        ('evoke_am_test_setting_enabled', 'bool'),
+        ('evoke_am_test_pause_ms', 'void'),
+        ('evoke_am_test_error_if_enabled', 'void'),
     ):
         definition = re.compile(
             rf'\n{return_type}\n{re.escape(function)}\('
@@ -3226,18 +3226,18 @@ def check_c_contract(errors: list[str]) -> None:
             )
     for function, header in (
         (required_fence, reclamation_header),
-        ('ii42_am_test_setting_enabled', test_support_header),
-        ('ii42_am_test_pause_ms', test_support_header),
-        ('ii42_am_test_error_if_enabled', test_support_header),
+        ('evoke_am_test_setting_enabled', test_support_header),
+        ('evoke_am_test_pause_ms', test_support_header),
+        ('evoke_am_test_error_if_enabled', test_support_header),
     ):
         if header.count(f'{function}(') != 1:
             errors.append(f'{function}: private declaration mismatch')
     for forbidden in (
-        'ii42_am_mutation_publish',
-        'ii42_am_preload_',
-        'ii42_am_scheduler_',
-        'ii42_am_work_hint_',
-        'ii42_segment_pages_write_',
+        'evoke_am_mutation_publish',
+        'evoke_am_preload_',
+        'evoke_am_scheduler_',
+        'evoke_am_work_hint_',
+        'evoke_segment_pages_write_',
         'GenericXLog',
         'XLog',
         'BackgroundWorker',
@@ -3271,9 +3271,9 @@ def check_c_contract(errors: list[str]) -> None:
     )
     for required in (
         'ConditionalLockRelation(',
-        'ii42_segment_page_reuse_arena_build_retired(',
-        'ii42_segment_page_reuse_arena_build_empty_fenced(',
-        'ii42.test_reuse_reader_fence_pause_ms',
+        'evoke_segment_page_reuse_arena_build_retired(',
+        'evoke_segment_page_reuse_arena_build_empty_fenced(',
+        'evoke.test_reuse_reader_fence_pause_ms',
         'relation_locked = false;',
         'UnlockRelation(index_relation, AccessExclusiveLock);',
     ):
@@ -3284,9 +3284,9 @@ def check_c_contract(errors: list[str]) -> None:
             )
     for required in (
         'def exercise_retired_page_reader_fence(',
-        "SET ii42.test_prepared_cow_publication_pause_ms = '2000'",
-        "SET ii42.test_reuse_reader_fence_pause_ms = '2000'",
-        "SET ii42.test_convergent_root_snapshot_pause_ms ",
+        "SET evoke.test_prepared_cow_publication_pause_ms = '2000'",
+        "SET evoke.test_reuse_reader_fence_pause_ms = '2000'",
+        "SET evoke.test_convergent_root_snapshot_pause_ms ",
         "mode = 'AccessShareLock'",
         "and prepared_reader_ids == ['stable']",
         "and handoff_reused_blocks > 0",
@@ -3298,7 +3298,7 @@ def check_c_contract(errors: list[str]) -> None:
                 f'gate is missing {required!r}'
             )
     retirement_append_start = mutation_source.find(
-        '\nbool\nii42_am_mutation_append_l0_record('
+        '\nbool\nevoke_am_mutation_append_l0_record('
     )
     retirement_append_end = len(mutation_source)
     retirement_append_body = (
@@ -3322,10 +3322,10 @@ def check_c_contract(errors: list[str]) -> None:
                 f'is missing {required!r}'
             )
     append_wrapper_start = source.find(
-        '\nstatic bool\nii42_am_append_convergent_l0_record('
+        '\nstatic bool\nevoke_am_append_convergent_l0_record('
     )
     append_wrapper_end = source.find(
-        '\nstatic int\nii42_am_cmp_l0_text_atom(',
+        '\nstatic int\nevoke_am_cmp_l0_text_atom(',
         append_wrapper_start,
     )
     append_wrapper_body = (
@@ -3338,11 +3338,11 @@ def check_c_contract(errors: list[str]) -> None:
     )
     for required in (
         'volatile bool maintenance_due = false;',
-        'ii42_am_mutation_append_l0_record(',
+        'evoke_am_mutation_append_l0_record(',
         'PG_FINALLY();',
         'if (maintenance_due)',
-        'ii42_am_work_hint_mark(',
-        'II42_AM_WORK_HINT_MAINTENANCE',
+        'evoke_am_work_hint_mark(',
+        'EVOKE_AM_WORK_HINT_MAINTENANCE',
     ):
         if required not in append_wrapper_body:
             errors.append(
@@ -3365,9 +3365,9 @@ def check_c_contract(errors: list[str]) -> None:
             'preserve both urgent-maintenance outcomes'
         )
     for forbidden in (
-        'ii42_am_work_hint_',
-        'II42_AM_WORK_HINT_',
-        'ii42_shared_preload',
+        'evoke_am_work_hint_',
+        'EVOKE_AM_WORK_HINT_',
+        'evoke_shared_preload',
         'BackgroundWorker',
         'SPI_',
     ):
@@ -3380,20 +3380,20 @@ def check_c_contract(errors: list[str]) -> None:
         'ReadBuffer',
         'LockBuffer',
         'GenericXLog',
-        'ii42_segment_pages_',
-        'ii42_am_lock_append',
+        'evoke_segment_pages_',
+        'evoke_am_lock_append',
     ):
         if forbidden in append_wrapper_body:
             errors.append(
                 f'{AM_SOURCE_PATH.name}: linked-L0 scheduling adapter '
                 f'retains mutation authority: {forbidden!r}'
             )
-    cow_mutation = 'ii42_am_mutation_publish_cow_manifest'
+    cow_mutation = 'evoke_am_mutation_publish_cow_manifest'
     cow_mutation_start = mutation_source.find(
         f'\nbool\n{cow_mutation}('
     )
     cow_mutation_end = mutation_source.find(
-        '\n\nXLogRecPtr\nii42_am_l0_rotate_active_locked(',
+        '\n\nXLogRecPtr\nevoke_am_l0_rotate_active_locked(',
         cow_mutation_start,
     )
     cow_mutation_body = (
@@ -3405,10 +3405,10 @@ def check_c_contract(errors: list[str]) -> None:
         else ''
     )
     cow_wrapper_start = source.find(
-        '\nstatic bool\nii42_am_publish_cow_manifest('
+        '\nstatic bool\nevoke_am_publish_cow_manifest('
     )
     cow_wrapper_end = source.find(
-        '\nstatic ii42_am_pending_seal_outcome',
+        '\nstatic evoke_am_pending_seal_outcome',
         cow_wrapper_start,
     )
     cow_wrapper_body = (
@@ -3420,11 +3420,11 @@ def check_c_contract(errors: list[str]) -> None:
         else ''
     )
     reclaim_start = source.find(
-        '\nstatic ii42_am_retired_reclaim_outcome\n'
-        'ii42_am_try_reclaim_retired_pages('
+        '\nstatic evoke_am_retired_reclaim_outcome\n'
+        'evoke_am_try_reclaim_retired_pages('
     )
     reclaim_end = source.find(
-        '\nstatic bool\nii42_am_term_structural_fold_select(',
+        '\nstatic bool\nevoke_am_term_structural_fold_select(',
         reclaim_start,
     )
     reclaim_body = (
@@ -3457,21 +3457,21 @@ def check_c_contract(errors: list[str]) -> None:
             'one scheduling-adapter caller'
         )
     for required in (
-        'ii42_am_lock_append(index_relation);',
-        'ii42_am_read_meta(index_relation, &latest_meta);',
-        'ii42_am_segment_read_root_from_meta(',
-        'ii42_segment_object_ref_equal(',
-        'ii42_active_l0_frontier_equal(',
-        'ii42_segment_manifest_validate_published(',
-        'ii42_segment_read_root_seal_pending(',
-        'ii42_segment_read_root_replace_manifest(',
+        'evoke_am_lock_append(index_relation);',
+        'evoke_am_read_meta(index_relation, &latest_meta);',
+        'evoke_am_segment_read_root_from_meta(',
+        'evoke_segment_object_ref_equal(',
+        'evoke_active_l0_frontier_equal(',
+        'evoke_segment_manifest_validate_published(',
+        'evoke_segment_read_root_seal_pending(',
+        'evoke_segment_read_root_replace_manifest(',
         'ReadBufferExtended(',
         'GenericXLogStart(index_relation)',
-        'ii42_am_l0_store_root(next_meta_page, &next_root);',
+        'evoke_am_l0_store_root(next_meta_page, &next_root);',
         'XLogFlush(publish_lsn);',
-        'ii42_segment_pages_publish_fsm_handoff(',
+        'evoke_segment_pages_publish_fsm_handoff(',
         'PG_FINALLY();',
-        'ii42_am_unlock_append(index_relation);',
+        'evoke_am_unlock_append(index_relation);',
     ):
         if required not in cow_mutation_body:
             errors.append(
@@ -3479,9 +3479,9 @@ def check_c_contract(errors: list[str]) -> None:
                 f'is missing {required!r}'
             )
     for forbidden in (
-        'ii42_am_shared_preload_',
-        'ii42_am_schedule_',
-        'ii42_am_work_hint_',
+        'evoke_am_shared_preload_',
+        'evoke_am_schedule_',
+        'evoke_am_work_hint_',
         'BackgroundWorker',
         'SPI_',
     ):
@@ -3491,11 +3491,11 @@ def check_c_contract(errors: list[str]) -> None:
                 f'acquired adjacent authority: {forbidden!r}'
             )
     for required in (
-        'ii42_am_mutation_publish_cow_manifest(',
-        'ii42_am_read_meta(index_relation, &current_meta);',
-        'ii42_am_preload_rekey_generation(',
-        'ii42_am_preload_retire_obsolete(',
-        'ii42_am_schedule_auto_preload(index_relation);',
+        'evoke_am_mutation_publish_cow_manifest(',
+        'evoke_am_read_meta(index_relation, &current_meta);',
+        'evoke_am_preload_rekey_generation(',
+        'evoke_am_preload_retire_obsolete(',
+        'evoke_am_schedule_auto_preload(index_relation);',
     ):
         if required not in cow_wrapper_body:
             errors.append(
@@ -3507,9 +3507,9 @@ def check_c_contract(errors: list[str]) -> None:
         'LockBuffer',
         'GenericXLog',
         'XLogFlush',
-        'ii42_segment_pages_publish_fsm_handoff',
-        'ii42_am_lock_append',
-        'ii42_am_unlock_append',
+        'evoke_segment_pages_publish_fsm_handoff',
+        'evoke_am_lock_append',
+        'evoke_am_unlock_append',
     ):
         if forbidden in cow_wrapper_body:
             errors.append(
@@ -3517,13 +3517,13 @@ def check_c_contract(errors: list[str]) -> None:
                 f'mutation authority: {forbidden!r}'
             )
     for required in (
-        'void\nii42_am_preload_rekey_generation(',
-        'ii42_am_preload_kind_rekey_safe(kind)',
-        'ii42_am_preload_retire_entry_locked(entry);',
-        'ii42_am_preload_hash_remove_locked(entry);',
+        'void\nevoke_am_preload_rekey_generation(',
+        'evoke_am_preload_kind_rekey_safe(kind)',
+        'evoke_am_preload_retire_entry_locked(entry);',
+        'evoke_am_preload_hash_remove_locked(entry);',
         'entry->meta = *current_meta;',
-        'ii42_am_preload_hash_insert_locked((int) index);',
-        'ii42_am_preload_retire_obsolete_locked(',
+        'evoke_am_preload_hash_insert_locked((int) index);',
+        'evoke_am_preload_retire_obsolete_locked(',
     ):
         if required not in preload_source:
             errors.append(
@@ -3531,10 +3531,10 @@ def check_c_contract(errors: list[str]) -> None:
                 f'rekey is missing {required!r}'
             )
     rekey_safe_start = preload_source.find(
-        '\nstatic bool\nii42_am_preload_kind_rekey_safe('
+        '\nstatic bool\nevoke_am_preload_kind_rekey_safe('
     )
     rekey_safe_end = preload_source.find(
-        '\nstatic bool\nii42_am_preload_payload_size_valid(',
+        '\nstatic bool\nevoke_am_preload_payload_size_valid(',
         rekey_safe_start,
     )
     rekey_safe_body = (
@@ -3542,19 +3542,19 @@ def check_c_contract(errors: list[str]) -> None:
         if rekey_safe_start >= 0 and rekey_safe_end > rekey_safe_start
         else ''
     )
-    if 'II42_AM_PRELOAD_RESIDENT_FOLD' in rekey_safe_body:
+    if 'EVOKE_AM_PRELOAD_RESIDENT_FOLD' in rekey_safe_body:
         errors.append(
             f'{AM_PRELOAD_SOURCE_PATH.name}: root-embedded resident folds '
             'must be rebuilt rather than rekeyed after reclamation'
         )
-    if 'ii42_am_preload_rekey_generation(' not in preload_header:
+    if 'evoke_am_preload_rekey_generation(' not in preload_header:
         errors.append(
             f'{AM_PRELOAD_HEADER_PATH.name}: pure-reclamation preload '
             'rekey has no declaration'
         )
     for required in (
-        'ii42_segment_manifest_build_identity(',
-        'ii42_segment_pages_write_cow_reclaim(',
+        'evoke_segment_manifest_build_identity(',
+        'evoke_segment_pages_write_cow_reclaim(',
         'false,\n                    &build_meta);',
     ):
         if required not in reclaim_body:
@@ -3568,10 +3568,10 @@ def check_c_contract(errors: list[str]) -> None:
             'preload generations'
         )
     for function, return_type in (
-        ('ii42_am_l0_require_meta_root', 'void'),
-        ('ii42_am_l0_store_root', 'void'),
-        ('ii42_am_l0_rotate_active_locked', 'XLogRecPtr'),
-        ('ii42_am_mutation_append_l0_record', 'bool'),
+        ('evoke_am_l0_require_meta_root', 'void'),
+        ('evoke_am_l0_store_root', 'void'),
+        ('evoke_am_l0_rotate_active_locked', 'XLogRecPtr'),
+        ('evoke_am_mutation_append_l0_record', 'bool'),
     ):
         definition = re.compile(
             rf'\n{return_type}\n{re.escape(function)}\('
@@ -3605,7 +3605,7 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{SAME_INDEX_CONCURRENCY_PATH.name}: shared retirement '
                 f'guard is missing {required!r}'
             )
-    xid_classifier = 'ii42_am_delta_record_states'
+    xid_classifier = 'evoke_am_delta_record_states'
     xid_classifier_definition = re.compile(
         rf'\nbool\n{re.escape(xid_classifier)}\('
     )
@@ -3633,8 +3633,8 @@ def check_c_contract(errors: list[str]) -> None:
             'the five frozen callers'
         )
     for layout in (
-        '#define II42_AM_ABORTED_DELTA_XID BootstrapTransactionId',
-        'typedef enum ii42_am_delta_xid_state',
+        '#define EVOKE_AM_ABORTED_DELTA_XID BootstrapTransactionId',
+        'typedef enum evoke_am_delta_xid_state',
     ):
         owners = [
             path
@@ -3647,7 +3647,7 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{layout}: linked-L0 XID value does not have one mutation '
                 f'header owner: {owner_names or "<none>"}'
             )
-    rotation_limit = 'ii42_am_active_l0_rotation_record_limit'
+    rotation_limit = 'evoke_am_active_l0_rotation_record_limit'
     rotation_limit_definition = re.compile(
         rf'\nuint32\n{re.escape(rotation_limit)}\('
     )
@@ -3680,8 +3680,8 @@ def check_c_contract(errors: list[str]) -> None:
             'the AM entry module'
         )
     for lifecycle_predicate in (
-        'ii42_am_active_l0_checkpoint_due',
-        'ii42_am_accelerator_refresh_record_limit',
+        'evoke_am_active_l0_checkpoint_due',
+        'evoke_am_accelerator_refresh_record_limit',
     ):
         if mutation_header.count(f'{lifecycle_predicate}(') != 1:
             errors.append(
@@ -3710,10 +3710,10 @@ def check_c_contract(errors: list[str]) -> None:
             rotation_limit_start:rotation_limit_end
         ]
         for required in (
-            '"ii42.test_convergent_l0_rotation_records"',
-            'return II42_ACTIVE_L0_ROTATION_RECORDS;',
+            '"evoke.test_convergent_l0_rotation_records"',
+            'return EVOKE_ACTIVE_L0_ROTATION_RECORDS;',
             'superuser_arg(GetOuterUserId())',
-            'value > II42_ACTIVE_L0_MAX_RECORDS',
+            'value > EVOKE_ACTIVE_L0_MAX_RECORDS',
         ):
             if required not in rotation_limit_block:
                 errors.append(
@@ -3730,7 +3730,7 @@ def check_c_contract(errors: list[str]) -> None:
         )
     else:
         xid_classifier_end = mutation_source.find(
-            '\n\nbool\nii42_am_l0_expected_source_matches(',
+            '\n\nbool\nevoke_am_l0_expected_source_matches(',
             xid_classifier_start,
         )
         xid_classifier_block = mutation_source[
@@ -3740,9 +3740,9 @@ def check_c_contract(errors: list[str]) -> None:
             'record_count > 0',
             'TransactionIdIsNormal(record_xid)',
             '!TransactionIdIsCurrentTransactionId(record_xid)',
-            'ii42_am_frozen_xid_audit_enabled()',
+            'evoke_am_frozen_xid_audit_enabled()',
             'LWLockAcquire(XactTruncationLock, LW_SHARED)',
-            'record_xid == II42_AM_ABORTED_DELTA_XID',
+            'record_xid == EVOKE_AM_ABORTED_DELTA_XID',
             'record_xid == FrozenTransactionId',
             'TransamVariables->oldestClogXid',
             'TransactionIdDidCommit(record_xid)',
@@ -3755,7 +3755,7 @@ def check_c_contract(errors: list[str]) -> None:
                     f'{AM_MUTATION_SOURCE_PATH.name}: linked-L0 XID '
                     f'classifier is missing {required!r}'
                 )
-    source_guard = 'ii42_am_l0_expected_source_matches'
+    source_guard = 'evoke_am_l0_expected_source_matches'
     source_guard_definition = re.compile(
         rf'\nbool\n{re.escape(source_guard)}\('
     )
@@ -3797,22 +3797,22 @@ def check_c_contract(errors: list[str]) -> None:
         )
     else:
         source_guard_end = mutation_source.find(
-            '\n\nstatic void\nii42_am_set_generic_page_content_len(',
+            '\n\nstatic void\nevoke_am_set_generic_page_content_len(',
             source_guard_start,
         )
         source_guard_block = mutation_source[
             source_guard_start:source_guard_end
         ] if source_guard_end > source_guard_start else ''
         for required in (
-            'record_kind != II42_L0_RECORD_RETIRE',
-            'ii42_document_cow_records_equal(expected, current)',
+            'record_kind != EVOKE_L0_RECORD_RETIRE',
+            'evoke_document_cow_records_equal(expected, current)',
             'expected->version.document_slot',
             'expected->version.born_sequence',
             'expected->version.heap_block',
             'expected->version.heap_offset',
             'expected->version.document_length',
             'expected->version.semantic_input_fingerprint',
-            'II42_DOCUMENT_FINGERPRINT_BYTES',
+            'EVOKE_DOCUMENT_FINGERPRINT_BYTES',
         ):
             if required not in source_guard_block:
                 errors.append(
@@ -3825,13 +3825,13 @@ def check_c_contract(errors: list[str]) -> None:
             'LockBuffer',
             'MarkBufferDirty',
             'XLog',
-            'ii42_am_read_meta',
-            'ii42_am_append',
-            'ii42_am_publish',
-            'ii42_segment_pages_',
-            'ii42_runtime',
-            'ii42_model',
-            'ii42_page_query',
+            'evoke_am_read_meta',
+            'evoke_am_append',
+            'evoke_am_publish',
+            'evoke_segment_pages_',
+            'evoke_runtime',
+            'evoke_model',
+            'evoke_page_query',
         ):
             if forbidden in source_guard_block:
                 errors.append(
@@ -3839,7 +3839,7 @@ def check_c_contract(errors: list[str]) -> None:
                     f'guard acquired forbidden authority: {forbidden!r}'
                 )
     for required in (
-        '"ii42.test_require_frozen_delta_xids"',
+        '"evoke.test_require_frozen_delta_xids"',
         'GetConfigOptionByName(',
         'parse_bool(setting, &enabled)',
         'superuser_arg(GetOuterUserId())',
@@ -3851,16 +3851,16 @@ def check_c_contract(errors: list[str]) -> None:
                 f'missing {required!r}'
             )
     for forbidden in (
-        'ii42_am_work_hint_',
-        'ii42_shared_preload',
-        'ii42_am_schedule_',
-        'ii42_am_rebuild_',
+        'evoke_am_work_hint_',
+        'evoke_shared_preload',
+        'evoke_am_schedule_',
+        'evoke_am_rebuild_',
         'BackgroundWorker',
         'SPI_',
-        'ii42_page_query',
-        'ii42_semantic',
-        'ii42_runtime',
-        'ii42_model',
+        'evoke_page_query',
+        'evoke_semantic',
+        'evoke_runtime',
+        'evoke_model',
     ):
         if forbidden in mutation_source:
             errors.append(
@@ -3868,12 +3868,12 @@ def check_c_contract(errors: list[str]) -> None:
                 f'forbidden adjacent authority: {forbidden!r}'
             )
     makefile = MAKEFILE_PATH.read_text(encoding='utf-8')
-    if 'src/ii42_am_mutation.o \\' not in makefile:
+    if 'src/evoke_am_mutation.o \\' not in makefile:
         errors.append('Makefile: mutation module is not linked')
     for layout, expected_owner in (
-        ('typedef enum ii42_am_rebuild_builder', AM_BUILD_HEADER_PATH),
-        ('typedef struct ii42_am_rebuild_workload', AM_BUILD_HEADER_PATH),
-        ('typedef struct ii42_am_rebuild_output', AM_BUILD_HEADER_PATH),
+        ('typedef enum evoke_am_rebuild_builder', AM_BUILD_HEADER_PATH),
+        ('typedef struct evoke_am_rebuild_workload', AM_BUILD_HEADER_PATH),
+        ('typedef struct evoke_am_rebuild_output', AM_BUILD_HEADER_PATH),
     ):
         owners = [
             path
@@ -3887,9 +3887,9 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{owner_names or "<none>"}'
             )
     for function, return_type in (
-        ('ii42_am_rebuild_memory_budget_choose', 'bool'),
-        ('ii42_am_rebuild_builder_name', r'const char \*'),
-        ('ii42_am_rebuild_output_release', 'void'),
+        ('evoke_am_rebuild_memory_budget_choose', 'bool'),
+        ('evoke_am_rebuild_builder_name', r'const char \*'),
+        ('evoke_am_rebuild_output_release', 'void'),
     ):
         definition = re.compile(
             rf'\n{return_type}\n{re.escape(function)}\('
@@ -3911,10 +3911,10 @@ def check_c_contract(errors: list[str]) -> None:
                 f'have one declaration: {function}'
             )
     rebuild_output_start = build_header.find(
-        'typedef struct ii42_am_rebuild_output'
+        'typedef struct evoke_am_rebuild_output'
     )
     rebuild_output_end = build_header.find(
-        '} ii42_am_rebuild_output;',
+        '} evoke_am_rebuild_output;',
         rebuild_output_start,
     )
     if rebuild_output_start < 0 or rebuild_output_end < 0:
@@ -3924,7 +3924,7 @@ def check_c_contract(errors: list[str]) -> None:
     else:
         rebuild_output_block = build_header[
             rebuild_output_start:
-            rebuild_output_end + len('} ii42_am_rebuild_output;')
+            rebuild_output_end + len('} evoke_am_rebuild_output;')
         ]
         for field in (
             'Oid source_type;',
@@ -3932,8 +3932,8 @@ def check_c_contract(errors: list[str]) -> None:
             'size_t num_docs;',
             'uint8_t *index_bytes;',
             'size_t index_bytes_len;',
-            'char semantic_signature[II42_AM_SEMANTIC_SIGNATURE_LEN + 1];',
-            'ii42_index index;',
+            'char semantic_signature[EVOKE_AM_SEMANTIC_SIGNATURE_LEN + 1];',
+            'evoke_index index;',
             'bool index_valid;',
             'bool segment_sae;',
             'BufFile *segment_semantic_postings;',
@@ -3950,10 +3950,10 @@ def check_c_contract(errors: list[str]) -> None:
                 )
     rebuild_release_start = build_source.find(
         '\nstatic void\n'
-        'ii42_am_rebuild_output_release_materialized_sources('
+        'evoke_am_rebuild_output_release_materialized_sources('
     )
     rebuild_release_end = build_source.find(
-        '\nvoid\nii42_am_rebuild_output_release(',
+        '\nvoid\nevoke_am_rebuild_output_release(',
         rebuild_release_start,
     )
     public_release_end = build_source.find(
@@ -3979,8 +3979,8 @@ def check_c_contract(errors: list[str]) -> None:
             'BufFileClose(output->segment_semantic_postings);',
             'pfree(output->segment_semantic_input_fingerprints);',
             'if (output->index_valid)',
-            'ii42_index_free(&output->index);',
-            'ii42_am_rebuild_output_release_materialized_sources(output);',
+            'evoke_index_free(&output->index);',
+            'evoke_am_rebuild_output_release_materialized_sources(output);',
             'memset(output, 0, sizeof(*output));',
         ):
             if required not in rebuild_release_block:
@@ -3990,10 +3990,10 @@ def check_c_contract(errors: list[str]) -> None:
                 )
         for forbidden in (
             'Relation',
-            'ii42_am_meta',
-            'ii42_segment_pages',
-            'ii42_runtime',
-            'ii42_model',
+            'evoke_am_meta',
+            'evoke_segment_pages',
+            'evoke_runtime',
+            'evoke_model',
             'LockRelation',
             'LWLock',
             'XLog',
@@ -4006,7 +4006,7 @@ def check_c_contract(errors: list[str]) -> None:
                     f'{AM_BUILD_SOURCE_PATH.name}: rebuild output release '
                     f'acquired forbidden authority: {forbidden!r}'
                 )
-    replacement_prepare = 'ii42_am_prepare_replacement_relation'
+    replacement_prepare = 'evoke_am_prepare_replacement_relation'
     replacement_prepare_definition = re.compile(
         rf'\nuint64\n{re.escape(replacement_prepare)}\('
     )
@@ -4051,15 +4051,15 @@ def check_c_contract(errors: list[str]) -> None:
             replacement_prepare_start:replacement_prepare_end
         ]
         for required in (
-            'ii42_am_meta_page empty_meta;',
+            'evoke_am_meta_page empty_meta;',
             'uint64 rebuild_count;',
             'memset(&empty_meta, 0, sizeof(empty_meta));',
-            'empty_meta.magic = II42_AM_MAGIC;',
-            'empty_meta.version = II42_AM_VERSION;',
-            'empty_meta.page_kind = II42_AM_PAGE_META;',
-            'rebuild_count = ii42_am_next_rebuild_count(indexRelation);',
+            'empty_meta.magic = EVOKE_AM_MAGIC;',
+            'empty_meta.version = EVOKE_AM_VERSION;',
+            'empty_meta.page_kind = EVOKE_AM_PAGE_META;',
+            'rebuild_count = evoke_am_next_rebuild_count(indexRelation);',
             'RelationTruncate(indexRelation, 0);',
-            'ii42_am_write_new_page(',
+            'evoke_am_write_new_page(',
             '&empty_meta,',
             'sizeof(empty_meta)',
             'return rebuild_count;',
@@ -4073,21 +4073,21 @@ def check_c_contract(errors: list[str]) -> None:
             'LockAcquire',
             'LockRelease',
             'LockRelation',
-            'ii42_am_lock_generation_barrier',
-            'ii42_am_runtime_contract_hash(',
-            'ii42_am_publish_replacement_segments(',
-            'ii42_am_write_init_page_at(',
-            'ii42_am_next_cache_epoch(',
+            'evoke_am_lock_generation_barrier',
+            'evoke_am_runtime_contract_hash(',
+            'evoke_am_publish_replacement_segments(',
+            'evoke_am_write_init_page_at(',
+            'evoke_am_next_cache_epoch(',
             'table_index_build_scan',
-            'ii42_am_rebuild_memory_budget_choose(',
-            'ii42_am_schedule',
-            'ii42_am_preload',
-            'ii42_am_maintenance',
-            'ii42_am_convergent_mutation',
+            'evoke_am_rebuild_memory_budget_choose(',
+            'evoke_am_schedule',
+            'evoke_am_preload',
+            'evoke_am_maintenance',
+            'evoke_am_convergent_mutation',
             'ambulkdelete',
-            'ii42_page_query',
-            'ii42_runtime',
-            'ii42_model',
+            'evoke_page_query',
+            'evoke_runtime',
+            'evoke_model',
             'PG_TRY',
             'PG_FINALLY',
         ):
@@ -4096,7 +4096,7 @@ def check_c_contract(errors: list[str]) -> None:
                     f'{AM_BUILD_SOURCE_PATH.name}: replacement preparation '
                     f'acquired forbidden authority: {forbidden!r}'
                 )
-    rebuild_publisher = 'ii42_am_publish_replacement_segments'
+    rebuild_publisher = 'evoke_am_publish_replacement_segments'
     rebuild_publisher_definition = re.compile(
         rf'\nvoid\n{re.escape(rebuild_publisher)}\('
     )
@@ -4127,7 +4127,7 @@ def check_c_contract(errors: list[str]) -> None:
         f'\nvoid\n{rebuild_publisher}('
     )
     rebuild_publisher_end = build_source.find(
-        '\n\nstatic uint64\nii42_am_budget_headroom_limit(',
+        '\n\nstatic uint64\nevoke_am_budget_headroom_limit(',
         rebuild_publisher_start,
     )
     rebuild_publisher_block = ''
@@ -4140,28 +4140,28 @@ def check_c_contract(errors: list[str]) -> None:
         rebuild_publisher_block = build_source[
             rebuild_publisher_start:rebuild_publisher_end
         ]
-        if '#define II42_AM_REBUILD_ID_SHIFT 11U' not in build_source:
+        if '#define EVOKE_AM_REBUILD_ID_SHIFT 11U' not in build_source:
             errors.append(
                 f'{AM_BUILD_SOURCE_PATH.name}: rebuild ID namespace does '
                 'not reserve the checked multi-segment range'
             )
         for required in (
-            'const uint8 contract_hash[II42_SEGMENT_CONTRACT_HASH_BYTES]',
+            'const uint8 contract_hash[EVOKE_SEGMENT_CONTRACT_HASH_BYTES]',
             'replacement == NULL || !replacement->index_valid',
-            '(rebuild_count << II42_AM_REBUILD_ID_SHIFT) | UINT64_C(1);',
+            '(rebuild_count << EVOKE_AM_REBUILD_ID_SHIFT) | UINT64_C(1);',
             'first_segment_id = manifest_id + 1;',
             'active_l0_segment_id = first_segment_id;',
             'memcpy(\n            manifest->contract_hash,',
-            'ii42_initial_fold_stream_create(',
-            'ii42_segment_query_contract_build(',
-            'ii42_segment_pages_write_sealed_bundle_fork(',
-            'ii42_segment_pages_write_streamed_initial_folded_bundle_fork(',
-            'ii42_am_publish_rebuild_meta(',
+            'evoke_initial_fold_stream_create(',
+            'evoke_segment_query_contract_build(',
+            'evoke_segment_pages_write_sealed_bundle_fork(',
+            'evoke_segment_pages_write_streamed_initial_folded_bundle_fork(',
+            'evoke_am_publish_rebuild_meta(',
             'PG_TRY();',
             'PG_FINALLY();',
-            'ii42_initial_fold_stream_free(cleanup->fold_publish.stream);',
-            'ii42_segment_query_contract_free(&cleanup->query_contract);',
-            'ii42_segment_manifest_free(&cleanup->manifest);',
+            'evoke_initial_fold_stream_free(cleanup->fold_publish.stream);',
+            'evoke_segment_query_contract_free(&cleanup->query_contract);',
+            'evoke_segment_manifest_free(&cleanup->manifest);',
         ):
             if required not in rebuild_publisher_block:
                 errors.append(
@@ -4169,18 +4169,18 @@ def check_c_contract(errors: list[str]) -> None:
                     f'missing {required!r}'
                 )
         for forbidden in (
-            'ii42_am_runtime_contract_hash(',
+            'evoke_am_runtime_contract_hash(',
             'RelationTruncate(',
-            'ii42_am_lock_generation_barrier',
-            'ii42_am_next_rebuild_count(',
-            'ii42_am_next_cache_epoch(',
-            'ii42_am_write_new_page(',
-            'ii42_am_write_init_page_at(',
-            'ii42_am_schedule',
-            'ii42_am_preload',
-            'ii42_runtime',
-            'ii42_model',
-            'ii42_segment_payload_partition_contiguous(',
+            'evoke_am_lock_generation_barrier',
+            'evoke_am_next_rebuild_count(',
+            'evoke_am_next_cache_epoch(',
+            'evoke_am_write_new_page(',
+            'evoke_am_write_init_page_at(',
+            'evoke_am_schedule',
+            'evoke_am_preload',
+            'evoke_runtime',
+            'evoke_model',
+            'evoke_segment_payload_partition_contiguous(',
             'rd_options',
             'GetConfigOption',
             'DefineCustom',
@@ -4193,15 +4193,15 @@ def check_c_contract(errors: list[str]) -> None:
                     f'acquired forbidden authority: {forbidden!r}'
                 )
     main_publish_start = source.find(
-        '\nstatic void\nii42_am_write_convergent_segment_relation('
+        '\nstatic void\nevoke_am_write_convergent_segment_relation('
     )
     main_publish_end = source.find(
-        '\n\nstatic void\nii42_am_reindex_relation(',
+        '\n\nstatic void\nevoke_am_reindex_relation(',
         main_publish_start,
     )
-    init_publish_start = source.find('\nstatic void\nii42_ambuildempty(')
+    init_publish_start = source.find('\nstatic void\nevoke_ambuildempty(')
     init_publish_end = source.find(
-        '\n\nstatic char *\nii42_am_compile_semantic_documents_query(',
+        '\n\nstatic char *\nevoke_am_compile_semantic_documents_query(',
         init_publish_start,
     )
     for label, start, end, fork_setup, fork_number in (
@@ -4216,7 +4216,7 @@ def check_c_contract(errors: list[str]) -> None:
             'INIT',
             init_publish_start,
             init_publish_end,
-            'ii42_am_write_init_page_at(',
+            'evoke_am_write_init_page_at(',
             'INIT_FORKNUM',
         ),
     ):
@@ -4229,7 +4229,7 @@ def check_c_contract(errors: list[str]) -> None:
         caller_block = source[start:end]
         setup_at = caller_block.find(fork_setup)
         hash_at = caller_block.find(
-            'ii42_am_runtime_contract_hash(indexRelation, contract_hash);'
+            'evoke_am_runtime_contract_hash(indexRelation, contract_hash);'
         )
         publish_at = caller_block.find(f'{rebuild_publisher}(')
         if not (0 <= setup_at < hash_at < publish_at):
@@ -4238,7 +4238,7 @@ def check_c_contract(errors: list[str]) -> None:
                 'its fork, derive its immutable hash, then publish'
             )
         for required in (
-            'uint8 contract_hash[II42_SEGMENT_CONTRACT_HASH_BYTES];',
+            'uint8 contract_hash[EVOKE_SEGMENT_CONTRACT_HASH_BYTES];',
             fork_number,
             'replacement,\n            contract_hash,',
         ):
@@ -4252,15 +4252,15 @@ def check_c_contract(errors: list[str]) -> None:
             main_publish_start:main_publish_end
         ]
         lock_at = main_publish_block.find(
-            'ii42_am_lock_generation_barrier(indexRelation);'
+            'evoke_am_lock_generation_barrier(indexRelation);'
         )
         prepare_at = main_publish_block.find(f'{replacement_prepare}(')
         hash_at = main_publish_block.find(
-            'ii42_am_runtime_contract_hash(indexRelation, contract_hash);'
+            'evoke_am_runtime_contract_hash(indexRelation, contract_hash);'
         )
         publish_at = main_publish_block.find(f'{rebuild_publisher}(')
         unlock_at = main_publish_block.find(
-            'ii42_am_unlock_generation_barrier(indexRelation);'
+            'evoke_am_unlock_generation_barrier(indexRelation);'
         )
         if not (
             0 <= lock_at < prepare_at < hash_at < publish_at < unlock_at
@@ -4270,13 +4270,13 @@ def check_c_contract(errors: list[str]) -> None:
                 'hash, publish, and unlock order changed'
             )
         for forbidden in (
-            'ii42_am_meta_page empty_meta;',
-            'empty_meta.magic = II42_AM_MAGIC;',
-            'empty_meta.version = II42_AM_VERSION;',
-            'empty_meta.page_kind = II42_AM_PAGE_META;',
+            'evoke_am_meta_page empty_meta;',
+            'empty_meta.magic = EVOKE_AM_MAGIC;',
+            'empty_meta.version = EVOKE_AM_VERSION;',
+            'empty_meta.page_kind = EVOKE_AM_PAGE_META;',
             'RelationTruncate(indexRelation, 0);',
-            'ii42_am_next_rebuild_count(indexRelation);',
-            'ii42_am_write_new_page(',
+            'evoke_am_next_rebuild_count(indexRelation);',
+            'evoke_am_write_new_page(',
         ):
             if forbidden in main_publish_block:
                 errors.append(
@@ -4284,8 +4284,8 @@ def check_c_contract(errors: list[str]) -> None:
                     f'duplicate preparation: {forbidden!r}'
                 )
     for retired_rebuild_output_name in (
-        'ii42_am_replacement',
-        'ii42_am_replacement_free',
+        'evoke_am_replacement',
+        'evoke_am_replacement_free',
     ):
         owners = [
             path
@@ -4298,7 +4298,7 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{retired_rebuild_output_name}: retired rebuild output '
                 f'name remains in {owner_names}'
             )
-    fingerprint_predicate = 'ii42_document_fingerprint_is_zero'
+    fingerprint_predicate = 'evoke_document_fingerprint_is_zero'
     out_of_line_fingerprint_definition = re.compile(
         rf'\n(?:static\s+)?bool\n{fingerprint_predicate}\('
     )
@@ -4332,7 +4332,7 @@ def check_c_contract(errors: list[str]) -> None:
         fingerprint_block = fingerprint_matches[0].group('body')
         for required_predicate_part in (
             'if (fingerprint == NULL)',
-            'index < II42_DOCUMENT_FINGERPRINT_BYTES',
+            'index < EVOKE_DOCUMENT_FINGERPRINT_BYTES',
             'if (fingerprint[index] != 0)',
             'return false;',
             'return true;',
@@ -4350,9 +4350,9 @@ def check_c_contract(errors: list[str]) -> None:
             'Lock',
             'XLog',
             'WAL',
-            'ii42_am_',
-            'ii42_runtime',
-            'ii42_model',
+            'evoke_am_',
+            'evoke_runtime',
+            'evoke_model',
         ):
             if forbidden_predicate_authority in fingerprint_block:
                 errors.append(
@@ -4361,9 +4361,9 @@ def check_c_contract(errors: list[str]) -> None:
                     f'{forbidden_predicate_authority!r}'
                 )
     for retired_fingerprint_name in (
-        'ii42_am_document_fingerprint_is_zero',
-        'ii42_l0_fingerprint_is_zero',
-        'ii42_document_cow_fingerprint_is_zero',
+        'evoke_am_document_fingerprint_is_zero',
+        'evoke_l0_fingerprint_is_zero',
+        'evoke_document_cow_fingerprint_is_zero',
     ):
         retired_owners = [
             path
@@ -4388,10 +4388,10 @@ def check_c_contract(errors: list[str]) -> None:
                 f'uses in {caller_name}'
             )
     build_common_start = source.find(
-        '\nstatic IndexBuildResult *\nii42_am_build_common('
+        '\nstatic IndexBuildResult *\nevoke_am_build_common('
     )
     build_common_end = source.find(
-        '\n\nstatic IndexBuildResult *\nii42_ambuild(',
+        '\n\nstatic IndexBuildResult *\nevoke_ambuild(',
         build_common_start,
     )
     if build_common_start < 0 or build_common_end < 0:
@@ -4401,12 +4401,12 @@ def check_c_contract(errors: list[str]) -> None:
     else:
         build_common_block = source[build_common_start:build_common_end]
         if build_common_block.count(
-                'ii42_am_rebuild_output_release(&replacement);') != 1:
+                'evoke_am_rebuild_output_release(&replacement);') != 1:
             errors.append(
                 f'{AM_SOURCE_PATH.name}: normal rebuild output does not have '
                 'one release'
             )
-        if 'ii42_am_schedule_background_maintenance(indexRelation);' not in (
+        if 'evoke_am_schedule_background_maintenance(indexRelation);' not in (
                 build_common_block):
             errors.append(
                 f'{AM_SOURCE_PATH.name}: bulk build does not schedule '
@@ -4414,12 +4414,12 @@ def check_c_contract(errors: list[str]) -> None:
             )
 
     fold_start = source.find(
-        '\nstatic ii42_am_term_structural_fold_outcome\n'
-        'ii42_am_try_term_fold('
+        '\nstatic evoke_am_term_structural_fold_outcome\n'
+        'evoke_am_try_term_fold('
     )
     fold_end = source.find(
-        '\n\nstatic ii42_am_term_structural_fold_outcome\n'
-        'ii42_am_try_structural_term_fold(',
+        '\n\nstatic evoke_am_term_structural_fold_outcome\n'
+        'evoke_am_try_structural_term_fold(',
         fold_start,
     )
     fold_block = (
@@ -4428,13 +4428,13 @@ def check_c_contract(errors: list[str]) -> None:
         else ''
     )
     for required in (
-        'ii42_am_term_structural_fold_load_term_extents(',
-        'ii42_term_fold_bundle_advance_neutral_extents(',
+        'evoke_am_term_structural_fold_load_term_extents(',
+        'evoke_term_fold_bundle_advance_neutral_extents(',
         '&cleanup->next_fold,\n                NULL,\n                &cow_result',
-        'II42_SEGMENT_COW_WRITE_PREPARED_READER_FENCE_REQUIRED',
+        'EVOKE_SEGMENT_COW_WRITE_PREPARED_READER_FENCE_REQUIRED',
         'defer_fsm_handoff',
         'UnlockRelation(index_relation, AccessExclusiveLock);',
-        'ii42_segment_pages_publish_fsm_handoff(',
+        'evoke_segment_pages_publish_fsm_handoff(',
     ):
         if required not in fold_block:
             errors.append(
@@ -4442,24 +4442,24 @@ def check_c_contract(errors: list[str]) -> None:
                 f'page-native term-local input {required!r}'
             )
     if (
-        '#define II42_AM_TERM_FOLD_TARGET_TAIL_EXTENTS \\\n'
-        '    II42_AM_TERM_FOLD_MAX_NEW_EXTENTS'
+        '#define EVOKE_AM_TERM_FOLD_TARGET_TAIL_EXTENTS \\\n'
+        '    EVOKE_AM_TERM_FOLD_MAX_NEW_EXTENTS'
     ) not in source:
         errors.append(
             f'{AM_SOURCE_PATH.name}: structural term fold does not retain '
             'the bounded new-extent tail'
         )
-    if 'ii42_segment_pages_load_payload_range(' in fold_block:
+    if 'evoke_segment_pages_load_payload_range(' in fold_block:
         errors.append(
             f'{AM_SOURCE_PATH.name}: structural term fold materializes '
             'complete source segment payloads'
         )
     maintenance_counts_start = source.find(
-        '\nstatic bool\nii42_am_maintenance_result_counts('
+        '\nstatic bool\nevoke_am_maintenance_result_counts('
     )
     maintenance_counts_end = source.find(
         '\n\nstatic bool\n'
-        'ii42_am_convergent_semantic_completion_due(',
+        'evoke_am_convergent_semantic_completion_due(',
         maintenance_counts_start,
     )
     maintenance_counts_block = (
@@ -4476,11 +4476,11 @@ def check_c_contract(errors: list[str]) -> None:
         )
     defer_result_start = source.find(
         '\nstatic bool\n'
-        'ii42_am_maintenance_result_defers_to_reconcile('
+        'evoke_am_maintenance_result_defers_to_reconcile('
     )
     defer_result_end = source.find(
         '\n\nstatic bool\n'
-        'ii42_am_convergent_semantic_completion_due(',
+        'evoke_am_convergent_semantic_completion_due(',
         defer_result_start,
     )
     defer_result_block = (
@@ -4498,10 +4498,10 @@ def check_c_contract(errors: list[str]) -> None:
                 f'miss periodic-reconcile classifier {required!r}'
             )
     worker_start = source.find(
-        '\nstatic int\nii42_am_execute_maintenance_candidate('
+        '\nstatic int\nevoke_am_execute_maintenance_candidate('
     )
     worker_end = source.find(
-        '\n\nPGDLLEXPORT void\nii42_maintenance_worker_main(',
+        '\n\nPGDLLEXPORT void\nevoke_maintenance_worker_main(',
         worker_start,
     )
     worker_block = (
@@ -4510,18 +4510,18 @@ def check_c_contract(errors: list[str]) -> None:
         else ''
     )
     for required in (
-        'ii42_am_maintenance_result_defers_to_reconcile(result)',
+        'evoke_am_maintenance_result_defers_to_reconcile(result)',
         'else if (deferred_to_reconcile && candidate->hinted)',
-        'ii42_am_work_hint_clear_if_unchanged(',
+        'evoke_am_work_hint_clear_if_unchanged(',
     ):
         if required not in worker_block:
             errors.append(
                 f'{AM_SOURCE_PATH.name}: memory-blocked accelerator hint '
                 f'can busy-loop without {required!r}'
             )
-    build_empty_start = source.find('\nstatic void\nii42_ambuildempty(')
+    build_empty_start = source.find('\nstatic void\nevoke_ambuildempty(')
     build_empty_end = source.find(
-        '\n\nstatic char *\nii42_am_compile_semantic_documents_query(',
+        '\n\nstatic char *\nevoke_am_compile_semantic_documents_query(',
         build_empty_start,
     )
     if build_empty_start < 0 or build_empty_end < 0:
@@ -4531,11 +4531,11 @@ def check_c_contract(errors: list[str]) -> None:
     else:
         build_empty_block = source[build_empty_start:build_empty_end]
         for required in (
-            'ii42_am_rebuild_output replacement;',
+            'evoke_am_rebuild_output replacement;',
             'replacement.index = cleanup->index;',
-            'ii42_index_init(&cleanup->index);',
-            'ii42_am_rebuild_output_release(&replacement);',
-            'ii42_index_free(&cleanup->index);',
+            'evoke_index_init(&cleanup->index);',
+            'evoke_am_rebuild_output_release(&replacement);',
+            'evoke_index_free(&cleanup->index);',
         ):
             if required not in build_empty_block:
                 errors.append(
@@ -4544,7 +4544,7 @@ def check_c_contract(errors: list[str]) -> None:
                 )
         if (
             build_empty_block.count(
-                'ii42_am_rebuild_output_release(&replacement);'
+                'evoke_am_rebuild_output_release(&replacement);'
             ) != 1
         ):
             errors.append(
@@ -4552,16 +4552,16 @@ def check_c_contract(errors: list[str]) -> None:
                 'have one release'
             )
     for constant in (
-        'II42_AM_REBUILD_MEMORY_ESTIMATE_MULTIPLIER',
-        'II42_AM_COMPACT_REBUILD_MEMORY_ESTIMATE_MULTIPLIER',
-        'II42_AM_SPILL_REBUILD_MEMORY_ESTIMATE_MULTIPLIER',
-        'II42_AM_STANDARD_REBUILD_BUDGET_HEADROOM_NUM',
-        'II42_AM_STANDARD_REBUILD_BUDGET_HEADROOM_DEN',
-        'II42_AM_COMPACT_REBUILD_BUDGET_HEADROOM_NUM',
-        'II42_AM_COMPACT_REBUILD_BUDGET_HEADROOM_DEN',
-        'II42_AM_STANDARD_REBUILD_MAX_PAYLOAD_BYTES',
-        'II42_AM_COMPACT_REBUILD_MAX_PAYLOAD_BYTES',
-        'II42_AM_SEMANTIC_BUILD_FIXED_WORKSPACE_BYTES',
+        'EVOKE_AM_REBUILD_MEMORY_ESTIMATE_MULTIPLIER',
+        'EVOKE_AM_COMPACT_REBUILD_MEMORY_ESTIMATE_MULTIPLIER',
+        'EVOKE_AM_SPILL_REBUILD_MEMORY_ESTIMATE_MULTIPLIER',
+        'EVOKE_AM_STANDARD_REBUILD_BUDGET_HEADROOM_NUM',
+        'EVOKE_AM_STANDARD_REBUILD_BUDGET_HEADROOM_DEN',
+        'EVOKE_AM_COMPACT_REBUILD_BUDGET_HEADROOM_NUM',
+        'EVOKE_AM_COMPACT_REBUILD_BUDGET_HEADROOM_DEN',
+        'EVOKE_AM_STANDARD_REBUILD_MAX_PAYLOAD_BYTES',
+        'EVOKE_AM_COMPACT_REBUILD_MAX_PAYLOAD_BYTES',
+        'EVOKE_AM_SEMANTIC_BUILD_FIXED_WORKSPACE_BYTES',
     ):
         definition = re.compile(rf'^#define {constant}\b', re.MULTILINE)
         owners = [
@@ -4576,11 +4576,11 @@ def check_c_contract(errors: list[str]) -> None:
                 f'owner: {owner_names or "<none>"}'
             )
     semantic_stream_adapter_start = build_source.find(
-        '\nstatic ii42_status\nii42_am_semantic_posting_file_read('
+        '\nstatic evoke_status\nevoke_am_semantic_posting_file_read('
     )
     semantic_stream_adapter_end = build_source.find(
         '\nstatic void\n'
-        'ii42_am_rebuild_output_release_materialized_sources(',
+        'evoke_am_rebuild_output_release_materialized_sources(',
         semantic_stream_adapter_start,
     )
     semantic_stream_adapter_block = ''
@@ -4594,10 +4594,10 @@ def check_c_contract(errors: list[str]) -> None:
             semantic_stream_adapter_start:semantic_stream_adapter_end
         ]
     initial_fold_producer_start = build_source.find(
-        '\nstatic ii42_status\nii42_am_initial_fold_publish_next('
+        '\nstatic evoke_status\nevoke_am_initial_fold_publish_next('
     )
     initial_fold_producer_end = build_source.find(
-        '\nvoid\nii42_am_rebuild_output_release(',
+        '\nvoid\nevoke_am_rebuild_output_release(',
         initial_fold_producer_start,
     )
     initial_fold_producer_block = ''
@@ -4611,9 +4611,9 @@ def check_c_contract(errors: list[str]) -> None:
             initial_fold_producer_start:initial_fold_producer_end
         ]
         for required in (
-            'ii42_initial_fold_stream_next(',
-            'ii42_initial_fold_stream_free(publish->stream);',
-            'ii42_am_rebuild_output_release_materialized_sources(',
+            'evoke_initial_fold_stream_next(',
+            'evoke_initial_fold_stream_free(publish->stream);',
+            'evoke_am_rebuild_output_release_materialized_sources(',
             'publish->source_released = true;',
         ):
             if required not in initial_fold_producer_block:
@@ -4638,8 +4638,8 @@ def check_c_contract(errors: list[str]) -> None:
         line
         for line in pure_build_source.splitlines()
         if line not in (
-            '#include "ii42_am_meta.h"',
-            '#include "ii42_segment_pages.h"',
+            '#include "evoke_am_meta.h"',
+            '#include "evoke_segment_pages.h"',
         )
     )
     for forbidden_build_dependency in (
@@ -4649,10 +4649,10 @@ def check_c_contract(errors: list[str]) -> None:
         'XLog',
         'LWLock',
         'LockRelation',
-        'ii42_am_meta',
-        'ii42_segment_',
-        'ii42_runtime',
-        'ii42_maintenance_rebuild_memory_budget_mb',
+        'evoke_am_meta',
+        'evoke_segment_',
+        'evoke_runtime',
+        'evoke_maintenance_rebuild_memory_budget_mb',
         'ereport(',
         'palloc',
     ):
@@ -4663,9 +4663,9 @@ def check_c_contract(errors: list[str]) -> None:
             )
     for forbidden_build_header_dependency in (
         'storage/bufmgr.h',
-        'ii42_am_meta.h',
-        'ii42_segment_pages.h',
-        'ii42_runtime_service.h',
+        'evoke_am_meta.h',
+        'evoke_segment_pages.h',
+        'evoke_runtime_service.h',
     ):
         if forbidden_build_header_dependency in build_header:
             errors.append(
@@ -4695,9 +4695,9 @@ def check_c_contract(errors: list[str]) -> None:
                     f'common value authority: {constructor}'
                 )
     for retired_constructor in (
-        'ii42_am_float4_array_from_values',
-        'ii42_am_int4_array_from_values',
-        'ii42_am_text_array_from_cstrings',
+        'evoke_am_float4_array_from_values',
+        'evoke_am_int4_array_from_values',
+        'evoke_am_text_array_from_cstrings',
     ):
         for path in sorted((REPO_ROOT / 'src').glob('*.[ch]')):
             if retired_constructor in path.read_text(encoding='utf-8'):
@@ -4706,11 +4706,11 @@ def check_c_contract(errors: list[str]) -> None:
                     f'remains: {retired_constructor}'
                 )
 
-    if '#include "ii42_am_meta.h"' not in source:
+    if '#include "evoke_am_meta.h"' not in source:
         errors.append(
             f'{AM_SOURCE_PATH.name}: checked metapage authority is not used'
         )
-    meta_layout = 'typedef struct ii42_am_meta_page'
+    meta_layout = 'typedef struct evoke_am_meta_page'
     meta_layout_owners = []
     for path in sorted((REPO_ROOT / 'src').glob('*.[ch]')):
         if meta_layout in path.read_text(encoding='utf-8'):
@@ -4721,7 +4721,7 @@ def check_c_contract(errors: list[str]) -> None:
             'metapage wire layout does not have one header owner: '
             f'{owners or "<none>"}'
         )
-    health_layout = 'typedef struct ii42_am_payload_health_state'
+    health_layout = 'typedef struct evoke_am_payload_health_state'
     health_layout_owners = []
     for path in sorted((REPO_ROOT / 'src').glob('*.[ch]')):
         if health_layout in path.read_text(encoding='utf-8'):
@@ -4732,7 +4732,7 @@ def check_c_contract(errors: list[str]) -> None:
             'payload-health value layout does not have one header owner: '
             f'{owners or "<none>"}'
         )
-    debt_layout = 'typedef struct ii42_am_convergent_mutation_debt'
+    debt_layout = 'typedef struct evoke_am_convergent_mutation_debt'
     debt_layout_owners = []
     for path in sorted((REPO_ROOT / 'src').glob('*.[ch]')):
         if debt_layout in path.read_text(encoding='utf-8'):
@@ -4744,14 +4744,14 @@ def check_c_contract(errors: list[str]) -> None:
             f'{owners or "<none>"}'
         )
     for constant in (
-        'II42_AM_MAGIC',
-        'II42_AM_VERSION',
-        'II42_AM_PAGE_META',
-        'II42_AM_FLAG_STALE',
-        'II42_AM_FLAG_CORRUPT',
-        'II42_AM_FLAG_REBUILD_REQUIRED',
-        'II42_AM_FLAG_SEMANTIC_QUARANTINE',
-        'II42_AM_STORAGE_CONVERGENT_SEGMENTS',
+        'EVOKE_AM_MAGIC',
+        'EVOKE_AM_VERSION',
+        'EVOKE_AM_PAGE_META',
+        'EVOKE_AM_FLAG_STALE',
+        'EVOKE_AM_FLAG_CORRUPT',
+        'EVOKE_AM_FLAG_REBUILD_REQUIRED',
+        'EVOKE_AM_FLAG_SEMANTIC_QUARANTINE',
+        'EVOKE_AM_STORAGE_CONVERGENT_SEGMENTS',
     ):
         definition = re.compile(rf'^#define {constant}\b', re.MULTILINE)
         owners = [
@@ -4766,17 +4766,17 @@ def check_c_contract(errors: list[str]) -> None:
                 f'owner: {owner_names or "<none>"}'
             )
     meta_read_functions = (
-        'ii42_am_meta_uses_convergent_segment_storage',
-        'ii42_am_require_convergent_segment_storage',
-        'ii42_am_segment_read_root_from_meta',
-        'ii42_am_relation_nblocks',
-        'ii42_am_read_meta',
-        'ii42_am_payload_health',
-        'ii42_am_meta_has_pending_maintenance',
+        'evoke_am_meta_uses_convergent_segment_storage',
+        'evoke_am_require_convergent_segment_storage',
+        'evoke_am_segment_read_root_from_meta',
+        'evoke_am_relation_nblocks',
+        'evoke_am_read_meta',
+        'evoke_am_payload_health',
+        'evoke_am_meta_has_pending_maintenance',
     )
     for function in meta_read_functions:
         definition = re.compile(
-            rf'\n(?:bool|void|ii42_status|BlockNumber)\n'
+            rf'\n(?:bool|void|evoke_status|BlockNumber)\n'
             rf'{re.escape(function)}\('
         )
         owners = [
@@ -4796,8 +4796,8 @@ def check_c_contract(errors: list[str]) -> None:
                 f'have one declaration: {function}'
             )
     meta_accounting_functions = (
-        'ii42_am_segment_object_bytes_add',
-        'ii42_am_convergent_object_bytes',
+        'evoke_am_segment_object_bytes_add',
+        'evoke_am_convergent_object_bytes',
     )
     for function in meta_accounting_functions:
         definition = re.compile(
@@ -4820,10 +4820,10 @@ def check_c_contract(errors: list[str]) -> None:
                 f'have one declaration: {function}'
             )
     accounting_start = meta_source.find(
-        '\nuint64\nii42_am_segment_object_bytes_add('
+        '\nuint64\nevoke_am_segment_object_bytes_add('
     )
     accounting_end = meta_source.find(
-        '\n\nvoid\nii42_am_convergent_mutation_debt_read(',
+        '\n\nvoid\nevoke_am_convergent_mutation_debt_read(',
         accounting_start,
     )
     if accounting_start < 0 or accounting_end < 0:
@@ -4834,8 +4834,8 @@ def check_c_contract(errors: list[str]) -> None:
     else:
         accounting_block = meta_source[accounting_start:accounting_end]
         for required in (
-            'return ii42_u64_saturating_add(left, right);',
-            'ii42_am_segment_read_root_from_meta(meta, &root)',
+            'return evoke_u64_saturating_add(left, right);',
+            'evoke_am_segment_read_root_from_meta(meta, &root)',
             'root.published_block_high_watermark * BLCKSZ',
         ):
             if required not in accounting_block:
@@ -4844,22 +4844,22 @@ def check_c_contract(errors: list[str]) -> None:
                     f'missing {required!r}'
                 )
         for forbidden in (
-            'ii42_am_convergent_mutation_debt',
-            'ii42_am_schedule',
-            'ii42_am_maintain',
-            'ii42_runtime',
-            'ii42_model',
+            'evoke_am_convergent_mutation_debt',
+            'evoke_am_schedule',
+            'evoke_am_maintain',
+            'evoke_runtime',
+            'evoke_model',
             'rd_options',
             'GetConfigOption',
             'table_index_build_scan',
-            'ii42_segment_pages_inventory_reachable',
-            'ii42_segment_pages_load_sealed_manifest(',
+            'evoke_segment_pages_inventory_reachable',
+            'evoke_segment_pages_load_sealed_manifest(',
             'retired_range',
             'recyclable',
             'RelationGetNumberOfBlocks',
             'MarkBufferDirty',
             'XLog',
-            'ii42_page_query',
+            'evoke_page_query',
             'IndexScan',
             'ambulkdelete',
         ):
@@ -4868,7 +4868,7 @@ def check_c_contract(errors: list[str]) -> None:
                     f'{AM_META_SOURCE_PATH.name}: root byte accounting '
                     f'acquired forbidden authority: {forbidden!r}'
                 )
-    debt_function = 'ii42_am_convergent_mutation_debt_read'
+    debt_function = 'evoke_am_convergent_mutation_debt_read'
     debt_definition = re.compile(
         rf'\nvoid\n{re.escape(debt_function)}\('
     )
@@ -4889,10 +4889,10 @@ def check_c_contract(errors: list[str]) -> None:
             f'not have one declaration: {debt_function}'
         )
     debt_start = meta_source.find(
-        '\nvoid\nii42_am_convergent_mutation_debt_read('
+        '\nvoid\nevoke_am_convergent_mutation_debt_read('
     )
     debt_end = meta_source.find(
-        '\n\nstatic void\nii42_am_normalize_meta_storage(',
+        '\n\nstatic void\nevoke_am_normalize_meta_storage(',
         debt_start,
     )
     if debt_start < 0 or debt_end < 0:
@@ -4903,24 +4903,24 @@ def check_c_contract(errors: list[str]) -> None:
     else:
         debt_block = meta_source[debt_start:debt_end]
         for required in (
-            'ii42_u32_saturating_add(',
-            'ii42_am_get_consistency(index_relation)',
-            'II42_AM_CONSISTENCY_MANUAL',
+            'evoke_u32_saturating_add(',
+            'evoke_am_get_consistency(index_relation)',
+            'EVOKE_AM_CONSISTENCY_MANUAL',
             'meta->pending_write_tuples',
             'meta->pending_delete_tuples',
-            'ii42_am_segment_read_root_from_meta(meta, &root)',
-            'ii42_l0_storage_snapshot_init(&snapshot);',
-            'ii42_segment_pages_load_l0_snapshot(',
-            'II42_L0_RECORD_UPSERT',
-            'II42_L0_RECORD_RETIRE',
-            'II42_L0_RECORD_SEMANTIC_COMPLETE',
-            'II42_L0_RECORD_SEMANTIC_QUARANTINE',
-            'II42_L0_RECORD_INVALID',
+            'evoke_am_segment_read_root_from_meta(meta, &root)',
+            'evoke_l0_storage_snapshot_init(&snapshot);',
+            'evoke_segment_pages_load_l0_snapshot(',
+            'EVOKE_L0_RECORD_UPSERT',
+            'EVOKE_L0_RECORD_RETIRE',
+            'EVOKE_L0_RECORD_SEMANTIC_COMPLETE',
+            'EVOKE_L0_RECORD_SEMANTIC_QUARANTINE',
+            'EVOKE_L0_RECORD_INVALID',
             'debt_out->records = snapshot.record_count;',
             'debt_out->bytes = snapshot.payload_bytes;',
             'PG_TRY();',
             'PG_FINALLY();',
-            'ii42_l0_storage_snapshot_free(&snapshot);',
+            'evoke_l0_storage_snapshot_free(&snapshot);',
         ):
             if required not in debt_block:
                 errors.append(
@@ -4928,12 +4928,12 @@ def check_c_contract(errors: list[str]) -> None:
                     f'is missing {required!r}'
                 )
         for forbidden in (
-            'ii42_am_append',
-            'ii42_am_publish',
-            'ii42_am_schedule',
-            'ii42_am_try_maintain',
-            'ii42_runtime',
-            'ii42_model',
+            'evoke_am_append',
+            'evoke_am_publish',
+            'evoke_am_schedule',
+            'evoke_am_try_maintain',
+            'evoke_runtime',
+            'evoke_model',
             'table_index_build_scan',
             'heap_beginscan',
             'MarkBufferDirty',
@@ -4941,16 +4941,16 @@ def check_c_contract(errors: list[str]) -> None:
             'XLog',
             'LockRelation',
             'LWLock',
-            'ii42_page_query',
+            'evoke_page_query',
             'ambulkdelete',
-            'ii42_am_posting_heat',
+            'evoke_am_posting_heat',
         ):
             if forbidden in debt_block:
                 errors.append(
                     f'{AM_META_SOURCE_PATH.name}: linked-L0 debt projection '
                     f'acquired forbidden authority: {forbidden!r}'
                 )
-    rebuild_meta_publish = 'ii42_am_publish_rebuild_meta'
+    rebuild_meta_publish = 'evoke_am_publish_rebuild_meta'
     rebuild_meta_publish_definition = re.compile(
         rf'\nvoid\n{re.escape(rebuild_meta_publish)}\('
     )
@@ -4982,7 +4982,7 @@ def check_c_contract(errors: list[str]) -> None:
             f'{AM_BUILD_SOURCE_PATH.name}: rebuild metapage publication '
             'does not have exactly one typed caller'
         )
-    if 'ii42_am_publish_convergent_segment_meta' in source:
+    if 'evoke_am_publish_convergent_segment_meta' in source:
         errors.append(
             f'{AM_SOURCE_PATH.name}: retired rebuild metapage writer remains'
         )
@@ -4990,7 +4990,7 @@ def check_c_contract(errors: list[str]) -> None:
         f'\nvoid\n{rebuild_meta_publish}('
     )
     rebuild_publish_end = meta_source.find(
-        '\n\nbool\nii42_am_meta_has_pending_maintenance(',
+        '\n\nbool\nevoke_am_meta_has_pending_maintenance(',
         rebuild_publish_start,
     )
     meta_read_source = meta_source
@@ -5010,7 +5010,7 @@ def check_c_contract(errors: list[str]) -> None:
         for required in (
             'fork_number != MAIN_FORKNUM',
             'fork_number != INIT_FORKNUM',
-            'ii42_segment_read_root_serialize(',
+            'evoke_segment_read_root_serialize(',
             'root->published_block_high_watermark != (uint32) nblocks',
             'LockBuffer(meta_buffer, BUFFER_LOCK_EXCLUSIVE);',
             'START_CRIT_SECTION();',
@@ -5028,13 +5028,13 @@ def check_c_contract(errors: list[str]) -> None:
             'ExtendBufferedRel(',
             'P_NEW',
             'GenericXLog',
-            'ii42_am_lock_generation_barrier',
-            'ii42_am_replacement',
-            'ii42_segment_pages_',
-            'ii42_runtime',
-            'ii42_model',
-            'ii42_am_schedule',
-            'ii42_am_update_meta_flags',
+            'evoke_am_lock_generation_barrier',
+            'evoke_am_replacement',
+            'evoke_segment_pages_',
+            'evoke_runtime',
+            'evoke_model',
+            'evoke_am_schedule',
+            'evoke_am_update_meta_flags',
         ):
             if forbidden in rebuild_publish_block:
                 errors.append(
@@ -5042,9 +5042,9 @@ def check_c_contract(errors: list[str]) -> None:
                     f'publication acquired forbidden authority: {forbidden!r}'
                 )
     meta_mutation_functions = (
-        'ii42_am_note_maintenance_activity',
-        'ii42_am_mark_stale',
-        'ii42_am_get_stats',
+        'evoke_am_note_maintenance_activity',
+        'evoke_am_mark_stale',
+        'evoke_am_get_stats',
     )
     for function in meta_mutation_functions:
         definition = re.compile(
@@ -5067,10 +5067,10 @@ def check_c_contract(errors: list[str]) -> None:
                 f'does not have one declaration: {function}'
             )
     meta_mutation_start = meta_source.find(
-        '\nstatic void\nii42_am_update_meta_flags('
+        '\nstatic void\nevoke_am_update_meta_flags('
     )
     meta_mutation_end = meta_source.find(
-        '\n\nuint64\nii42_am_next_rebuild_count(',
+        '\n\nuint64\nevoke_am_next_rebuild_count(',
         meta_mutation_start,
     )
     if meta_mutation_start < 0 or meta_mutation_end < 0:
@@ -5083,14 +5083,14 @@ def check_c_contract(errors: list[str]) -> None:
             meta_mutation_start:meta_mutation_end
         ]
         for required in (
-            'ii42_am_lock_append(indexRelation);',
+            'evoke_am_lock_append(indexRelation);',
             'LockBuffer(buffer, BUFFER_LOCK_EXCLUSIVE);',
-            'ii42_am_mark_buffer_dirty_with_wal(indexRelation, buffer);',
-            'ii42_am_maintenance_tracking_enabled(indexRelation)',
-            'ii42_am_pin_maintenance_xact(indexRelation);',
-            'ii42_u32_saturating_add(',
-            'ii42_am_update_meta_flags(',
-            'II42_AM_FLAG_STALE',
+            'evoke_am_mark_buffer_dirty_with_wal(indexRelation, buffer);',
+            'evoke_am_maintenance_tracking_enabled(indexRelation)',
+            'evoke_am_pin_maintenance_xact(indexRelation);',
+            'evoke_u32_saturating_add(',
+            'evoke_am_update_meta_flags(',
+            'EVOKE_AM_FLAG_STALE',
             'stats->num_index_tuples = meta.num_docs;',
         ):
             if required not in meta_mutation_block:
@@ -5099,16 +5099,16 @@ def check_c_contract(errors: list[str]) -> None:
                     f'projection is missing {required!r}'
                 )
         for forbidden in (
-            'ii42_am_schedule',
-            'ii42_am_try_maintain',
-            'ii42_am_work_hint',
-            'ii42_am_publish',
-            'ii42_runtime',
-            'ii42_model',
+            'evoke_am_schedule',
+            'evoke_am_try_maintain',
+            'evoke_am_work_hint',
+            'evoke_am_publish',
+            'evoke_runtime',
+            'evoke_model',
             'table_index_build_scan',
             'heap_beginscan',
-            'ii42_page_query',
-            'ii42_segment_pages_',
+            'evoke_page_query',
+            'evoke_segment_pages_',
             'ambulkdelete',
         ):
             if forbidden in meta_mutation_block:
@@ -5126,13 +5126,13 @@ def check_c_contract(errors: list[str]) -> None:
         meta_read_source = meta_read_source.replace(debt_block, '')
     ordinal_functions = (
         (
-            'ii42_am_next_rebuild_count',
+            'evoke_am_next_rebuild_count',
             'uint64',
             build_source,
             AM_BUILD_SOURCE_PATH,
         ),
         (
-            'ii42_am_next_cache_epoch',
+            'evoke_am_next_cache_epoch',
             'uint16',
             source,
             AM_SOURCE_PATH,
@@ -5164,10 +5164,10 @@ def check_c_contract(errors: list[str]) -> None:
                 f'have exactly one caller: {function}'
             )
     ordinal_start = meta_source.find(
-        '\nuint64\nii42_am_next_rebuild_count('
+        '\nuint64\nevoke_am_next_rebuild_count('
     )
     ordinal_end = meta_source.find(
-        '\n\nvoid\nii42_am_publish_rebuild_meta(',
+        '\n\nvoid\nevoke_am_publish_rebuild_meta(',
         ordinal_start,
     )
     if ordinal_start < 0 or ordinal_end < 0:
@@ -5179,7 +5179,7 @@ def check_c_contract(errors: list[str]) -> None:
         ordinal_block = meta_source[ordinal_start:ordinal_end]
         for required in (
             'RelationGetNumberOfBlocks(indexRelation) == 0',
-            'ii42_am_read_meta(indexRelation, &meta);',
+            'evoke_am_read_meta(indexRelation, &meta);',
             'meta.rebuild_count == UINT64_MAX',
             'return UINT64_MAX;',
             'return meta.rebuild_count + 1;',
@@ -5200,14 +5200,14 @@ def check_c_contract(errors: list[str]) -> None:
             'MarkBufferDirty',
             'GenericXLog',
             'XLog',
-            'ii42_am_publish',
-            'ii42_am_schedule',
-            'ii42_am_preload',
-            'ii42_runtime',
-            'ii42_model',
+            'evoke_am_publish',
+            'evoke_am_schedule',
+            'evoke_am_preload',
+            'evoke_runtime',
+            'evoke_model',
             'table_index_build_scan',
             'ambulkdelete',
-            'ii42_page_query',
+            'evoke_page_query',
         ):
             if forbidden in ordinal_block:
                 errors.append(
@@ -5215,7 +5215,7 @@ def check_c_contract(errors: list[str]) -> None:
                     f'acquired forbidden authority: {forbidden!r}'
                 )
         meta_read_source = meta_read_source.replace(ordinal_block, '')
-    generation_barrier_tag = 'II42_AM_GENERATION_BARRIER_LOCK_TAG'
+    generation_barrier_tag = 'EVOKE_AM_GENERATION_BARRIER_LOCK_TAG'
     if meta_source.count(
             f'#define {generation_barrier_tag} UINT32_C(0x32534255)') != 1:
         errors.append(
@@ -5229,8 +5229,8 @@ def check_c_contract(errors: list[str]) -> None:
                 f'{path.name}: generation barrier tag escaped root authority'
             )
     generation_barrier_functions = (
-        'ii42_am_lock_generation_barrier',
-        'ii42_am_unlock_generation_barrier',
+        'evoke_am_lock_generation_barrier',
+        'evoke_am_unlock_generation_barrier',
     )
     for function in generation_barrier_functions:
         definition = re.compile(rf'\nvoid\n{re.escape(function)}\(')
@@ -5256,8 +5256,8 @@ def check_c_contract(errors: list[str]) -> None:
                 f'changed: {function}'
             )
     for function in (
-        'ii42_am_lock_generation_barrier_oid',
-        'ii42_am_unlock_generation_barrier_oid',
+        'evoke_am_lock_generation_barrier_oid',
+        'evoke_am_unlock_generation_barrier_oid',
     ):
         if meta_source.count(f'\nstatic void\n{function}(') != 1:
             errors.append(
@@ -5278,10 +5278,10 @@ def check_c_contract(errors: list[str]) -> None:
                     f'{function}'
                 )
     generation_barrier_start = meta_source.find(
-        '\nstatic void\nii42_am_lock_generation_barrier_oid('
+        '\nstatic void\nevoke_am_lock_generation_barrier_oid('
     )
     generation_barrier_end = meta_source.find(
-        '\n\nvoid\nii42_am_mark_buffer_dirty_with_wal(',
+        '\n\nvoid\nevoke_am_mark_buffer_dirty_with_wal(',
         generation_barrier_start,
     )
     if generation_barrier_start < 0 or generation_barrier_end < 0:
@@ -5296,11 +5296,11 @@ def check_c_contract(errors: list[str]) -> None:
         for required in (
             'SET_LOCKTAG_ADVISORY(',
             'MyDatabaseId,',
-            'II42_AM_GENERATION_BARRIER_LOCK_TAG,',
+            'EVOKE_AM_GENERATION_BARRIER_LOCK_TAG,',
             'index_oid,',
             '(void) LockAcquire(&tag, ExclusiveLock, false, false);',
             'if (!LockRelease(&tag, ExclusiveLock, false))',
-            'ii42 generation barrier is not held',
+            'evoke generation barrier is not held',
             'RelationGetRelid(indexRelation)',
         ):
             if required not in generation_barrier_block:
@@ -5314,7 +5314,7 @@ def check_c_contract(errors: list[str]) -> None:
                 'key count changed'
             )
         for forbidden in (
-            'II42_AM_WRITER_BARRIER_LOCK_TAG',
+            'EVOKE_AM_WRITER_BARRIER_LOCK_TAG',
             'LockAcquire(&tag, ShareLock',
             'LockRelease(&tag, ShareLock',
             'ConditionalLock',
@@ -5326,14 +5326,14 @@ def check_c_contract(errors: list[str]) -> None:
             'XLog',
             'table_open(',
             'table_close(',
-            'ii42_am_publish',
-            'ii42_am_schedule',
-            'ii42_am_preload',
-            'ii42_am_maintenance',
-            'ii42_runtime',
-            'ii42_model',
+            'evoke_am_publish',
+            'evoke_am_schedule',
+            'evoke_am_preload',
+            'evoke_am_maintenance',
+            'evoke_runtime',
+            'evoke_model',
             'ambulkdelete',
-            'ii42_page_query',
+            'evoke_page_query',
         ):
             if forbidden in generation_barrier_block:
                 errors.append(
@@ -5345,22 +5345,22 @@ def check_c_contract(errors: list[str]) -> None:
             '',
         )
     if maintenance_source.count(
-            '#define II42_AM_WRITER_BARRIER_LOCK_TAG '
+            '#define EVOKE_AM_WRITER_BARRIER_LOCK_TAG '
             'UINT32_C(0x32534242)') != 1:
         errors.append(
             f'{AM_MAINTENANCE_SOURCE_PATH.name}: writer barrier ownership '
             'changed'
         )
-    if 'II42_AM_WRITER_BARRIER_LOCK_TAG' in meta_source:
+    if 'EVOKE_AM_WRITER_BARRIER_LOCK_TAG' in meta_source:
         errors.append(
             f'{AM_META_SOURCE_PATH.name}: writer barrier entered root '
             'authority'
         )
     page_write_functions = (
-        'ii42_am_mark_buffer_dirty_with_wal',
-        'ii42_am_write_page_at',
-        'ii42_am_write_init_page_at',
-        'ii42_am_write_new_page',
+        'evoke_am_mark_buffer_dirty_with_wal',
+        'evoke_am_write_page_at',
+        'evoke_am_write_init_page_at',
+        'evoke_am_write_new_page',
     )
     for function in page_write_functions:
         definition = re.compile(rf'\nvoid\n{re.escape(function)}\(')
@@ -5381,10 +5381,10 @@ def check_c_contract(errors: list[str]) -> None:
                 f'does not have one declaration: {function}'
             )
     page_write_start = meta_source.find(
-        '\nvoid\nii42_am_mark_buffer_dirty_with_wal('
+        '\nvoid\nevoke_am_mark_buffer_dirty_with_wal('
     )
     page_write_end = meta_source.find(
-        '\n\nvoid\nii42_am_payload_health(',
+        '\n\nvoid\nevoke_am_payload_health(',
         page_write_start,
     )
     if page_write_start < 0 or page_write_end < 0:
@@ -5401,23 +5401,23 @@ def check_c_contract(errors: list[str]) -> None:
             'if (blkno < nblocks)',
             'else if (blkno == nblocks)',
             'P_NEW',
-            'ii42 segment write skipped a block',
+            'evoke segment write skipped a block',
             'LockBuffer(buffer, BUFFER_LOCK_EXCLUSIVE);',
             'nblocks = RelationGetNumberOfBlocksInFork(',
             'INIT_FORKNUM',
-            'ii42 initialization fork write is not contiguous',
+            'evoke initialization fork write is not contiguous',
             'ExtendBufferedRel(',
             'EB_LOCK_FIRST | EB_SKIP_EXTENSION_LOCK',
-            'unexpected ii42 initialization fork size',
+            'unexpected evoke initialization fork size',
             'START_CRIT_SECTION();',
             'PageInit(page, BLCKSZ, 0);',
             'memcpy(PageGetContents(page), contents, len);',
-            'ii42_am_mark_buffer_dirty_with_wal(indexRelation, buffer);',
+            'evoke_am_mark_buffer_dirty_with_wal(indexRelation, buffer);',
             'MarkBufferDirty(buffer);',
             'log_newpage_buffer(buffer, false);',
             'END_CRIT_SECTION();',
             'UnlockReleaseBuffer(buffer);',
-            'ii42_am_write_page_at(',
+            'evoke_am_write_page_at(',
         ):
             if required not in page_write_block:
                 errors.append(
@@ -5432,14 +5432,14 @@ def check_c_contract(errors: list[str]) -> None:
             'LockRelease',
             'table_open(',
             'table_close(',
-            'ii42_am_publish',
-            'ii42_am_schedule',
-            'ii42_am_preload',
-            'ii42_runtime',
-            'ii42_model',
+            'evoke_am_publish',
+            'evoke_am_schedule',
+            'evoke_am_preload',
+            'evoke_runtime',
+            'evoke_model',
             'ambulkdelete',
-            'ii42_page_query',
-            'ii42_segment_pages_',
+            'evoke_page_query',
+            'evoke_segment_pages_',
         ):
             if forbidden in page_write_block:
                 errors.append(
@@ -5447,10 +5447,10 @@ def check_c_contract(errors: list[str]) -> None:
                     f'closure acquired forbidden authority: {forbidden!r}'
                 )
         expected_am_calls = {
-            'ii42_am_mark_buffer_dirty_with_wal': 0,
-            'ii42_am_write_page_at': 0,
-            'ii42_am_write_init_page_at': 1,
-            'ii42_am_write_new_page': 0,
+            'evoke_am_mark_buffer_dirty_with_wal': 0,
+            'evoke_am_write_page_at': 0,
+            'evoke_am_write_init_page_at': 1,
+            'evoke_am_write_new_page': 0,
         }
         for function, expected_count in expected_am_calls.items():
             if source.count(f'{function}(') != expected_count:
@@ -5460,7 +5460,7 @@ def check_c_contract(errors: list[str]) -> None:
                 )
         meta_read_source = meta_read_source.replace(page_write_block, '')
     normalize_definition = re.compile(
-        r'\nstatic void\nii42_am_normalize_meta_storage\('
+        r'\nstatic void\nevoke_am_normalize_meta_storage\('
     )
     if len(normalize_definition.findall(meta_source)) != 1:
         errors.append(
@@ -5470,14 +5470,14 @@ def check_c_contract(errors: list[str]) -> None:
     for path in sorted((REPO_ROOT / 'src').glob('*.[ch]')):
         if path == AM_META_SOURCE_PATH:
             continue
-        if 'ii42_am_normalize_meta_storage' in path.read_text(
+        if 'evoke_am_normalize_meta_storage' in path.read_text(
             encoding='utf-8'
         ):
             errors.append(
                 f'{path.name}: private metapage normalization escaped its '
                 'read authority'
             )
-    if 'sizeof(ii42_am_meta_page)' not in meta_source:
+    if 'sizeof(evoke_am_meta_page)' not in meta_source:
         errors.append(
             f'{AM_META_SOURCE_PATH.name}: metapage size guard is missing'
         )
@@ -5488,18 +5488,18 @@ def check_c_contract(errors: list[str]) -> None:
         'START_CRIT_SECTION',
         'LWLock',
         'LockRelation',
-        'ii42_am_cache',
-        'ii42_am_publish',
-        'ii42_am_schedule',
-        'ii42_am_write',
-        'ii42_runtime',
-        'ii42_model',
-        'ii42_segment_read_root_serialize',
-        'ii42_segment_publish',
-        'ii42_segment_pages_',
-        'ii42_am_convergent_mutation_debt',
-        'ii42_am_rebuild',
-        'ii42_document_cow',
+        'evoke_am_cache',
+        'evoke_am_publish',
+        'evoke_am_schedule',
+        'evoke_am_write',
+        'evoke_runtime',
+        'evoke_model',
+        'evoke_segment_read_root_serialize',
+        'evoke_segment_publish',
+        'evoke_segment_pages_',
+        'evoke_am_convergent_mutation_debt',
+        'evoke_am_rebuild',
+        'evoke_document_cow',
     ):
         if forbidden_meta_dependency in meta_read_source:
             errors.append(
@@ -5509,10 +5509,10 @@ def check_c_contract(errors: list[str]) -> None:
     for forbidden_meta_header_dependency in (
         'storage/bufmgr.h',
         'storage/bufpage.h',
-        'ii42_page_query.h',
-        'ii42_runtime_service.h',
-        'ii42_segment_pages.h',
-        'ii42_storage.h',
+        'evoke_page_query.h',
+        'evoke_runtime_service.h',
+        'evoke_segment_pages.h',
+        'evoke_storage.h',
     ):
         if forbidden_meta_header_dependency in meta_header:
             errors.append(
@@ -5527,7 +5527,7 @@ def check_lifecycle_smoke(errors: list[str]) -> None:
         'sae = true',
         'consistency = realtime',
         'consistency = eventual',
-        'ii42_index_maintain(',
+        'evoke_index_maintain(',
         'DROP INDEX p2_mutable.docs_idx',
         'drop_removes_relation_and_preserves_source',
         'unified_generation_ready',
@@ -5582,7 +5582,7 @@ def check_lifecycle_smoke(errors: list[str]) -> None:
     )
     realtime_sae_fixtures = (
         LIFECYCLE_SMOKE_PATH,
-        REPO_ROOT / 'scripts/benchmark_ii42_product_path.py',
+        REPO_ROOT / 'scripts/benchmark_evoke_product_path.py',
         REPO_ROOT / 'scripts/test_concurrent_ddl_lifecycle_smoke.py',
         REPO_ROOT / 'scripts/test_onnxruntime_provider_matrix.py',
         REPO_ROOT / 'scripts/test_runtime_service_temp_pg.py',
@@ -5603,8 +5603,8 @@ def check_lifecycle_smoke(errors: list[str]) -> None:
 def check_cache_failure_smoke(errors: list[str]) -> None:
     smoke = CACHE_FAILURE_SMOKE_PATH.read_text(encoding='utf-8')
     required = (
-        'ii42.test_query_operator_error_after_parse',
-        'ii42.test_search_error_after_rank',
+        'evoke.test_query_operator_error_after_parse',
+        'evoke.test_search_error_after_rank',
         'RSS_GROWTH_LIMIT_KIB',
         'expect_scan_fault',
         'L0 query retry did not return 20 hits',
@@ -5625,7 +5625,7 @@ def check_vacuum_frontier_smoke(errors: list[str]) -> None:
         'ACTIVE_L0_MAX_RECORDS = 131_072',
         'VACUUM_COW_BATCH_RECORDS = 65_536',
         'DEFAULT_ROW_COUNT = 140_000',
-        'ii42.test_convergent_vacuum_error_after_batch',
+        'evoke.test_convergent_vacuum_error_after_batch',
         'partial_vacuum_batch_is_failure_safe',
         'restart_preserves_converged_retirement',
         'post_frontier_insert_survives_restart',
@@ -5647,8 +5647,8 @@ def check_storage_layout_boundary(errors: list[str]) -> None:
         'STORAGE_CONVERGENT_SEGMENTS = 3',
         "'--no-data-checksums'",
         "'0A000'",
-        "'unsupported ii42 index storage layout'",
-        "'REINDEX the ii42 index to publish page-native v3 storage.'",
+        "'unsupported evoke index storage layout'",
+        "'REINDEX the evoke index to publish page-native v3 storage.'",
         "'background_due_count'",
         "'REINDEX INDEX docs_bm25_idx; CHECKPOINT;'",
     )
@@ -5667,7 +5667,7 @@ def check_storage_layout_boundary(errors: list[str]) -> None:
         'META_MAGIC_OFFSET = PAGE_HEADER_SIZE',
         'META_TID_BYTES_OFFSET = PAGE_HEADER_SIZE + 24',
         'META_ROOT_OFFSET = PAGE_HEADER_SIZE + 153',
-        "'invalid ii42 index metapage'",
+        "'invalid evoke index metapage'",
         "'Validation failed: marked_corrupt.'",
         "'Validation failed: invalid_segment_read_root.'",
         "'Validation failed: segment_root_out_of_bounds.'",
@@ -5690,9 +5690,9 @@ def check_storage_layout_boundary(errors: list[str]) -> None:
         "details['pending_writes']",
         "generation.get('health_reason')",
         "status.get('blocker') != 'generation_invalid'",
-        "'cannot preload corrupt ii42 generation'",
-        "'invalid ii42 convergent segment payload'",
-        "public.ii42_index_refresh('docs_bm25_idx')",
+        "'cannot preload corrupt evoke generation'",
+        "'invalid evoke convergent segment payload'",
+        "public.evoke_index_refresh('docs_bm25_idx')",
     )
     for needle in required_payload_health_smoke:
         if needle not in payload_health_smoke:
@@ -5704,10 +5704,10 @@ def check_storage_layout_boundary(errors: list[str]) -> None:
     source = AM_SOURCE_PATH.read_text(encoding='utf-8')
     prewarm_start = source.find(
         '\nstatic uint64\n'
-        'ii42_am_prewarm_convergent_generation_pages('
+        'evoke_am_prewarm_convergent_generation_pages('
     )
     prewarm_end = source.find(
-        '\n\n\nstatic void\nii42_am_rebuild_workload_from_convergent(',
+        '\n\n\nstatic void\nevoke_am_rebuild_workload_from_convergent(',
         prewarm_start,
     )
     if prewarm_start < 0 or prewarm_end < 0:
@@ -5717,11 +5717,11 @@ def check_storage_layout_boundary(errors: list[str]) -> None:
     else:
         prewarm_block = source[prewarm_start:prewarm_end]
         for needle in (
-            'ii42_segment_pages_load_sealed_manifest(',
-            'ii42_segment_pages_inventory_reachable(',
-            'ii42_segment_pages_load_maintenance_manifest(',
-            'ii42_segment_pages_load_query_contract(',
-            'ii42_am_prewarm_page_budget()',
+            'evoke_segment_pages_load_sealed_manifest(',
+            'evoke_segment_pages_inventory_reachable(',
+            'evoke_segment_pages_load_maintenance_manifest(',
+            'evoke_segment_pages_load_query_contract(',
+            'evoke_am_prewarm_page_budget()',
         ):
             if needle not in prewarm_block:
                 errors.append(
@@ -5733,10 +5733,10 @@ def check_storage_layout_boundary(errors: list[str]) -> None:
         )
         bounded_branch = prewarm_block.find('\n        else\n', exact_branch)
         sealed_load = prewarm_block.find(
-            'ii42_segment_pages_load_sealed_manifest('
+            'evoke_segment_pages_load_sealed_manifest('
         )
         maintenance_load = prewarm_block.find(
-            'ii42_segment_pages_load_maintenance_manifest('
+            'evoke_segment_pages_load_maintenance_manifest('
         )
         if not (
             0 <= exact_branch < sealed_load < bounded_branch <
@@ -5747,10 +5747,10 @@ def check_storage_layout_boundary(errors: list[str]) -> None:
                 'index-sized sealed closure'
             )
     generation_signature_start = source.find(
-        '\nDatum\nii42_index_generation_signature_internal_c('
+        '\nDatum\nevoke_index_generation_signature_internal_c('
     )
     generation_signature_end = source.find(
-        '\nPG_FUNCTION_INFO_V1(ii42_index_details);',
+        '\nPG_FUNCTION_INFO_V1(evoke_index_details);',
         generation_signature_start,
     )
     if generation_signature_start < 0 or generation_signature_end < 0:
@@ -5761,14 +5761,14 @@ def check_storage_layout_boundary(errors: list[str]) -> None:
         generation_signature_block = source[
             generation_signature_start:generation_signature_end
         ]
-        if 'ii42_segment_pages_load_maintenance_manifest(' not in (
+        if 'evoke_segment_pages_load_maintenance_manifest(' not in (
             generation_signature_block
         ):
             errors.append(
                 f'{AM_SOURCE_PATH.name}: query generation signature must use '
                 'the bounded manifest loader'
             )
-        if 'ii42_segment_pages_load_sealed_manifest(' in (
+        if 'evoke_segment_pages_load_sealed_manifest(' in (
             generation_signature_block
         ):
             errors.append(
@@ -5777,27 +5777,27 @@ def check_storage_layout_boundary(errors: list[str]) -> None:
             )
     diagnostic_boundaries = (
         (
-            '\nstatic Datum\nii42_am_convergent_generation_audit_datum(',
-            '\nstatic Datum\nii42_am_generation_audit_datum(',
+            '\nstatic Datum\nevoke_am_convergent_generation_audit_datum(',
+            '\nstatic Datum\nevoke_am_generation_audit_datum(',
             (
-                'ii42_segment_pages_load_sealed_manifest(',
-                'ii42_am_convergent_mutation_debt_read(',
+                'evoke_segment_pages_load_sealed_manifest(',
+                'evoke_am_convergent_mutation_debt_read(',
             ),
         ),
         (
-            '\nii42_index_runtime_state_internal(',
-            '\nPG_FUNCTION_INFO_V1(ii42_index_shared_preload_resident);',
+            '\nevoke_index_runtime_state_internal(',
+            '\nPG_FUNCTION_INFO_V1(evoke_index_shared_preload_resident);',
             (
-                'ii42_am_convergent_mutation_debt_read(',
-                'ii42_am_rebuild_workload_from_convergent(',
+                'evoke_am_convergent_mutation_debt_read(',
+                'evoke_am_rebuild_workload_from_convergent(',
             ),
         ),
         (
-            '\nDatum\nii42_index_details(',
-            '\nPG_FUNCTION_INFO_V1(ii42_index_policy_recommend);',
+            '\nDatum\nevoke_index_details(',
+            '\nPG_FUNCTION_INFO_V1(evoke_index_policy_recommend);',
             (
-                'ii42_am_convergent_object_bytes(',
-                'ii42_am_convergent_mutation_debt_read(',
+                'evoke_am_convergent_object_bytes(',
+                'evoke_am_convergent_mutation_debt_read(',
             ),
         ),
     )
@@ -5811,7 +5811,7 @@ def check_storage_layout_boundary(errors: list[str]) -> None:
             )
             continue
         block = source[start:end]
-        health_position = block.find('ii42_am_payload_health(')
+        health_position = block.find('evoke_am_payload_health(')
         corrupt_branch_position = block.find('if (health.corrupt)')
         if health_position < 0 or corrupt_branch_position < health_position:
             errors.append(
@@ -5826,21 +5826,21 @@ def check_storage_layout_boundary(errors: list[str]) -> None:
                     f'{AM_SOURCE_PATH.name}: {traversal} precedes corrupt '
                     f'health gate in {start_marker.strip()!r}'
                 )
-    if source.count('ii42_am_require_convergent_segment_storage(') < 17:
+    if source.count('evoke_am_require_convergent_segment_storage(') < 17:
         errors.append(
             f'{AM_SOURCE_PATH.name}: v3 fail-closed guard no longer covers '
             'the installed product boundaries'
         )
-    if source.count('ii42_am_require_exact_bm25_index_at_meta(') != 6:
+    if source.count('evoke_am_require_exact_bm25_index_at_meta(') != 6:
         errors.append(
             f'{AM_SOURCE_PATH.name}: exact-BM25 product boundaries do not '
             'share one snapshot-meta guard'
         )
     background_start = source.find(
-        '\nstatic bool\nii42_am_get_background_due_candidate('
+        '\nstatic bool\nevoke_am_get_background_due_candidate('
     )
     background_end = source.find(
-        '\nstatic int\nii42_am_maintenance_action_tier(',
+        '\nstatic int\nevoke_am_maintenance_action_tier(',
         background_start,
     )
     if background_start < 0 or background_end < 0:
@@ -5850,9 +5850,9 @@ def check_storage_layout_boundary(errors: list[str]) -> None:
     else:
         background = source[background_start:background_end]
         for needle in (
-            '!ii42_am_meta_uses_convergent_segment_storage(&meta)',
+            '!evoke_am_meta_uses_convergent_segment_storage(&meta)',
             'goto maintenance_candidate_done;',
-            'ii42_am_convergent_structural_fold_due(',
+            'evoke_am_convergent_structural_fold_due(',
             'semantic_accelerator_due ||',
             'structural_fold_due ||',
         ):
@@ -5862,11 +5862,11 @@ def check_storage_layout_boundary(errors: list[str]) -> None:
                     f'unsupported storage; missing {needle!r}'
                 )
     preload_start = source.find(
-        '\nstatic ii42_am_auto_preload_attempt\n'
-        'ii42_am_try_auto_preload_index_oid('
+        '\nstatic evoke_am_auto_preload_attempt\n'
+        'evoke_am_try_auto_preload_index_oid('
     )
     preload_end = source.find(
-        '\nstatic bool\nii42_am_select_auto_preload_index(',
+        '\nstatic bool\nevoke_am_select_auto_preload_index(',
         preload_start,
     )
     if (
@@ -5895,8 +5895,8 @@ def check_storage_layout_boundary(errors: list[str]) -> None:
     else:
         preload = source[preload_start:preload_end]
         for needle in (
-            'ii42_am_try_read_current_meta(indexRelation, &meta)',
-            '!ii42_am_meta_uses_convergent_segment_storage(&meta)',
+            'evoke_am_try_read_current_meta(indexRelation, &meta)',
+            '!evoke_am_meta_uses_convergent_segment_storage(&meta)',
             '!health.rebuild_required',
             'goto auto_preload_done;',
         ):
@@ -5926,7 +5926,7 @@ def check_maturity_suite(errors: list[str]) -> None:
         'scripts/test_payload_health_corruption_smoke.py',
         'scripts/test_onnxruntime_resource_soak.py',
         'scripts/test_model_lifecycle_medium_perf.py',
-        'scripts/benchmark_ii42_product_path.py',
+        'scripts/benchmark_evoke_product_path.py',
     )
     for needle in required:
         if needle not in suite:
@@ -5956,93 +5956,93 @@ def check_maturity_suite(errors: list[str]) -> None:
 
 def check_arch3_legacy_runtime_absent(errors: list[str]) -> None:
     forbidden = (
-        'ii42.test_legacy_v2_build',
-        'ii42_am_runtime_state_unsupported_format',
+        'evoke.test_legacy_v2_build',
+        'evoke_am_runtime_state_unsupported_format',
         'storage=unsupported_format',
-        'CREATE FUNCTION ii42_index_semantic_query_internal(',
-        'ii42_index_semantic_query_internal',
+        'CREATE FUNCTION evoke_index_semantic_query_internal(',
+        'evoke_index_semantic_query_internal',
         'SaeUnifiedDeltaCache',
-        'Ii42UnifiedDeltaPreloadResult',
-        'II42_AM_SHARED_GENERATION_UNIFIED_DELTA_CACHE',
-        'ii42_unified_delta_cache_preload',
-        'ii42_unified_delta_shared_',
-        'ii42_unified_local_delta_cache',
-        'Ii42UnifiedDeltaIdentity',
-        'typedef struct Ii42UnifiedDelta\n',
-        'ii42_unified_delta_load(',
-        'ii42_unified_delta_load_snapshot',
-        'ii42_unified_delta_free(',
-        'ii42_am_unified_delta_load_prefix(',
-        'ii42_am_unified_delta_identity_init(',
-        'ii42_am_meta_uses_generation_delta_storage(',
-        'Ii42UnifiedDeltaDocument',
-        'ii42_am_semantic_pending_batch',
-        'ii42_am_semantic_quarantine_state',
-        'ii42_am_semantic_quarantine_scan(',
-        'ii42_am_unified_delta_document_from_payload(',
-        'ii42_am_semantic_frontier_tombstone',
-        'typedef struct ii42_am_data_page',
-        'ii42_am_delta_record_header',
-        'ii42_am_unified_delta_header',
-        'II42_AM_PAGE_DELTA',
-        'Ii42SemanticReader',
-        'Ii42SemanticDocumentCursor',
-        'Ii42SemanticGenerationInfo',
-        'ii42_semantic_reader_',
-        'ii42_semantic_document_cursor_',
+        'EvokeUnifiedDeltaPreloadResult',
+        'EVOKE_AM_SHARED_GENERATION_UNIFIED_DELTA_CACHE',
+        'evoke_unified_delta_cache_preload',
+        'evoke_unified_delta_shared_',
+        'evoke_unified_local_delta_cache',
+        'EvokeUnifiedDeltaIdentity',
+        'typedef struct EvokeUnifiedDelta\n',
+        'evoke_unified_delta_load(',
+        'evoke_unified_delta_load_snapshot',
+        'evoke_unified_delta_free(',
+        'evoke_am_unified_delta_load_prefix(',
+        'evoke_am_unified_delta_identity_init(',
+        'evoke_am_meta_uses_generation_delta_storage(',
+        'EvokeUnifiedDeltaDocument',
+        'evoke_am_semantic_pending_batch',
+        'evoke_am_semantic_quarantine_state',
+        'evoke_am_semantic_quarantine_scan(',
+        'evoke_am_unified_delta_document_from_payload(',
+        'evoke_am_semantic_frontier_tombstone',
+        'typedef struct evoke_am_data_page',
+        'evoke_am_delta_record_header',
+        'evoke_am_unified_delta_header',
+        'EVOKE_AM_PAGE_DELTA',
+        'EvokeSemanticReader',
+        'EvokeSemanticDocumentCursor',
+        'EvokeSemanticGenerationInfo',
+        'evoke_semantic_reader_',
+        'evoke_semantic_document_cursor_',
         'SaeEvidenceResidentPayload',
         'SaeEvidenceResidentReadFn',
-        'ii42_unified_delta_snapshot_lock',
-        'ii42_unified_delta_snapshot_unlock',
-        'ii42_am_test_unified_delta_snapshot_pause',
-        'ii42.test_unified_delta_snapshot_pause_ms',
-        'ii42_am_delta_generation_identity_matches',
-        'II42_AM_PAGE_GENERATION_DATA',
-        'II42_AM_PAGE_SEMANTIC_DATA',
-        'ii42_am_generation_data_page',
-        'ii42_am_generation_page_header_size',
-        'ii42_am_generation_page_max_payload',
-        'ii42_am_semantic_metadata_valid',
-        'ii42_am_persisted_generation_contract_version',
-        'ii42_am_runtime_signature_for_generation',
-        'ii42_am_semantic_payload_writer',
-        'ii42_am_semantic_payload_write(',
-        'ii42_am_semantic_doc_pair_read(',
-        'ii42_am_semantic_lexical_pair_read(',
+        'evoke_unified_delta_snapshot_lock',
+        'evoke_unified_delta_snapshot_unlock',
+        'evoke_am_test_unified_delta_snapshot_pause',
+        'evoke.test_unified_delta_snapshot_pause_ms',
+        'evoke_am_delta_generation_identity_matches',
+        'EVOKE_AM_PAGE_GENERATION_DATA',
+        'EVOKE_AM_PAGE_SEMANTIC_DATA',
+        'evoke_am_generation_data_page',
+        'evoke_am_generation_page_header_size',
+        'evoke_am_generation_page_max_payload',
+        'evoke_am_semantic_metadata_valid',
+        'evoke_am_persisted_generation_contract_version',
+        'evoke_am_runtime_signature_for_generation',
+        'evoke_am_semantic_payload_writer',
+        'evoke_am_semantic_payload_write(',
+        'evoke_am_semantic_doc_pair_read(',
+        'evoke_am_semantic_lexical_pair_read(',
         'replacement->semantic_file',
         'replacement->semantic_bytes',
         'EATM_EVIDENCE_UNIFIED_MAGIC',
         'EATMH004',
-        'ii42_semantic_build_empty_unified_payload',
-        'ii42_semantic_write_unified_payload',
-        'Ii42SemanticPairReadFn',
-        'Ii42SemanticU32ReadFn',
-        'Ii42SemanticLexicalPairReadFn',
-        'Ii42SemanticOrdinalPairReadFn',
-        'Ii42SemanticPayloadWriteFn',
-        'Ii42SemanticUnifiedPayloadInput',
-        'II42_AM_SEMANTIC_IMPACT_HEAD_SIZE',
-        'ii42_am_semantic_head_pair',
-        'ii42_am_semantic_head_add',
+        'evoke_semantic_build_empty_unified_payload',
+        'evoke_semantic_write_unified_payload',
+        'EvokeSemanticPairReadFn',
+        'EvokeSemanticU32ReadFn',
+        'EvokeSemanticLexicalPairReadFn',
+        'EvokeSemanticOrdinalPairReadFn',
+        'EvokeSemanticPayloadWriteFn',
+        'EvokeSemanticUnifiedPayloadInput',
+        'EVOKE_AM_SEMANTIC_IMPACT_HEAD_SIZE',
+        'evoke_am_semantic_head_pair',
+        'evoke_am_semantic_head_add',
         'builder->head_pairs',
         'builder->head_sort',
         'builder->head_sort_desc',
         'builder->head_sort_input_slot',
         'builder->head_sort_output_slot',
-        'ii42_am_ordinal_pair',
-        'ii42_am_semantic_auxiliary_files',
-        'ii42_am_semantic_build_lexical_atom_rows',
-        'ii42_am_semantic_build_frontier_indexes',
-        'ii42_am_semantic_auxiliary_files_close',
+        'evoke_am_ordinal_pair',
+        'evoke_am_semantic_auxiliary_files',
+        'evoke_am_semantic_build_lexical_atom_rows',
+        'evoke_am_semantic_build_frontier_indexes',
+        'evoke_am_semantic_auxiliary_files_close',
         'builder->semantic_frontier_pairs',
         'builder->semantic_frontier_starts',
         'builder->semantic_frontier_pair_count',
-        'II42_AM_LEGACY_EVENTUAL_REBUILD_THRESHOLD',
-        'II42_AM_LEGACY_SAE_EVENTUAL_REBUILD_DELTA_BYTES',
-        'II42_AM_LEGACY_DELTA_OVERLAY_MAX_RECORDS',
-        'II42_AM_LEGACY_DELTA_OVERLAY_MAX_BYTES',
-        'II42_AM_LEGACY_SAE_DELTA_CACHE_HEADROOM_PERCENT',
-        'ii42_generation_cache_',
+        'EVOKE_AM_LEGACY_EVENTUAL_REBUILD_THRESHOLD',
+        'EVOKE_AM_LEGACY_SAE_EVENTUAL_REBUILD_DELTA_BYTES',
+        'EVOKE_AM_LEGACY_DELTA_OVERLAY_MAX_RECORDS',
+        'EVOKE_AM_LEGACY_DELTA_OVERLAY_MAX_BYTES',
+        'EVOKE_AM_LEGACY_SAE_DELTA_CACHE_HEADROOM_PERCENT',
+        'evoke_generation_cache_',
         'shared_generation_cache_size',
         'overlay_full_scan_calls',
         'overlay_base_docs_scanned',
@@ -6056,29 +6056,29 @@ def check_arch3_legacy_runtime_absent(errors: list[str]) -> None:
         'delta_overlay_materialized',
         'index_owns_allocations',
         '->delta_overlay',
-        'ii42_am_generation_ptr(',
-        'ii42_am_can_use_unsigned_sparse_path(',
-        'ii42_am_can_use_legacy_sparse_path(',
-        'ii42_am_sparse_add_score(',
-        'ii42_am_sparse_nonoccurrence_sum(',
-        'ii42_am_rank_signed_sparse_scores(',
-        'ii42_am_rank_signed_sparse_candidates',
-        'ii42_am_rank_all_signed_sparse',
-        'ii42_am_prepare_search_state_sparse(',
-        'ii42_am_prepare_field_tokens_search_state_unsigned_sparse(',
-        'ii42_am_prepare_field_tokens_search_state_sparse(',
+        'evoke_am_generation_ptr(',
+        'evoke_am_can_use_unsigned_sparse_path(',
+        'evoke_am_can_use_legacy_sparse_path(',
+        'evoke_am_sparse_add_score(',
+        'evoke_am_sparse_nonoccurrence_sum(',
+        'evoke_am_rank_signed_sparse_scores(',
+        'evoke_am_rank_signed_sparse_candidates',
+        'evoke_am_rank_all_signed_sparse',
+        'evoke_am_prepare_search_state_sparse(',
+        'evoke_am_prepare_field_tokens_search_state_unsigned_sparse(',
+        'evoke_am_prepare_field_tokens_search_state_sparse(',
         'init_filtered_ids',
         'next_zero_doc_id',
         'legacy_pos',
         'legacy_end',
-        'II42_AM_STORAGE_GENERATION_DELTA',
-        'ii42_am_block_ranges_overlap(',
+        'EVOKE_AM_STORAGE_GENERATION_DELTA',
+        'evoke_am_block_ranges_overlap(',
         'unified_delta',
         'UNIFIED_DELTA',
         'cached->active_generation',
-        'ii42_unified_delta_record_maybe_committed',
-        'ii42_unified_delta_records_maybe_committed',
-        'ii42_unified_delta_current_xact_modified',
+        'evoke_unified_delta_record_maybe_committed',
+        'evoke_unified_delta_records_maybe_committed',
+        'evoke_unified_delta_current_xact_modified',
         'meta.index_bytes_len > 0',
         'meta.index_bytes_len,\n            meta.semantic_bytes_len',
         'meta.semantic_data_pages',
@@ -6111,38 +6111,38 @@ def check_arch3_legacy_runtime_absent(errors: list[str]) -> None:
                 )
 
     am_source = AM_SOURCE_PATH.read_text(encoding='utf-8')
-    if '#define II42_AM_SEMANTIC_QUERY_RESULT_COLS 15' not in am_source:
+    if '#define EVOKE_AM_SEMANTIC_QUERY_RESULT_COLS 15' not in am_source:
         errors.append(
             f'{AM_SOURCE_PATH.name}: native semantic query contract is not '
             'the 15-column page-native contract'
         )
     mapper_source = am_source.split(
-        'ii42_am_get_sae_lexical_mapper(Relation indexRelation)',
+        'evoke_am_get_sae_lexical_mapper(Relation indexRelation)',
         maxsplit=1,
     )[-1].split(
-        'ii42_am_semantic_builder_begin(',
+        'evoke_am_semantic_builder_begin(',
         maxsplit=1,
     )[0]
-    if 'ii42_segment_pages_load_maintenance_manifest(' not in mapper_source:
+    if 'evoke_segment_pages_load_maintenance_manifest(' not in mapper_source:
         errors.append(
             f'{AM_SOURCE_PATH.name}: the SAE lexical mapper must use the '
             'bounded published-manifest loader'
         )
-    if 'ii42_segment_pages_load_sealed_manifest(' in mapper_source:
+    if 'evoke_segment_pages_load_sealed_manifest(' in mapper_source:
         errors.append(
             f'{AM_SOURCE_PATH.name}: the SAE lexical mapper validates the '
             'full COW closure on the query hot path'
         )
     page_query_source = PAGE_QUERY_SOURCE_PATH.read_text(encoding='utf-8')
     score_block_source = page_query_source.split(
-        'ii42_page_query_score_block(',
+        'evoke_page_query_score_block(',
         maxsplit=1,
     )[-1].split(
-        'ii42_page_query_score_streaming(',
+        'evoke_page_query_score_streaming(',
         maxsplit=1,
     )[0]
     if (
-        'ii42_segment_pages_load_query_term_block_from_record('
+        'evoke_segment_pages_load_query_term_block_from_record('
         not in score_block_source
     ):
         errors.append(
@@ -6153,15 +6153,15 @@ def check_arch3_legacy_runtime_absent(errors: list[str]) -> None:
         encoding='utf-8'
     )
     accelerator_source = (
-        REPO_ROOT / 'src' / 'ii42_am_accelerator.c'
+        REPO_ROOT / 'src' / 'evoke_am_accelerator.c'
     ).read_text(encoding='utf-8')
     for required in (
-        'ii42_segment_pages_init_preflight_fold_ref(',
-        'ii42_segment_pages_term_retirements_equal(',
-        'ii42_segment_page_reuse_arena handoff_arena;',
-        'ii42_segment_page_reuse_arena staging_arena;',
-        'ii42_segment_pages_set_staged_writes(',
-        'II42_SEGMENT_COW_WRITE_PREPARED_READER_FENCE_REQUIRED',
+        'evoke_segment_pages_init_preflight_fold_ref(',
+        'evoke_segment_pages_term_retirements_equal(',
+        'evoke_segment_page_reuse_arena handoff_arena;',
+        'evoke_segment_page_reuse_arena staging_arena;',
+        'evoke_segment_pages_set_staged_writes(',
+        'EVOKE_SEGMENT_COW_WRITE_PREPARED_READER_FENCE_REQUIRED',
     ):
         if required not in segment_pages_source:
             errors.append(
@@ -6169,19 +6169,19 @@ def check_arch3_legacy_runtime_absent(errors: list[str]) -> None:
                 f'append-only retirement preflight {required!r}'
             )
     term_fold_writer = segment_pages_source.split(
-        'ii42_segment_pages_write_cow_term_fold(',
+        'evoke_segment_pages_write_cow_term_fold(',
         maxsplit=1,
     )[-1].split(
-        '\nii42_segment_cow_write_outcome\n'
-        'ii42_segment_pages_write_cow_neutral_fold(',
+        '\nevoke_segment_cow_write_outcome\n'
+        'evoke_segment_pages_write_cow_neutral_fold(',
         maxsplit=1,
     )[0]
-    if 'ii42_segment_pages_load_sealed_manifest(' in term_fold_writer:
+    if 'evoke_segment_pages_load_sealed_manifest(' in term_fold_writer:
         errors.append(
             f'{SEGMENT_PAGES_SOURCE_PATH.name}: term-fold publication runs '
             'a corpus-wide COW closure under its reader fence'
         )
-    if 'ii42_segment_pages_load_maintenance_manifest(' not in (
+    if 'evoke_segment_pages_load_maintenance_manifest(' not in (
         term_fold_writer
     ):
         errors.append(
@@ -6189,25 +6189,25 @@ def check_arch3_legacy_runtime_absent(errors: list[str]) -> None:
             'a bounded cold manifest identity check'
         )
     if segment_pages_source.count(
-        'ii42_segment_pages_set_staged_writes('
+        'evoke_segment_pages_set_staged_writes('
     ) != 7:
         errors.append(
             f'{SEGMENT_PAGES_SOURCE_PATH.name}: all six online COW writers '
             'must inventory their staged closure pages'
         )
     impact_writer = am_source.split(
-        'ii42_am_try_term_impact_specialization(',
+        'evoke_am_try_term_impact_specialization(',
         maxsplit=1,
     )[-1].split(
-        '\nstatic ii42_am_term_structural_fold_outcome\n'
-        'ii42_am_try_workload_term_fold(',
+        '\nstatic evoke_am_term_structural_fold_outcome\n'
+        'evoke_am_try_workload_term_fold(',
         maxsplit=1,
     )[0]
     impact_write = impact_writer.find(
-        'ii42_segment_pages_write_cow_impact_fold('
+        'evoke_segment_pages_write_cow_impact_fold('
     )
     impact_fence = impact_writer.find(
-        'ii42_am_acquire_convergent_reader_fence('
+        'evoke_am_acquire_convergent_reader_fence('
     )
     if impact_write < 0 or impact_fence < 0 or impact_write > impact_fence:
         errors.append(
@@ -6215,10 +6215,10 @@ def check_arch3_legacy_runtime_absent(errors: list[str]) -> None:
             'its publication-only reader fence'
         )
     if accelerator_source.count(
-        'ii42_segment_pages_abandon_staged_write('
+        'evoke_segment_pages_abandon_staged_write('
     ) != 1:
         errors.append(
-            'ii42_am_accelerator.c: a busy publication fence does not '
+            'evoke_am_accelerator.c: a busy publication fence does not '
             'recycle the prepared accelerator closure'
         )
     if 'context->page_validation_cache' not in segment_pages_source:
@@ -6232,16 +6232,16 @@ def check_arch3_legacy_runtime_absent(errors: list[str]) -> None:
     ).read_text(encoding='utf-8')
     test_hooks = set(
         re.findall(
-            r'PG_FUNCTION_INFO_V1\((ii42_test_[A-Za-z0-9_]+)\);',
+            r'PG_FUNCTION_INFO_V1\((evoke_test_[A-Za-z0-9_]+)\);',
             am_source,
         )
     )
     smoke_hooks = set(
-        re.findall(r"['\"](ii42_test_[A-Za-z0-9_]+)['\"]", segment_smoke)
+        re.findall(r"['\"](evoke_test_[A-Za-z0-9_]+)['\"]", segment_smoke)
     )
     if test_hooks != smoke_hooks:
         errors.append(
-            'ii42_am.c: white-box C hooks must exactly match the isolated '
+            'evoke_am.c: white-box C hooks must exactly match the isolated '
             'page-native golden smoke; missing from smoke='
             f'{sorted(test_hooks - smoke_hooks)!r}, missing from AM='
             f'{sorted(smoke_hooks - test_hooks)!r}'
@@ -6256,13 +6256,13 @@ def check_arch3_legacy_runtime_absent(errors: list[str]) -> None:
         )
 
     state_json_sql = current_sql.split(
-        'CREATE FUNCTION ii42_index_runtime_state_json(index_name regclass)',
+        'CREATE FUNCTION evoke_index_runtime_state_json(index_name regclass)',
         maxsplit=1,
     )[-1].split(
-        'COMMENT ON FUNCTION ii42_index_runtime_state_json(regclass)',
+        'COMMENT ON FUNCTION evoke_index_runtime_state_json(regclass)',
         maxsplit=1,
     )[0]
-    if "AS 'MODULE_PATHNAME', 'ii42_index_runtime_state_json'" not in (
+    if "AS 'MODULE_PATHNAME', 'evoke_index_runtime_state_json'" not in (
         state_json_sql
     ):
         errors.append(
@@ -6311,7 +6311,7 @@ def check_arch3_legacy_runtime_absent(errors: list[str]) -> None:
                 f'{relative_path}: retired decoded-cache program remains'
             )
 
-    if 'II42_AM_MAINTENANCE_QUERY_VISIBILITY' in am_source:
+    if 'EVOKE_AM_MAINTENANCE_QUERY_VISIBILITY' in am_source:
         errors.append(
             f'{AM_SOURCE_PATH.name}: unreachable query-visibility '
             'maintenance class remains'
@@ -6439,14 +6439,14 @@ def check_rebuild_runner_storage_contract(errors: list[str]) -> None:
         "predicate = (idx.get('predicate') or '').strip()",
         "include_sql = f\"INCLUDE ({', '.join(include_defs)})\\n\"",
         'semantic_runtime_preflight_before_refresh',
-        "'DROP EXTENSION ii42;'",
-        'ii42_catalog_contract_internal',
+        "'DROP EXTENSION evoke;'",
+        'evoke_catalog_contract_internal',
         'def current_generation_ready(db, idx):',
         "state->'generation'->>'storage' = 'convergent_segments'",
         "state->'generation'->>'payload_health' = 'ok'",
         "state->'generation'->>'rebuild_required'",
-        'unsupported ii42 index metapage version',
-        'unsupported ii42 index storage layout',
+        'unsupported evoke index metapage version',
+        'unsupported evoke index storage layout',
         'return current_generation_ready(db, idx)',
     )
     for contract in required:
@@ -6455,7 +6455,7 @@ def check_rebuild_runner_storage_contract(errors: list[str]) -> None:
                 f'{REBUILD_INDEXES_PATH.name}: missing current-storage '
                 f'ready contract {contract!r}'
             )
-    if 'DROP EXTENSION ii42 CASCADE' in runner:
+    if 'DROP EXTENSION evoke CASCADE' in runner:
         errors.append(
             f'{REBUILD_INDEXES_PATH.name}: destructive extension refresh '
             'still uses CASCADE instead of the audited atomic transition'
@@ -6495,7 +6495,7 @@ def check_source_migration_smoke(errors: list[str]) -> None:
     required = (
         '--source-package-root',
         'CREATE EXTENSION psql_bm25s WITH SCHEMA public',
-        'CREATE EXTENSION ii42 WITH SCHEMA ii42_ext',
+        'CREATE EXTENSION evoke WITH SCHEMA evoke_ext',
         'public.psql_bm25s_search(',
         'public.psql_bm25s_maintain_index(',
         'CREATE INDEX CONCURRENTLY docs_new_idx',
@@ -6516,8 +6516,8 @@ def check_source_migration_smoke(errors: list[str]) -> None:
         REPO_ROOT / 'docs/upgrading.md'
     ).read_text(encoding='utf-8')
     for needle in (
-        'CREATE SCHEMA ii42_ext',
-        'CREATE EXTENSION ii42 WITH SCHEMA ii42_ext',
+        'CREATE SCHEMA evoke_ext',
+        'CREATE EXTENSION evoke WITH SCHEMA evoke_ext',
         'cannot coexist in one schema',
     ):
         if needle not in upgrading:
@@ -6561,7 +6561,7 @@ def check_privilege_smoke(errors: list[str]) -> None:
 
     sql = CURRENT_SQL_PATH.read_text(encoding='utf-8')
     status_contract = (
-        'CREATE FUNCTION ii42_index_status(index_name regclass)\n'
+        'CREATE FUNCTION evoke_index_status(index_name regclass)\n'
         'RETURNS jsonb\n'
         'LANGUAGE plpgsql SECURITY DEFINER VOLATILE PARALLEL UNSAFE'
     )
@@ -6574,8 +6574,8 @@ def check_privilege_smoke(errors: list[str]) -> None:
 
 def check_product_docs(errors: list[str]) -> None:
     required = (
-        'ii42_query',
-        'ii42_index_status',
+        'evoke_query',
+        'evoke_index_status',
     )
     for relative in PRODUCT_DOCS:
         path = REPO_ROOT / relative
@@ -6583,8 +6583,8 @@ def check_product_docs(errors: list[str]) -> None:
             errors.append(f'{relative}: missing product documentation')
             continue
         text = path.read_text(encoding='utf-8')
-        if 'ii42_search' in text:
-            errors.append(f'{relative}: documents retired ii42_search API')
+        if 'evoke_search' in text:
+            errors.append(f'{relative}: documents retired evoke_search API')
         for needle in required:
             if needle not in text:
                 errors.append(f'{relative}: missing {needle}')
@@ -6619,11 +6619,11 @@ def check_product_docs(errors: list[str]) -> None:
     if getting_started_path.is_file():
         getting_started = getting_started_path.read_text(encoding='utf-8')
         onboarding_contracts = (
-            ('USING ii42 (body)', 'single-column index example'),
+            ('USING evoke (body)', 'single-column index example'),
             ('sae = true', 'semantic index example'),
             ('eventual-only', 'semantic consistency boundary'),
-            ('ii42_index_status', 'readiness example'),
-            ('ii42_index_try_maintain', 'maintenance example'),
+            ('evoke_index_status', 'readiness example'),
+            ('evoke_index_try_maintain', 'maintenance example'),
             ('REINDEX INDEX', 'rebuild example'),
             ('DROP INDEX', 'native drop example'),
             ('multicolumn-indexes.md', 'multicolumn guide link'),
@@ -6635,14 +6635,14 @@ def check_product_docs(errors: list[str]) -> None:
                     'docs/getting-started.md: missing '
                     f'{description}: {needle!r}'
                 )
-        if 'ii42_index_drop' in getting_started:
+        if 'evoke_index_drop' in getting_started:
             errors.append(
                 'docs/getting-started.md: removed drop wrapper remains'
             )
 
     for relative in PRODUCT_DOCS:
         path = REPO_ROOT / relative
-        if path.is_file() and 'ii42_index_drop' in path.read_text(
+        if path.is_file() and 'evoke_index_drop' in path.read_text(
             encoding='utf-8'
         ):
             errors.append(
@@ -6657,7 +6657,7 @@ def check_product_docs(errors: list[str]) -> None:
     else:
         model_checkout = model_checkout_path.read_text(encoding='utf-8')
         for contract in (
-            'ii42_index_audit',
+            'evoke_index_audit',
             'explicit_audit_required',
             'bounded readiness',
         ):
@@ -6739,7 +6739,7 @@ def check_product_docs(errors: list[str]) -> None:
 
     runtime_header = RUNTIME_SERVICE_HEADER_PATH.read_text(encoding='utf-8')
     runtime_version = re.search(
-        r'^#define II42_RUNTIME_SERVICE_VERSION (\d+)$',
+        r'^#define EVOKE_RUNTIME_SERVICE_VERSION (\d+)$',
         runtime_header,
         re.MULTILINE,
     )

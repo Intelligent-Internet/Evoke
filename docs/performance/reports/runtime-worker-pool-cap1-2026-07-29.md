@@ -103,8 +103,8 @@ The following current-tree gates passed:
 
 ## Capacity Contract
 
-`ii42.runtime_worker_count` and
-`ii42.onnxruntime_session_cache_size` are restart-only bounds. Each worker owns
+`evoke.runtime_worker_count` and
+`evoke.onnxruntime_session_cache_size` are restart-only bounds. Each worker owns
 its own bounded session cache, so model memory scales approximately with:
 
 ```text
@@ -119,12 +119,12 @@ two workers; four workers are about 6.1 GiB.
 
 ## Raw Evidence
 
-- `docs/performance/data/raw/runtime-worker-pool-2026-07-29/ii42-cap1-workers1.json`
-- `docs/performance/data/raw/runtime-worker-pool-2026-07-29/ii42-cap1-workers2.json`
-- `docs/performance/data/raw/runtime-worker-pool-2026-07-29/ii42-cap1-workers4.json`
-- `docs/performance/data/raw/runtime-worker-pool-2026-07-29/ii42-cap1-workers4-t2.json`
-- `docs/performance/data/raw/runtime-worker-pool-2026-07-29/ii42-cap1-workers4-t4.json`
-- `docs/performance/data/raw/runtime-worker-pool-2026-07-29/ii42-cap1-workers2-soak120.json`
+- `docs/performance/data/raw/runtime-worker-pool-2026-07-29/evoke-cap1-workers1.json`
+- `docs/performance/data/raw/runtime-worker-pool-2026-07-29/evoke-cap1-workers2.json`
+- `docs/performance/data/raw/runtime-worker-pool-2026-07-29/evoke-cap1-workers4.json`
+- `docs/performance/data/raw/runtime-worker-pool-2026-07-29/evoke-cap1-workers4-t2.json`
+- `docs/performance/data/raw/runtime-worker-pool-2026-07-29/evoke-cap1-workers4-t4.json`
+- `docs/performance/data/raw/runtime-worker-pool-2026-07-29/evoke-cap1-workers2-soak120.json`
 
 These artifacts qualify the current working tree. Release evidence must be
 rerun and bound to the final commit and staged package fingerprint.

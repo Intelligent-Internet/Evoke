@@ -8,7 +8,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -39,17 +39,17 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help=(
             'PostgreSQL share or extension directory containing the '
-            'staged ii42.control.'
+            'staged evoke.control.'
         ),
     )
-    parser.add_argument('--fresh-db', default='ii42_schema_fresh_smoke')
+    parser.add_argument('--fresh-db', default='evoke_schema_fresh_smoke')
     parser.add_argument(
         '--relocate-db',
-        default='ii42_schema_relocate_smoke',
+        default='evoke_schema_relocate_smoke',
     )
     parser.add_argument(
         '--pinned-version-db',
-        default='ii42_schema_pinned_version_smoke',
+        default='evoke_schema_pinned_version_smoke',
     )
     return parser.parse_args()
 
@@ -91,11 +91,11 @@ def run_psql(args: argparse.Namespace, dbname: str, sql: str) -> str:
 
 
 def read_extension_version() -> str:
-    for line in (REPO_ROOT / 'ii42.control').read_text().splitlines():
+    for line in (REPO_ROOT / 'evoke.control').read_text().splitlines():
         match = VERSION_RE.match(line)
         if match is not None:
             return match.group(1)
-    raise RuntimeError('could not read default_version from ii42.control')
+    raise RuntimeError('could not read default_version from evoke.control')
 
 
 def free_port() -> int:
@@ -159,7 +159,7 @@ def drop_database(args: argparse.Namespace, dbname: str) -> None:
 def wrapper_smoke_sql(version_sql: str) -> str:
     return f'''
     CREATE SCHEMA ext;
-    CREATE EXTENSION ii42 WITH SCHEMA ext {version_sql};
+    CREATE EXTENSION evoke WITH SCHEMA ext {version_sql};
 
     CREATE TABLE public.docs (
         id serial PRIMARY KEY,
@@ -177,17 +177,17 @@ def wrapper_smoke_sql(version_sql: str) -> str:
         ('theta lambda', 'theta summary', 'theta title', ARRAY['theta']);
 
     SET search_path = ext, public;
-    CREATE INDEX docs_body_idx ON public.docs USING ii42 (body);
-    CREATE INDEX docs_title_idx ON public.docs USING ii42 (title);
-    CREATE INDEX docs_tokens_idx ON public.docs USING ii42 (tokens);
-    CREATE INDEX docs_fields_idx ON public.docs USING ii42 (body, summary)
+    CREATE INDEX docs_body_idx ON public.docs USING evoke (body);
+    CREATE INDEX docs_title_idx ON public.docs USING evoke (title);
+    CREATE INDEX docs_tokens_idx ON public.docs USING evoke (tokens);
+    CREATE INDEX docs_fields_idx ON public.docs USING evoke (body, summary)
         WITH (field_aware = true);
 
     DO $$
     DECLARE
         runtime_state jsonb;
     BEGIN
-        runtime_state := ext.ii42_index_runtime_state_json(
+        runtime_state := ext.evoke_index_runtime_state_json(
             'public.docs_body_idx'::regclass
         );
         IF jsonb_typeof(runtime_state) <> 'object'
@@ -206,7 +206,7 @@ def wrapper_smoke_sql(version_sql: str) -> str:
             OR NOT ((runtime_state->'shared_preload') ? 'registry')
             OR NOT ((runtime_state->'debt') ? 'counter_only')
             OR runtime_state->>'raw_state'
-                NOT LIKE 'ii42_index_runtime_state(%'
+                NOT LIKE 'evoke_index_runtime_state(%'
         THEN
             RAISE EXCEPTION
                 'runtime state JSON contract mismatch: %', runtime_state;
@@ -227,13 +227,13 @@ def wrapper_smoke_sql(version_sql: str) -> str:
               ON operator.oid = amop.amopopr
             WHERE namespace.nspname = 'ext'
               AND opclass.opcname IN (
-                  'ii42_text_ops',
-                  'ii42_varchar_ops'
+                  'evoke_text_ops',
+                  'evoke_varchar_ops'
               )
               AND operator.oprname = '@@'
         ) THEN
             RAISE EXCEPTION
-                'scalar ii42 opclasses must not bind raw @@ operators';
+                'scalar evoke opclasses must not bind raw @@ operators';
         END IF;
     END;
     $$;
@@ -248,20 +248,20 @@ def wrapper_smoke_sql(version_sql: str) -> str:
         removed_signature text;
     BEGIN
         FOREACH removed_signature IN ARRAY ARRAY[
-            'ext.ii42_index_drop(regclass)',
-            'ext.ii42_fast_path_advice(regclass)',
-            'ext.ii42_fast_path_plan(regclass,jsonb)',
-            'ext.ii42_fast_path_explain(regclass,text)',
-            'ext.ii42_ranked_query('
-                || 'ext.ii42_result_prepared_query,integer,real[])',
-            'ext.ii42_ranked_query('
+            'ext.evoke_index_drop(regclass)',
+            'ext.evoke_fast_path_advice(regclass)',
+            'ext.evoke_fast_path_plan(regclass,jsonb)',
+            'ext.evoke_fast_path_explain(regclass,text)',
+            'ext.evoke_ranked_query('
+                || 'ext.evoke_result_prepared_query,integer,real[])',
+            'ext.evoke_ranked_query('
                 || 'regclass,text,integer,real[],boolean,text[],boolean,'
                 || 'boolean)',
-            'ext.ii42_query_prepared('
-                || 'ext.ii42_result_prepared_query,integer,real[])',
-            'ext.ii42_filter_query(ext.ii42_result_ranked_query)',
-            'ext.ii42_order_tokens(ext.ii42_result_ranked_query)',
-            'ext.ii42_fusion(ext.ii42_result_hit[],integer)'
+            'ext.evoke_query_prepared('
+                || 'ext.evoke_result_prepared_query,integer,real[])',
+            'ext.evoke_filter_query(ext.evoke_result_ranked_query)',
+            'ext.evoke_order_tokens(ext.evoke_result_ranked_query)',
+            'ext.evoke_fusion(ext.evoke_result_hit[],integer)'
         ]
         LOOP
             IF to_regprocedure(removed_signature) IS NOT NULL THEN
@@ -269,13 +269,13 @@ def wrapper_smoke_sql(version_sql: str) -> str:
                     'removed SQL API is installed: %', removed_signature;
             END IF;
         END LOOP;
-        IF to_regtype('ext.ii42_result_ranked_query') IS NOT NULL THEN
+        IF to_regtype('ext.evoke_result_ranked_query') IS NOT NULL THEN
             RAISE EXCEPTION
-                'removed ii42_result_ranked_query type is installed';
+                'removed evoke_result_ranked_query type is installed';
         END IF;
 
         function_oid := to_regprocedure(
-            'ext.ii42_query('
+            'ext.evoke_query('
             || 'regclass,text,integer,real[],boolean,text[],boolean,boolean'
             || ')'
         );
@@ -285,7 +285,7 @@ def wrapper_smoke_sql(version_sql: str) -> str:
             WHERE oid = function_oid
         ) THEN
             RAISE EXCEPTION
-                'ii42_query must be the SECURITY DEFINER product boundary';
+                'evoke_query must be the SECURITY DEFINER product boundary';
         END IF;
         SELECT EXISTS (
             SELECT 1
@@ -302,22 +302,22 @@ def wrapper_smoke_sql(version_sql: str) -> str:
         FROM pg_proc AS procedure
         WHERE procedure.oid = function_oid;
         IF NOT public_can_execute THEN
-            RAISE EXCEPTION 'PUBLIC cannot execute ii42_query';
+            RAISE EXCEPTION 'PUBLIC cannot execute evoke_query';
         END IF;
 
         FOREACH function_signature IN ARRAY ARRAY[
-            'ext.ii42_encode_text_internal(regclass,text)',
-            'ext.ii42_encode_document_batch_internal(regclass,text[])',
-            'ext.ii42_index_semantic_query_native_internal('
+            'ext.evoke_encode_text_internal(regclass,text)',
+            'ext.evoke_encode_document_batch_internal(regclass,text[])',
+            'ext.evoke_index_semantic_query_native_internal('
                 || 'regclass,integer[],real[],text[],real[],integer,text,'
                 || 'integer[],tid[],jsonb)',
-            'ext.ii42_query_semantic_internal('
+            'ext.evoke_query_semantic_internal('
                 || 'regclass,text,integer,text[],real[],integer[],tid[],'
                 || 'jsonb)',
-            'ext.ii42_query_internal('
+            'ext.evoke_query_internal('
                 || 'regclass,text,text[],real[],integer,real[],boolean,'
                 || 'text[],boolean,boolean,integer[],tid[],jsonb)',
-            'ext.ii42_query_bm25_internal('
+            'ext.evoke_query_bm25_internal('
                 || 'regclass,text,integer,real[],boolean,text[],boolean,'
                 || 'boolean)'
         ]
@@ -359,18 +359,18 @@ def wrapper_smoke_sql(version_sql: str) -> str:
           ON namespace.oid = procedure.pronamespace
         WHERE namespace.nspname = 'ext'
           AND procedure.proname = ANY (ARRAY[
-              'ii42_query_ids',
-              'ii42_query_tokens',
-              'ii42_field_aware_query_tokens',
-              'ii42_field_aware_query',
-              'ii42_prepared_query',
-              'ii42_order_tokens',
-              'ii42_op_match_prepared_query',
-              'ii42_op_match_prepared_query_scalar',
-              'ii42_match_prepared_query',
-              'ii42_match_query',
-              'ii42_score_prepared_query',
-              'ii42_score_query'
+              'evoke_query_ids',
+              'evoke_query_tokens',
+              'evoke_field_aware_query_tokens',
+              'evoke_field_aware_query',
+              'evoke_prepared_query',
+              'evoke_order_tokens',
+              'evoke_op_match_prepared_query',
+              'evoke_op_match_prepared_query_scalar',
+              'evoke_match_prepared_query',
+              'evoke_match_query',
+              'evoke_score_prepared_query',
+              'evoke_score_query'
           ])
           AND EXISTS (
               SELECT 1
@@ -399,19 +399,19 @@ def wrapper_smoke_sql(version_sql: str) -> str:
           ON namespace.oid = procedure.pronamespace
         WHERE namespace.nspname = 'ext'
           AND procedure.proname = ANY (ARRAY[
-              'ii42_fusion_weighted_query',
-              'ii42_fusion_weighted_queries',
-              'ii42_fusion_field_query',
-              'ii42_fusion_field_queries',
-              'ii42_fusion',
-              'ii42_fusion_query',
-              'ii42_fusion_query_fields',
-              'ii42_fusion_query_weighted',
-              'ii42_hybrid_candidate',
-              'ii42_hybrid_bm25_candidate',
-              'ii42_hybrid_vector_candidate',
-              'ii42_hybrid_bm25_candidates',
-              'ii42_hybrid_fuse_candidates'
+              'evoke_fusion_weighted_query',
+              'evoke_fusion_weighted_queries',
+              'evoke_fusion_field_query',
+              'evoke_fusion_field_queries',
+              'evoke_fusion',
+              'evoke_fusion_query',
+              'evoke_fusion_query_fields',
+              'evoke_fusion_query_weighted',
+              'evoke_hybrid_candidate',
+              'evoke_hybrid_bm25_candidate',
+              'evoke_hybrid_vector_candidate',
+              'evoke_hybrid_bm25_candidates',
+              'evoke_hybrid_fuse_candidates'
           ])
           AND NOT EXISTS (
               SELECT 1
@@ -444,18 +444,18 @@ def wrapper_smoke_sql(version_sql: str) -> str:
           AND procedure.proretset
           AND result_type.typnamespace = namespace.oid
           AND result_type.typname = ANY (ARRAY[
-              'ii42_result_hit',
-              'ii42_result_hybrid_candidate',
-              'ii42_result_hybrid_hit'
+              'evoke_result_hit',
+              'evoke_result_hybrid_candidate',
+              'evoke_result_hybrid_hit'
           ])
           AND procedure.proname <> ALL (ARRAY[
-              'ii42_query',
-              'ii42_fusion',
-              'ii42_fusion_query',
-              'ii42_fusion_query_fields',
-              'ii42_fusion_query_weighted',
-              'ii42_hybrid_bm25_candidates',
-              'ii42_hybrid_fuse_candidates'
+              'evoke_query',
+              'evoke_fusion',
+              'evoke_fusion_query',
+              'evoke_fusion_query_fields',
+              'evoke_fusion_query_weighted',
+              'evoke_hybrid_bm25_candidates',
+              'evoke_hybrid_fuse_candidates'
           ])
           AND EXISTS (
               SELECT 1
@@ -476,18 +476,18 @@ def wrapper_smoke_sql(version_sql: str) -> str:
     END;
     $$;
 
-    CREATE ROLE ii42_schema_app;
-    GRANT USAGE ON SCHEMA ext TO ii42_schema_app;
-    GRANT SELECT ON public.docs TO ii42_schema_app;
-    SET ROLE ii42_schema_app;
+    CREATE ROLE evoke_schema_app;
+    GRANT USAGE ON SCHEMA ext TO evoke_schema_app;
+    GRANT SELECT ON public.docs TO evoke_schema_app;
+    SET ROLE evoke_schema_app;
     SELECT count(*)
-    FROM ext.ii42_query(
+    FROM ext.evoke_query(
         'public.docs_body_idx'::regclass,
         'alpha',
         2
     );
     SELECT count(*)
-    FROM ext.ii42_query(
+    FROM ext.evoke_query(
         'public.docs_fields_idx'::regclass,
         'alpha',
         ARRAY['body', 'summary']::text[],
@@ -495,7 +495,7 @@ def wrapper_smoke_sql(version_sql: str) -> str:
         2
     );
     SELECT count(*)
-    FROM ext.ii42_fusion_query(
+    FROM ext.evoke_fusion_query(
         ARRAY[
             'public.docs_body_idx'::regclass,
             'public.docs_title_idx'::regclass
@@ -506,7 +506,7 @@ def wrapper_smoke_sql(version_sql: str) -> str:
     );
     WITH candidates AS (
         SELECT array_agg(candidate) AS items
-        FROM ext.ii42_hybrid_bm25_candidates(
+        FROM ext.evoke_hybrid_bm25_candidates(
             'body',
             'public.docs_body_idx'::regclass,
             'alpha',
@@ -516,7 +516,7 @@ def wrapper_smoke_sql(version_sql: str) -> str:
     )
     SELECT count(*)
     FROM candidates
-    CROSS JOIN LATERAL ext.ii42_hybrid_fuse_candidates(
+    CROSS JOIN LATERAL ext.evoke_hybrid_fuse_candidates(
         candidates.items,
         2
     );
@@ -524,48 +524,48 @@ def wrapper_smoke_sql(version_sql: str) -> str:
     FROM public.docs
     WHERE tokens OPERATOR(ext.@@) 'alpha';
     RESET ROLE;
-    DROP OWNED BY ii42_schema_app;
-    DROP ROLE ii42_schema_app;
+    DROP OWNED BY evoke_schema_app;
+    DROP ROLE evoke_schema_app;
 
     SET search_path = pg_catalog;
 
     SELECT count(*)
-    FROM ext.ii42_fusion_query_weighted(
+    FROM ext.evoke_fusion_query_weighted(
         ARRAY[
-            ext.ii42_fusion_weighted_query(
+            ext.evoke_fusion_weighted_query(
                 'public.docs_body_idx'::regclass,
                 'alpha',
                 2.0
             ),
-            ext.ii42_fusion_weighted_query(
+            ext.evoke_fusion_weighted_query(
                 'public.docs_title_idx'::regclass,
                 'alpha',
                 1.0
             )
-        ]::ext.ii42_result_fusion_weighted_query[],
+        ]::ext.evoke_result_fusion_weighted_query[],
         2,
         10,
         NULL
     ) r;
 
     SELECT count(*)
-    FROM ext.ii42_query(
+    FROM ext.evoke_query(
         'public.docs_body_idx'::regclass,
         'alpha',
         2
     ) r;
 
     SELECT count(*)
-    FROM ext.ii42_hybrid_fuse_candidates(
+    FROM ext.evoke_hybrid_fuse_candidates(
         ARRAY[
-            ext.ii42_hybrid_bm25_candidate(
+            ext.evoke_hybrid_bm25_candidate(
                 'body',
                 '(0,1)'::tid,
                 1.0,
                 1,
                 2.0
             ),
-            ext.ii42_hybrid_vector_candidate(
+            ext.evoke_hybrid_vector_candidate(
                 'embedding',
                 '(0,1)'::tid,
                 0.2,
@@ -573,7 +573,7 @@ def wrapper_smoke_sql(version_sql: str) -> str:
                 1.0,
                 'minmax'
             ),
-            ext.ii42_hybrid_vector_candidate(
+            ext.evoke_hybrid_vector_candidate(
                 'embedding',
                 '(0,2)'::tid,
                 0.4,
@@ -581,7 +581,7 @@ def wrapper_smoke_sql(version_sql: str) -> str:
                 1.0,
                 'minmax'
             )
-        ]::ext.ii42_result_hybrid_candidate[],
+        ]::ext.evoke_result_hybrid_candidate[],
         2,
         'score'
     ) h;
@@ -623,12 +623,12 @@ def run_relocation_guard(args: argparse.Namespace) -> None:
             '''
             CREATE SCHEMA ext;
             CREATE SCHEMA ext2;
-            CREATE EXTENSION ii42 WITH SCHEMA ext;
+            CREATE EXTENSION evoke WITH SCHEMA ext;
             ''',
         )
         result = subprocess.run(
             psql_cmd(args, args.relocate_db),
-            input='ALTER EXTENSION ii42 SET SCHEMA ext2;',
+            input='ALTER EXTENSION evoke SET SCHEMA ext2;',
             text=True,
             cwd=REPO_ROOT,
             check=False,
@@ -636,9 +636,9 @@ def run_relocation_guard(args: argparse.Namespace) -> None:
         )
         if result.returncode == 0:
             raise AssertionError(
-                'ii42 unexpectedly allowed ALTER EXTENSION SET SCHEMA'
+                'evoke unexpectedly allowed ALTER EXTENSION SET SCHEMA'
             )
-        expected = 'extension "ii42" does not support SET SCHEMA'
+        expected = 'extension "evoke" does not support SET SCHEMA'
         if expected not in result.stderr:
             raise AssertionError(
                 'unexpected relocation error: '
@@ -670,7 +670,7 @@ def run_isolated(args: argparse.Namespace) -> None:
         if not binary.is_file():
             raise FileNotFoundError(f'PostgreSQL binary is missing: {binary}')
 
-    with tempfile.TemporaryDirectory(prefix='ii42_schema_') as tmp:
+    with tempfile.TemporaryDirectory(prefix='evoke_schema_') as tmp:
         root = Path(tmp)
         data_dir = root / 'data'
         socket_dir = root / 'socket'
@@ -744,10 +744,10 @@ def main() -> None:
         args.extension_libdir = args.extension_libdir.expanduser().resolve()
         if not any(
             (args.extension_libdir / name).is_file()
-            for name in ('ii42.so', 'ii42.dylib')
+            for name in ('evoke.so', 'evoke.dylib')
         ):
             raise FileNotFoundError(
-                'ii42 extension library is missing from '
+                'evoke extension library is missing from '
                 f'{args.extension_libdir}'
             )
         args.extension_control_dir = extension_control_root(

@@ -7,10 +7,10 @@ from types import ModuleType
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / 'scripts' / 'benchmark_forward_bound_projection.py'
-QUERY_SOURCE = (ROOT / 'src' / 'ii42_page_query.c').read_text(
+QUERY_SOURCE = (ROOT / 'src' / 'evoke_page_query.c').read_text(
     encoding='utf-8'
 )
-QUERY_HEADER = (ROOT / 'src' / 'ii42_page_query.h').read_text(
+QUERY_HEADER = (ROOT / 'src' / 'evoke_page_query.h').read_text(
     encoding='utf-8'
 )
 
@@ -28,28 +28,28 @@ def load_script() -> ModuleType:
 
 
 def test_forward_bound_oracle_is_bounded_and_read_only() -> None:
-    assert 'II42_PAGE_QUERY_FORWARD_BOUND_AUDIT_MAX_BYTES' in QUERY_HEADER
+    assert 'EVOKE_PAGE_QUERY_FORWARD_BOUND_AUDIT_MAX_BYTES' in QUERY_HEADER
     assert 'estimated_work_bytes' in QUERY_SOURCE
     oracle_source = QUERY_SOURCE.split(
-        'ii42_page_query_forward_bound_audit_run(',
+        'evoke_page_query_forward_bound_audit_run(',
         maxsplit=1,
     )[1]
     assert 'store_semantic' not in oracle_source
     assert 'publish_semantic' not in oracle_source
     assert '] = {3, 4, 6};' in oracle_source
     script_source = SCRIPT.read_text(encoding='utf-8')
-    assert 'ii42_index_generation_readiness_internal_c' in script_source
+    assert 'evoke_index_generation_readiness_internal_c' in script_source
     assert '--query-vector-table' in script_source
     assert '--ceiling-only' in script_source
-    assert 'ii42_test_query_term_suffix_ceiling' in script_source
+    assert 'evoke_test_query_term_suffix_ceiling' in script_source
 
 
 def test_term_suffix_probe_does_not_scan_forward_rows() -> None:
     probe_source = QUERY_SOURCE.split(
-        'ii42_page_query_term_suffix_ceiling_run(',
+        'evoke_page_query_term_suffix_ceiling_run(',
         maxsplit=1,
     )[1].split(
-        'ii42_page_query_forward_bound_audit_run(',
+        'evoke_page_query_forward_bound_audit_run(',
         maxsplit=1,
     )[0]
     assert 'load_semantic_accelerator_forward_directory' in probe_source

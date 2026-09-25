@@ -15,7 +15,7 @@ from typing import Any
 
 import psycopg
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 
 
 QUERY = 'rare zebra quantum flux capacitor semantic retrieval'
@@ -26,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             'Exercise concurrent and rewrite lifecycle operations for BM25 '
-            'and semantic-enabled ii42 indexes.'
+            'and semantic-enabled evoke indexes.'
         ),
     )
     parser.add_argument(
@@ -72,7 +72,7 @@ def index_status(
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_status(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass)',
             (index_name,),
         )
         value = cursor.fetchone()[0]
@@ -109,7 +109,7 @@ def search_ids(
         cursor.execute(
             '''
             SELECT source.id
-            FROM ii42_query(%s::regclass, %s, 20) AS hit
+            FROM evoke_query(%s::regclass, %s, 20) AS hit
             JOIN ddl_lifecycle.docs AS source ON source.ctid = hit.ctid
             ORDER BY hit.score DESC, source.id
             ''',
@@ -159,11 +159,11 @@ def main() -> int:
         args.extension_libdir = args.extension_libdir.resolve()
         extension_libraries = [
             args.extension_libdir / name
-            for name in ('ii42.so', 'ii42.dylib')
+            for name in ('evoke.so', 'evoke.dylib')
         ]
         if not any(path.is_file() for path in extension_libraries):
             raise FileNotFoundError(
-                'ii42 extension library is missing from '
+                'evoke extension library is missing from '
                 f'{args.extension_libdir}'
             )
     if args.extension_control_dir is not None:
@@ -171,7 +171,7 @@ def main() -> int:
             args.extension_control_dir
         )
 
-    root = Path(tempfile.mkdtemp(prefix='ii42_concurrent_ddl_'))
+    root = Path(tempfile.mkdtemp(prefix='evoke_concurrent_ddl_'))
     data_dir = root / 'data'
     socket_dir = root / 'socket'
     log_path = root / 'postgres.log'
@@ -180,7 +180,7 @@ def main() -> int:
     pg_ctl = args.pg_bin / 'pg_ctl'
     started = False
     report: dict[str, Any] = {
-        'api_version': 'ii42_index_v1',
+        'api_version': 'evoke_index_v1',
         'route': 'concurrent_ddl_and_relation_rewrite',
         'model_path': str(args.model_path),
         'gates': [],
@@ -199,7 +199,7 @@ def main() -> int:
             ]
         )
         with (data_dir / 'postgresql.conf').open('a', encoding='utf-8') as file:
-            file.write("\nshared_preload_libraries = 'ii42'\n")
+            file.write("\nshared_preload_libraries = 'evoke'\n")
             if args.extension_libdir is not None:
                 libdir = str(args.extension_libdir).replace("'", "''")
                 file.write(
@@ -221,7 +221,7 @@ def main() -> int:
             file.write(f"unix_socket_directories = '{socket_dir}'\n")
             file.write(f'port = {port}\n')
             file.write('max_worker_processes = 16\n')
-            file.write("ii42.shared_runtime_size = '256MB'\n")
+            file.write("evoke.shared_runtime_size = '256MB'\n")
         run([pg_ctl, '-D', data_dir, '-l', log_path, 'start', '-w'])
         started = True
 
@@ -237,7 +237,7 @@ def main() -> int:
             with connection.cursor() as cursor:
                 cursor.execute(
                     f'''
-                    CREATE EXTENSION ii42;
+                    CREATE EXTENSION evoke;
                     CREATE SCHEMA ddl_lifecycle;
                     CREATE TABLE ddl_lifecycle.docs (
                         id text PRIMARY KEY,
@@ -253,14 +253,14 @@ def main() -> int:
                 cursor.execute(
                     '''
                     CREATE INDEX CONCURRENTLY docs_bm25_idx
-                    ON ddl_lifecycle.docs USING ii42 (body)
+                    ON ddl_lifecycle.docs USING evoke (body)
                     WITH (sae = false, consistency = realtime)
                     ''',
                 )
                 cursor.execute(
                     f'''
                     CREATE INDEX CONCURRENTLY docs_semantic_idx
-                    ON ddl_lifecycle.docs USING ii42 (body)
+                    ON ddl_lifecycle.docs USING evoke (body)
                     WITH (
                         sae = true,
                         model_path = {sql_literal(str(args.model_path))}
@@ -293,7 +293,7 @@ def main() -> int:
                     ALTER TABLE ddl_lifecycle.concurrent_docs
                     ADD PRIMARY KEY (id);
                     CREATE INDEX concurrent_docs_idx
-                    ON ddl_lifecycle.concurrent_docs USING ii42 (body)
+                    ON ddl_lifecycle.concurrent_docs USING evoke (body)
                     WITH (sae = false, consistency = realtime);
                     ''',
                 )
@@ -390,7 +390,7 @@ def main() -> int:
                 cursor.execute(
                     '''
                     SELECT source.id
-                    FROM ii42_query(
+                    FROM evoke_query(
                         'ddl_lifecycle.concurrent_docs_idx'::regclass,
                         'rare concurrent writer visibility token',
                         20
@@ -505,13 +505,13 @@ def main() -> int:
                     JOIN pg_catalog.pg_am AS access
                       ON access.oid = relation.relam
                     WHERE namespace.nspname = 'ddl_lifecycle'
-                      AND access.amname = 'ii42'
+                      AND access.amname = 'evoke'
                     ''',
                 )
                 remaining = int(cursor.fetchone()[0])
             if remaining != 0:
                 raise AssertionError(
-                    f'{remaining} ii42 indexes remain after concurrent drop'
+                    f'{remaining} evoke indexes remain after concurrent drop'
                 )
             report['gates'].append('drop_index_concurrently')
 

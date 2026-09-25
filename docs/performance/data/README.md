@@ -32,10 +32,10 @@ per-path raw data:
   `2026-04-02` PG18 matrix bundle.
 - `official-beir-pg18-comparison-current-2026-04-02.json`
   Refreshed PG18 comparison file combining upstream `bm25s`,
-  `ii42 ids`, and `ii42 text[]`.
+  `evoke ids`, and `evoke text[]`.
 - `pg18-beir-extension-matrix-current-2026-04-02.json`
   Refreshed `15 x 5` PG18 matrix combining upstream `bm25s`,
-  `ii42 ids`, `ii42 text[]`, `pg_search`, and
+  `evoke ids`, `evoke text[]`, `pg_search`, and
   `vchord_bm25`.
 - `official-beir-local-upstream-current-2026-03-21.json`
   Historical localhost upstream rerun retained because the later
@@ -46,7 +46,7 @@ per-path raw data:
   Historical same-machine `pg_bm25s` comparison subset.
 - `pg-extension-focused-comparison-current-2026-03-21.json`
   Historical merged comparison file combining local upstream,
-  `ii42`, and `pg_bm25s` on the completed localhost subset.
+  `evoke`, and `pg_bm25s` on the completed localhost subset.
 - `native-orderby-focus-topk1000-2026-03-21.json`
   Focused localhost benchmark comparing the native `<=>` ordered-scan
   path with the existing `rowset` APIs at `top_k = 1000`.
@@ -65,12 +65,12 @@ The refreshed `2026-04-02` PG18 matrix files are now the preferred
 reference when the question is "what is the current cross-engine
 benchmark status?".
 
-That refresh only replaced the two ii42 columns. The raw archive keeps its
+That refresh only replaced the two evoke columns. The raw archive keeps its
 original pre-rebrand result filenames so the historical archive remains
 byte-for-byte traceable.
 
 - `30` new raw cells from the `2026-04-02` Google Cloud rerun supply
-  `ii42 ids` and `ii42 text[]`
+  `evoke ids` and `evoke text[]`
 - the other `45` raw cells (`upstream bm25s`, `pg_search`,
   `vchord_bm25`) are intentionally carried forward from the stable
   `2026-03-31` PG18 matrix
@@ -122,7 +122,7 @@ behind the current rollups.
   `2026-03-31` full matrix as the current project-wide authority.
 - `pg18-beir-psql-only-tantivy-2026-04-02/`
   Raw archive for the follow-up Google Cloud rerun that refreshed only
-  the ii42 ids and text[] columns. The per-dataset result files keep
+  the evoke ids and text[] columns. The per-dataset result files keep
   their original pre-rebrand filenames inside this raw archive.
   - `manifest.json`
   - `launch.json`

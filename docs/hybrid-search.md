@@ -1,6 +1,6 @@
 # Hybrid Vector/Evoke Search
 
-The public `ii42_hybrid_*` APIs combine candidates from Evoke and external
+The public `evoke_hybrid_*` APIs combine candidates from Evoke and external
 retrieval engines such as pgvector or VectorChord. This composition layer is a
 product capability above the unified single-index design; it does not split or
 modify an Evoke index internally.
@@ -33,7 +33,7 @@ simpler and faster.
 
 ## Candidate Model
 
-The fusion layer operates on `ii42_result_hybrid_candidate` values:
+The fusion layer operates on `evoke_result_hybrid_candidate` values:
 
 - `source_name`: stable source label such as `title`, `body`, or `embedding`
 - `ctid`: row identity for same-table fusion within one statement
@@ -43,7 +43,7 @@ The fusion layer operates on `ii42_result_hybrid_candidate` values:
 - `normalizer`: score normalization strategy
 - `direction`: whether higher or lower raw values are better
 
-The output is a set of `ii42_result_hybrid_hit` rows with:
+The output is a set of `evoke_result_hybrid_hit` rows with:
 
 - final fused score
 - source count
@@ -62,8 +62,8 @@ The per-source fields are part of the product contract because hybrid ranking
 is only useful
 when the final order can be inspected and tuned.
 
-`ii42_hybrid_fuse_candidates(...)` uses a C fast path for normalization,
-de-duplication, grouping, and final ordering. Use `ii42_query(...)` for each
+`evoke_hybrid_fuse_candidates(...)` uses a C fast path for normalization,
+de-duplication, grouping, and final ordering. Use `evoke_query(...)` for each
 Evoke source and hybrid fusion only when independent retrieval engines are
 intentionally combined.
 
@@ -110,16 +110,16 @@ after measuring whether a specific normalization improves result quality.
 
 For the historical SQL-first dual-engine design that motivated this API
 surface, see the archived
-[Hybrid Vector/BM25 Search Use-Case Design](research-sae/reports/designs/ii42-hybrid-vector-bm25-use-case-design.md).
+[Hybrid Vector/BM25 Search Use-Case Design](research-sae/reports/designs/evoke-hybrid-vector-bm25-use-case-design.md).
 
 ## BM25 Sources
 
-BM25 candidates can be created directly from a `ii42` index:
+BM25 candidates can be created directly from a `evoke` index:
 
 ```sql
 WITH bm25_candidates AS (
     SELECT c
-    FROM ii42_hybrid_bm25_candidates(
+    FROM evoke_hybrid_bm25_candidates(
         'title',
         'docs_title_bm25_idx'::regclass,
         'how to use a computer',
@@ -128,7 +128,7 @@ WITH bm25_candidates AS (
     ) AS c
 )
 SELECT h.*
-FROM ii42_hybrid_fuse_candidates(
+FROM evoke_hybrid_fuse_candidates(
     ARRAY(SELECT c FROM bm25_candidates),
     20,
     'rrf'
@@ -147,7 +147,7 @@ With VectorChord or pgvector installed, the vector side can look like this:
 
 ```sql
 WITH vector_candidates AS (
-    SELECT ii42_hybrid_vector_candidate(
+    SELECT evoke_hybrid_vector_candidate(
         'embedding',
         d.ctid,
         (d.embedding <-> '[0.1,0.2,0.3]'::vector)::real,
@@ -162,7 +162,7 @@ WITH vector_candidates AS (
     LIMIT 1000
 )
 SELECT h.*
-FROM ii42_hybrid_fuse_candidates(
+FROM evoke_hybrid_fuse_candidates(
     ARRAY(SELECT c FROM vector_candidates),
     20,
     'rrf'
@@ -171,7 +171,7 @@ FROM ii42_hybrid_fuse_candidates(
 
 For RRF, the vector normalizer is not used; only rank and weight matter. For
 score fusion, vector distances should normally use `lower_is_better` through
-`ii42_hybrid_vector_candidate(...)`, with `minmax`,
+`evoke_hybrid_vector_candidate(...)`, with `minmax`,
 `negative_distance`, or `inverse_distance`.
 
 ## Mixed BM25 And Vector Example
@@ -179,7 +179,7 @@ score fusion, vector distances should normally use `lower_is_better` through
 ```sql
 WITH title_candidates AS (
     SELECT c
-    FROM ii42_hybrid_bm25_candidates(
+    FROM evoke_hybrid_bm25_candidates(
         'title',
         'docs_title_bm25_idx'::regclass,
         'how to use a computer',
@@ -189,7 +189,7 @@ WITH title_candidates AS (
 ),
 body_candidates AS (
     SELECT c
-    FROM ii42_hybrid_bm25_candidates(
+    FROM evoke_hybrid_bm25_candidates(
         'body',
         'docs_body_bm25_idx'::regclass,
         'how to use a computer',
@@ -198,7 +198,7 @@ body_candidates AS (
     ) AS c
 ),
 vector_candidates AS (
-    SELECT ii42_hybrid_vector_candidate(
+    SELECT evoke_hybrid_vector_candidate(
         'embedding',
         d.ctid,
         (d.embedding <-> '[0.1,0.2,0.3]'::vector)::real,
@@ -216,7 +216,7 @@ vector_candidates AS (
 ),
 hybrid_hits AS (
     SELECT *
-    FROM ii42_hybrid_fuse_candidates(
+    FROM evoke_hybrid_fuse_candidates(
         ARRAY(
             SELECT c FROM title_candidates
             UNION ALL
@@ -239,7 +239,7 @@ ORDER BY h.score DESC, d.id;
 The final `WHERE` keeps the returned rows aligned with the requested time
 window, but runs after fusion's `k` cutoff and can underfill. Push the predicate
 into each source when supported. For an SSR source, use a filtered
-`ii42_query(...)` overload or planner-native query before constructing hybrid
+`evoke_query(...)` overload or planner-native query before constructing hybrid
 candidates; increasing each source's candidate budget is only a recall tradeoff.
 
 ## Filtering And Recall
@@ -269,7 +269,7 @@ CREATE EXTENSION IF NOT EXISTS vchord;
 
 EXPLAIN
 WITH vector_candidates AS (
-    SELECT ii42_hybrid_vector_candidate(
+    SELECT evoke_hybrid_vector_candidate(
         'embedding',
         d.ctid,
         (d.embedding <-> '[0.1,0.2,0.3]'::vector)::real,
@@ -284,7 +284,7 @@ WITH vector_candidates AS (
     LIMIT 1000
 )
 SELECT *
-FROM ii42_hybrid_fuse_candidates(
+FROM evoke_hybrid_fuse_candidates(
     ARRAY(SELECT c FROM vector_candidates),
     20,
     'rrf'

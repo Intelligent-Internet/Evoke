@@ -1,6 +1,6 @@
 # Competitive Analysis
 
-This page summarizes what `ii42` learned from nearby projects and
+This page summarizes what `evoke` learned from nearby projects and
 what it explicitly treats as not suitable for this project.
 
 This is historical comparative evidence, not the current product contract.
@@ -23,7 +23,7 @@ Not suitable for this project:
 
 Outcome:
 
-- `ii42` absorbed the worthwhile PostgreSQL integration ideas
+- `evoke` absorbed the worthwhile PostgreSQL integration ideas
   while keeping the retrieval core on the native C path
 
 Detailed notes are archived in
@@ -88,7 +88,7 @@ Outcome:
   - `rowset` remains the canonical exact BM25 contract
   - `@@` remains a document-match predicate, not a scoring API
   - `<=>` remains an ordered-retrieval surface only when PostgreSQL uses a
-    real `ii42` index path
+    real `evoke` index path
   - SQL wrappers, prepared/index-bound query values, filtered ranked
     helpers, score-carrying result APIs, field-aware query helpers, and
     the field-aware multicolumn engine were added as explicit
@@ -97,12 +97,12 @@ Outcome:
     deliberately not added
 - the full local `main` vs branch closeout stayed positive on the full
   15-dataset BEIR list:
-  - `ii42_ids`: median `+18.60%`
-  - `ii42_text`: median `+24.52%`
+  - `evoke_ids`: median `+18.60%`
+  - `evoke_text`: median `+24.52%`
 - the follow-up cloud PG18 rerun used to refresh the published matrix
   also stayed positive overall:
-  - `ii42_ids`: median `+37.93%` vs the documented baseline
-  - `ii42_text`: median `+16.12%` vs the documented baseline
+  - `evoke_ids`: median `+37.93%` vs the documented baseline
+  - `evoke_text`: median `+16.12%` vs the documented baseline
 - it did not justify replacing the PostgreSQL-native, `bm25s`-aligned
   core architecture
 

@@ -11,7 +11,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -62,13 +62,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         '--extension-libdir',
         type=Path,
-        help='Directory containing the staged ii42 shared library.',
+        help='Directory containing the staged evoke shared library.',
     )
     parser.add_argument(
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share root containing extension/ii42.control, or '
+            'PostgreSQL share root containing extension/evoke.control, or '
             'the extension directory itself.'
         ),
     )
@@ -138,7 +138,7 @@ def init_cluster(args: argparse.Namespace, pgdata: Path, port: int) -> None:
         conf.write("\nlisten_addresses = ''\n")
         conf.write(f"unix_socket_directories = '{pgdata}'\n")
         conf.write(f'port = {port}\n')
-        conf.write("shared_preload_libraries = 'ii42'\n")
+        conf.write("shared_preload_libraries = 'evoke'\n")
         if args.extension_libdir is not None:
             libdir = str(args.extension_libdir).replace("'", "''")
             conf.write(
@@ -153,9 +153,9 @@ def init_cluster(args: argparse.Namespace, pgdata: Path, port: int) -> None:
                 f'{control_dir}:$system'
                 "'\n"
             )
-        conf.write("ii42.shared_runtime_size = '16MB'\n")
-        conf.write("ii42.preload_timer_interval_ms = '1h'\n")
-        conf.write("ii42.maintenance_timer_interval_ms = '1h'\n")
+        conf.write("evoke.shared_runtime_size = '16MB'\n")
+        conf.write("evoke.preload_timer_interval_ms = '1h'\n")
+        conf.write("evoke.maintenance_timer_interval_ms = '1h'\n")
 
 
 def start_cluster(args: argparse.Namespace, pgdata: Path) -> None:
@@ -214,7 +214,7 @@ def run_smoke(args: argparse.Namespace, pgdata: Path, port: int) -> None:
         pgdata,
         port,
         '''
-        CREATE EXTENSION ii42;
+        CREATE EXTENSION evoke;
         CREATE TABLE docs (
             id int primary key,
             tokens text[] not null
@@ -228,7 +228,7 @@ def run_smoke(args: argparse.Namespace, pgdata: Path, port: int) -> None:
         ]
         FROM generate_series(1, 30000) gs;
         CREATE INDEX docs_bm25_idx
-            ON docs USING ii42 (tokens)
+            ON docs USING evoke (tokens)
             WITH (
                 consistency = 'eventual'
             );
@@ -238,7 +238,7 @@ def run_smoke(args: argparse.Namespace, pgdata: Path, port: int) -> None:
         args,
         pgdata,
         port,
-        "SELECT public.ii42_index_runtime_state('docs_bm25_idx');",
+        "SELECT public.evoke_index_runtime_state('docs_bm25_idx');",
     )
     standard_estimate, compact_estimate, spill_estimate = (
         estimates_from_state(state)
@@ -298,7 +298,7 @@ def run_smoke(args: argparse.Namespace, pgdata: Path, port: int) -> None:
         pgdata,
         port,
         f'''
-        ALTER SYSTEM SET ii42.maintenance_rebuild_memory_budget =
+        ALTER SYSTEM SET evoke.maintenance_rebuild_memory_budget =
             '{budget_mb}MB';
         SELECT pg_reload_conf();
         INSERT INTO docs VALUES
@@ -309,7 +309,7 @@ def run_smoke(args: argparse.Namespace, pgdata: Path, port: int) -> None:
         args,
         pgdata,
         port,
-        "SELECT public.ii42_index_runtime_state('docs_bm25_idx');",
+        "SELECT public.evoke_index_runtime_state('docs_bm25_idx');",
     )
     if f'rebuild_builder={args.builder}' not in budget_state:
         raise AssertionError(
@@ -325,7 +325,7 @@ def run_smoke(args: argparse.Namespace, pgdata: Path, port: int) -> None:
         args,
         pgdata,
         port,
-        "SELECT public.ii42_index_runtime_state('docs_bm25_idx');",
+        "SELECT public.evoke_index_runtime_state('docs_bm25_idx');",
     )
     if f'rebuild_builder={args.builder}' not in rebuilt_state:
         raise AssertionError(
@@ -337,7 +337,7 @@ def run_smoke(args: argparse.Namespace, pgdata: Path, port: int) -> None:
         args,
         pgdata,
         port,
-        "SELECT public.ii42_index_preload('docs_bm25_idx');",
+        "SELECT public.evoke_index_preload('docs_bm25_idx');",
     )
     rows = psql(
         args,
@@ -345,7 +345,7 @@ def run_smoke(args: argparse.Namespace, pgdata: Path, port: int) -> None:
         port,
         '''
         SELECT count(*)
-        FROM public.ii42_query(
+        FROM public.evoke_query(
             'docs_bm25_idx',
             'fresh',
             10,
@@ -373,12 +373,12 @@ def main() -> None:
     if args.extension_libdir is not None:
         args.extension_libdir = args.extension_libdir.expanduser().resolve()
         libraries = (
-            args.extension_libdir / 'ii42.so',
-            args.extension_libdir / 'ii42.dylib',
+            args.extension_libdir / 'evoke.so',
+            args.extension_libdir / 'evoke.dylib',
         )
         if not any(path.is_file() for path in libraries):
             raise FileNotFoundError(
-                'ii42 extension library is missing from '
+                'evoke extension library is missing from '
                 f'{args.extension_libdir}'
             )
     if args.extension_control_dir is not None:
@@ -386,7 +386,7 @@ def main() -> None:
             args.extension_control_dir
         )
     tmpdir = Path(tempfile.mkdtemp(
-        prefix='ii42-compact-builder-',
+        prefix='evoke-compact-builder-',
         dir='/tmp',
     ))
     pgdata = tmpdir / 'pgdata'

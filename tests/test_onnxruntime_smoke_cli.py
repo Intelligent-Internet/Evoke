@@ -17,7 +17,7 @@ def test_extension_control_root_accepts_share_directory(
 ) -> None:
     extension_dir = tmp_path / 'extension'
     extension_dir.mkdir()
-    (extension_dir / 'ii42.control').write_text(
+    (extension_dir / 'evoke.control').write_text(
         "default_version = '0.2.0'\n",
         encoding='utf-8',
     )
@@ -30,7 +30,7 @@ def test_extension_control_root_accepts_extension_directory(
 ) -> None:
     extension_dir = tmp_path / 'extension'
     extension_dir.mkdir()
-    (extension_dir / 'ii42.control').write_text(
+    (extension_dir / 'evoke.control').write_text(
         "default_version = '0.2.0'\n",
         encoding='utf-8',
     )
@@ -41,7 +41,7 @@ def test_extension_control_root_accepts_extension_directory(
 def test_extension_control_root_rejects_missing_control(
     tmp_path: Path,
 ) -> None:
-    with pytest.raises(FileNotFoundError, match='ii42.control'):
+    with pytest.raises(FileNotFoundError, match='evoke.control'):
         extension_control_root(tmp_path)
 
 

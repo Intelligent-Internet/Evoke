@@ -50,7 +50,7 @@ The recommendation helper should stay conservative.
   - medium confidence
 
 That confidence guidance is now reflected in
-`ii42_index_policy_recommend(...)`.
+`evoke_index_policy_recommend(...)`.
 
 ## Targeted Follow-Up
 
@@ -80,7 +80,7 @@ repeatable evidence to justify a dedicated recommendation profile.
 ## Stability Note
 
 While collecting the earlier heavier repeats, concurrent heavy
-benchmark runs intermittently hit `invalid ii42 index metapage`.
+benchmark runs intermittently hit `invalid evoke index metapage`.
 
 Follow-up hardening on the branch serializes maintenance writers and
 rebuilds with a maintenance-only relation lock. A dedicated smoke script

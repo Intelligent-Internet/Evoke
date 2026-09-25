@@ -74,10 +74,7 @@ fi
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [ -z "$model_checkout" ]; then
-    model_checkout="$(
-        printf '%s' \
-            "${EVOKE_MILESTONE_MODEL_CHECKOUT:-${II42_MILESTONE_MODEL_CHECKOUT:-}}"
-    )"
+    model_checkout="${EVOKE_MILESTONE_MODEL_CHECKOUT:-}"
 fi
 if [ -z "$model_checkout" ]; then
     model_checkout="${repo_root}/.artifacts/evoke-milestone-model"
@@ -105,10 +102,10 @@ if git -C "$repo_root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
         git_tree_state='dirty'
     fi
 else
-    git_commit="${II42_GIT_COMMIT:-}"
-    git_tree_state="${II42_GIT_TREE_STATE:-source-archive}"
+    git_commit="${EVOKE_GIT_COMMIT:-}"
+    git_tree_state="${EVOKE_GIT_TREE_STATE:-source-archive}"
     if [ -z "$git_commit" ]; then
-        echo 'II42_GIT_COMMIT is required outside a Git worktree' >&2
+        echo 'EVOKE_GIT_COMMIT is required outside a Git worktree' >&2
         exit 1
     fi
 fi
@@ -119,9 +116,9 @@ if [ "$git_tree_state" = 'dirty' ] && [ "$allow_dirty" != true ]; then
 fi
 control_version="$(sed -n \
     "s/^default_version = '\(.*\)'$/\1/p" \
-    "${repo_root}/ii42.control")"
+    "${repo_root}/evoke.control")"
 if [ "$version" != "$control_version" ]; then
-    echo "release version ${version} does not match ii42.control " \
+    echo "release version ${version} does not match evoke.control " \
         "version ${control_version}" >&2
     exit 1
 fi
@@ -134,7 +131,7 @@ fi
 arch="$(uname -m)"
 os_name="$(uname -s | tr '[:upper:]' '[:lower:]')"
 if [ -z "$onnxruntime_prefix" ]; then
-    onnxruntime_prefix="${II42_ONNXRUNTIME_PREFIX:-}"
+    onnxruntime_prefix="${EVOKE_ONNXRUNTIME_PREFIX:-}"
     if [ -n "$onnxruntime_prefix" ]; then
         onnxruntime_prefix_explicit=true
     fi
@@ -187,8 +184,8 @@ rm -rf "$stage_dir" "$zip_path" "$checksum_path"
 mkdir -p "$stage_dir"
 
 make -C "$repo_root" clean PG_CONFIG="$pg_config"
-make -C "$repo_root" II42_ENABLE_ONNXRUNTIME=1 PG_CONFIG="$pg_config"
-make -C "$repo_root" install II42_ENABLE_ONNXRUNTIME=1 \
+make -C "$repo_root" EVOKE_ENABLE_ONNXRUNTIME=1 PG_CONFIG="$pg_config"
+make -C "$repo_root" install EVOKE_ENABLE_ONNXRUNTIME=1 \
     DESTDIR="$stage_dir" PG_CONFIG="$pg_config"
 
 runtime_libdir="$(pkg-config --variable=libdir libonnxruntime)"
@@ -234,7 +231,7 @@ fi
 mkdir -p "$runtime_stage_dir" "${stage_dir}/LICENSES"
 cp -P "${runtime_libraries[@]}" "$runtime_stage_dir/"
 if [ "$os_name" = 'darwin' ]; then
-    extension_library="${runtime_stage_dir}/ii42.dylib"
+    extension_library="${runtime_stage_dir}/evoke.dylib"
     runtime_dependency="$(
         otool -L "$extension_library" |
             awk '/libonnxruntime\.[0-9]+\.dylib/ { print $1; exit }'
@@ -265,7 +262,7 @@ if [ "$os_name" = 'darwin' ]; then
         exit 1
     fi
 fi
-model_stage_dir="${stage_dir}${pg_sharedir}/ii42/models/default"
+model_stage_dir="${stage_dir}${pg_sharedir}/evoke/models/default"
 mkdir -p "$model_stage_dir"
 cp -R "${model_checkout}/." "$model_stage_dir/"
 chmod -R a+rX "$model_stage_dir"
@@ -309,7 +306,7 @@ ONNX Runtime SDK prefix: ${onnxruntime_prefix}
 ONNX Runtime linkage: bundled in PostgreSQL pkglibdir
 Milestone model: ${model_id}
 Milestone model manifest SHA-256: ${model_manifest_sha256}
-Milestone model location: ${pg_sharedir}/ii42/models/default
+Milestone model location: ${pg_sharedir}/evoke/models/default
 EOF
 
 cp "${repo_root}/README.md" "${stage_dir}/README.md"

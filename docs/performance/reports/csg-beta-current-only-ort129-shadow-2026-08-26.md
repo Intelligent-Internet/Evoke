@@ -16,11 +16,11 @@ recorded as `source-archive`; the build did not depend on an untracked checkout.
 | --- | --- |
 | Source archive | `158abc76ee4ffbd108f176d3cea2ba8c3b2dc0064cac0bff3d344a0cd0b04e68` |
 | Package archive | `8c36c8a84a23313f8120e8b32227bdcd1fbd0308367cd0969fd7dc9f1d8829c0` |
-| `ii42.so` | `4e7d6b6d5ef412e96737e375dc3801b88540b2117eef9596e72af300315ac1ff` |
+| `evoke.so` | `4e7d6b6d5ef412e96737e375dc3801b88540b2117eef9596e72af300315ac1ff` |
 | ONNX Runtime 1.29.0 | `5715f06d8992ca8eeeddcce43df3a7d38f97d537052126f558e912cb312460ca` |
-| `ii42.control` | `ca157ce9a4c1f597137975635928998264ea22fa5d9fa05d2119010eda7ab99b` |
+| `evoke.control` | `ca157ce9a4c1f597137975635928998264ea22fa5d9fa05d2119010eda7ab99b` |
 | Install SQL | `a755eb5d40bd87360a26a2a3c913b74cd9d6e393e540eb76a387a23c51eccdee` |
-| Model manifest | `b61060a3958ee56209de47a34ee5cbe08351bfeb3fcbbfdcbf477403210764f7` |
+| Model manifest | `dd0993f0638a3f683fbb6475a8509c228d8f6547aab90a0b762b1ff6fd7d0041` |
 | Document compiler | `9e04d78c9cb14a73dbda4dba66d0e14ce0840d76ff6ab2ff6bdee8e4671cb79f` |
 | Query compiler | `d93d38d1e9d34e26a08b9b87ccf4013a2d7357002c09e797abbe4aea7349f9b3` |
 
@@ -51,7 +51,7 @@ an actual maximum of 32.
 
 ## Shadow Deployment
 
-Shadow `ii_dev` was the only database using II42. Before deployment, all 14
+Shadow `ii_dev` was the only database using Evoke. Before deployment, all 14
 indexes were valid and ready; all nine Commons product accelerators used policy
 7, and all six scoped product roots used current scope v6.
 

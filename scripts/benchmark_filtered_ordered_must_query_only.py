@@ -18,7 +18,7 @@ import psycopg
 from psycopg import conninfo, sql
 
 DEFAULT_DATASETS_DIR = (
-    Path(tempfile.gettempdir()) / 'ii42_dataset_cache/beir_official'
+    Path(tempfile.gettempdir()) / 'evoke_dataset_cache/beir_official'
 )
 TOKEN_RE = re.compile(r'[A-Za-z0-9]+')
 STOPWORDS = frozenset({
@@ -56,7 +56,7 @@ class TokenizedCorpus:
 
 
 def benchmark_admin_dsn() -> str:
-    base_dsn = os.environ.get('II42_BENCH_DSN', 'dbname=postgres')
+    base_dsn = os.environ.get('EVOKE_BENCH_DSN', 'dbname=postgres')
     params = conninfo.conninfo_to_dict(base_dsn)
     if not params.get('user'):
         params['user'] = getpass.getuser()
@@ -169,7 +169,7 @@ def tokenize_dataset(
 
 def benchmark_db_name(dataset: str) -> str:
     suffix = dataset.replace('-', '_')
-    return f'ii42_profile_filtered_ordered_must_{suffix}'
+    return f'evoke_profile_filtered_ordered_must_{suffix}'
 
 
 def decode_ids(vocab_by_id: list[str], token_ids: list[int]) -> list[str]:
@@ -291,7 +291,7 @@ def wait_for_index_ready(
     db_dsn = conninfo.make_conninfo(
         PG_DSN,
         dbname=db_name,
-        application_name='ii42_filtered_ordered_must_ready',
+        application_name='evoke_filtered_ordered_must_ready',
     )
 
     while time.monotonic() < deadline:
@@ -304,7 +304,7 @@ def wait_for_index_ready(
                     )
                     relation_bytes = int(cur.fetchone()[0])
                     cur.execute(
-                        "SELECT 1 FROM ii42_index_details("
+                        "SELECT 1 FROM evoke_index_details("
                         "'bench.docs_tokens_bm25_idx'::regclass)"
                     )
                     cur.fetchone()
@@ -316,7 +316,7 @@ def wait_for_index_ready(
 
     detail = f'last error: {last_error}' if last_error is not None else ''
     raise RuntimeError(
-        'ii42 benchmark index was not visible to a fresh backend '
+        'evoke benchmark index was not visible to a fresh backend '
         f'within {timeout_s:.1f}s; expected {expected_bytes} bytes. {detail}'
     )
 
@@ -360,12 +360,12 @@ def prepare_state(
     db_dsn = conninfo.make_conninfo(
         PG_DSN,
         dbname=db_name,
-        application_name='ii42_filtered_ordered_must_prepare',
+        application_name='evoke_filtered_ordered_must_prepare',
     )
     try:
         with psycopg.connect(db_dsn, autocommit=True) as conn:
             with conn.cursor() as cur:
-                cur.execute('CREATE EXTENSION ii42')
+                cur.execute('CREATE EXTENSION evoke')
                 cur.execute('CREATE SCHEMA bench')
                 cur.execute(
                     'CREATE TABLE bench.docs_tokens ('
@@ -388,7 +388,7 @@ def prepare_state(
                 cur.execute(
                     """
                     CREATE INDEX docs_tokens_bm25_idx
-                    ON bench.docs_tokens USING ii42 (tokens)
+                    ON bench.docs_tokens USING evoke (tokens)
                     WITH (
                         method = 'lucene',
                         idf_method = 'lucene',
@@ -518,7 +518,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         '--application-name',
-        default='ii42_filtered_ordered_must_query_only',
+        default='evoke_filtered_ordered_must_query_only',
     )
     parser.add_argument(
         '--repeats',

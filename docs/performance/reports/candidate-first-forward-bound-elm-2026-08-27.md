@@ -21,9 +21,9 @@ policy 7 after the experiment.
 - Host: Elm
 - PostgreSQL: 18.6
 - Runtime: immutable ONNX Runtime 1.29 package
-- Fixture: `ii42_cf_eval.pubmed_250k`
+- Fixture: `evoke_cf_eval.pubmed_250k`
 - Documents: 250,000 logged rows
-- Index: `ii42_cf_eval.pubmed_250k_ii42_idx`
+- Index: `evoke_cf_eval.pubmed_250k_evoke_idx`
 - Queries: three semantic queries
 - Exact ladder: seven filters spanning 178 to 249,854 allowed rows
 - Product comparison: warm medians after one warm-up execution

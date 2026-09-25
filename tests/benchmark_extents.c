@@ -1,6 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "ii42_core.h"
+#include "evoke_core.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -11,9 +11,9 @@
 
 typedef struct extent_view
 {
-    ii42_term_extent_list *terms;
-    ii42_posting_extent *extents;
-    ii42_posting_value *values;
+    evoke_term_extent_list *terms;
+    evoke_posting_extent *extents;
+    evoke_posting_value *values;
 } extent_view;
 
 typedef enum benchmark_score_mode
@@ -81,9 +81,9 @@ extent_view_free(extent_view *view)
     memset(view, 0, sizeof(*view));
 }
 
-static ii42_status
+static evoke_status
 extent_view_use_canonical_values(
-    const ii42_index *index,
+    const evoke_index *index,
     extent_view *view
 )
 {
@@ -93,12 +93,12 @@ extent_view_use_canonical_values(
     if (index == NULL || view == NULL ||
         index->term_frequencies == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     view->values = calloc(index->data_len, sizeof(*view->values));
     if (view->values == NULL)
     {
-        return II42_ERR_NOMEM;
+        return EVOKE_ERR_NOMEM;
     }
     for (posting_index = 0;
          posting_index < index->data_len;
@@ -109,30 +109,30 @@ extent_view_use_canonical_values(
     }
     for (term_id = 0; term_id < index->vocab_size; term_id++)
     {
-        ii42_term_extent_list *list = &view->terms[term_id];
+        evoke_term_extent_list *list = &view->terms[term_id];
         size_t extent_index;
 
         for (extent_index = 0; extent_index < list->len; extent_index++)
         {
-            ii42_posting_extent *extent =
-                (ii42_posting_extent *) &list->extents[extent_index];
+            evoke_posting_extent *extent =
+                (evoke_posting_extent *) &list->extents[extent_index];
             ptrdiff_t offset =
                 extent->term_frequencies - index->term_frequencies;
 
             if (offset < 0 || (uint64_t) offset >= index->data_len)
             {
-                return II42_ERR_FORMAT;
+                return EVOKE_ERR_FORMAT;
             }
             extent->values = &view->values[offset];
             extent->term_frequencies = NULL;
         }
     }
-    return II42_OK;
+    return EVOKE_OK;
 }
 
-static ii42_status
+static evoke_status
 extent_view_build(
-    const ii42_index *index,
+    const evoke_index *index,
     size_t target_extents_per_term,
     extent_view *view_out
 )
@@ -143,11 +143,11 @@ extent_view_build(
 
     if (index == NULL || target_extents_per_term == 0 || view_out == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     if ((size_t) index->vocab_size > SIZE_MAX / target_extents_per_term)
     {
-        return II42_ERR_RANGE;
+        return EVOKE_ERR_RANGE;
     }
     max_extents = (size_t) index->vocab_size * target_extents_per_term;
 
@@ -157,7 +157,7 @@ extent_view_build(
     if (view_out->terms == NULL || view_out->extents == NULL)
     {
         extent_view_free(view_out);
-        return II42_ERR_NOMEM;
+        return EVOKE_ERR_NOMEM;
     }
 
     for (term_id = 0; term_id < index->vocab_size; term_id++)
@@ -188,7 +188,7 @@ extent_view_build(
             uint64_t remaining_extents = (uint64_t) (extent_count - i);
             uint64_t extent_len =
                 (remaining + remaining_extents - 1) / remaining_extents;
-            ii42_posting_extent *extent =
+            evoke_posting_extent *extent =
                 &view_out->extents[extent_cursor++];
 
             extent->data = &index->data[cursor];
@@ -196,30 +196,30 @@ extent_view_build(
             extent->term_frequencies = &index->term_frequencies[cursor];
             extent->len = extent_len;
             extent->local_document_count = index->num_docs;
-            extent->kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL;
-            if (ii42_posting_extent_validate_layout(index, extent) !=
-                II42_OK)
+            extent->kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL;
+            if (evoke_posting_extent_validate_layout(index, extent) !=
+                EVOKE_OK)
             {
                 extent_view_free(view_out);
-                return II42_ERR_FORMAT;
+                return EVOKE_ERR_FORMAT;
             }
             cursor += extent_len;
         }
         if (cursor != end)
         {
             extent_view_free(view_out);
-            return II42_ERR_FORMAT;
+            return EVOKE_ERR_FORMAT;
         }
     }
 
-    return II42_OK;
+    return EVOKE_OK;
 }
 
-static ii42_status
+static evoke_status
 run_benchmark(
-    const ii42_index *index,
+    const evoke_index *index,
     const extent_view *view,
-    const ii42_corpus_stats *stats,
+    const evoke_corpus_stats *stats,
     benchmark_score_mode mode,
     const uint32_t *query_ids,
     size_t query_len,
@@ -240,17 +240,17 @@ run_benchmark(
         uint64_t started_ns;
         uint64_t finished_ns;
         float *scores = NULL;
-        ii42_topk_result topk;
-        ii42_status status;
+        evoke_topk_result topk;
+        evoke_status status;
 
         memset(&topk, 0, sizeof(topk));
         if (!mono_now_ns(&started_ns))
         {
-            return II42_ERR_INVALID;
+            return EVOKE_ERR_INVALID;
         }
         if (mode == BENCHMARK_SCORE_MIXED)
         {
-            status = ii42_scores_from_ids_mixed(
+            status = evoke_scores_from_ids_mixed(
                 index,
                 stats,
                 view == NULL ? NULL : view->terms,
@@ -263,7 +263,7 @@ run_benchmark(
         }
         else if (mode == BENCHMARK_SCORE_NEUTRAL)
         {
-            status = ii42_scores_from_ids_neutral(
+            status = evoke_scores_from_ids_neutral(
                 index,
                 stats,
                 view == NULL ? NULL : view->terms,
@@ -276,7 +276,7 @@ run_benchmark(
         }
         else if (view == NULL)
         {
-            status = ii42_scores_from_ids(
+            status = evoke_scores_from_ids(
                 index,
                 query_ids,
                 query_len,
@@ -286,7 +286,7 @@ run_benchmark(
         }
         else
         {
-            status = ii42_scores_from_ids_extents(
+            status = evoke_scores_from_ids_extents(
                 index,
                 view->terms,
                 index->vocab_size,
@@ -296,29 +296,29 @@ run_benchmark(
                 &scores
             );
         }
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
             free(scores);
             return status;
         }
-        status = ii42_topk(
+        status = evoke_topk(
             scores,
             index->num_docs,
             index->num_docs < 100 ? index->num_docs : 100,
             true,
             &topk
         );
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
             free(scores);
-            ii42_topk_result_free(&topk);
+            evoke_topk_result_free(&topk);
             return status;
         }
         if (!mono_now_ns(&finished_ns) || finished_ns < started_ns)
         {
             free(scores);
-            ii42_topk_result_free(&topk);
-            return II42_ERR_INVALID;
+            evoke_topk_result_free(&topk);
+            return EVOKE_ERR_INVALID;
         }
 
         if (topk.len > 0)
@@ -327,7 +327,7 @@ run_benchmark(
             checksum += (double) topk.doc_ids[i % topk.len] * 0.000001;
         }
         free(scores);
-        ii42_topk_result_free(&topk);
+        evoke_topk_result_free(&topk);
 
         if (i >= warmup_iters)
         {
@@ -338,12 +338,12 @@ run_benchmark(
     *avg_ms_out = ((double) total_ns / (double) timed_iters) / 1000000.0;
     *qps_out = *avg_ms_out > 0.0 ? 1000.0 / *avg_ms_out : 0.0;
     *checksum_out = checksum;
-    return II42_OK;
+    return EVOKE_OK;
 }
 
-static ii42_status
+static evoke_status
 verify_impact_exact(
-    const ii42_index *index,
+    const evoke_index *index,
     const extent_view *view,
     const uint32_t *query_ids,
     size_t query_len,
@@ -352,20 +352,20 @@ verify_impact_exact(
 {
     float *contiguous = NULL;
     float *fragmented = NULL;
-    ii42_status status;
+    evoke_status status;
 
-    status = ii42_scores_from_ids(
+    status = evoke_scores_from_ids(
         index,
         query_ids,
         query_len,
         weight_mask,
         &contiguous
     );
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
         return status;
     }
-    status = ii42_scores_from_ids_extents(
+    status = evoke_scores_from_ids_extents(
         index,
         view->terms,
         index->vocab_size,
@@ -374,14 +374,14 @@ verify_impact_exact(
         weight_mask,
         &fragmented
     );
-    if (status == II42_OK &&
+    if (status == EVOKE_OK &&
         memcmp(
             contiguous,
             fragmented,
             index->num_docs * sizeof(*contiguous)
         ) != 0)
     {
-        status = II42_ERR_FORMAT;
+        status = EVOKE_ERR_FORMAT;
     }
 
     free(contiguous);
@@ -389,10 +389,10 @@ verify_impact_exact(
     return status;
 }
 
-static ii42_status
+static evoke_status
 verify_neutral_exact(
-    const ii42_index *index,
-    const ii42_corpus_stats *stats,
+    const evoke_index *index,
+    const evoke_corpus_stats *stats,
     const extent_view *view,
     const uint32_t *query_ids,
     size_t query_len,
@@ -401,14 +401,14 @@ verify_neutral_exact(
 {
     float *contiguous = NULL;
     float *fragmented = NULL;
-    ii42_topk_result impact_topk;
-    ii42_topk_result neutral_topk;
-    ii42_status status;
+    evoke_topk_result impact_topk;
+    evoke_topk_result neutral_topk;
+    evoke_status status;
 
     memset(&impact_topk, 0, sizeof(impact_topk));
     memset(&neutral_topk, 0, sizeof(neutral_topk));
 
-    status = ii42_scores_from_ids_neutral(
+    status = evoke_scores_from_ids_neutral(
         index,
         stats,
         NULL,
@@ -418,11 +418,11 @@ verify_neutral_exact(
         weight_mask,
         &contiguous
     );
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
         return status;
     }
-    status = ii42_scores_from_ids_neutral(
+    status = evoke_scores_from_ids_neutral(
         index,
         stats,
         view->terms,
@@ -432,42 +432,42 @@ verify_neutral_exact(
         weight_mask,
         &fragmented
     );
-    if (status == II42_OK &&
+    if (status == EVOKE_OK &&
         memcmp(
             contiguous,
             fragmented,
             index->num_docs * sizeof(*contiguous)
         ) != 0)
     {
-        status = II42_ERR_FORMAT;
+        status = EVOKE_ERR_FORMAT;
     }
-    if (status == II42_OK)
+    if (status == EVOKE_OK)
     {
         float *impact = NULL;
 
-        status = ii42_scores_from_ids(
+        status = evoke_scores_from_ids(
             index,
             query_ids,
             query_len,
             weight_mask,
             &impact
         );
-        if (status == II42_OK)
+        if (status == EVOKE_OK)
         {
             size_t topk_len = index->num_docs < 100 ?
                 index->num_docs :
                 100;
 
-            status = ii42_topk(
+            status = evoke_topk(
                 impact,
                 index->num_docs,
                 topk_len,
                 true,
                 &impact_topk
             );
-            if (status == II42_OK)
+            if (status == EVOKE_OK)
             {
-                status = ii42_topk(
+                status = evoke_topk(
                     contiguous,
                     index->num_docs,
                     topk_len,
@@ -475,7 +475,7 @@ verify_neutral_exact(
                     &neutral_topk
                 );
             }
-            if (status == II42_OK &&
+            if (status == EVOKE_OK &&
                 (impact_topk.len != neutral_topk.len ||
                  memcmp(
                      impact_topk.doc_ids,
@@ -483,7 +483,7 @@ verify_neutral_exact(
                      impact_topk.len * sizeof(*impact_topk.doc_ids)
                  ) != 0))
             {
-                status = II42_ERR_FORMAT;
+                status = EVOKE_ERR_FORMAT;
             }
         }
         free(impact);
@@ -491,15 +491,15 @@ verify_neutral_exact(
 
     free(contiguous);
     free(fragmented);
-    ii42_topk_result_free(&impact_topk);
-    ii42_topk_result_free(&neutral_topk);
+    evoke_topk_result_free(&impact_topk);
+    evoke_topk_result_free(&neutral_topk);
     return status;
 }
 
-static ii42_status
+static evoke_status
 verify_mixed_exact(
-    const ii42_index *index,
-    const ii42_corpus_stats *stats,
+    const evoke_index *index,
+    const evoke_corpus_stats *stats,
     const extent_view *view,
     const uint32_t *query_ids,
     size_t query_len,
@@ -508,9 +508,9 @@ verify_mixed_exact(
 {
     float *neutral = NULL;
     float *mixed = NULL;
-    ii42_status status;
+    evoke_status status;
 
-    status = ii42_scores_from_ids_neutral(
+    status = evoke_scores_from_ids_neutral(
         index,
         stats,
         view->terms,
@@ -520,11 +520,11 @@ verify_mixed_exact(
         weight_mask,
         &neutral
     );
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
         return status;
     }
-    status = ii42_scores_from_ids_mixed(
+    status = evoke_scores_from_ids_mixed(
         index,
         stats,
         view->terms,
@@ -534,14 +534,14 @@ verify_mixed_exact(
         weight_mask,
         &mixed
     );
-    if (status == II42_OK &&
+    if (status == EVOKE_OK &&
         memcmp(
             neutral,
             mixed,
             index->num_docs * sizeof(*neutral)
         ) != 0)
     {
-        status = II42_ERR_FORMAT;
+        status = EVOKE_ERR_FORMAT;
     }
 
     free(neutral);
@@ -553,13 +553,13 @@ int
 main(int argc, char **argv)
 {
     const size_t extent_counts[] = {1, 2, 4, 8};
-    ii42_doc_ids *docs = NULL;
+    evoke_doc_ids *docs = NULL;
     uint32_t *all_tokens = NULL;
     uint32_t *query_ids = NULL;
     float *weight_mask = NULL;
-    ii42_index index;
-    ii42_params params;
-    ii42_corpus_stats stats;
+    evoke_index index;
+    evoke_params params;
+    evoke_corpus_stats stats;
     size_t num_docs = 250000;
     size_t timed_iters = 200;
     size_t warmup_iters = 25;
@@ -571,7 +571,7 @@ main(int argc, char **argv)
     double baseline_ms = 0.0;
     double neutral_baseline_ms = 0.0;
     size_t i;
-    ii42_status status;
+    evoke_status status;
 
     if (argc > 1 && !parse_size_arg(argv[1], &num_docs))
     {
@@ -634,20 +634,20 @@ main(int argc, char **argv)
     params.k1 = 1.5f;
     params.b = 0.75f;
     params.delta = 0.5f;
-    params.method = II42_METHOD_BM25PLUS;
-    params.idf_method = II42_METHOD_LUCENE;
+    params.method = EVOKE_METHOD_BM25PLUS;
+    params.idf_method = EVOKE_METHOD_LUCENE;
 
-    ii42_index_init(&index);
-    status = ii42_build_index_from_ids(
+    evoke_index_init(&index);
+    status = evoke_build_index_from_ids(
         docs,
         num_docs,
         &params,
         false,
         &index
     );
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
-        fprintf(stderr, "index build failed: %s\n", ii42_strerror(status));
+        fprintf(stderr, "index build failed: %s\n", evoke_strerror(status));
         goto fail;
     }
 
@@ -674,12 +674,12 @@ main(int argc, char **argv)
         {
             extent_count = extent_counts[i - 1];
             status = extent_view_build(&index, extent_count, &view);
-            if (status != II42_OK)
+            if (status != EVOKE_OK)
             {
                 fprintf(
                     stderr,
                     "extent view build failed: %s\n",
-                    ii42_strerror(status)
+                    evoke_strerror(status)
                 );
                 goto fail;
             }
@@ -690,13 +690,13 @@ main(int argc, char **argv)
                 query_len,
                 weight_mask
             );
-            if (status != II42_OK)
+            if (status != EVOKE_OK)
             {
                 fprintf(
                     stderr,
                     "extent parity failed for %zu extents: %s\n",
                     extent_count,
-                    ii42_strerror(status)
+                    evoke_strerror(status)
                 );
                 extent_view_free(&view);
                 goto fail;
@@ -718,9 +718,9 @@ main(int argc, char **argv)
             &qps,
             &checksum
         );
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
-            fprintf(stderr, "benchmark failed: %s\n", ii42_strerror(status));
+            fprintf(stderr, "benchmark failed: %s\n", evoke_strerror(status));
             extent_view_free(&view);
             goto fail;
         }
@@ -765,12 +765,12 @@ main(int argc, char **argv)
         {
             extent_count = extent_counts[i - 1];
             status = extent_view_build(&index, extent_count, &view);
-            if (status != II42_OK)
+            if (status != EVOKE_OK)
             {
                 fprintf(
                     stderr,
                     "neutral extent view build failed: %s\n",
-                    ii42_strerror(status)
+                    evoke_strerror(status)
                 );
                 goto fail;
             }
@@ -782,13 +782,13 @@ main(int argc, char **argv)
                 query_len,
                 weight_mask
             );
-            if (status != II42_OK)
+            if (status != EVOKE_OK)
             {
                 fprintf(
                     stderr,
                     "neutral parity failed for %zu extents: %s\n",
                     extent_count,
-                    ii42_strerror(status)
+                    evoke_strerror(status)
                 );
                 extent_view_free(&view);
                 goto fail;
@@ -810,12 +810,12 @@ main(int argc, char **argv)
             &qps,
             &checksum
         );
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
             fprintf(
                 stderr,
                 "neutral benchmark failed: %s\n",
-                ii42_strerror(status)
+                evoke_strerror(status)
             );
             extent_view_free(&view);
             goto fail;
@@ -862,22 +862,22 @@ main(int argc, char **argv)
 
         memset(&view, 0, sizeof(view));
         status = extent_view_build(&index, extent_count, &view);
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
             fprintf(
                 stderr,
                 "mixed extent view build failed: %s\n",
-                ii42_strerror(status)
+                evoke_strerror(status)
             );
             goto fail;
         }
         status = extent_view_use_canonical_values(&index, &view);
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
             fprintf(
                 stderr,
                 "canonical value view failed: %s\n",
-                ii42_strerror(status)
+                evoke_strerror(status)
             );
             extent_view_free(&view);
             goto fail;
@@ -890,13 +890,13 @@ main(int argc, char **argv)
             query_len,
             weight_mask
         );
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
             fprintf(
                 stderr,
                 "mixed parity failed for %zu extents: %s\n",
                 extent_count,
-                ii42_strerror(status)
+                evoke_strerror(status)
             );
             extent_view_free(&view);
             goto fail;
@@ -915,12 +915,12 @@ main(int argc, char **argv)
             &qps,
             &checksum
         );
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
             fprintf(
                 stderr,
                 "mixed benchmark failed: %s\n",
-                ii42_strerror(status)
+                evoke_strerror(status)
             );
             extent_view_free(&view);
             goto fail;
@@ -941,7 +941,7 @@ main(int argc, char **argv)
         extent_view_free(&view);
     }
 
-    ii42_index_free(&index);
+    evoke_index_free(&index);
     free(docs);
     free(all_tokens);
     free(query_ids);
@@ -949,7 +949,7 @@ main(int argc, char **argv)
     return 0;
 
 fail:
-    ii42_index_free(&index);
+    evoke_index_free(&index);
     free(docs);
     free(all_tokens);
     free(query_ids);

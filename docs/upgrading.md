@@ -1,46 +1,47 @@
 # Migrate To Evoke
 
-Evoke supports one historical product migration: preserve the source table and
-rebuild a `psql_bm25s` index as a current Evoke index.
+Evoke supports source-preserving migrations from `psql_bm25s` and from the
+legacy beta `ii42` package: keep the table as the authority and rebuild a
+current Evoke index from that table.
 
 The public package and repository names are Evoke. The installed SQL extension,
 access method, function namespace, GUC namespace, and on-disk compatibility
-identity remain `ii42` for this release, so migration SQL still creates
-`CREATE EXTENSION ii42` and `USING ii42` indexes.
+identity remain `evoke` for this release, so migration SQL still creates
+`CREATE EXTENSION evoke` and `USING evoke` indexes.
 
 Evoke does not ship beta-to-beta `ALTER EXTENSION` scripts, retired physical
-format readers, or a chain of intermediate catalog transitions. A current
-package installs one current catalog. An unsupported Evoke beta deployment must
-preserve its source tables, remove its old indexes and extension catalog, then
-create current indexes from the current package.
+format readers, compatibility aliases, or a chain of intermediate catalog
+transitions. A current package installs one current catalog. An unsupported
+legacy beta deployment must preserve its source tables, remove its old indexes
+and extension catalog, then create current indexes from the current package.
 
 ## Migration Shape
 
 Migrate side by side so the old index remains available until the new index is
 validated:
 
-1. Keep the source table, `psql_bm25s` extension, and old index online.
+1. Keep the source table, old extension, and old index online.
 2. Install the current Evoke package on the primary and every physical standby.
-3. Create the `ii42` extension in a separate schema. The two extensions define
+3. Create the `evoke` extension in a separate schema. The two extensions define
    some same-signature operators and cannot coexist in one schema.
-4. Build a new `USING ii42` index over the same source columns.
+4. Build a new `USING evoke` index over the same source columns.
 5. Compare representative results, CRUD behavior, and operational readiness.
 6. Switch application queries to Evoke.
-7. Drop `psql_bm25s` only after the rollback window closes.
+7. Drop the old extension only after the rollback window closes.
 
 ## Install Beside `psql_bm25s`
 
 ```sql
-CREATE SCHEMA ii42_ext;
-CREATE EXTENSION ii42 WITH SCHEMA ii42_ext;
+CREATE SCHEMA evoke_ext;
+CREATE EXTENSION evoke WITH SCHEMA evoke_ext;
 ```
 
 The access-method name is not schema-qualified, so index creation still uses
-`USING ii42`:
+`USING evoke`:
 
 ```sql
-CREATE INDEX CONCURRENTLY docs_body_ii42_idx
-ON docs USING ii42 (body);
+CREATE INDEX CONCURRENTLY docs_body_evoke_idx
+ON docs USING evoke (body);
 ```
 
 For a unified lexical and semantic index, configure the shared runtime first
@@ -48,7 +49,7 @@ and create the new index with only the mode switch:
 
 ```sql
 CREATE INDEX CONCURRENTLY docs_body_semantic_idx
-ON docs USING ii42 (body)
+ON docs USING evoke (body)
 WITH (sae = true);
 ```
 
@@ -61,22 +62,26 @@ new index is derived from the source table by the current writer.
 
 ## Inventory And Rebuild Tool
 
-The operator tool can inventory both access methods and generate a reviewable
-plan. It is not a neutral BM25-only migration command: its generated
-`migrate_psql_bm25s_text_like` action selects `sae = true`, eventual consistency,
-and runtime precision `fp16`. Integer-token migration remains lexical-only.
+The operator tool can inventory `psql_bm25s`, legacy beta `ii42`, and current
+`evoke` access methods, then generate a reviewable plan whose rebuilt indexes
+use `USING evoke`. It is not a neutral BM25-only migration command: its
+generated `migrate_psql_bm25s_text_like` action selects `sae = true`, eventual
+consistency, and runtime precision `fp16`. Legacy beta semantic indexes are
+rebuilt as SSR indexes when their captured reloptions include `sae=true`;
+legacy beta BM25 indexes remain lexical-only. Integer-token migration remains
+lexical-only.
 For a BM25-preserving text migration, use the side-by-side SQL above and retain
 the original supported scoring, text, and maintenance options explicitly.
 
 Inventory and preview without executing replacement:
 
 ```bash
-python3 scripts/rebuild_ii42_indexes.py \
-    --inventory-output /secure/path/ii42-migration-plan.json \
+python3 scripts/rebuild_evoke_indexes.py \
+    --inventory-output /secure/path/evoke-migration-plan.json \
     --database application_database
 
-python3 scripts/rebuild_ii42_indexes.py \
-    --plan /secure/path/ii42-migration-plan.json \
+python3 scripts/rebuild_evoke_indexes.py \
+    --plan /secure/path/evoke-migration-plan.json \
     --dry-run \
     --jobs 1
 ```
@@ -99,13 +104,13 @@ cutover semantics and installing a coherent package/runtime on every node.
 Check the new index through the Evoke schema:
 
 ```sql
-SELECT ii42_ext.ii42_index_status(
-    'docs_body_ii42_idx'::regclass
+SELECT evoke_ext.evoke_index_status(
+    'docs_body_evoke_idx'::regclass
 );
 
 SELECT source.id, hit.score
-FROM ii42_ext.ii42_query(
-    'docs_body_ii42_idx'::regclass,
+FROM evoke_ext.evoke_query(
+    'docs_body_evoke_idx'::regclass,
     'migration verification query',
     20
 ) AS hit
@@ -128,6 +133,8 @@ and rollback approval:
 ```sql
 DROP INDEX old_docs_body_psql_bm25s_idx;
 DROP EXTENSION psql_bm25s;
+-- or, for a legacy beta source:
+DROP EXTENSION ii42;
 ```
 
 Dropping the old extension must not alter source rows or the current Evoke
@@ -137,7 +144,7 @@ When removing a current Evoke index directly, use the ordinary PostgreSQL
 lifecycle:
 
 ```sql
-DROP INDEX docs_body_ii42_idx;
+DROP INDEX docs_body_evoke_idx;
 ```
 
 ## Current-Only Evoke Boundary
@@ -190,7 +197,7 @@ When replacing an Evoke binary loaded through `shared_preload_libraries`:
 5. restore the positive maintenance-worker limit after smoke tests.
 
 Never overwrite a shared-preloaded library beneath a running postmaster.
-`sae = true` also requires a positive `ii42.shared_runtime_size`; model
+`sae = true` also requires a positive `evoke.shared_runtime_size`; model
 sessions and tokenizers have no backend-local fallback.
 
 The package-bound migration smoke is documented in

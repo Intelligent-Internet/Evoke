@@ -14,9 +14,9 @@ from pathlib import Path
 
 DEFAULT_TEMP_ROOT = Path(tempfile.gettempdir())
 DEFAULT_CACHED_DATASETS_DIR = (
-    DEFAULT_TEMP_ROOT / 'ii42_dataset_cache/beir_official'
+    DEFAULT_TEMP_ROOT / 'evoke_dataset_cache/beir_official'
 )
-DEFAULT_OUTPUT_ROOT = DEFAULT_TEMP_ROOT / 'ii42_perf_iterations'
+DEFAULT_OUTPUT_ROOT = DEFAULT_TEMP_ROOT / 'evoke_perf_iterations'
 DEFAULT_PG_CONFIG = Path(
     os.environ.get(
         'PG_CONFIG',
@@ -203,10 +203,10 @@ def is_transient_query_failure(stderr: str | None) -> bool:
     if not stderr:
         return False
     return (
-        'invalid ii42 index metapage' in stderr or
-        'truncated ii42 index payload' in stderr or
+        'invalid evoke index metapage' in stderr or
+        'truncated evoke index payload' in stderr or
         (
-            'ii42 index relation' in stderr and
+            'evoke index relation' in stderr and
             ' is empty' in stderr
         )
     )
@@ -466,7 +466,7 @@ def run_label(
     for dataset in datasets:
         state_file = label_dir / f'{sanitize_name(dataset)}.state.json'
         app_name = (
-            f'ii42_iter_{sanitize_name(label)}_'
+            f'evoke_iter_{sanitize_name(label)}_'
             f'{sanitize_name(dataset)}'
         )
         prepare_path = label_dir / f'{sanitize_name(dataset)}.prepare.json'

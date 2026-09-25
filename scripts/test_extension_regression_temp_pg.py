@@ -9,7 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -34,7 +34,7 @@ def parse_args() -> argparse.Namespace:
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share directory containing extension/ii42.control, '
+            'PostgreSQL share directory containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -86,11 +86,11 @@ def run_regression(
     instance_dir = work_root / 'instance'
     config_path = work_root / 'postgresql.conf'
     config_lines = [
-        "shared_preload_libraries = 'ii42'",
+        "shared_preload_libraries = 'evoke'",
         'max_worker_processes = 16',
         # Keep golden SQL output independent of background convergence timing.
         # Dedicated lifecycle tests exercise the maintenance workers.
-        'ii42.maintenance_worker_limit = 0',
+        'evoke.maintenance_worker_limit = 0',
     ]
     if extension_libdir is not None:
         libdir = str(extension_libdir).replace("'", "''")
@@ -145,11 +145,11 @@ def main() -> int:
         args.extension_libdir = args.extension_libdir.resolve()
         extension_libraries = [
             args.extension_libdir / name
-            for name in ('ii42.so', 'ii42.dylib')
+            for name in ('evoke.so', 'evoke.dylib')
         ]
         if not any(path.is_file() for path in extension_libraries):
             raise FileNotFoundError(
-                'ii42 extension library is missing from '
+                'evoke extension library is missing from '
                 f'{args.extension_libdir}'
             )
     if args.extension_control_dir is not None:
@@ -158,7 +158,7 @@ def main() -> int:
         )
 
     with tempfile.TemporaryDirectory(
-        prefix='ii42-extension-regression-'
+        prefix='evoke-extension-regression-'
     ) as temp_dir:
         work_root = Path(temp_dir)
         output_dir = args.output_dir or work_root / 'output'
@@ -166,7 +166,7 @@ def main() -> int:
             args.pg_bin,
             work_root,
             output_dir,
-            regression_name='ii42_integration',
+            regression_name='evoke_integration',
             extension_libdir=args.extension_libdir,
             extension_control_dir=args.extension_control_dir,
         )

@@ -9,7 +9,7 @@ Date: 2026-03-24
 ## Scope
 
 This benchmark measures sustained mixed write churn on the same local
-PostgreSQL instance and the same `ii42` build.
+PostgreSQL instance and the same `evoke` build.
 
 Workload:
 
@@ -21,7 +21,7 @@ Workload:
   - 50 deletes
   - one `VACUUM`
 - 100 measured BM25 queries after each cycle
-- `int4[]` / `ii42_query_ids(...)`
+- `int4[]` / `evoke_query_ids(...)`
 
 Compared maintenance modes:
 
@@ -36,7 +36,7 @@ Compared maintenance modes:
 
 Raw data is stored in the corresponding diagnostics JSON.
 The benchmark now records the effective index maintenance policy through
-`ii42_index_details(regclass)` for each tested mode.
+`evoke_index_details(regclass)` for each tested mode.
 
 ## Summary
 

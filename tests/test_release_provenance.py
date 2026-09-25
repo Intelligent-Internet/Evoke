@@ -64,11 +64,11 @@ def test_release_builders_require_locked_milestone_model() -> None:
 
     for script in (zip_script, docker_script):
         assert '--model-checkout' in script
-        assert 'II42_MILESTONE_MODEL_CHECKOUT' in script
+        assert 'EVOKE_MILESTONE_MODEL_CHECKOUT' in script
         assert 'validate_milestone_model_checkout.py' in script
-    assert 'ii42/models/default' in zip_script
+    assert 'evoke/models/default' in zip_script
     assert 'evoke_milestone_model' in docker_script
-    assert 'ii42/models/default' in dockerfile
+    assert 'evoke/models/default' in dockerfile
 
 
 def test_release_zip_checksum_is_portable() -> None:
@@ -102,7 +102,7 @@ def test_release_workflow_checksums_resolve_from_dist(tmp_path: Path) -> None:
 
     dist = tmp_path / 'dist'
     dist.mkdir()
-    archive = dist / 'ii42-test.zip'
+    archive = dist / 'evoke-test.zip'
     archive.write_bytes(b'checksum regression fixture')
     checksum = archive.with_suffix('.zip.sha256')
     checksum.write_text(
@@ -139,7 +139,7 @@ def test_release_zip_owns_the_pinned_onnxruntime_sdk() -> None:
     ).read_text(encoding='utf-8')
 
     assert '--onnxruntime-prefix' in script
-    assert 'II42_ONNXRUNTIME_PREFIX' in script
+    assert 'EVOKE_ONNXRUNTIME_PREFIX' in script
     assert 'packaging/onnxruntime.version' in script
     assert 'scripts/install_onnxruntime_c.sh' in script
     assert 'onnxruntime_pkg_config_path' in script
@@ -170,14 +170,14 @@ def test_docker_release_records_git_provenance() -> None:
         REPO_ROOT / 'packaging/docker/postgres18/Dockerfile'
     ).read_text(encoding='utf-8')
 
-    assert 'II42_GIT_COMMIT=${git_commit}' in script
-    assert 'II42_GIT_TREE_STATE=${git_tree_state}' in script
+    assert 'EVOKE_GIT_COMMIT=${git_commit}' in script
+    assert 'EVOKE_GIT_TREE_STATE=${git_tree_state}' in script
     assert (
-        'org.opencontainers.image.revision="${II42_GIT_COMMIT}"'
+        'org.opencontainers.image.revision="${EVOKE_GIT_COMMIT}"'
         in dockerfile
     )
     assert (
-        'io.evoke.git-tree-state="${II42_GIT_TREE_STATE}"'
+        'io.evoke.git-tree-state="${EVOKE_GIT_TREE_STATE}"'
         in dockerfile
     )
 
@@ -216,7 +216,7 @@ def test_ci_preserves_onnxruntime_discovery_during_install() -> None:
     ).read_text(encoding='utf-8')
 
     assert 'sudo --preserve-env=PKG_CONFIG_PATH make install' in workflow
-    assert workflow.count('II42_ENABLE_ONNXRUNTIME=1') >= 3
+    assert workflow.count('EVOKE_ENABLE_ONNXRUNTIME=1') >= 3
 
 
 def test_docker_smokes_wait_for_the_final_tcp_server() -> None:

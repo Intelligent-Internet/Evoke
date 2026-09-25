@@ -41,7 +41,7 @@ def native_result(
             'summary': summary,
         }],
         'qrels_query_count': 10,
-        'route': 'ii42_query',
+        'route': 'evoke_query',
         'schema': 'bench',
         'table': 'docs',
     }

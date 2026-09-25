@@ -34,12 +34,12 @@ BM25 基礎承接 eager sparse scoring 的思路：預先準備 term 貢獻值�
 
 ## 2. 系統架構與產品介面
 
-Evoke 提供單一 PostgreSQL access method：`USING ii42`。預設 `sae = false` 模式提供精確 BM25；設為 `sae = true` 時，合格模型將語意 atom 加入同一索引。本文以 Sparse Semantic Retrieval（SSR）指稱產品層的稀疏語意檢索路徑；`sae` reloption 保留為目前 SQL/catalog 名稱，SAE 則保留給 encoder／vocabulary 機制與歷史實驗名稱。
+Evoke 提供單一 PostgreSQL access method：`USING evoke`。預設 `sae = false` 模式提供精確 BM25；設為 `sae = true` 時，合格模型將語意 atom 加入同一索引。本文以 Sparse Semantic Retrieval（SSR）指稱產品層的稀疏語意檢索路徑；`sae` reloption 保留為目前 SQL/catalog 名稱，SAE 則保留給 encoder／vocabulary 機制與歷史實驗名稱。
 
 ```text
                          PostgreSQL application
                                    |
-                     SQL / ii42_query / predicates
+                     SQL / evoke_query / predicates
                                    |
                     +--------------+--------------+
                     |                             |
@@ -61,17 +61,17 @@ Evoke 提供單一 PostgreSQL access method：`USING ii42`。預設 `sae = false
       + pending semantic work          + shared model runtime
 ```
 
-`ii42_query` 的 explicit-hit overload 同時服務兩種模式。SSR 另支援 planner-native scalar marker：planner 將符合條件的排名查詢轉為 custom scan，而不是逐列呼叫模型。BM25 也保留原生 operator 與有序 index scan 介面。`ctid` 和索引內部 `doc_id` 是執行身分，不是可長期保存的應用主鍵。
+`evoke_query` 的 explicit-hit overload 同時服務兩種模式。SSR 另支援 planner-native scalar marker：planner 將符合條件的排名查詢轉為 custom scan，而不是逐列呼叫模型。BM25 也保留原生 operator 與有序 index scan 介面。`ctid` 和索引內部 `doc_id` 是執行身分，不是可長期保存的應用主鍵。
 
 對於資料表 `docs(id, title, body)`，安裝 extension 並設定共用 runtime 與合格模型 checkout 後：
 
 ```sql
 CREATE INDEX docs_retrieval_idx
-    ON docs USING ii42 (title, body)
+    ON docs USING evoke (title, body)
     WITH (sae = true, field_aware = true);
 
 SELECT d.id, hit.score
-FROM ii42_query(
+FROM evoke_query(
     'docs_retrieval_idx'::regclass,
     'transaction-safe semantic retrieval',
     ARRAY['title', 'body']::text[],
@@ -167,7 +167,7 @@ S_{fields}(q,d)=\sum_f a_f S_f(q,d).
 | Bundle | `evoke-p2.2-nfcorpus-v2` |
 | Model ID | `evoke_p2_p22_nfcorpus_v2_smoke` |
 | Runtime ABI | `evoke_p2_unified_text_atoms_v2` |
-| Manifest SHA-256 | `b61060a3958ee56209de47a34ee5cbe08351bfeb3fcbbfdcbf477403210764f7` |
+| Manifest SHA-256 | `dd0993f0638a3f683fbb6475a8509c228d8f6547aab90a0b762b1ff6fd7d0041` |
 | ONNX Runtime | `1.29.0` |
 
 完全相同的凍結 checkout 已發布為 [Evoke Model (Beta 1)](https://huggingface.co/Intelligent-Internet/Evoke-Model-Beta-1)。[下載指南](examples/semantic-model-checkout.md#download-the-default-model)固定 revision 與 archive checksum；此次分發不改變模型或歷史評估身分。
@@ -265,7 +265,7 @@ Term 目錄使用持久化 64-way radix tree，每個 leaf 包含 16 個 term。
 
 Descendant 共享物件時，實作保留其 ancestor ownership，不會只是為了換 owner 而遞迴複製整個歷史 closure。若樹高為 $h$、有 $m$ 個 leaf 改變，新寫入的中繼資料沿受影響路徑成長；在去除重複路徑之前，可概念性寫成 $O(mh)$，而不是必然重寫 $O(|\mathcal{V}|)$ 的完整詞彙表。這是中繼資料界限，不是變更 posting payload 或完整加速器重建的工作量上界。
 
-實作入口包括 [term COW](../src/ii42_term_cow.c)、[document COW](../src/ii42_document_cow.c)、[lexicon COW](../src/ii42_lexicon_cow.c)，以及 [segment pages](../src/ii42_segment_pages.c) 中由下而上的 writer。完整儲存設計見 [Convergent Segmented Index](convergent-segmented-index.md)。
+實作入口包括 [term COW](../src/evoke_term_cow.c)、[document COW](../src/evoke_document_cow.c)、[lexicon COW](../src/evoke_lexicon_cow.c)，以及 [segment pages](../src/evoke_segment_pages.c) 中由下而上的 writer。完整儲存設計見 [Convergent Segmented Index](convergent-segmented-index.md)。
 
 ### 5.3 經驗證的發布與回收
 
@@ -555,10 +555,10 @@ Evoke 的工程主張是：詞法與學習式稀疏檢索不只可以共用分�
 | 領域 | 主要參考 |
 | --- | --- |
 | 沿革與模型成果 | [詞法報告](technical-report-psql_bm25s.md)、[模型報告](technical-report-evoke-model-zh.md) |
-| 索引版面與 COW | [儲存設計](convergent-segmented-index.md)、[term COW header](../src/ii42_term_cow.h)、[segment pages](../src/ii42_segment_pages.c) |
-| 查詢與 filter | [查詢契約](query-semantics.md)、[page query](../src/ii42_page_query.c)、[scope](../src/ii42_scope.c)、[filter](../src/ii42_filter.c) |
+| 索引版面與 COW | [儲存設計](convergent-segmented-index.md)、[term COW header](../src/evoke_term_cow.h)、[segment pages](../src/evoke_segment_pages.c) |
+| 查詢與 filter | [查詢契約](query-semantics.md)、[page query](../src/evoke_page_query.c)、[scope](../src/evoke_scope.c)、[filter](../src/evoke_filter.c) |
 | 模型執行 | P2 runtime 實作、[runtime 契約](shared-runtime-and-residency.md)、[模型 lock](../packaging/milestone-model.json) |
-| 加速器 | [Builder](../src/ii42_am_accelerator.c)、[directory](../src/ii42_semantic_accelerator_directory.c)、[forward format](../src/ii42_semantic_forward.c)、[執行證據](performance/reports/semantic-accelerator-bounded-execution.md) |
-| 並發與准入 | [Lifecycle](maintenance-lifecycle.md)、[scheduler](../src/ii42_am_scheduler.c)、[validation](testing-and-validation.md) |
+| 加速器 | [Builder](../src/evoke_am_accelerator.c)、[directory](../src/evoke_semantic_accelerator_directory.c)、[forward format](../src/evoke_semantic_forward.c)、[執行證據](performance/reports/semantic-accelerator-bounded-execution.md) |
+| 並發與准入 | [Lifecycle](maintenance-lifecycle.md)、[scheduler](../src/evoke_am_scheduler.c)、[validation](testing-and-validation.md) |
 
 外部基礎文獻：[BM25S](https://arxiv.org/abs/2407.03618)、[Granite Embedding Models](https://arxiv.org/abs/2502.20204)，以及 PostgreSQL 的 [index access-method](https://www.postgresql.org/docs/18/indexam.html) 和 [extension WAL](https://www.postgresql.org/docs/18/wal-for-extensions.html) 文件。外部工作的貢獻各自歸屬於原作者；上述 Evoke 性能數字來自連結的專案實驗證據，而不是這些論文。

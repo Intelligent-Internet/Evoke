@@ -31,8 +31,8 @@ FOCUSED_DATASETS = ['arguana', 'scifact', 'webis-touche2020']
 
 
 def benchmark_db_name(dataset: str) -> str:
-    suffix = os.environ.get('II42_ORDERBY_DB_SUFFIX', '')
-    return f'ii42_orderby_{dataset.replace("-", "_")}{suffix}'
+    suffix = os.environ.get('EVOKE_ORDERBY_DB_SUFFIX', '')
+    return f'evoke_orderby_{dataset.replace("-", "_")}{suffix}'
 
 
 def decode_ids(vocab_by_id: list[str], token_ids: list[int]) -> list[str]:
@@ -59,7 +59,7 @@ def benchmark_ids_search(
             count(*),
             coalesce(min(doc_id), 0),
             coalesce(max(score), 0::real)
-        FROM public.ii42_query_ids(
+        FROM public.evoke_query_ids(
             'bench.docs_ids_bm25_idx'::regclass,
             %s::int4[],
             %s::int4,
@@ -87,7 +87,7 @@ def benchmark_text_search(
             count(*),
             coalesce(min(doc_id), 0),
             coalesce(max(score), 0::real)
-        FROM public.ii42_query_tokens(
+        FROM public.evoke_query_tokens(
             'bench.docs_tokens_bm25_idx'::regclass,
             %s::text[],
             %s::int4,
@@ -193,12 +193,12 @@ def run_dataset(
     db_dsn = conninfo.make_conninfo(
         PG_DSN,
         dbname=db_name,
-        application_name='ii42_orderby_eval',
+        application_name='evoke_orderby_eval',
     )
     with psycopg.connect(db_dsn, autocommit=True) as conn:
         with conn.cursor() as cur:
-            cur.execute('CREATE EXTENSION ii42')
-            cur.execute('SELECT public.ii42_runtime_cache_clear()')
+            cur.execute('CREATE EXTENSION evoke')
+            cur.execute('SELECT public.evoke_runtime_cache_clear()')
             cur.execute('CREATE SCHEMA bench')
             cur.execute(
                 'CREATE TABLE bench.docs_ids ('
@@ -231,7 +231,7 @@ def run_dataset(
             cur.execute(
                 """
                 CREATE INDEX docs_ids_bm25_idx
-                ON bench.docs_ids USING ii42 (token_ids)
+                ON bench.docs_ids USING evoke (token_ids)
                 WITH (
                     method = 'lucene',
                     idf_method = 'lucene',
@@ -252,7 +252,7 @@ def run_dataset(
             cur.execute(
                 """
                 CREATE INDEX docs_tokens_bm25_idx
-                ON bench.docs_tokens USING ii42 (tokens)
+                ON bench.docs_tokens USING evoke (tokens)
                 WITH (
                     method = 'lucene',
                     idf_method = 'lucene',
@@ -304,7 +304,7 @@ def run_dataset(
         'dataset': dataset,
         'stats': dataset_stats(corpus_tokenized, query_ids),
         'upstream_bm25s_local': upstream,
-        'ii42_ids': {
+        'evoke_ids': {
             'build_ms': ids_build_ms,
             'build_bytes': ids_build_bytes,
             'search_query': ids_search,
@@ -312,7 +312,7 @@ def run_dataset(
             'plan_default': ids_default_plan,
             'plan_forced': ids_orderby['plan_forced'],
         },
-        'ii42_text': {
+        'evoke_text': {
             'build_ms': text_build_ms,
             'build_bytes': text_build_bytes,
             'search_query': text_search,

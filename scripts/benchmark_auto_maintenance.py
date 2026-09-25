@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import psycopg
 
 
-DB_NAME = 'ii42_auto_maintenance_bench'
+DB_NAME = 'evoke_auto_maintenance_bench'
 DOC_COUNT = 5000
 DOC_LEN = 24
 VOCAB_SIZE = 4000
@@ -56,7 +56,7 @@ def measure_query(
         cur.execute(
             '''
             SELECT *
-            FROM public.ii42_query_ids(
+            FROM public.evoke_query_ids(
                 %s::regclass,
                 %s::int4[],
                 %s,
@@ -91,7 +91,7 @@ def maintenance_state(cur: psycopg.Cursor, index_name: str) -> str:
             delta_bytes,
             stale
         )
-        FROM public.ii42_index_details(%s::regclass)
+        FROM public.evoke_index_details(%s::regclass)
         ''',
         (index_name,),
     )
@@ -170,7 +170,7 @@ def setup_table(
     cur.execute(
         f'''
         CREATE INDEX {table_name}_bm25_idx
-            ON {table_name} USING ii42 (token_ids)
+            ON {table_name} USING evoke (token_ids)
             WITH (
                 {reloptions_sql}
             )
@@ -205,7 +205,7 @@ def main() -> None:
 
     with psycopg.connect(f'dbname={DB_NAME}') as conn:
         with conn.cursor() as cur:
-            cur.execute('CREATE EXTENSION ii42')
+            cur.execute('CREATE EXTENSION evoke')
             setup_table(cur, 'docs_manual', docs, consistency='manual')
             setup_table(cur, 'docs_auto', docs)
             setup_table(cur, 'docs_auto_txn', docs)
@@ -244,7 +244,7 @@ def main() -> None:
                 cur.execute(
                     '''
                     SELECT *
-                    FROM public.ii42_query_ids(
+                    FROM public.evoke_query_ids(
                         'docs_manual_bm25_idx'::regclass,
                         %s::int4[],
                         %s,
@@ -263,7 +263,7 @@ def main() -> None:
             )
 
             cur.execute(
-                "SELECT public.ii42_index_refresh('docs_manual_bm25_idx'::regclass)"
+                "SELECT public.evoke_index_refresh('docs_manual_bm25_idx'::regclass)"
             )
             manual_after_insert = measure_query(cur, 'docs_manual_bm25_idx', queries)
             auto_after_insert = measure_query(cur, 'docs_auto_bm25_idx', queries)
@@ -283,7 +283,7 @@ def main() -> None:
                 cur.execute(
                     '''
                     SELECT *
-                    FROM public.ii42_query_ids(
+                    FROM public.evoke_query_ids(
                         'docs_manual_bm25_idx'::regclass,
                         %s::int4[],
                         %s,
@@ -302,7 +302,7 @@ def main() -> None:
             )
 
             cur.execute(
-                "SELECT public.ii42_index_refresh('docs_manual_bm25_idx'::regclass)"
+                "SELECT public.evoke_index_refresh('docs_manual_bm25_idx'::regclass)"
             )
             manual_after_update = measure_query(cur, 'docs_manual_bm25_idx', queries)
             auto_after_update = measure_query(cur, 'docs_auto_bm25_idx', queries)
@@ -328,7 +328,7 @@ def main() -> None:
                 cur.execute(
                     '''
                     SELECT *
-                    FROM public.ii42_query_ids(
+                    FROM public.evoke_query_ids(
                         'docs_manual_bm25_idx'::regclass,
                         %s::int4[],
                         %s,
@@ -347,7 +347,7 @@ def main() -> None:
             )
 
             cur.execute(
-                "SELECT public.ii42_index_refresh('docs_manual_bm25_idx'::regclass)"
+                "SELECT public.evoke_index_refresh('docs_manual_bm25_idx'::regclass)"
             )
             manual_after_delete_refresh = measure_query(
                 cur,
@@ -387,7 +387,7 @@ def main() -> None:
             cur.execute(
                 '''
                 SELECT *
-                FROM public.ii42_query_ids(
+                FROM public.evoke_query_ids(
                     'docs_auto_threshold_bm25_idx'::regclass,
                     %s::int4[],
                     %s,
@@ -422,7 +422,7 @@ def main() -> None:
             cur.execute(
                 '''
                 SELECT *
-                FROM public.ii42_query_ids(
+                FROM public.evoke_query_ids(
                     'docs_auto_threshold_update_bm25_idx'::regclass,
                     %s::int4[],
                     %s,
@@ -461,7 +461,7 @@ def main() -> None:
             cur.execute(
                 '''
                 SELECT *
-                FROM public.ii42_query_ids(
+                FROM public.evoke_query_ids(
                     'docs_auto_threshold_delete_bm25_idx'::regclass,
                     %s::int4[],
                     %s,

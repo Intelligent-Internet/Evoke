@@ -36,7 +36,7 @@ def merge_entry(
     if 'wall_time_s' in entry:
         target['wall_time_s'] = entry['wall_time_s']
 
-    for key in ('upstream_bm25s', 'ii42_ids', 'ii42_text'):
+    for key in ('upstream_bm25s', 'evoke_ids', 'evoke_text'):
         if key in entry:
             target[key] = entry[key]
 

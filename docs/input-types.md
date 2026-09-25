@@ -1,6 +1,6 @@
 # Supported Input Types
 
-`ii42` supports five indexed source-column types:
+`evoke` supports five indexed source-column types:
 
 - `int4[]`
 - `text[]`
@@ -34,7 +34,7 @@ or `varchar[]`. The model receives one text representation derived from those
 values. `int4[]` remains a single-column BM25 input and is not a semantic model
 input.
 
-## How `ii42` Supports Them
+## How `evoke` Supports Them
 
 In BM25 mode, for `int4[]`, `text[]`, and `varchar[]`, the index receives the caller's
 token stream directly:

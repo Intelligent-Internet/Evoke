@@ -35,9 +35,9 @@ compilation handles long input in windows rather than truncating the whole
 document to that size.
 
 ```sql
-SELECT ii42_index_options('docs_search_idx'::regclass);
-SELECT ii42_index_status('docs_search_idx'::regclass);
-SELECT * FROM ii42_query('docs_search_idx'::regclass, 'query', 20);
+SELECT evoke_index_options('docs_search_idx'::regclass);
+SELECT evoke_index_status('docs_search_idx'::regclass);
+SELECT * FROM evoke_query('docs_search_idx'::regclass, 'query', 20);
 DROP INDEX docs_search_idx;
 ```
 

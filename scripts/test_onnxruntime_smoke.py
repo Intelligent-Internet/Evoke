@@ -9,7 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -34,7 +34,7 @@ def parse_args() -> argparse.Namespace:
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share directory containing extension/ii42.control, '
+            'PostgreSQL share directory containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -67,7 +67,7 @@ def run(
 
 def smoke_sql() -> str:
     return """
-        CREATE EXTENSION ii42;
+        CREATE EXTENSION evoke;
 
         DO $$
         DECLARE
@@ -75,19 +75,19 @@ def smoke_sql() -> str:
             probe text;
             service_status jsonb;
         BEGIN
-            build_info := ii42_onnxruntime_build_info();
+            build_info := evoke_onnxruntime_build_info();
             IF build_info NOT LIKE 'enabled:%' THEN
                 RAISE EXCEPTION
                     'ONNX Runtime build is disabled: %', build_info;
             END IF;
 
-            probe := ii42_onnxruntime_probe();
+            probe := evoke_onnxruntime_probe();
             IF probe NOT LIKE 'available:%' THEN
                 RAISE EXCEPTION
                     'ONNX Runtime probe failed: %', probe;
             END IF;
 
-            service_status := ii42_runtime_service_status();
+            service_status := evoke_runtime_service_status();
             IF (service_status->>'shared_memory_available')::boolean
                     IS DISTINCT FROM true
                 OR (service_status->>'worker_ready')::boolean
@@ -167,11 +167,11 @@ def run_smoke(args: argparse.Namespace) -> dict[str, object]:
         args.extension_libdir = args.extension_libdir.resolve()
         extension_libraries = [
             args.extension_libdir / name
-            for name in ('ii42.so', 'ii42.dylib')
+            for name in ('evoke.so', 'evoke.dylib')
         ]
         if not any(path.is_file() for path in extension_libraries):
             raise FileNotFoundError(
-                'ii42 extension library is missing from '
+                'evoke extension library is missing from '
                 f'{args.extension_libdir}'
             )
     if args.extension_control_dir is not None:
@@ -179,7 +179,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, object]:
             args.extension_control_dir
         )
 
-    with tempfile.TemporaryDirectory(prefix='ii42_onnxruntime_') as tmp:
+    with tempfile.TemporaryDirectory(prefix='evoke_onnxruntime_') as tmp:
         root = Path(tmp)
         data_dir = root / 'data'
         socket_dir = root / 'socket'
@@ -191,7 +191,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, object]:
             'a',
             encoding='utf-8',
         ) as config:
-            config.write("\nshared_preload_libraries = 'ii42'\n")
+            config.write("\nshared_preload_libraries = 'evoke'\n")
             if args.extension_libdir is not None:
                 libdir = str(args.extension_libdir).replace("'", "''")
                 config.write(
@@ -252,7 +252,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, object]:
                 )
 
     return {
-        'api_version': 'ii42_index_v1',
+        'api_version': 'evoke_index_v1',
         'route': 'shared ONNX Runtime worker',
         'status': 'passed',
     }

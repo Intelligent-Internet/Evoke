@@ -16,7 +16,7 @@ from typing import Any, Callable
 
 import psycopg
 
-from ii42_test_support import (
+from evoke_test_support import (
     create_short_socket_root,
     extension_control_root,
 )
@@ -81,7 +81,7 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         required=True,
         help=(
-            'PostgreSQL share root containing extension/ii42.control, '
+            'PostgreSQL share root containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -133,9 +133,9 @@ def configure_cluster(
 ) -> None:
     config = data_dir / 'postgresql.conf'
     with config.open('a', encoding='utf-8') as handle:
-        handle.write("\nshared_preload_libraries = 'ii42'\n")
-        handle.write("ii42.shared_runtime_size = '64MB'\n")
-        handle.write("ii42.workspace_cache_bytes = '0'\n")
+        handle.write("\nshared_preload_libraries = 'evoke'\n")
+        handle.write("evoke.shared_runtime_size = '64MB'\n")
+        handle.write("evoke.workspace_cache_bytes = '0'\n")
         handle.write("listen_addresses = ''\n")
         handle.write(
             f"unix_socket_directories = '{quote_config(socket_dir)}'\n"
@@ -237,7 +237,7 @@ def quiesce_background_maintenance(
 ) -> list[dict[str, int]]:
     with connection.cursor() as cursor:
         cursor.execute(
-            "ALTER SYSTEM SET ii42.maintenance_worker_limit = '0'"
+            "ALTER SYSTEM SET evoke.maintenance_worker_limit = '0'"
         )
         cursor.execute('SELECT pg_reload_conf()')
         if cursor.fetchone()[0] is not True:
@@ -249,9 +249,9 @@ def quiesce_background_maintenance(
         with connection.cursor() as cursor:
             cursor.execute(
                 'SELECT '
-                "current_setting('ii42.maintenance_worker_limit')::int, "
+                "current_setting('evoke.maintenance_worker_limit')::int, "
                 'count(*) FILTER ('
-                "WHERE backend_type = 'ii42 background') "
+                "WHERE backend_type = 'evoke background') "
                 'FROM pg_stat_activity'
             )
             worker_limit, active_workers = cursor.fetchone()
@@ -384,123 +384,123 @@ def l0_accepts_records_after_optional_pending_seal(
 
 def setup(connection: psycopg.Connection[Any]) -> None:
     with connection.cursor() as cursor:
-        cursor.execute('CREATE EXTENSION ii42')
+        cursor.execute('CREATE EXTENSION evoke')
         cursor.execute('CREATE SCHEMA parity')
         cursor.execute(
             'CREATE FUNCTION parity.test_term_cow_pages_write(regclass) '
             'RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_term_cow_pages_write' "
+            "AS '$libdir/evoke', 'evoke_test_term_cow_pages_write' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_term_cow_pages_read('
             'regclass, int4, int4, text, text, text, text, int4, int4) '
             'RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_term_cow_pages_read' "
+            "AS '$libdir/evoke', 'evoke_test_term_cow_pages_read' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_term_fold_publish(regclass) '
             'RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_term_fold_publish' "
+            "AS '$libdir/evoke', 'evoke_test_term_fold_publish' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_term_fold_state(regclass, int4) '
             'RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_term_fold_state' "
+            "AS '$libdir/evoke', 'evoke_test_term_fold_state' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_unpublished_tail_append(regclass) '
             'RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_unpublished_tail_append' "
+            "AS '$libdir/evoke', 'evoke_test_unpublished_tail_append' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_query_term_plan_stats('
             'regclass, int4) RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_query_term_plan_stats' "
+            "AS '$libdir/evoke', 'evoke_test_query_term_plan_stats' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_query_term_page_native('
             'regclass, int4) RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_query_term_page_native' "
+            "AS '$libdir/evoke', 'evoke_test_query_term_page_native' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_query_term_page_native_topk('
             'regclass, int4, int4) RETURNS jsonb '
-            "AS '$libdir/ii42', "
-            "'ii42_test_query_term_page_native_topk' "
+            "AS '$libdir/evoke', "
+            "'evoke_test_query_term_page_native_topk' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_query_page_native_topk('
             'regclass, int4[], int4) RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_query_page_native_topk' "
+            "AS '$libdir/evoke', 'evoke_test_query_page_native_topk' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_query_page_native_topk('
             'regclass, int4[], real[], int4) RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_query_page_native_topk' "
+            "AS '$libdir/evoke', 'evoke_test_query_page_native_topk' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_query_page_native_topk_filtered('
             'regclass, int4[], real[], int4, boolean, int4[]) '
             'RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_query_page_native_topk' "
+            "AS '$libdir/evoke', 'evoke_test_query_page_native_topk' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_query_block_cost('
             'regclass, int4[], real[], int4) RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_query_block_cost' "
+            "AS '$libdir/evoke', 'evoke_test_query_block_cost' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_query_forward_bound_cost('
             'regclass, int4[], real[], int4[], int4) RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_query_forward_bound_cost' "
+            "AS '$libdir/evoke', 'evoke_test_query_forward_bound_cost' "
             'LANGUAGE C CALLED ON NULL INPUT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_query_term_suffix_ceiling('
             'regclass, int4[], real[]) RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_query_term_suffix_ceiling' "
+            "AS '$libdir/evoke', 'evoke_test_query_term_suffix_ceiling' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_query_page_native_l0_topk('
             'regclass, int4[], int4) RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_query_page_native_l0_topk' "
+            "AS '$libdir/evoke', 'evoke_test_query_page_native_l0_topk' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_query_page_native_l0_topk('
             'regclass, text[], int4) RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_query_page_native_l0_topk' "
+            "AS '$libdir/evoke', 'evoke_test_query_page_native_l0_topk' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_query_context_page_native('
             'regclass) RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_query_context_page_native' "
+            "AS '$libdir/evoke', 'evoke_test_query_context_page_native' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_query_lexicon_page_native('
             'regclass, text) RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_query_lexicon_page_native' "
+            "AS '$libdir/evoke', 'evoke_test_query_lexicon_page_native' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
             'CREATE FUNCTION parity.test_l0_stream_page_native('
             'regclass) RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_l0_stream_page_native' "
+            "AS '$libdir/evoke', 'evoke_test_l0_stream_page_native' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
@@ -522,11 +522,11 @@ def setup(connection: psycopg.Connection[Any]) -> None:
         create_page_native_reference_index(
             cursor,
             'CREATE INDEX docs_reference_idx ON parity.docs_reference '
-            'USING ii42 (body) WITH (sae=false, consistency=realtime)',
+            'USING evoke (body) WITH (sae=false, consistency=realtime)',
         )
         cursor.execute(
             'CREATE INDEX docs_v3_idx ON parity.docs_v3 '
-            'USING ii42 (body) WITH (sae=false, consistency=realtime)'
+            'USING evoke (body) WITH (sae=false, consistency=realtime)'
         )
 
         cursor.execute(
@@ -548,11 +548,11 @@ def setup(connection: psycopg.Connection[Any]) -> None:
         create_page_native_reference_index(
             cursor,
             'CREATE INDEX predicate_reference_idx ON parity.predicate_reference '
-            'USING ii42 (body) WITH (sae=false, consistency=realtime)',
+            'USING evoke (body) WITH (sae=false, consistency=realtime)',
         )
         cursor.execute(
             'CREATE INDEX predicate_v3_idx ON parity.predicate_v3 '
-            'USING ii42 (body) WITH (sae=false, consistency=realtime)'
+            'USING evoke (body) WITH (sae=false, consistency=realtime)'
         )
 
         cursor.execute(
@@ -574,11 +574,11 @@ def setup(connection: psycopg.Connection[Any]) -> None:
         create_page_native_reference_index(
             cursor,
             'CREATE INDEX ids_reference_idx ON parity.ids_reference '
-            'USING ii42 (tokens) WITH (sae=false, consistency=realtime)',
+            'USING evoke (tokens) WITH (sae=false, consistency=realtime)',
         )
         cursor.execute(
             'CREATE INDEX ids_v3_idx ON parity.ids_v3 '
-            'USING ii42 (tokens) WITH (sae=false, consistency=realtime)'
+            'USING evoke (tokens) WITH (sae=false, consistency=realtime)'
         )
 
         cursor.execute(
@@ -593,7 +593,7 @@ def setup(connection: psycopg.Connection[Any]) -> None:
         )
         cursor.execute(
             'CREATE INDEX high_df_v3_idx ON parity.high_df_v3 '
-            'USING ii42 (tokens) WITH (sae=false, consistency=realtime)'
+            'USING evoke (tokens) WITH (sae=false, consistency=realtime)'
         )
 
         cursor.execute(
@@ -610,7 +610,7 @@ def setup(connection: psycopg.Connection[Any]) -> None:
         )
         cursor.execute(
             'CREATE INDEX filtered_v3_idx ON parity.filtered_v3 '
-            'USING ii42 (tokens) WITH (sae=false, consistency=realtime)'
+            'USING evoke (tokens) WITH (sae=false, consistency=realtime)'
         )
 
         cursor.execute(
@@ -619,7 +619,7 @@ def setup(connection: psycopg.Connection[Any]) -> None:
         )
         cursor.execute(
             'CREATE INDEX empty_v3_idx ON parity.empty_v3 '
-            'USING ii42 (body) WITH (sae=false, consistency=realtime)'
+            'USING evoke (body) WITH (sae=false, consistency=realtime)'
         )
 
         cursor.execute(
@@ -632,7 +632,7 @@ def setup(connection: psycopg.Connection[Any]) -> None:
         )
         cursor.execute(
             'CREATE INDEX tail_v3_idx ON parity.tail_v3 '
-            'USING ii42 (body) WITH (sae=false, consistency=realtime)'
+            'USING evoke (body) WITH (sae=false, consistency=realtime)'
         )
 
 
@@ -644,7 +644,7 @@ def fetch_search(
     with connection.cursor() as cursor:
         cursor.execute(
             'SELECT doc_id, score::float8 '
-            'FROM ii42_query(%s::regclass, %s, 100)',
+            'FROM evoke_query(%s::regclass, %s, 100)',
             (index_name, query),
         )
         return [(int(row[0]), float(row[1])) for row in cursor.fetchall()]
@@ -658,7 +658,7 @@ def fetch_tokens(
     with connection.cursor() as cursor:
         cursor.execute(
             'SELECT doc_id, score::float8 '
-            'FROM ii42_query_tokens(%s::regclass, %s::text[], 100)',
+            'FROM evoke_query_tokens(%s::regclass, %s::text[], 100)',
             (index_name, query),
         )
         return [(int(row[0]), float(row[1])) for row in cursor.fetchall()]
@@ -672,7 +672,7 @@ def fetch_ids(
     with connection.cursor() as cursor:
         cursor.execute(
             'SELECT doc_id, score::float8 '
-            'FROM ii42_query_ids(%s::regclass, %s::int4[], 100)',
+            'FROM evoke_query_ids(%s::regclass, %s::int4[], 100)',
             (index_name, query),
         )
         return [(int(row[0]), float(row[1])) for row in cursor.fetchall()]
@@ -686,7 +686,7 @@ def fetch_ids_by_tid(
     with connection.cursor() as cursor:
         cursor.execute(
             'SELECT ctid::text, score::float8 '
-            'FROM ii42_query_ids(%s::regclass, %s::int4[], 100)',
+            'FROM evoke_query_ids(%s::regclass, %s::int4[], 100)',
             (index_name, query),
         )
         return [(str(row[0]), float(row[1])) for row in cursor.fetchall()]
@@ -700,9 +700,9 @@ def fetch_ordered(
 ) -> list[tuple[int, float]]:
     statement = (
         f'SELECT id, body <=> '
-        f'ii42_order_tokens(%s::regclass, %s) AS distance '
+        f'evoke_order_tokens(%s::regclass, %s) AS distance '
         f'FROM {table_name} '
-        f'ORDER BY body <=> ii42_order_tokens(%s::regclass, %s) '
+        f'ORDER BY body <=> evoke_order_tokens(%s::regclass, %s) '
         f'ASC LIMIT 100'
     )
     with connection.cursor() as cursor:
@@ -752,9 +752,9 @@ def fetch_filtered_ordered(
 ) -> list[tuple[int, float]]:
     statement = (
         f'SELECT id, body <=> '
-        f'ii42_order_tokens(%s::regclass, %s) AS distance '
+        f'evoke_order_tokens(%s::regclass, %s) AS distance '
         f'FROM {table_name} WHERE body @@ %s '
-        f'ORDER BY body <=> ii42_order_tokens(%s::regclass, %s) '
+        f'ORDER BY body <=> evoke_order_tokens(%s::regclass, %s) '
         f'ASC LIMIT %s'
     )
     with connection.cursor() as cursor:
@@ -859,8 +859,8 @@ def fetch_status(
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_status(%s::regclass), '
-            'ii42_index_generation_audit_internal(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass), '
+            'evoke_index_generation_audit_internal(%s::regclass)',
             (index_name, index_name),
         )
         row = cursor.fetchone()
@@ -1214,7 +1214,7 @@ def fetch_generation_cache_state(
 ) -> str:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_runtime_state(%s::regclass)',
+            'SELECT evoke_index_runtime_state(%s::regclass)',
             (index_name,),
         )
         row = cursor.fetchone()
@@ -1229,7 +1229,7 @@ def try_maintain(
 ) -> str:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_try_maintain(%s::regclass)',
+            'SELECT evoke_index_try_maintain(%s::regclass)',
             (index_name,),
         )
         row = cursor.fetchone()
@@ -1264,7 +1264,7 @@ def acquire_maintenance_guard(
 ) -> None:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_try_maintenance_lock(%s::regclass)',
+            'SELECT evoke_index_try_maintenance_lock(%s::regclass)',
             (index_name,),
         )
         row = cursor.fetchone()
@@ -1280,7 +1280,7 @@ def maintenance_guard_is_held(
 ) -> bool:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_maintenance_lock_held(%s::regclass)',
+            'SELECT evoke_index_maintenance_lock_held(%s::regclass)',
             (index_name,),
         )
         row = cursor.fetchone()
@@ -1293,13 +1293,13 @@ def release_maintenance_guard(
 ) -> None:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_maintenance_unlock(%s::regclass)',
+            'SELECT evoke_index_maintenance_unlock(%s::regclass)',
             (index_name,),
         )
 
 
 def maintenance_result_fields(result: str) -> dict[str, str]:
-    match = re.fullmatch(r'ii42_maintenance_result\((.*)\)', result)
+    match = re.fullmatch(r'evoke_maintenance_result\((.*)\)', result)
     if match is None:
         raise AssertionError(f'invalid maintenance result: {result}')
     fields: dict[str, str] = {}
@@ -1487,21 +1487,21 @@ def exercise_query_safe_retirement(
         )
         cursor.execute(
             'CREATE INDEX reuse_v3_idx '
-            'ON parity.reuse_docs USING ii42 (tokens) '
+            'ON parity.reuse_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)'
         )
 
     def append_row(row_id: int) -> None:
         with connection.cursor() as cursor:
             cursor.execute(
-                "SET ii42.test_convergent_l0_rotation_records = '1'"
+                "SET evoke.test_convergent_l0_rotation_records = '1'"
             )
             cursor.execute(
                 'INSERT INTO parity.reuse_docs VALUES (%s, ARRAY[1, %s])',
                 (row_id, row_id + 10),
             )
             cursor.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
 
     def rotate_and_seal(
@@ -1703,12 +1703,12 @@ def exercise_fixed_live_set_churn(
         create_page_native_reference_index(
             cursor,
             'CREATE INDEX fixed_churn_reference_idx '
-            'ON parity.fixed_churn_docs USING ii42 (tokens) '
+            'ON parity.fixed_churn_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)',
         )
         cursor.execute(
             'CREATE INDEX fixed_churn_v3_idx '
-            'ON parity.fixed_churn_docs USING ii42 (tokens) '
+            'ON parity.fixed_churn_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)'
         )
 
@@ -1720,7 +1720,7 @@ def exercise_fixed_live_set_churn(
             row_id = cycle % 4 + 1
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SET ii42.test_convergent_l0_rotation_records = '1'"
+                    "SET evoke.test_convergent_l0_rotation_records = '1'"
                 )
                 cursor.execute(
                     'UPDATE parity.fixed_churn_docs '
@@ -1813,7 +1813,7 @@ def exercise_fixed_live_set_churn(
             )
     finally:
         with connection.cursor() as cursor:
-            cursor.execute('RESET ii42.test_convergent_l0_rotation_records')
+            cursor.execute('RESET evoke.test_convergent_l0_rotation_records')
 
     slot_high_watermarks = [
         point['document_slot_high_watermark'] for point in timeline
@@ -1873,12 +1873,12 @@ def exercise_history_barrier_compaction(
         create_page_native_reference_index(
             cursor,
             'CREATE INDEX history_barrier_reference_idx '
-            'ON parity.history_barrier_docs USING ii42 (tokens) '
+            'ON parity.history_barrier_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)',
         )
         cursor.execute(
             'CREATE INDEX history_barrier_v3_idx '
-            'ON parity.history_barrier_docs USING ii42 (tokens) '
+            'ON parity.history_barrier_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)'
         )
 
@@ -1888,7 +1888,7 @@ def exercise_history_barrier_compaction(
         for row_id in range(2, 5):
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SET ii42.test_convergent_l0_rotation_records = '1'"
+                    "SET evoke.test_convergent_l0_rotation_records = '1'"
                 )
                 cursor.execute(
                     'INSERT INTO parity.history_barrier_docs '
@@ -1996,7 +1996,7 @@ def exercise_history_barrier_compaction(
         )
     finally:
         with connection.cursor() as cursor:
-            cursor.execute('RESET ii42.test_convergent_l0_rotation_records')
+            cursor.execute('RESET evoke.test_convergent_l0_rotation_records')
 
     return {
         'maintenance': maintenance,
@@ -2023,12 +2023,12 @@ def exercise_extent_pressure(
         create_page_native_reference_index(
             cursor,
             'CREATE INDEX extent_reference_idx '
-            'ON parity.extent_docs USING ii42 (tokens) '
+            'ON parity.extent_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)',
         )
         cursor.execute(
             'CREATE INDEX extent_v3_idx '
-            'ON parity.extent_docs USING ii42 (tokens) '
+            'ON parity.extent_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)'
         )
 
@@ -2045,7 +2045,7 @@ def exercise_extent_pressure(
         row_id = 100 + row_offset
         with connection.cursor() as cursor:
             cursor.execute(
-                "SET ii42.test_convergent_l0_rotation_records = '1'"
+                "SET evoke.test_convergent_l0_rotation_records = '1'"
             )
             cursor.execute(
                 'INSERT INTO parity.extent_docs VALUES ('
@@ -2122,7 +2122,7 @@ def exercise_extent_pressure(
         finally:
             with connection.cursor() as cursor:
                 cursor.execute(
-                    'RESET ii42.test_convergent_l0_rotation_records'
+                    'RESET evoke.test_convergent_l0_rotation_records'
                 )
 
     release_maintenance_guard(connection, 'parity.extent_v3_idx')
@@ -2184,15 +2184,15 @@ def exercise_structural_term_fold(
         create_page_native_reference_index(
             cursor,
             'CREATE INDEX structural_reference_idx '
-            'ON parity.structural_docs USING ii42 (tokens) '
+            'ON parity.structural_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)',
         )
         cursor.execute(
             'CREATE INDEX structural_v3_idx '
-            'ON parity.structural_docs USING ii42 (tokens) '
+            'ON parity.structural_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)'
         )
-        cursor.execute('SET ii42.test_force_structural_term_fold = true')
+        cursor.execute('SET evoke.test_force_structural_term_fold = true')
 
     maintenance: list[str] = []
     structural_folds: list[dict[str, str]] = []
@@ -2201,7 +2201,7 @@ def exercise_structural_term_fold(
             row_id = 200 + row_offset
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SET ii42.test_convergent_l0_rotation_records = '1'"
+                    "SET evoke.test_convergent_l0_rotation_records = '1'"
                 )
                 cursor.execute(
                     'INSERT INTO parity.structural_docs VALUES '
@@ -2209,7 +2209,7 @@ def exercise_structural_term_fold(
                     (row_id, 1000 + row_offset),
                 )
                 cursor.execute(
-                    'RESET ii42.test_convergent_l0_rotation_records'
+                    'RESET evoke.test_convergent_l0_rotation_records'
                 )
 
             for _ in range(12):
@@ -2254,7 +2254,7 @@ def exercise_structural_term_fold(
     finally:
         with connection.cursor() as cursor:
             cursor.execute(
-                'RESET ii42.test_force_structural_term_fold'
+                'RESET evoke.test_force_structural_term_fold'
             )
 
     if not structural_folds:
@@ -2296,13 +2296,13 @@ def exercise_structural_term_fold(
 
     with connection.cursor() as cursor:
         cursor.execute(
-            "SET ii42.test_convergent_l0_rotation_records = '1'"
+            "SET evoke.test_convergent_l0_rotation_records = '1'"
         )
         cursor.execute(
             'INSERT INTO parity.structural_docs VALUES '
             '(999, ARRAY[1, 2000])'
         )
-        cursor.execute('RESET ii42.test_convergent_l0_rotation_records')
+        cursor.execute('RESET evoke.test_convergent_l0_rotation_records')
     tail_maintenance: list[str] = []
     for _ in range(12):
         result = try_maintain(
@@ -2438,7 +2438,7 @@ def exercise_filtered_block_pruning(
         )
         cursor.execute(
             'CREATE INDEX filtered_block_idx '
-            'ON parity.filtered_block_docs USING ii42 (tokens) '
+            'ON parity.filtered_block_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)'
         )
 
@@ -2500,7 +2500,7 @@ def exercise_unified_maintenance_scheduler(
         )
         cursor.execute(
             'CREATE INDEX scheduler_optional_v3_idx '
-            'ON parity.scheduler_optional_docs USING ii42 (tokens) '
+            'ON parity.scheduler_optional_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=eventual)'
         )
 
@@ -2510,7 +2510,7 @@ def exercise_unified_maintenance_scheduler(
         )
         cursor.execute(
             'CREATE INDEX scheduler_mandatory_v3_idx '
-            'ON parity.scheduler_mandatory_docs USING ii42 (tokens) '
+            'ON parity.scheduler_mandatory_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=eventual)'
         )
 
@@ -2519,12 +2519,12 @@ def exercise_unified_maintenance_scheduler(
     try:
         with connection.cursor() as cursor:
             cursor.execute(
-                'SET ii42.test_force_structural_term_fold = true'
+                'SET evoke.test_force_structural_term_fold = true'
             )
         for row_offset in range(3):
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SET ii42.test_convergent_l0_rotation_records = '1'"
+                    "SET evoke.test_convergent_l0_rotation_records = '1'"
                 )
                 cursor.execute(
                     'INSERT INTO parity.scheduler_optional_docs VALUES '
@@ -2532,7 +2532,7 @@ def exercise_unified_maintenance_scheduler(
                     (100 + row_offset, 1000 + row_offset),
                 )
                 cursor.execute(
-                    'RESET ii42.test_convergent_l0_rotation_records'
+                    'RESET evoke.test_convergent_l0_rotation_records'
                 )
             for _ in range(8):
                 setup_maintenance.append(
@@ -2552,7 +2552,7 @@ def exercise_unified_maintenance_scheduler(
                 )
         with connection.cursor() as cursor:
             cursor.execute(
-                'RESET ii42.test_force_structural_term_fold'
+                'RESET evoke.test_force_structural_term_fold'
             )
 
         optional_before_hits = fetch_ids(
@@ -2600,7 +2600,7 @@ def exercise_unified_maintenance_scheduler(
             )
             cursor.execute(
                 'SELECT pending_total::bigint '
-                'FROM ii42_index_policy_recommend('
+                'FROM evoke_index_policy_recommend('
                 '%s::regclass, \'balanced\')',
                 (mandatory_index,),
             )
@@ -2612,7 +2612,7 @@ def exercise_unified_maintenance_scheduler(
             mandatory_policy_pending_total = int(policy_row[0])
             cursor.execute(
                 'SELECT index_oid::oid, result '
-                'FROM ii42_index_maintain_due(1)'
+                'FROM evoke_index_maintain_due(1)'
             )
             first_due = cursor.fetchone()
             cursor.execute(
@@ -2664,7 +2664,7 @@ def exercise_unified_maintenance_scheduler(
         with connection.cursor() as cursor:
             cursor.execute(
                 'SELECT index_oid::oid, result '
-                'FROM ii42_index_maintain_due(1)'
+                'FROM evoke_index_maintain_due(1)'
             )
             second_due = cursor.fetchone()
             cursor.execute(
@@ -2706,10 +2706,10 @@ def exercise_unified_maintenance_scheduler(
     finally:
         with connection.cursor() as cursor:
             cursor.execute(
-                'RESET ii42.test_force_structural_term_fold'
+                'RESET evoke.test_force_structural_term_fold'
             )
             cursor.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
         if (
             not mandatory_guard_released
@@ -2752,7 +2752,7 @@ def exercise_manual_v3_lifecycle(
         with connection.cursor() as cursor:
             cursor.execute(
                 'SELECT d.id '
-                'FROM ii42_query_ids(%s::regclass, ARRAY[1], 100) h '
+                'FROM evoke_query_ids(%s::regclass, ARRAY[1], 100) h '
                 f'JOIN {table_name} d ON d.ctid = h.ctid '
                 'ORDER BY h.score DESC, d.id',
                 (index_name,),
@@ -2770,7 +2770,7 @@ def exercise_manual_v3_lifecycle(
         )
         cursor.execute(
             f'CREATE INDEX manual_v3_idx ON {table_name} '
-            'USING ii42 (tokens) '
+            'USING evoke (tokens) '
             'WITH (sae=false, consistency=manual)'
         )
         cursor.execute(
@@ -2810,7 +2810,7 @@ def exercise_manual_v3_lifecycle(
 
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_refresh(%s::regclass)',
+            'SELECT evoke_index_refresh(%s::regclass)',
             (index_name,),
         )
         refresh_result = str(cursor.fetchone()[0])
@@ -2866,7 +2866,7 @@ def exercise_vacuum_retirement_statistics(
         with connection.cursor() as cursor:
             cursor.execute(
                 'SELECT d.id, h.score::float8 '
-                'FROM ii42_query(%s::regclass, %s, 100) h '
+                'FROM evoke_query(%s::regclass, %s, 100) h '
                 f'JOIN {table_name} d ON d.ctid = h.ctid '
                 'ORDER BY h.score DESC, d.id',
                 (index_name, query),
@@ -2892,13 +2892,13 @@ def exercise_vacuum_retirement_statistics(
         )
         cursor.execute(
             f'CREATE INDEX retirement_live_idx ON {live_table} '
-            'USING ii42 (body) WITH ('
+            'USING evoke (body) WITH ('
             "sae=false, consistency=realtime, method='bm25+', "
             "idf_method='bm25+')"
         )
         cursor.execute(
             f'CREATE INDEX retirement_oracle_idx ON {oracle_table} '
-            'USING ii42 (body) WITH ('
+            'USING evoke (body) WITH ('
             "sae=false, consistency=realtime, method='bm25+', "
             "idf_method='bm25+')"
         )
@@ -3025,12 +3025,12 @@ def exercise_workload_term_fold(
         create_page_native_reference_index(
             cursor,
             'CREATE INDEX workload_reference_idx '
-            'ON parity.workload_docs USING ii42 (tokens) '
+            'ON parity.workload_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)',
         )
         cursor.execute(
             'CREATE INDEX workload_v3_idx '
-            'ON parity.workload_docs USING ii42 (tokens) '
+            'ON parity.workload_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)'
         )
 
@@ -3040,12 +3040,12 @@ def exercise_workload_term_fold(
     try:
         with connection.cursor() as cursor:
             cursor.execute(
-                'SET ii42.test_force_structural_term_fold = true'
+                'SET evoke.test_force_structural_term_fold = true'
             )
         for row_offset in range(3):
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SET ii42.test_convergent_l0_rotation_records = '1'"
+                    "SET evoke.test_convergent_l0_rotation_records = '1'"
                 )
                 cursor.execute(
                     'INSERT INTO parity.workload_docs VALUES '
@@ -3053,7 +3053,7 @@ def exercise_workload_term_fold(
                     (300 + row_offset, 3000 + row_offset),
                 )
                 cursor.execute(
-                    'RESET ii42.test_convergent_l0_rotation_records'
+                    'RESET evoke.test_convergent_l0_rotation_records'
                 )
 
             for _ in range(8):
@@ -3079,7 +3079,7 @@ def exercise_workload_term_fold(
                 )
         with connection.cursor() as cursor:
             cursor.execute(
-                'RESET ii42.test_force_structural_term_fold'
+                'RESET evoke.test_force_structural_term_fold'
             )
 
         setup_status = fetch_status(connection, index_name)
@@ -3144,7 +3144,7 @@ def exercise_workload_term_fold(
                 f'release: {index_name}'
             )
         with connection.cursor() as cursor:
-            cursor.execute('SELECT ii42_index_touch_maintenance()')
+            cursor.execute('SELECT evoke_index_touch_maintenance()')
             touch_result = str(cursor.fetchone()[0])
 
         fold_statuses: list[dict[str, Any]] = []
@@ -3156,7 +3156,7 @@ def exercise_workload_term_fold(
             with connection.cursor() as cursor:
                 cursor.execute(
                     'SELECT '
-                    "ii42_index_runtime_state_json(%s::regclass)"
+                    "evoke_index_runtime_state_json(%s::regclass)"
                     "->'maintenance'",
                     (index_name,),
                 )
@@ -3207,10 +3207,10 @@ def exercise_workload_term_fold(
     finally:
         with connection.cursor() as cursor:
             cursor.execute(
-                'RESET ii42.test_force_structural_term_fold'
+                'RESET evoke.test_force_structural_term_fold'
             )
             cursor.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
         if not guard_released and maintenance_guard_is_held(
             connection,
@@ -3224,7 +3224,7 @@ def exercise_workload_term_fold(
     try:
         with connection.cursor() as cursor:
             cursor.execute(
-                'SET ii42.test_force_structural_term_fold = true'
+                'SET evoke.test_force_structural_term_fold = true'
             )
 
         def append_and_seal(
@@ -3233,7 +3233,7 @@ def exercise_workload_term_fold(
             with connection.cursor() as cursor:
                 cursor.execute(
                     'SELECT set_config('
-                    "'ii42.test_convergent_l0_rotation_records', "
+                    "'evoke.test_convergent_l0_rotation_records', "
                     '%s, false)',
                     (str(len(rows)),),
                 )
@@ -3243,7 +3243,7 @@ def exercise_workload_term_fold(
                     rows,
                 )
                 cursor.execute(
-                    'RESET ii42.test_convergent_l0_rotation_records'
+                    'RESET evoke.test_convergent_l0_rotation_records'
                 )
             for _ in range(12):
                 result = try_maintain(connection, index_name)
@@ -3590,10 +3590,10 @@ def exercise_workload_term_fold(
     finally:
         with connection.cursor() as cursor:
             cursor.execute(
-                'RESET ii42.test_force_structural_term_fold'
+                'RESET evoke.test_force_structural_term_fold'
             )
             cursor.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
         if (
             not geometric_guard_released
@@ -3771,7 +3771,7 @@ def exercise_impact_specialization(
     try:
         with connection.cursor() as cursor:
             cursor.execute(
-                'SET ii42.test_force_structural_term_fold = true'
+                'SET evoke.test_force_structural_term_fold = true'
             )
 
         initial_actions, initial_state = converge_to_impact(
@@ -3807,7 +3807,7 @@ def exercise_impact_specialization(
             )
 
         with connection.cursor() as cursor:
-            cursor.execute('SELECT ii42_runtime_cache_clear()')
+            cursor.execute('SELECT evoke_runtime_cache_clear()')
             cache_clear_count = int(cursor.fetchone()[0])
         cache_cleared_state = fetch_generation_cache_state(
             connection,
@@ -3894,14 +3894,14 @@ def exercise_impact_specialization(
 
         with connection.cursor() as cursor:
             cursor.execute(
-                "SET ii42.test_convergent_l0_rotation_records = '1'"
+                "SET evoke.test_convergent_l0_rotation_records = '1'"
             )
             cursor.execute(
                 'INSERT INTO parity.workload_docs '
                 'VALUES (900, ARRAY[1, 9000])'
             )
             cursor.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
         invalidated_hits = assert_query_parity(
             'impact specialization active L0 invalidation',
@@ -3931,14 +3931,14 @@ def exercise_impact_specialization(
 
         with connection.cursor() as cursor:
             cursor.execute(
-                "SET ii42.test_convergent_l0_rotation_records = '1'"
+                "SET evoke.test_convergent_l0_rotation_records = '1'"
             )
             cursor.execute(
                 'INSERT INTO parity.workload_docs '
                 'VALUES (901, ARRAY[1, 9001])'
             )
             cursor.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
         assert_query_parity('second impact invalidation')
         drain_l0('second impact invalidation')
@@ -3995,7 +3995,7 @@ def exercise_impact_specialization(
 
         with connection.cursor() as cursor:
             cursor.execute(
-                "SET ii42.test_convergent_l0_rotation_records = '1'"
+                "SET evoke.test_convergent_l0_rotation_records = '1'"
             )
             cursor.execute(
                 'DELETE FROM parity.workload_docs WHERE id = 1'
@@ -4004,7 +4004,7 @@ def exercise_impact_specialization(
                 'VACUUM (INDEX_CLEANUP ON) parity.workload_docs'
             )
             cursor.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
         retirement_invalidated_hits = assert_query_parity(
             'impact specialization retirement invalidation',
@@ -4070,10 +4070,10 @@ def exercise_impact_specialization(
     finally:
         with connection.cursor() as cursor:
             cursor.execute(
-                'RESET ii42.test_force_structural_term_fold'
+                'RESET evoke.test_force_structural_term_fold'
             )
             cursor.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
         if (
             not guard_released
@@ -4141,12 +4141,12 @@ def exercise_pending_l0_headroom(
         create_page_native_reference_index(
             cursor,
             'CREATE INDEX headroom_reference_idx '
-            'ON parity.headroom_reference USING ii42 (tokens) '
+            'ON parity.headroom_reference USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)',
         )
         cursor.execute(
             'CREATE INDEX headroom_v3_idx '
-            'ON parity.headroom_v3 USING ii42 (tokens) '
+            'ON parity.headroom_v3 USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)'
         )
         cursor.executemany(
@@ -4160,7 +4160,7 @@ def exercise_pending_l0_headroom(
     try:
         with connection.cursor() as cursor:
             cursor.execute(
-                "SET ii42.test_convergent_l0_rotation_records = '2'"
+                "SET evoke.test_convergent_l0_rotation_records = '2'"
             )
             cursor.executemany(
                 'INSERT INTO parity.headroom_v3 VALUES (%s, %s::int4[])',
@@ -4237,7 +4237,7 @@ def exercise_pending_l0_headroom(
     finally:
         with connection.cursor() as cursor:
             cursor.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
         if not guard_released and maintenance_guard_is_held(
             connection,
@@ -4273,7 +4273,7 @@ def exercise_posting_heat_query_batching(
         )
         cursor.execute(
             'CREATE INDEX heat_batch_v3_idx '
-            'ON parity.heat_batch_docs USING ii42 (tokens) '
+            'ON parity.heat_batch_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)'
         )
 
@@ -4415,12 +4415,12 @@ def exercise_fold_safe_compaction(
         create_page_native_reference_index(
             cursor,
             'CREATE INDEX fold_compaction_reference_idx '
-            'ON parity.fold_compaction_docs USING ii42 (tokens) '
+            'ON parity.fold_compaction_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)',
         )
         cursor.execute(
             'CREATE INDEX fold_compaction_v3_idx '
-            'ON parity.fold_compaction_docs USING ii42 (tokens) '
+            'ON parity.fold_compaction_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)'
         )
 
@@ -4438,7 +4438,7 @@ def exercise_fold_safe_compaction(
     for row_offset in range(4):
         with connection.cursor() as cursor:
             cursor.execute(
-                "SET ii42.test_convergent_l0_rotation_records = '1'"
+                "SET evoke.test_convergent_l0_rotation_records = '1'"
             )
             cursor.execute(
                 'INSERT INTO parity.fold_compaction_docs VALUES '
@@ -4446,7 +4446,7 @@ def exercise_fold_safe_compaction(
                 (10 + row_offset,),
             )
             cursor.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
         for _ in range(12):
             result = try_maintain(
@@ -4551,12 +4551,12 @@ def exercise_fold_forward_compaction(
         create_page_native_reference_index(
             cursor,
             'CREATE INDEX fold_forward_reference_idx '
-            'ON parity.fold_forward_docs USING ii42 (tokens) '
+            'ON parity.fold_forward_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)',
         )
         cursor.execute(
             'CREATE INDEX fold_forward_v3_idx '
-            'ON parity.fold_forward_docs USING ii42 (tokens) '
+            'ON parity.fold_forward_docs USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)'
         )
 
@@ -4571,15 +4571,15 @@ def exercise_fold_forward_compaction(
         )
     with connection.cursor() as cursor:
         cursor.execute(
-            "SET ii42.test_convergent_l0_rotation_records = '1'"
+            "SET evoke.test_convergent_l0_rotation_records = '1'"
         )
         cursor.execute(
             'INSERT INTO parity.fold_forward_docs '
             'VALUES (2, ARRAY[1, 2]), (3, ARRAY[1, 2])'
         )
-        cursor.execute('RESET ii42.test_convergent_l0_rotation_records')
+        cursor.execute('RESET evoke.test_convergent_l0_rotation_records')
         cursor.execute(
-            'SET ii42.test_force_fold_conflict_compaction = true'
+            'SET evoke.test_force_fold_conflict_compaction = true'
         )
 
     maintenance: list[str] = []
@@ -4617,7 +4617,7 @@ def exercise_fold_forward_compaction(
     finally:
         with connection.cursor() as cursor:
             cursor.execute(
-                'RESET ii42.test_force_fold_conflict_compaction'
+                'RESET evoke.test_force_fold_conflict_compaction'
             )
 
     if fold_forward is not None and (
@@ -4688,7 +4688,7 @@ def plan_uses_index(
     statement = (
         f'EXPLAIN (FORMAT JSON, COSTS OFF) '
         f'SELECT id FROM {table_name} '
-        f'ORDER BY body <=> ii42_order_tokens(%s::regclass, %s) '
+        f'ORDER BY body <=> evoke_order_tokens(%s::regclass, %s) '
         f'ASC LIMIT 3'
     )
     with connection.cursor() as cursor:
@@ -4893,11 +4893,11 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         args.extension_control_dir
     )
     extension_libraries = [
-        extension_libdir / name for name in ('ii42.so', 'ii42.dylib')
+        extension_libdir / name for name in ('evoke.so', 'evoke.dylib')
     ]
     if not any(path.is_file() for path in extension_libraries):
         raise FileNotFoundError(
-            f'ii42 library is missing from {extension_libdir}'
+            f'evoke library is missing from {extension_libdir}'
         )
 
     initdb = args.pg_bin / 'initdb'
@@ -4994,7 +4994,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             TEXT_QUERIES[0],
         )
         if not gates['native_ordered_scan_uses_v3_index']:
-            raise AssertionError('v3 ORDER BY did not use the ii42 index')
+            raise AssertionError('v3 ORDER BY did not use the evoke index')
 
         high_df_prefix = fetch_ids_ordered(
             connection,
@@ -5175,7 +5175,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 predicate_query,
             ):
                 raise AssertionError(
-                    'v3 predicate did not use the ii42 index: '
+                    'v3 predicate did not use the evoke index: '
                     f'{predicate_query!r}'
                 )
             predicate_parity[predicate_query] = v3_predicate
@@ -5790,7 +5790,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         try:
             with connection.cursor() as cursor:
                 cursor.execute(
-                    'SET ii42.test_force_structural_term_fold = true'
+                    'SET evoke.test_force_structural_term_fold = true'
                 )
             expected_workload_hits = fetch_ids_by_tid(
                 connection,
@@ -5844,7 +5844,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         finally:
             with connection.cursor() as cursor:
                 cursor.execute(
-                    'RESET ii42.test_force_structural_term_fold'
+                    'RESET evoke.test_force_structural_term_fold'
                 )
             if maintenance_guard_is_held(
                 connection,
@@ -6075,7 +6075,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             fetch_page_native_text_l0_query_topk(
                 connection,
                 'parity.docs_v3_idx',
-                ['ii42_zero_score_missing'],
+                ['evoke_zero_score_missing'],
                 dirty_visible_documents,
             )
         )
@@ -6083,7 +6083,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             fetch_page_native_text_l0_query_topk(
                 connection,
                 'parity.docs_v3_idx',
-                ['ii42_zero_score_missing'],
+                ['evoke_zero_score_missing'],
                 3,
             )
         )
@@ -6559,23 +6559,23 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             with transaction_connection.cursor() as cursor:
                 cursor.execute(
                     'INSERT INTO parity.docs_v3 VALUES '
-                    "(20, 'ii42txcurrentmarker')"
+                    "(20, 'evoketxcurrentmarker')"
                 )
             current_hits = fetch_search(
                 transaction_connection,
                 'parity.docs_v3_idx',
-                'ii42txcurrentmarker',
+                'evoketxcurrentmarker',
             )
             unresolved_hits = fetch_search(
                 observer_connection,
                 'parity.docs_v3_idx',
-                'ii42txcurrentmarker',
+                'evoketxcurrentmarker',
             )
             transaction_page_native['current'] = (
                 fetch_page_native_text_l0_query_topk(
                     transaction_connection,
                     'parity.docs_v3_idx',
-                    ['lexical', 'ii42txcurrentmarker'],
+                    ['lexical', 'evoketxcurrentmarker'],
                     1,
                 )
             )
@@ -6583,7 +6583,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 fetch_page_native_text_l0_query_topk(
                     observer_connection,
                     'parity.docs_v3_idx',
-                    ['lexical', 'ii42txcurrentmarker'],
+                    ['lexical', 'evoketxcurrentmarker'],
                     1,
                 )
             )
@@ -6602,13 +6602,13 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             committed_hits = fetch_search(
                 observer_connection,
                 'parity.docs_v3_idx',
-                'ii42txcurrentmarker',
+                'evoketxcurrentmarker',
             )
             transaction_page_native['committed'] = (
                 fetch_page_native_text_l0_query_topk(
                     observer_connection,
                     'parity.docs_v3_idx',
-                    ['lexical', 'ii42txcurrentmarker'],
+                    ['lexical', 'evoketxcurrentmarker'],
                     1,
                 )
             )
@@ -6620,20 +6620,20 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             with transaction_connection.cursor() as cursor:
                 cursor.execute(
                     'INSERT INTO parity.docs_v3 VALUES '
-                    "(21, 'ii42txabortedmarker')"
+                    "(21, 'evoketxabortedmarker')"
                 )
             aborted_current_ids = positive_result_ids(
                 fetch_search(
                     transaction_connection,
                     'parity.docs_v3_idx',
-                    'ii42txabortedmarker',
+                    'evoketxabortedmarker',
                 )
             )
             transaction_page_native['aborted_current'] = (
                 fetch_page_native_text_l0_query_topk(
                     transaction_connection,
                     'parity.docs_v3_idx',
-                    ['lexical', 'ii42txabortedmarker'],
+                    ['lexical', 'evoketxabortedmarker'],
                     1,
                 )
             )
@@ -6646,7 +6646,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 fetch_page_native_text_l0_query_topk(
                     observer_connection,
                     'parity.docs_v3_idx',
-                    ['lexical', 'ii42txabortedmarker'],
+                    ['lexical', 'evoketxabortedmarker'],
                     1,
                 )
             )
@@ -6654,29 +6654,29 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 fetch_search(
                     observer_connection,
                     'parity.docs_v3_idx',
-                    'ii42txabortedmarker',
+                    'evoketxabortedmarker',
                 )
             ):
                 raise AssertionError('aborted transaction remained searchable')
 
             with transaction_connection.cursor() as cursor:
-                cursor.execute('SAVEPOINT ii42_l0_savepoint')
+                cursor.execute('SAVEPOINT evoke_l0_savepoint')
                 cursor.execute(
                     'INSERT INTO parity.docs_v3 VALUES '
-                    "(22, 'ii42txsavepointmarker')"
+                    "(22, 'evoketxsavepointmarker')"
                 )
             savepoint_current_ids = positive_result_ids(
                 fetch_search(
                     transaction_connection,
                     'parity.docs_v3_idx',
-                    'ii42txsavepointmarker',
+                    'evoketxsavepointmarker',
                 )
             )
             transaction_page_native['savepoint_current'] = (
                 fetch_page_native_text_l0_query_topk(
                     transaction_connection,
                     'parity.docs_v3_idx',
-                    ['lexical', 'ii42txsavepointmarker'],
+                    ['lexical', 'evoketxsavepointmarker'],
                     1,
                 )
             )
@@ -6685,12 +6685,12 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                     'savepoint row was not visible before rollback'
                 )
             with transaction_connection.cursor() as cursor:
-                cursor.execute('ROLLBACK TO SAVEPOINT ii42_l0_savepoint')
+                cursor.execute('ROLLBACK TO SAVEPOINT evoke_l0_savepoint')
             transaction_page_native['savepoint_rolled_back'] = (
                 fetch_page_native_text_l0_query_topk(
                     transaction_connection,
                     'parity.docs_v3_idx',
-                    ['lexical', 'ii42txsavepointmarker'],
+                    ['lexical', 'evoketxsavepointmarker'],
                     1,
                 )
             )
@@ -6698,7 +6698,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 fetch_search(
                     transaction_connection,
                     'parity.docs_v3_idx',
-                    'ii42txsavepointmarker',
+                    'evoketxsavepointmarker',
                 )
             ):
                 raise AssertionError(
@@ -6709,16 +6709,16 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             with transaction_connection.cursor() as cursor:
                 cursor.execute(
                     'INSERT INTO parity.docs_v3 VALUES '
-                    "(23, 'ii42txpreparedmarker')"
+                    "(23, 'evoketxpreparedmarker')"
                 )
                 cursor.execute(
-                    "PREPARE TRANSACTION 'ii42_v3_l0_prepared'"
+                    "PREPARE TRANSACTION 'evoke_v3_l0_prepared'"
                 )
             if positive_result_ids(
                 fetch_search(
                     observer_connection,
                     'parity.docs_v3_idx',
-                    'ii42txpreparedmarker',
+                    'evoketxpreparedmarker',
                 )
             ):
                 raise AssertionError(
@@ -6728,20 +6728,20 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 fetch_page_native_text_l0_query_topk(
                     observer_connection,
                     'parity.docs_v3_idx',
-                    ['lexical', 'ii42txpreparedmarker'],
+                    ['lexical', 'evoketxpreparedmarker'],
                     1,
                 )
             )
             with observer_connection.cursor() as cursor:
                 cursor.execute(
-                    "COMMIT PREPARED 'ii42_v3_l0_prepared'"
+                    "COMMIT PREPARED 'evoke_v3_l0_prepared'"
                 )
             if len(
                 positive_result_ids(
                     fetch_search(
                         observer_connection,
                         'parity.docs_v3_idx',
-                        'ii42txpreparedmarker',
+                        'evoketxpreparedmarker',
                     )
                 )
             ) != 1:
@@ -6752,7 +6752,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 fetch_page_native_text_l0_query_topk(
                     observer_connection,
                     'parity.docs_v3_idx',
-                    ['lexical', 'ii42txpreparedmarker'],
+                    ['lexical', 'evoketxpreparedmarker'],
                     1,
                 )
             )
@@ -6810,17 +6810,17 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 with observer_connection.cursor() as cursor:
                     cursor.execute(
                         'INSERT INTO parity.docs_v3 VALUES '
-                        "(24, 'ii42oldsnapshotmarker')"
+                        "(24, 'evokeoldsnapshotmarker')"
                     )
                 old_snapshot_hits = fetch_search(
                     old_snapshot_connection,
                     'parity.docs_v3_idx',
-                    'ii42oldsnapshotmarker',
+                    'evokeoldsnapshotmarker',
                 )
                 observer_snapshot_hits = fetch_search(
                     observer_connection,
                     'parity.docs_v3_idx',
-                    'ii42oldsnapshotmarker',
+                    'evokeoldsnapshotmarker',
                 )
                 snapshot_rotation, snapshot_rotation_attempts = (
                     try_maintain_after_lock_contention(
@@ -6919,7 +6919,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 with observer_connection.cursor() as cursor:
                     cursor.execute(
                         'INSERT INTO parity.docs_v3 VALUES '
-                        "(25, 'ii42rotationseed')"
+                        "(25, 'evokerotationseed')"
                     )
             finally:
                 old_snapshot_connection.close()
@@ -6956,18 +6956,18 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         ]['records']
         with connection.cursor() as cursor:
             cursor.execute(
-                "SET ii42.test_convergent_l0_rotation_records = '1'"
+                "SET evoke.test_convergent_l0_rotation_records = '1'"
             )
             cursor.execute(
                 'INSERT INTO parity.docs_v3 VALUES '
-                "(30, 'ii42rotationactiveone')"
+                "(30, 'evokerotationactiveone')"
             )
             cursor.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
             cursor.execute(
                 'INSERT INTO parity.docs_v3 VALUES '
-                "(31, 'ii42rotationactivetwo')"
+                "(31, 'evokerotationactivetwo')"
             )
         rotation_status = fetch_status(
             connection,
@@ -7017,7 +7017,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                         fetch_search(
                             connection,
                             'parity.docs_v3_idx',
-                            'ii42txpreparedmarker',
+                            'evoketxpreparedmarker',
                         )
                     )
                 )
@@ -7029,7 +7029,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                         fetch_search(
                             connection,
                             'parity.docs_v3_idx',
-                            'ii42rotationactiveone',
+                            'evokerotationactiveone',
                         )
                     )
                 )
@@ -7039,7 +7039,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                         fetch_search(
                             connection,
                             'parity.docs_v3_idx',
-                            'ii42rotationactivetwo',
+                            'evokerotationactivetwo',
                         )
                     )
                 )
@@ -7126,7 +7126,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                         fetch_search(
                             connection,
                             'parity.docs_v3_idx',
-                            'ii42txpreparedmarker',
+                            'evoketxpreparedmarker',
                         )
                     )
                 )
@@ -7138,7 +7138,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                         fetch_search(
                             connection,
                             'parity.docs_v3_idx',
-                            'ii42rotationactivetwo',
+                            'evokerotationactivetwo',
                         )
                     )
                 )
@@ -7207,7 +7207,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
 
         compact_marker = 0
         while compact_marker < 4:
-            marker = f'ii42compactmarker{compact_marker}'
+            marker = f'evokecompactmarker{compact_marker}'
             previous_segment_count = compaction_status['generation'][
                 'primary'
             ]['segment_count']
@@ -7216,14 +7216,14 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             ]['active']['records']
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SET ii42.test_convergent_l0_rotation_records = '1'"
+                    "SET evoke.test_convergent_l0_rotation_records = '1'"
                 )
                 cursor.execute(
                     'INSERT INTO parity.docs_v3 VALUES (%s, %s)',
                     (40 + compact_marker, marker),
                 )
                 cursor.execute(
-                    'RESET ii42.test_convergent_l0_rotation_records'
+                    'RESET evoke.test_convergent_l0_rotation_records'
                 )
             compaction_status = fetch_status(
                 connection,
@@ -7284,9 +7284,9 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         ]['segment_count']
         compaction_queries = (
             'blue bird river',
-            'ii42rotationactiveone',
-            'ii42compactmarker0',
-            f'ii42compactmarker{compact_marker - 1}',
+            'evokerotationactiveone',
+            'evokecompactmarker0',
+            f'evokecompactmarker{compact_marker - 1}',
         )
         for _ in range(16):
             compaction_status = fetch_status(
@@ -7446,17 +7446,17 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             )
             cursor.execute(
                 "INSERT INTO parity.sustained_docs VALUES "
-                "(1, 'ii42sustainedcommon ii42sustainedbase')"
+                "(1, 'evokesustainedcommon evokesustainedbase')"
             )
             create_page_native_reference_index(
                 cursor,
                 'CREATE INDEX sustained_reference_idx '
-                'ON parity.sustained_docs USING ii42 (body) '
+                'ON parity.sustained_docs USING evoke (body) '
                 'WITH (sae=false, consistency=realtime)',
             )
             cursor.execute(
                 'CREATE INDEX sustained_v3_idx '
-                'ON parity.sustained_docs USING ii42 (body) '
+                'ON parity.sustained_docs USING evoke (body) '
                 'WITH (sae=false, consistency=realtime)'
             )
 
@@ -7466,20 +7466,20 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         for marker_index in range(32):
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SET ii42.test_convergent_l0_rotation_records = '1'"
+                    "SET evoke.test_convergent_l0_rotation_records = '1'"
                 )
                 cursor.execute(
                     'INSERT INTO parity.sustained_docs VALUES (%s, %s)',
                     (
                         100 + marker_index,
                         (
-                            'ii42sustainedcommon '
-                            f'ii42sustainedmarker{marker_index:02d}'
+                            'evokesustainedcommon '
+                            f'evokesustainedmarker{marker_index:02d}'
                         ),
                     ),
                 )
                 cursor.execute(
-                    'RESET ii42.test_convergent_l0_rotation_records'
+                    'RESET evoke.test_convergent_l0_rotation_records'
                 )
 
             for maintenance_pass in range(12):
@@ -7545,12 +7545,12 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         sustained_reference_hits = fetch_search(
             connection,
             'parity.sustained_reference_idx',
-            'ii42sustainedcommon',
+            'evokesustainedcommon',
         )
         sustained_v3_hits = fetch_search(
             connection,
             'parity.sustained_v3_idx',
-            'ii42sustainedcommon',
+            'evokesustainedcommon',
         )
         assert_rows_close(
             sustained_reference_hits,
@@ -7615,7 +7615,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         restarted_sustained_hits = fetch_search(
             connection,
             'parity.sustained_v3_idx',
-            'ii42sustainedcommon',
+            'evokesustainedcommon',
         )
         assert_rows_close(
             sustained_reference_hits,
@@ -7798,7 +7798,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         shutil.rmtree(root, ignore_errors=True)
 
     return {
-        'api_version': 'ii42_index_v1',
+        'api_version': 'evoke_index_v1',
         'route': 'default convergent segment v3 read parity',
         'gates': gates,
         'passed_gates': sum(gates.values()),

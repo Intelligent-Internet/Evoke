@@ -7,11 +7,11 @@ field-aware SQL helpers added on the `codex/sql-enhancements` branch.
 
 It compares:
 
-- explicit baseline fusion with `ii42_fusion(...)`
-- `ii42_fusion_query_weighted(...)`
-- `ii42_fusion_query_fields(...)`
-- `ii42_fusion_query(field_names[], ...)`
-- `ii42_fusion_query(index_names[], ...)`
+- explicit baseline fusion with `evoke_fusion(...)`
+- `evoke_fusion_query_weighted(...)`
+- `evoke_fusion_query_fields(...)`
+- `evoke_fusion_query(field_names[], ...)`
+- `evoke_fusion_query(index_names[], ...)`
 
 The benchmark uses:
 

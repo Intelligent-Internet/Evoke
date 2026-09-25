@@ -16,7 +16,7 @@ from typing import Any
 import psycopg
 from psycopg import sql
 
-from ii42_test_support import (
+from evoke_test_support import (
     create_short_socket_root,
     extension_control_root,
     vacuum_with_session_maintenance_lock,
@@ -25,10 +25,10 @@ from ii42_test_support import (
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PG_BIN = Path('/opt/homebrew/opt/postgresql@18/bin')
-ROLLBACK_GID = 'ii42_sae_rollback_prepared'
-COMMIT_GID = 'ii42_sae_commit_prepared'
-BM25_ROLLBACK_GID = 'ii42_bm25_rollback_prepared'
-BM25_COMMIT_GID = 'ii42_bm25_commit_prepared'
+ROLLBACK_GID = 'evoke_sae_rollback_prepared'
+COMMIT_GID = 'evoke_sae_commit_prepared'
+BM25_ROLLBACK_GID = 'evoke_bm25_rollback_prepared'
+BM25_COMMIT_GID = 'evoke_bm25_commit_prepared'
 
 
 def parse_args() -> argparse.Namespace:
@@ -75,7 +75,7 @@ def configure_cluster(
     extension_control_dir: Path | None,
 ) -> None:
     with (data_dir / 'postgresql.conf').open('a', encoding='utf-8') as handle:
-        handle.write("\nshared_preload_libraries = 'ii42'\n")
+        handle.write("\nshared_preload_libraries = 'evoke'\n")
         if extension_libdir is not None:
             libdir = str(extension_libdir).replace("'", "''")
             handle.write(
@@ -90,13 +90,13 @@ def configure_cluster(
                 f'{control_dir}:$system'
                 "'\n"
             )
-        handle.write("ii42.shared_runtime_size = '64MB'\n")
+        handle.write("evoke.shared_runtime_size = '64MB'\n")
         # This suite advances maintenance one action at a time. Disable
         # hint-driven workers so they cannot rotate L0 before the test owns
         # the per-index gate; automatic scheduling is covered separately.
-        handle.write("ii42.maintenance_worker_limit = 0\n")
-        handle.write("ii42.maintenance_timer_interval_ms = '1h'\n")
-        handle.write("ii42.maintenance_low_debt_interval_ms = '1000ms'\n")
+        handle.write("evoke.maintenance_worker_limit = 0\n")
+        handle.write("evoke.maintenance_timer_interval_ms = '1h'\n")
+        handle.write("evoke.maintenance_low_debt_interval_ms = '1000ms'\n")
         handle.write('max_prepared_transactions = 10\n')
         handle.write('max_worker_processes = 16\n')
         handle.write("listen_addresses = ''\n")
@@ -137,7 +137,7 @@ def index_status(
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
         cursor.execute(
-            sql.SQL('SELECT ii42_index_status({}::regclass)').format(
+            sql.SQL('SELECT evoke_index_status({}::regclass)').format(
                 sql.Literal(index_name)
             )
         )
@@ -188,7 +188,7 @@ def query_ids(
             sql.SQL(
                 """
                 SELECT source.id
-                FROM ii42_query(
+                FROM evoke_query(
                     {}::regclass,
                     %s,
                     20
@@ -216,7 +216,7 @@ def acquire_maintenance_lock(
     with connection.cursor() as cursor:
         cursor.execute(
             sql.SQL(
-                'SELECT ii42_index_try_maintenance_lock({}::regclass)'
+                'SELECT evoke_index_try_maintenance_lock({}::regclass)'
             ).format(sql.Literal(index_name))
         )
         row = cursor.fetchone()
@@ -256,7 +256,7 @@ def release_maintenance_lock(
         with connection.cursor() as cursor:
             cursor.execute(
                 sql.SQL(
-                    'SELECT ii42_index_maintenance_unlock({}::regclass)'
+                    'SELECT evoke_index_maintenance_unlock({}::regclass)'
                 ).format(sql.Literal(index_name))
             )
         connection.commit()
@@ -279,14 +279,14 @@ def maintain_until(
         with connection.cursor() as cursor:
             cursor.execute(
                 f"SET {'LOCAL ' if local_setting else ''}"
-                "ii42.test_convergent_l0_rotation_records = '1'"
+                "evoke.test_convergent_l0_rotation_records = '1'"
             )
     try:
         for _ in range(max_attempts):
             with connection.cursor() as cursor:
                 cursor.execute(
                     sql.SQL(
-                        'SELECT ii42_index_try_maintain({}::regclass)'
+                        'SELECT evoke_index_try_maintain({}::regclass)'
                     ).format(sql.Literal(index_name))
                 )
                 row = cursor.fetchone()
@@ -300,7 +300,7 @@ def maintain_until(
         if force_checkpoint and not local_setting:
             with connection.cursor() as cursor:
                 cursor.execute(
-                    'RESET ii42.test_convergent_l0_rotation_records'
+                    'RESET evoke.test_convergent_l0_rotation_records'
                 )
     return results
 
@@ -321,7 +321,7 @@ def maintain_due_for_index(
         target_oid = int(target_row[0])
         cursor.execute(
             'SELECT index_oid::oid, result '
-            'FROM ii42_index_maintain_due(256)'
+            'FROM evoke_index_maintain_due(256)'
         )
         rows = cursor.fetchall()
     for index_oid, result in rows:
@@ -343,14 +343,14 @@ def maintain_until_converged(
     with connection.cursor() as cursor:
         cursor.execute(
             f"SET {'LOCAL ' if local_setting else ''}"
-            "ii42.test_convergent_l0_rotation_records = '1'"
+            "evoke.test_convergent_l0_rotation_records = '1'"
         )
     try:
         for _ in range(max_attempts):
             with connection.cursor() as cursor:
                 cursor.execute(
                     sql.SQL(
-                        'SELECT ii42_index_maintain({}::regclass)'
+                        'SELECT evoke_index_maintain({}::regclass)'
                     ).format(sql.Literal(index_name))
                 )
                 row = cursor.fetchone()
@@ -375,7 +375,7 @@ def maintain_until_converged(
         if not local_setting:
             with connection.cursor() as cursor:
                 cursor.execute(
-                    'RESET ii42.test_convergent_l0_rotation_records'
+                    'RESET evoke.test_convergent_l0_rotation_records'
                 )
 
     return results, statuses
@@ -387,7 +387,7 @@ def prepared_gids(connection: psycopg.Connection[Any]) -> list[str]:
             """
             SELECT gid
             FROM pg_catalog.pg_prepared_xacts
-            WHERE gid LIKE 'ii42_%'
+            WHERE gid LIKE 'evoke_%'
             ORDER BY gid
             """
         )
@@ -439,11 +439,11 @@ def main() -> None:
         args.extension_libdir = args.extension_libdir.expanduser().resolve()
         libraries = [
             args.extension_libdir / name
-            for name in ('ii42.so', 'ii42.dylib')
+            for name in ('evoke.so', 'evoke.dylib')
         ]
         if not any(path.is_file() for path in libraries):
             raise FileNotFoundError(
-                'ii42 extension library is missing from '
+                'evoke extension library is missing from '
                 f'{args.extension_libdir}'
             )
     if args.extension_control_dir is not None:
@@ -460,11 +460,11 @@ def main() -> None:
     if not (model_path / 'manifest.json').is_file():
         raise FileNotFoundError(f'missing model checkout: {model_path}')
 
-    socket_root = create_short_socket_root('ii42-2pc-')
+    socket_root = create_short_socket_root('evoke-2pc-')
     evidence: dict[str, Any] = {}
     gates: dict[str, bool] = {}
     try:
-        with tempfile.TemporaryDirectory(prefix='ii42-2pc-data-') as temp:
+        with tempfile.TemporaryDirectory(prefix='evoke-2pc-data-') as temp:
             root = Path(temp)
             data_dir = root / 'data'
             socket_dir = socket_root / 's'
@@ -502,7 +502,7 @@ def main() -> None:
                 started = True
                 with connect(socket_dir, port) as connection:
                     with connection.cursor() as cursor:
-                        cursor.execute('CREATE EXTENSION ii42')
+                        cursor.execute('CREATE EXTENSION evoke')
                         cursor.execute(
                             """
                             CREATE TABLE docs (
@@ -518,7 +518,7 @@ def main() -> None:
                             sql.SQL(
                                 """
                                 CREATE INDEX docs_body_idx
-                                ON docs USING ii42 (body)
+                                ON docs USING evoke (body)
                                 WITH (
                                     sae = true,
                                     model_path = {}
@@ -546,14 +546,14 @@ def main() -> None:
                             INSERT INTO bm25_periodic_docs VALUES
                                 ('periodic-base', 'periodic baseline token');
                             CREATE INDEX bm25_periodic_docs_body_idx
-                                ON bm25_periodic_docs USING ii42 (body)
+                                ON bm25_periodic_docs USING evoke (body)
                                 WITH (consistency = realtime);
                             INSERT INTO bm25_periodic_docs VALUES
                                 ('periodic-new', 'periodicuniquesentinel');
                             """
                         )
                         cursor.execute(
-                            "SELECT ii42_index_try_maintain("
+                            "SELECT evoke_index_try_maintain("
                             "'bm25_periodic_docs_body_idx'::regclass)"
                         )
                         before_interval_result = str(cursor.fetchone()[0])
@@ -1098,7 +1098,7 @@ def main() -> None:
                             CREATE UNIQUE INDEX bm25_docs_aux_idx
                                 ON bm25_docs (aux);
                             CREATE INDEX bm25_docs_body_idx
-                                ON bm25_docs USING ii42 (body)
+                                ON bm25_docs USING evoke (body)
                                 WITH (consistency = realtime);
                             """
                         )
@@ -1120,7 +1120,7 @@ def main() -> None:
                             INSERT INTO mvcc_docs VALUES
                                 ('mvcc-row', 'mvccoldtoken');
                             CREATE INDEX mvcc_docs_body_idx
-                                ON mvcc_docs USING ii42 (body)
+                                ON mvcc_docs USING evoke (body)
                                 WITH (consistency = realtime);
                             """
                         )
@@ -1420,7 +1420,7 @@ def main() -> None:
                             INSERT INTO null_docs VALUES
                                 ('null-row', 'nulltransitiontoken');
                             CREATE INDEX null_docs_body_idx
-                                ON null_docs USING ii42 (body)
+                                ON null_docs USING evoke (body)
                                 WITH (consistency = realtime);
                             """
                         )
@@ -1497,7 +1497,7 @@ def main() -> None:
                 else:
                     with lock_connection.cursor() as cursor:
                         cursor.execute(
-                            "SELECT ii42_index_try_maintain("
+                            "SELECT evoke_index_try_maintain("
                             "'null_docs_body_idx'::regclass)"
                         )
                         null_maintain_result = str(cursor.fetchone()[0])
@@ -1647,7 +1647,7 @@ def main() -> None:
                             INSERT INTO oversized_docs VALUES
                                 ('oversized-row', 'oversizedbaselinetoken');
                             CREATE INDEX oversized_docs_body_idx
-                                ON oversized_docs USING ii42 (body)
+                                ON oversized_docs USING evoke (body)
                                 WITH (consistency = realtime);
                             """
                         )
@@ -1725,7 +1725,7 @@ def main() -> None:
                 )
                 with lock_connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT ii42_index_try_maintain("
+                        "SELECT evoke_index_try_maintain("
                         "'oversized_docs_body_idx'::regclass)"
                     )
                     oversized_maintain_result = str(cursor.fetchone()[0])
@@ -1816,7 +1816,7 @@ def main() -> None:
                         'bm25_oversized_delta_fails_closed_then_recovers'
                     ] = (
                         len(oversized_body.encode('utf-8')) > 8192
-                        and 'cannot rebuild an ii42 index from its writing '
+                        and 'cannot rebuild an evoke index from its writing '
                             'transaction' in oversized_query_error
                         and generation_id(oversized_in_xact_status)
                             == oversized_initial_generation
@@ -1881,7 +1881,7 @@ def main() -> None:
                         with writer.cursor() as cursor:
                             cursor.execute(
                                 'SET LOCAL '
-                                'ii42.test_precommit_error_after_flush = on'
+                                'evoke.test_precommit_error_after_flush = on'
                             )
                             cursor.execute(
                                 """
@@ -1919,7 +1919,7 @@ def main() -> None:
                 evidence['bm25_old_after_abort'] = bm25_old_after_abort
                 evidence['bm25_new_after_abort'] = bm25_new_after_abort
                 gates['bm25_late_precommit_abort_keeps_generation_exact'] = (
-                    'injected ii42 error' in late_precommit_error
+                    'injected evoke error' in late_precommit_error
                     and generation_id(bm25_after_late_abort)
                         == bm25_initial_generation
                     and int(
@@ -2197,7 +2197,7 @@ def main() -> None:
                     else:
                         with observer.cursor() as cursor:
                             cursor.execute(
-                                "SELECT ii42_index_maintain("
+                                "SELECT evoke_index_maintain("
                                 "'bm25_docs_body_idx'::regclass)"
                             )
                             bm25_maintain_result = str(cursor.fetchone()[0])
@@ -2476,7 +2476,7 @@ def main() -> None:
 
     result = {
         'suite': 'transactional_delta_lifecycle',
-        'api_version': 'ii42_index_v1',
+        'api_version': 'evoke_index_v1',
         'gates': gates,
         'passed_gates': sum(gates.values()),
         'total_gates': len(gates),

@@ -7,7 +7,7 @@ canonical retrieval is ordinary table SQL:
 
 ```sql
 SELECT d.*,
-       ii42_query('docs_body_idx'::regclass, 'query text') AS score
+       evoke_query('docs_body_idx'::regclass, 'query text') AS score
 FROM docs AS d
 WHERE d.publish_date >= DATE '2026-01-01'
 ORDER BY score DESC
@@ -21,7 +21,7 @@ includes snapshot-visible linked L0; the bounded accelerator route may use a
 compatible older serving baseline and omit newer additions until convergence.
 Returned rows are still revalidated under the current statement snapshot.
 
-The two- and four-argument scalar `ii42_query(...)` overloads are planner
+The two- and four-argument scalar `evoke_query(...)` overloads are planner
 markers. They are never evaluated once per row. One Evoke `CustomScan` evaluates
 ordinary PostgreSQL predicates under the statement snapshot, encodes the query
 once, and returns subset top-k from the same root and scorer used by the
@@ -32,7 +32,7 @@ The explicit hit API returns `ctid`, index-local `doc_id`, and `score`. Join by
 
 ```sql
 SELECT d.id, d.body, hit.score
-FROM ii42_query('docs_body_idx'::regclass, 'query text', 20) AS hit
+FROM evoke_query('docs_body_idx'::regclass, 'query text', 20) AS hit
 JOIN docs AS d ON d.ctid = hit.ctid
 ORDER BY hit.score DESC, d.id;
 ```
@@ -49,8 +49,8 @@ not silently differ from indexing policy.
 
 The extension-owner exact support functions are:
 
-- `ii42_query_ids(...)` for `int4[]`;
-- `ii42_query_tokens(...)` for text token arrays.
+- `evoke_query_ids(...)` for `int4[]`;
+- `evoke_query_tokens(...)` for text token arrays.
 
 They are revoked from `PUBLIC`, reject semantic-enabled indexes, and exist for
 regression/benchmark isolation rather than application routing.
@@ -62,14 +62,14 @@ checkout. Lexical and semantic postings contribute to one score accumulator
 and one top-k result. There is no ANN query or post-retrieval fusion stage.
 
 On `field_aware = true` indexes, lexical and semantic atoms are namespaced per
-field. The ordinary `ii42_query(index, query, k)` overload searches every
+field. The ordinary `evoke_query(index, query, k)` overload searches every
 field with weight `1.0`; the field-aware overload selects fields and computes
 `sum(field_weight * (field_BM25 + field_semantic))`. Both forms traverse the same
 physical posting index and use the same accumulator.
 
 BM25-only query overrides and `weight_mask` are rejected. Query encoding,
 document encoding, atom identity, normalization, and scoring profile must share
-the same validated contract. A mismatch makes `ii42_index_status(...)`
+the same validated contract. A mismatch makes `evoke_index_status(...)`
 non-ready and search fails closed.
 
 A newly committed semantic row may initially have lexical evidence only. This
@@ -113,8 +113,8 @@ materialize the first statement's results.
 
 ## Ordering And Ties
 
-Explicit-hit `ii42_query(..., k, ...)` returns the index top-k and permits an
-application-side secondary key. Planner-native scalar `ii42_query(...)`
+Explicit-hit `evoke_query(..., k, ...)` returns the index top-k and permits an
+application-side secondary key. Planner-native scalar `evoke_query(...)`
 currently accepts only its score as the sort key; a second key fails closed
 rather than changing top-k semantics.
 
@@ -139,7 +139,7 @@ scalar shape. Owner diagnostics can use the prepared-query `@@@` surface.
 
 `ORDER BY value <=> query ASC LIMIT k` is the planner-visible BM25 ordering
 surface. It has full index ranking semantics only when PostgreSQL selects a
-real `ii42` index scan. A scalar evaluation outside that scan is a local
+real `evoke` index scan. A scalar evaluation outside that scan is a local
 distance calculation, not a corpus retrieval oracle.
 
 These operators are BM25-specific and do not dispatch to semantic scoring.
@@ -147,7 +147,7 @@ These operators are BM25-specific and do not dispatch to semantic scoring.
 ## Prepared Diagnostics And Product Composition
 
 Prepared-query and ranked-query helpers are owner-only diagnostics. The public
-`ii42_query(...)` overload provides custom field weighting inside one
+`evoke_query(...)` overload provides custom field weighting inside one
 field-aware index. Fusion and hybrid helpers are public composition APIs above
 one or more independently queried indexes. Neither category changes a source
 index's page-native scorer or lifecycle.
@@ -158,7 +158,7 @@ index's page-native scorer or lifecycle.
 - fusion/hybrid APIs combine already retrieved candidate rows.
 
 Application code should prefer planner-native SQL for one semantic index and
-use `ii42_query(...)` when it explicitly needs hit rows. Use fusion or hybrid
+use `evoke_query(...)` when it explicitly needs hit rows. Use fusion or hybrid
 composition only when the application deliberately combines multiple Evoke
 indexes or an Evoke source with another retrieval engine.
 
@@ -179,7 +179,7 @@ PostgreSQL predicates:
 ```sql
 SELECT source.id,
        source.body,
-       ii42_query('docs_body_idx'::regclass, 'graph retrieval') AS score
+       evoke_query('docs_body_idx'::regclass, 'graph retrieval') AS score
 FROM docs AS source
 WHERE source.publish_date >= DATE '2026-01-01'
   AND source.categories && ARRAY['cs.LG']
@@ -215,7 +215,7 @@ structured-predicate API below uses the same serving-baseline contract.
 
 ### Structured Predicate API
 
-The structured JSON `ii42_query(...)` overload provides explicit subset top-k
+The structured JSON `evoke_query(...)` overload provides explicit subset top-k
 workflows. Its supported operations are:
 
 | Operation | JSON shape | Typical use |
@@ -277,7 +277,7 @@ An SSR index can place frequently used exact dimensions in the same Evoke root:
 
 ```sql
 CREATE INDEX docs_search_idx
-ON docs USING ii42 (title, abstract)
+ON docs USING evoke (title, abstract)
 INCLUDE (publish_date, categories)
 WITH (sae = true, field_aware = true);
 ```
@@ -347,7 +347,7 @@ of this directory for large page-native generations after restart. A resident
 fold carries an equivalent TID projection, but filtered scoring still uses the
 page-native route and the durable compact child remains the cold fallback.
 Setting
-`ii42.maintenance_worker_limit = 0` disables both proactive preload and normal
+`evoke.maintenance_worker_limit = 0` disables both proactive preload and normal
 background convergence. In that diagnostic configuration, a current root still
 serves filtered queries from its compact child but does not publish shared
 state; production deployments should leave maintenance enabled.
@@ -479,7 +479,7 @@ owns independent corpus statistics, document slots, and TID space.
 Before serving traffic:
 
 ```sql
-SELECT ii42_index_status('docs_body_idx'::regclass);
+SELECT evoke_index_status('docs_body_idx'::regclass);
 ```
 
 Search fails closed for invalid physical roots, incompatible reloptions,

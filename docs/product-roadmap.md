@@ -51,7 +51,7 @@ query-latency or memory evidence.
 
 ### CSG-I114: access-method orchestration boundaries
 
-`src/ii42_am.c` still owns a large but cohesive orchestration closure. Further
+`src/evoke_am.c` still owns a large but cohesive orchestration closure. Further
 extraction is optional and must preserve typed, one-way authority boundaries.
 Do not add a second root, scheduler, scorer, lifecycle, or broad private API to
 reduce file size.

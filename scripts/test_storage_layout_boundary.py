@@ -12,7 +12,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 from test_convergent_segment_read_smoke import (
     configure_cluster,
     pg_config_value,
@@ -166,7 +166,7 @@ def storage_version(index_path: Path) -> int:
         page = index_file.read(BLCKSZ)
     if len(page) != BLCKSZ:
         raise AssertionError(
-            f'ii42 metapage is short: {len(page)} bytes at {index_path}'
+            f'evoke metapage is short: {len(page)} bytes at {index_path}'
         )
     return int(struct.unpack_from('<I', page, STORAGE_VERSION_OFFSET)[0])
 
@@ -176,7 +176,7 @@ def patch_storage_version(index_path: Path, version: int) -> None:
         page = bytearray(index_file.read(BLCKSZ))
         if len(page) != BLCKSZ:
             raise AssertionError(
-                f'ii42 metapage is short: {len(page)} bytes at {index_path}'
+                f'evoke metapage is short: {len(page)} bytes at {index_path}'
             )
         struct.pack_into('<I', page, STORAGE_VERSION_OFFSET, version)
         index_file.seek(0)
@@ -193,8 +193,8 @@ def assert_storage_error(result: subprocess.CompletedProcess[str]) -> None:
         )
     expected = (
         '0A000',
-        'unsupported ii42 index storage layout',
-        'REINDEX the ii42 index to publish page-native v3 storage.',
+        'unsupported evoke index storage layout',
+        'REINDEX the evoke index to publish page-native v3 storage.',
     )
     missing = [part for part in expected if part not in result.stderr]
     if missing:
@@ -244,7 +244,7 @@ def run_boundary(
         socket_dir,
         port,
         '''
-        CREATE EXTENSION ii42;
+        CREATE EXTENSION evoke;
         CREATE TABLE docs (
             id integer PRIMARY KEY,
             tokens text[] NOT NULL
@@ -253,7 +253,7 @@ def run_boundary(
         SELECT id, ARRAY['storage', 'boundary', id::text]
         FROM generate_series(1, 128) AS id;
         CREATE INDEX docs_bm25_idx
-            ON docs USING ii42 (tokens)
+            ON docs USING evoke (tokens)
             WITH (consistency = 'eventual');
         CHECKPOINT;
         ''',
@@ -282,7 +282,7 @@ def run_boundary(
     checks = {
         'query': '''
             SELECT count(*)
-            FROM ii42_query_tokens(
+            FROM evoke_query_tokens(
                 'docs_bm25_idx'::regclass,
                 ARRAY['storage'],
                 10,
@@ -294,41 +294,41 @@ def run_boundary(
         ''',
         'vacuum': 'VACUUM docs;',
         'maintenance': '''
-            SELECT ii42_index_try_maintain('docs_bm25_idx'::regclass);
+            SELECT evoke_index_try_maintain('docs_bm25_idx'::regclass);
         ''',
         'generation_status': '''
-            SELECT ii42_index_generation_status_internal(
+            SELECT evoke_index_generation_status_internal(
                 'docs_bm25_idx'::regclass
             );
         ''',
         'cache_state': '''
-            SELECT ii42_index_runtime_state(
+            SELECT evoke_index_runtime_state(
                 'docs_bm25_idx'::regclass
             );
         ''',
         'preload': '''
-            SELECT ii42_index_preload(
+            SELECT evoke_index_preload(
                 'docs_bm25_idx'::regclass
             );
         ''',
         'details': '''
             SELECT count(*)
-            FROM ii42_index_details('docs_bm25_idx'::regclass);
+            FROM evoke_index_details('docs_bm25_idx'::regclass);
         ''',
         'policy': '''
             SELECT count(*)
-            FROM ii42_index_policy_recommend(
+            FROM evoke_index_policy_recommend(
                 'docs_bm25_idx'::regclass,
                 'balanced'
             );
         ''',
         'generation_signature': '''
-            SELECT ii42_index_generation_signature_internal(
+            SELECT evoke_index_generation_signature_internal(
                 'docs_bm25_idx'::regclass
             );
         ''',
         'shared_resident': '''
-            SELECT ii42_index_shared_preload_resident(
+            SELECT evoke_index_shared_preload_resident(
                 'docs_bm25_idx'::regclass
             );
         ''',
@@ -348,7 +348,7 @@ def run_boundary(
         socket_dir,
         port,
         '''
-        SELECT ii42_index_runtime_signature_internal(
+        SELECT evoke_index_runtime_signature_internal(
             'docs_bm25_idx'::regclass
         );
         ''',
@@ -362,7 +362,7 @@ def run_boundary(
         pg_bin,
         socket_dir,
         port,
-        'SELECT count(*) FROM ii42_index_maintain_due(16);',
+        'SELECT count(*) FROM evoke_index_maintain_due(16);',
     ).stdout.strip()
     if due_count != '0':
         raise AssertionError(
@@ -396,7 +396,7 @@ def run_boundary(
         port,
         '''
         SELECT count(*)
-        FROM ii42_query_tokens(
+        FROM evoke_query_tokens(
             'docs_bm25_idx'::regclass,
             ARRAY['storage'],
             10,

@@ -87,7 +87,7 @@ def main() -> int:
 
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(
-        prefix='.ii42-model-',
+        prefix='.evoke-model-',
         dir=output.parent,
     ) as temp_name:
         temp = Path(temp_name)

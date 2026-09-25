@@ -5,7 +5,7 @@ Date: 2026-07-31
 ## Scope
 
 This focused local diagnostic measures the same public
-`ii42_query_ids(...)` top-100 query in five exact representations:
+`evoke_query_ids(...)` top-100 query in five exact representations:
 
 1. a one-segment static rebuild;
 2. the same 40,000-document corpus represented by one base plus two sealed

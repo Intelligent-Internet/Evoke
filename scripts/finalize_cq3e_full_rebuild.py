@@ -22,7 +22,7 @@ from qualify_full_rebuild_rss import (
 
 
 EXPECTED_EQUIVALENCE_SQL_SHA256 = (
-    '8c3df2fd7ccca6eef20e873e31d9f8e38647347c0b8d6a00b252056cf041f243'
+    '89182d8143f4346246b94b905d9fdc19f424386fbfacc82de8b86db067dcfae7'
 )
 MAX_FAMILY_COVERAGE_DELAY_SECONDS = 5.0
 
@@ -255,7 +255,7 @@ def connection_dsn(args: argparse.Namespace) -> str:
         f'port={args.port}',
         f'user={args.user}',
         f'dbname={args.database}',
-        'application_name=ii42_cq3e_finalizer',
+        'application_name=evoke_cq3e_finalizer',
     ])
 
 
@@ -366,7 +366,7 @@ def main() -> int:
     command = psql_command(args)
     environment = {
         **os.environ,
-        'PGAPPNAME': 'ii42_cq3e_postbuild_equivalence',
+        'PGAPPNAME': 'evoke_cq3e_postbuild_equivalence',
     }
     process = subprocess.run(
         command,

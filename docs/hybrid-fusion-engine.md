@@ -1,7 +1,7 @@
 # Hybrid Fusion Engine
 
 The public hybrid fusion engine is a composition layer above independent
-retrieval sources. Applications use `ii42_query(...)` for each Evoke source
+retrieval sources. Applications use `evoke_query(...)` for each Evoke source
 and use this engine only when they intentionally combine sources.
 
 The hybrid fusion engine is the implementation layer behind
@@ -12,7 +12,7 @@ and other ranked candidate sources into one weighted top-k result set.
 The feature is intentionally a late-fusion layer. Each retrieval source keeps
 its own best access path:
 
-- `ii42` indexes produce BM25 or unified lexical/semantic candidates.
+- `evoke` indexes produce BM25 or unified lexical/semantic candidates.
 - Vector extensions such as `pgvector` or VectorChord produce vector
   candidates.
 - Ordinary SQL can produce any additional ranked candidate source.
@@ -25,12 +25,12 @@ de-duplication, fusion, and ordering step.
 The current implementation includes the pieces needed for hybrid ranking
 inside PostgreSQL:
 
-- A generic candidate type, `ii42_result_hybrid_candidate`.
-- A generic hit type, `ii42_result_hybrid_hit`.
+- A generic candidate type, `evoke_result_hybrid_candidate`.
+- A generic hit type, `evoke_result_hybrid_hit`.
 - BM25 candidate constructors and a direct BM25 index adapter.
 - Vector candidate constructors that accept ordinary SQL distances.
 - A public C-backed fusion function,
-  `ii42_hybrid_fuse_candidates(...)`.
+  `evoke_hybrid_fuse_candidates(...)`.
 - Reciprocal-rank fusion through `fusion => 'rrf'`.
 - Weighted score fusion through `fusion => 'score'`.
 - Explicit normalizers: `identity`, `negative_distance`,
@@ -51,8 +51,8 @@ just SQL that emits hybrid candidates.
 The fusion function accepts an array of candidate rows:
 
 ```sql
-ii42_hybrid_fuse_candidates(
-    candidates ii42_result_hybrid_candidate[],
+evoke_hybrid_fuse_candidates(
+    candidates evoke_result_hybrid_candidate[],
     k integer,
     fusion text DEFAULT 'rrf',
     rrf_k real DEFAULT 60,
@@ -134,7 +134,7 @@ For RAG-style search with SQL filters, keep retrieval source ownership clear:
 ```sql
 WITH title_candidates AS (
     SELECT c
-    FROM ii42_hybrid_bm25_candidates(
+    FROM evoke_hybrid_bm25_candidates(
         'title',
         'docs_title_bm25_idx'::regclass,
         'how to use a computer',
@@ -143,7 +143,7 @@ WITH title_candidates AS (
     ) AS c
 ),
 vector_candidates AS (
-    SELECT ii42_hybrid_vector_candidate(
+    SELECT evoke_hybrid_vector_candidate(
         'embedding',
         d.ctid,
         (d.embedding <-> '[0.1,0.2,0.3]'::vector)::real,
@@ -161,7 +161,7 @@ vector_candidates AS (
 ),
 hybrid_hits AS (
     SELECT *
-    FROM ii42_hybrid_fuse_candidates(
+    FROM evoke_hybrid_fuse_candidates(
         ARRAY(
             SELECT c FROM title_candidates
             UNION ALL
@@ -205,7 +205,7 @@ for measured results.
 Applications may use the C-backed function directly:
 
 ```sql
-ii42_hybrid_fuse_candidates(...)
+evoke_hybrid_fuse_candidates(...)
 ```
 
 Recommended defaults:
@@ -214,7 +214,7 @@ Recommended defaults:
 - Start with weights that express source importance, not raw score scale.
 - Use `score` only after selecting and benchmarking a normalizer.
 - Keep vector retrieval in the vector extension's own indexed SQL path.
-- Keep Evoke retrieval in `ii42_query(...)` or its public candidate adapters.
+- Keep Evoke retrieval in `evoke_query(...)` or its public candidate adapters.
 - Use the debug arrays to inspect why a document won.
 
 ## Validation

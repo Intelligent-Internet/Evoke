@@ -58,12 +58,12 @@ def fetch_status(
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_status(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass)',
             (INDEX_NAME,),
         )
         row = cursor.fetchone()
     if row is None or not isinstance(row[0], dict):
-        raise RuntimeError('ii42_index_status did not return JSON')
+        raise RuntimeError('evoke_index_status did not return JSON')
     return dict(row[0])
 
 
@@ -81,7 +81,7 @@ def quarantine_details(
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_semantic_quarantine_internal('
+            'SELECT evoke_index_semantic_quarantine_internal('
             '%s::regclass)',
             (INDEX_NAME,),
         )
@@ -108,7 +108,7 @@ def acquire_guard(
 ) -> None:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_try_maintenance_lock(%s::regclass)',
+            'SELECT evoke_index_try_maintenance_lock(%s::regclass)',
             (INDEX_NAME,),
         )
         acquired = bool(cursor.fetchone()[0])
@@ -121,11 +121,11 @@ def release_guard(
 ) -> None:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_maintenance_unlock(%s::regclass)',
+            'SELECT evoke_index_maintenance_unlock(%s::regclass)',
             (INDEX_NAME,),
         )
         cursor.execute(
-            'SELECT ii42_index_maintenance_lock_held(%s::regclass)',
+            'SELECT evoke_index_maintenance_lock_held(%s::regclass)',
             (INDEX_NAME,),
         )
         row = cursor.fetchone()
@@ -136,7 +136,7 @@ def release_guard(
 def maintain(connection: psycopg.Connection[Any]) -> str:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_maintain(%s::regclass)',
+            'SELECT evoke_index_maintain(%s::regclass)',
             (INDEX_NAME,),
         )
         row = cursor.fetchone()
@@ -231,20 +231,20 @@ def setup(
     with connection.cursor() as cursor:
         cursor.execute(
             f"""
-            CREATE EXTENSION ii42;
+            CREATE EXTENSION evoke;
             CREATE SCHEMA {SCHEMA};
             CREATE TABLE {SCHEMA}.docs (
                 id text PRIMARY KEY,
                 body text NOT NULL
             );
-            CREATE ROLE ii42_quarantine_observer NOLOGIN;
+            CREATE ROLE evoke_quarantine_observer NOLOGIN;
             INSERT INTO {SCHEMA}.docs VALUES (
                 'base',
                 'durable semantic quarantine baseline'
             );
             CREATE INDEX docs_idx
             ON {SCHEMA}.docs
-            USING ii42 (body)
+            USING evoke (body)
             WITH (
                 sae = true,
                 model_path = {sql_literal(str(model_path))},
@@ -252,7 +252,7 @@ def setup(
                 auto_preload = 0
             );
             GRANT USAGE ON SCHEMA {SCHEMA}
-            TO ii42_quarantine_observer
+            TO evoke_quarantine_observer
             """
         )
 
@@ -291,14 +291,14 @@ def query_rows(
 ) -> list[tuple[str, float]]:
     set_test_setting(
         connection,
-        'ii42.test_unified_overlay_oracle',
+        'evoke.test_unified_overlay_oracle',
         'on' if oracle else 'off',
     )
     with connection.cursor() as cursor:
         cursor.execute(
             f"""
             SELECT source.id, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 '{INDEX_NAME}'::regclass,
                 %s,
                 20
@@ -412,10 +412,10 @@ def assert_owner_only_diagnostics(
     denied: dict[str, str] = {}
 
     with connection.cursor() as cursor:
-        cursor.execute('SET ROLE ii42_quarantine_observer')
+        cursor.execute('SET ROLE evoke_quarantine_observer')
         try:
             cursor.execute(
-                'SELECT ii42_index_semantic_quarantine_internal('
+                'SELECT evoke_index_semantic_quarantine_internal('
                 '%s::regclass)',
                 (INDEX_NAME,),
             )
@@ -430,7 +430,7 @@ def assert_owner_only_diagnostics(
         raise AssertionError(
             f'quarantine diagnostics were not owner-only: {denied}'
         )
-    if 'ii42_index_semantic_quarantine_internal' not in denied['message']:
+    if 'evoke_index_semantic_quarantine_internal' not in denied['message']:
         raise AssertionError(
             f'quarantine ACL failed at the wrong boundary: {denied}'
         )
@@ -473,12 +473,12 @@ def run_retry_scenario(
         raise AssertionError('retry scenario has no poison row')
     set_test_setting(
         maintenance,
-        'ii42.test_semantic_quarantine_retry_ms',
+        'evoke.test_semantic_quarantine_retry_ms',
         '0',
     )
     set_test_setting(
         maintenance,
-        'ii42.test_semantic_completion_fail_pattern',
+        'evoke.test_semantic_completion_fail_pattern',
         'POISON_retry',
     )
     first_result = maintain_until(
@@ -505,7 +505,7 @@ def run_retry_scenario(
     )
     set_test_setting(
         maintenance,
-        'ii42.test_semantic_completion_fail_pattern',
+        'evoke.test_semantic_completion_fail_pattern',
         '',
     )
     recovery_result = maintain_until(
@@ -516,7 +516,7 @@ def run_retry_scenario(
     final = assert_converged(writer)
     set_test_setting(
         maintenance,
-        'ii42.test_semantic_quarantine_retry_ms',
+        'evoke.test_semantic_quarantine_retry_ms',
         '',
     )
     return {
@@ -541,7 +541,7 @@ def run_scenario(
         raise AssertionError('scenario has no poison row')
     set_test_setting(
         maintenance,
-        'ii42.test_semantic_completion_fail_pattern',
+        'evoke.test_semantic_completion_fail_pattern',
         f'POISON_{prefix}',
     )
     result = maintain_until(
@@ -560,7 +560,7 @@ def run_scenario(
     if recovery == 'retry':
         set_test_setting(
             maintenance,
-            'ii42.test_semantic_quarantine_retry_ms',
+            'evoke.test_semantic_quarantine_retry_ms',
             '0',
         )
         with writer.cursor() as cursor:
@@ -591,7 +591,7 @@ def run_scenario(
     elif recovery == 'reindex':
         set_test_setting(
             maintenance,
-            'ii42.test_semantic_completion_fail_pattern',
+            'evoke.test_semantic_completion_fail_pattern',
             '',
         )
         with maintenance.cursor() as cursor:
@@ -603,12 +603,12 @@ def run_scenario(
     observation['final'] = assert_converged(writer)
     set_test_setting(
         maintenance,
-        'ii42.test_semantic_completion_fail_pattern',
+        'evoke.test_semantic_completion_fail_pattern',
         '',
     )
     set_test_setting(
         maintenance,
-        'ii42.test_semantic_quarantine_retry_ms',
+        'evoke.test_semantic_quarantine_retry_ms',
         '',
     )
     return observation
@@ -650,7 +650,7 @@ def main() -> None:
         encoding='utf-8',
     ) as handle:
         handle.write(
-            "ii42.maintenance_timer_interval_ms = '3600000ms'\n"
+            "evoke.maintenance_timer_interval_ms = '3600000ms'\n"
         )
     start_cluster(pg_ctl, data_dir, log_path)
 
@@ -671,7 +671,7 @@ def main() -> None:
         insert_batch(writer, 'global', None)
         set_test_setting(
             maintenance,
-            'ii42.test_semantic_completion_fail_global',
+            'evoke.test_semantic_completion_fail_global',
             'on',
         )
         global_actions, global_error = maintain_until_error(maintenance)
@@ -696,7 +696,7 @@ def main() -> None:
             )
         set_test_setting(
             maintenance,
-            'ii42.test_semantic_completion_fail_global',
+            'evoke.test_semantic_completion_fail_global',
             'off',
         )
         report['global_failure'] = {
@@ -743,7 +743,7 @@ def main() -> None:
         insert_batch(writer, 'restart', 1)
         set_test_setting(
             maintenance,
-            'ii42.test_semantic_completion_fail_pattern',
+            'evoke.test_semantic_completion_fail_pattern',
             'POISON_restart',
         )
         restart_actions = maintain_until(

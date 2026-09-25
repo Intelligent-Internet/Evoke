@@ -297,11 +297,11 @@ stage directory rather than added to the repository root.
   revisits the post-NG79 research direction, separating task diversity,
   teacher fidelity, relevance judgments and posting cost. It is a discussion
   proposal, not an executable protocol or permission to access locked tests.
-- [Historical hybrid Vector/BM25 deployment design](designs/ii42-hybrid-vector-bm25-use-case-design.md)
+- [Historical hybrid Vector/BM25 deployment design](designs/evoke-hybrid-vector-bm25-use-case-design.md)
 - [Historical online-maintenance design](designs/ii42-online-maintenance-future-plan.md)
 - [Milestone and current-state summaries](milestones/)
 - [M1900-M1951 learned-sparse milestone](m1900-m1999/ii42-m1900-m1951-learned-sparse-one-index-milestone.md)
-- [M1934 unseen-transfer report](m1900-m1999/ii42-m1934-fixed-budget-unseen-transfer-report.md)
+- [M1934 unseen-transfer report](m1900-m1999/evoke-m1934-fixed-budget-unseen-transfer-report.md)
 
 ## Legacy Archive
 

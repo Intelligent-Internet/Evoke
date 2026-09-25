@@ -7,7 +7,7 @@ index with `sae = true`.
 ## 1. Create A Table
 
 ```sql
-CREATE EXTENSION ii42;
+CREATE EXTENSION evoke;
 
 CREATE TABLE docs (
     id bigint PRIMARY KEY,
@@ -28,8 +28,8 @@ Before starting
 PostgreSQL, enable the shared runtime:
 
 ```conf
-shared_preload_libraries = 'ii42'
-ii42.shared_runtime_size = '64MB'
+shared_preload_libraries = 'evoke'
+evoke.shared_runtime_size = '64MB'
 ```
 
 ## 3. Create And Query The Index
@@ -38,11 +38,11 @@ Restart PostgreSQL, then create the unified index:
 
 ```sql
 CREATE INDEX docs_semantic_idx
-ON docs USING ii42 (body)
+ON docs USING evoke (body)
 WITH (sae = true);
 
 SELECT source.id, source.body, hit.score
-FROM ii42_query(
+FROM evoke_query(
     'docs_semantic_idx'::regclass,
     'database search',
     10
@@ -59,7 +59,7 @@ shared workers.
 Check readiness with:
 
 ```sql
-SELECT ii42_index_status('docs_semantic_idx'::regclass);
+SELECT evoke_index_status('docs_semantic_idx'::regclass);
 ```
 
 Require `query_ready = true` before serving traffic. For production warm-query

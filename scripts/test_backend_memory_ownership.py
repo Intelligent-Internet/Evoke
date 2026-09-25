@@ -135,8 +135,8 @@ def init_cluster(
         conf.write("\nlisten_addresses = ''\n")
         conf.write(f"unix_socket_directories = '{pgdata}'\n")
         conf.write(f'port = {port}\n')
-        conf.write("shared_preload_libraries = 'ii42'\n")
-        conf.write("ii42.shared_runtime_size = '1MB'\n")
+        conf.write("shared_preload_libraries = 'evoke'\n")
+        conf.write("evoke.shared_runtime_size = '1MB'\n")
         if args.extension_libdir is not None:
             libdir = str(args.extension_libdir.resolve()).replace("'", "''")
             conf.write(
@@ -192,7 +192,7 @@ def build_fixture(
         pgdata,
         port,
         f'''
-        CREATE EXTENSION ii42;
+        CREATE EXTENSION evoke;
 
         CREATE TABLE memory_small (
             id int PRIMARY KEY,
@@ -206,7 +206,7 @@ def build_fixture(
         ]
         FROM generate_series(1, {args.small_rows}) gs;
         CREATE INDEX memory_small_idx
-            ON memory_small USING ii42 (tokens)
+            ON memory_small USING evoke (tokens)
             WITH (auto_preload = 10);
 
         CREATE TABLE memory_large (
@@ -223,11 +223,11 @@ def build_fixture(
         ]
         FROM generate_series(1, {args.large_rows}) gs;
         CREATE INDEX memory_large_idx
-            ON memory_large USING ii42 (tokens)
+            ON memory_large USING evoke (tokens)
             WITH (auto_preload = 20);
 
-        SELECT ii42_index_preload('memory_small_idx'::regclass);
-        SELECT ii42_index_preload('memory_large_idx'::regclass);
+        SELECT evoke_index_preload('memory_small_idx'::regclass);
+        SELECT evoke_index_preload('memory_large_idx'::regclass);
         ''',
     )
 
@@ -458,7 +458,7 @@ def backend_context_bytes(
         cursor.execute(
             "SELECT COALESCE(sum(total_bytes), 0)::int8 "
             "FROM pg_backend_memory_contexts "
-            "WHERE name LIKE 'ii42%cache entry'",
+            "WHERE name LIKE 'evoke%cache entry'",
         )
         return int(cursor.fetchone()[0])
 
@@ -474,7 +474,7 @@ def execute_observed_query(
         cursor.execute(
             f'''
             SELECT count(*)
-            FROM ii42_query(
+            FROM evoke_query(
                 %s::regclass,
                 %s,
                 5,
@@ -495,7 +495,7 @@ def execute_observed_query(
         cursor.execute(
             f'''
             SELECT count(*)
-            FROM ii42_query(
+            FROM evoke_query(
                 %s::regclass,
                 %s,
                 5,
@@ -612,7 +612,7 @@ def observe_index(
                     )
             repeat_elapsed_ns = time.perf_counter_ns() - repeat_started
             cursor.execute(
-                'SELECT ii42_index_runtime_state_json(%s::regclass)',
+                'SELECT evoke_index_runtime_state_json(%s::regclass)',
                 (index_name,),
             )
             state = cursor.fetchone()[0]
@@ -727,10 +727,10 @@ def observe_index(
             'private_writable_after_by_region_bytes': (
                 private_after['private_writable_by_region_bytes']
             ),
-            'ii42_context_before_bytes': context_before,
-            'ii42_context_first_bytes': context_first,
-            'ii42_context_after_bytes': context_after,
-            'ii42_context_growth_bytes': max(
+            'evoke_context_before_bytes': context_before,
+            'evoke_context_first_bytes': context_first,
+            'evoke_context_after_bytes': context_after,
+            'evoke_context_growth_bytes': max(
                 0,
                 context_after - context_before,
             ),
@@ -757,7 +757,7 @@ def observe_index(
 def main() -> int:
     args = parse_args()
     workdir = Path(tempfile.mkdtemp(
-        prefix='ii42_v3_backend_memory_',
+        prefix='evoke_v3_backend_memory_',
         dir='/tmp',
     ))
     pgdata = workdir / 'pgdata'
@@ -808,8 +808,8 @@ def main() -> int:
         )
         scaled_context = max(
             0,
-            large['ii42_context_growth_bytes'] -
-            small['ii42_context_growth_bytes'],
+            large['evoke_context_growth_bytes'] -
+            small['evoke_context_growth_bytes'],
         )
         scaled_footprint = scaled_growth(
             large['physical_footprint_growth_bytes'],

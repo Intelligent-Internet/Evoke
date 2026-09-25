@@ -2,7 +2,7 @@
 
 This guide combines candidate sets from separate indexes. For multiple fields
 inside one index, use [Field-Aware Indexes](field-aware-indexes.md) instead.
-The `ii42_fusion_*` family identifies rows by `ctid`: all input indexes must
+The `evoke_fusion_*` family identifies rows by `ctid`: all input indexes must
 refer to the same base table and be queried within the same SQL snapshot.
 Do not fuse TIDs from different tables or partitions as if they were document
 IDs. The [hybrid API](hybrid-search.md) also uses same-table TIDs. For
@@ -13,7 +13,7 @@ Each source contributes only its retrieved candidate prefix. Increasing
 `candidate_k` improves coverage but does not guarantee the global fused top-k:
 a document below every source's cutoff can still have a high combined score.
 
-The public `ii42_fusion_*` APIs combine candidates from multiple independent
+The public `evoke_fusion_*` APIs combine candidates from multiple independent
 Evoke indexes. This is a product composition layer above single-index search;
 it does not change the storage, mutation, maintenance, or scorer of any source
 index.
@@ -44,7 +44,7 @@ Typical examples:
 
 The stable contract is:
 
-1. each source has its own BM25 or semantic-enabled `ii42` index
+1. each source has its own BM25 or semantic-enabled `evoke` index
 2. each source runs its own native top-k retrieval
 3. scores are fused only after those top-k result sets exist
 
@@ -52,7 +52,7 @@ That means:
 
 - there is no hidden cross-field scoring engine
 - field names are metadata, not implicit scoring signals
-- public `ii42_query(...)` remains each source's retrieval foundation
+- public `evoke_query(...)` remains each source's retrieval foundation
 - one single-index fusion mode is a different feature with different
   semantics; see [Multicolumn Indexes](multicolumn-indexes.md)
 
@@ -69,13 +69,13 @@ CREATE TABLE docs (
 );
 
 CREATE INDEX docs_title_bm25_idx
-    ON docs USING ii42 (title_tokens);
+    ON docs USING evoke (title_tokens);
 
 CREATE INDEX docs_abstract_bm25_idx
-    ON docs USING ii42 (abstract_tokens);
+    ON docs USING evoke (abstract_tokens);
 
 CREATE INDEX docs_body_bm25_idx
-    ON docs USING ii42 (body_tokens);
+    ON docs USING evoke (body_tokens);
 ```
 
 Each field is indexed independently. That keeps the storage and
@@ -88,10 +88,10 @@ This is the most explicit shape. It is also the easiest one to reason about.
 ```sql
 WITH fused AS (
     SELECT *
-    FROM ii42_fusion(
+    FROM evoke_fusion(
         ARRAY(
             SELECT h
-            FROM ii42_query(
+            FROM evoke_query(
                 'docs_title_bm25_idx'::regclass,
                 'cancer therapy',
                 20
@@ -100,7 +100,7 @@ WITH fused AS (
         3.0,
         ARRAY(
             SELECT h
-            FROM ii42_query(
+            FROM evoke_query(
                 'docs_abstract_bm25_idx'::regclass,
                 'cancer therapy',
                 20
@@ -130,32 +130,32 @@ This is the reference mental model for the higher-level helpers below.
 
 When an application has several weighted fields, the structured surface is:
 
-- `ii42_fusion_field_query(...)`
-- `ii42_fusion_query_fields(...)`
+- `evoke_fusion_field_query(...)`
+- `evoke_fusion_query_fields(...)`
 
 ```sql
 SELECT d.id, d.title_tokens, h.score
-FROM ii42_fusion_query_fields(
+FROM evoke_fusion_query_fields(
     ARRAY[
-        ii42_fusion_field_query(
+        evoke_fusion_field_query(
             'title',
             'docs_title_bm25_idx'::regclass,
             'cancer therapy',
             3.0
         ),
-        ii42_fusion_field_query(
+        evoke_fusion_field_query(
             'abstract',
             'docs_abstract_bm25_idx'::regclass,
             'cancer therapy',
             1.5
         ),
-        ii42_fusion_field_query(
+        evoke_fusion_field_query(
             'body',
             'docs_body_bm25_idx'::regclass,
             'cancer therapy',
             1.0
         )
-    ]::ii42_result_fusion_field_query[],
+    ]::evoke_result_fusion_field_query[],
     10,
     30,
     NULL
@@ -181,13 +181,13 @@ What it does not change:
 If several fields share the same raw query text and normalization
 options, the shortest surface is:
 
-- `ii42_fusion_query(...)`
+- `evoke_fusion_query(...)`
 
 Named form:
 
 ```sql
 SELECT d.id, d.title_tokens, h.score
-FROM ii42_fusion_query(
+FROM evoke_fusion_query(
     ARRAY['title', 'abstract', 'body']::text[],
     ARRAY[
         'docs_title_bm25_idx'::regclass,
@@ -212,7 +212,7 @@ Short form:
 
 ```sql
 SELECT d.id, d.title_tokens, h.score
-FROM ii42_fusion_query(
+FROM evoke_fusion_query(
     ARRAY[
         'docs_title_bm25_idx'::regclass,
         'docs_abstract_bm25_idx'::regclass,
@@ -260,8 +260,8 @@ The intended product pattern is:
 
 That is why the examples use:
 
-- `ii42_fusion_query_fields(...)`
-- `ii42_fusion_query(...)`
+- `evoke_fusion_query_fields(...)`
+- `evoke_fusion_query(...)`
 - `JOIN ... ON d.ctid = h.ctid`
 
 This keeps score attached to the current query execution. It also avoids
@@ -272,17 +272,17 @@ by row later.
 
 Use these in increasing order of abstraction:
 
-- `ii42_fusion(...)`
+- `evoke_fusion(...)`
   - most explicit
-- `ii42_fusion_weighted_query(...)`
+- `evoke_fusion_weighted_query(...)`
   - weighted prepared query
-- `ii42_fusion_field_query(...)`
+- `evoke_fusion_field_query(...)`
   - weighted prepared query with a field name
-- `ii42_fusion_query_weighted(...)`
+- `evoke_fusion_query_weighted(...)`
   - fusion from weighted prepared queries
-- `ii42_fusion_query_fields(...)`
+- `evoke_fusion_query_fields(...)`
   - fusion from named field queries
-- `ii42_fusion_query(...)`
+- `evoke_fusion_query(...)`
   - convenience form for shared query text
 
 ## Design Notes
@@ -296,4 +296,4 @@ The important design boundaries are:
   extension's API
 
 This is an application composition layer built on top of public
-`ii42_query(...)`, not a second search engine inside the extension.
+`evoke_query(...)`, not a second search engine inside the extension.

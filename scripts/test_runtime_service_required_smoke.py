@@ -9,7 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 from test_onnxruntime_smoke import REPO_ROOT
 
 
@@ -17,7 +17,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             'Verify ONNX-backed product queries require the shared '
-            'ii42 runtime service.'
+            'evoke runtime service.'
         ),
     )
     parser.add_argument(
@@ -36,7 +36,7 @@ def parse_args() -> argparse.Namespace:
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share directory containing extension/ii42.control, '
+            'PostgreSQL share directory containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -86,7 +86,7 @@ def psql(psql_bin: Path, socket_dir: Path, port: int, sql: str) -> str:
 def runtime_required_sql(model_path: Path) -> str:
     escaped_path = str(model_path).replace("'", "''")
     return f'''
-    CREATE EXTENSION ii42;
+    CREATE EXTENSION evoke;
     CREATE TABLE docs (
         id int PRIMARY KEY,
         body text NOT NULL
@@ -100,7 +100,7 @@ def runtime_required_sql(model_path: Path) -> str:
     DECLARE
         service_status jsonb;
     BEGIN
-        SELECT ii42_runtime_service_status() INTO service_status;
+        SELECT evoke_runtime_service_status() INTO service_status;
         IF (
             service_status->>'shared_memory_available'
         )::boolean IS DISTINCT FROM false THEN
@@ -143,7 +143,7 @@ def runtime_required_sql(model_path: Path) -> str:
     DO $$
     BEGIN
         EXECUTE format(
-            'CREATE INDEX docs_body_idx ON docs USING ii42 (body) '
+            'CREATE INDEX docs_body_idx ON docs USING evoke (body) '
             || 'WITH (sae = true, model_path = %L)',
             '{escaped_path}'
         );
@@ -151,7 +151,7 @@ def runtime_required_sql(model_path: Path) -> str:
             'SAE index build should require the shared runtime service';
     EXCEPTION WHEN others THEN
         IF position(
-            'ii42 SAE runtime service is not available'
+            'evoke SAE runtime service is not available'
             IN SQLERRM
         ) = 0 THEN
             RAISE EXCEPTION
@@ -170,7 +170,7 @@ def runtime_required_sql(model_path: Path) -> str:
     END;
     $$;
 
-    CREATE INDEX docs_body_idx ON docs USING ii42 (body)
+    CREATE INDEX docs_body_idx ON docs USING evoke (body)
     WITH (sae = false);
 
     DO $$
@@ -180,12 +180,12 @@ def runtime_required_sql(model_path: Path) -> str:
     BEGIN
         SELECT count(*)
         INTO hit_count
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_body_idx'::regclass,
             'semantic gpu',
             3
         );
-        SELECT ii42_index_status('docs_body_idx'::regclass)
+        SELECT evoke_index_status('docs_body_idx'::regclass)
         INTO status;
         IF hit_count = 0 OR status->>'index_type' <> 'bm25'
             OR (status->>'query_ready')::boolean IS DISTINCT FROM true THEN
@@ -205,7 +205,7 @@ def arena_required_sql(model_path: Path) -> str:
     DO $$
     BEGIN
         EXECUTE format(
-            'CREATE INDEX docs_body_idx ON docs USING ii42 (body) '
+            'CREATE INDEX docs_body_idx ON docs USING evoke (body) '
             || 'WITH (sae = true, model_path = %L)',
             '{escaped_path}'
         );
@@ -213,7 +213,7 @@ def arena_required_sql(model_path: Path) -> str:
             'SAE index build should require the shared arena';
     EXCEPTION WHEN others THEN
         IF position(
-            'ii42 SAE shared arena is not available'
+            'evoke SAE shared arena is not available'
             IN SQLERRM
         ) = 0 THEN
             RAISE EXCEPTION
@@ -232,11 +232,11 @@ def arena_required_sql(model_path: Path) -> str:
     END;
     $$;
 
-    CREATE INDEX docs_body_idx ON docs USING ii42 (body)
+    CREATE INDEX docs_body_idx ON docs USING evoke (body)
     WITH (sae = false);
 
     SELECT count(*)
-    FROM ii42_query(
+    FROM evoke_query(
         'docs_body_idx'::regclass,
         'semantic gpu',
         3
@@ -250,7 +250,7 @@ def runtime_enabled_sql(model_path: Path) -> str:
     DROP INDEX docs_body_idx;
 
     CREATE INDEX docs_body_idx
-    ON docs USING ii42 (body)
+    ON docs USING evoke (body)
     WITH (
         sae = true,
         model_path = '{escaped_path}',
@@ -273,20 +273,20 @@ def runtime_enabled_sql(model_path: Path) -> str:
     BEGIN
         SELECT count(*)
         INTO hit_count
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_body_idx'::regclass,
             'runtime ownership semantic gpu sentinel 256',
             10
         ) AS hit
         JOIN docs AS source ON source.ctid = hit.ctid
         WHERE source.id = 1256;
-        SELECT ii42_index_runtime_state_json(
+        SELECT evoke_index_runtime_state_json(
             'docs_body_idx'::regclass
         )
         INTO cache_state;
-        SELECT ii42_index_status('docs_body_idx'::regclass)
+        SELECT evoke_index_status('docs_body_idx'::regclass)
         INTO index_status;
-        SELECT ii42_runtime_service_status()
+        SELECT evoke_runtime_service_status()
         INTO service_status;
 
         IF hit_count = 0 THEN
@@ -348,7 +348,7 @@ def main() -> None:
     pg_ctl = pg_bin / 'pg_ctl'
     psql_bin = pg_bin / 'psql'
 
-    with tempfile.TemporaryDirectory(prefix='ii42_runtime_required_') as tmp:
+    with tempfile.TemporaryDirectory(prefix='evoke_runtime_required_') as tmp:
         root = Path(tmp)
         data_dir = root / 'data'
         socket_dir = root / 'socket'
@@ -428,7 +428,7 @@ def main() -> None:
                 with (
                     data_dir / 'postgresql.conf'
                 ).open('a', encoding='utf-8') as f:
-                    f.write("\nshared_preload_libraries = 'ii42'\n")
+                    f.write("\nshared_preload_libraries = 'evoke'\n")
                 run([
                     str(pg_ctl),
                     '-D',
@@ -461,10 +461,10 @@ def main() -> None:
                     data_dir / 'postgresql.conf'
                 ).open('a', encoding='utf-8') as f:
                     f.write(
-                        "ii42.shared_runtime_size = '1MB'\n"
+                        "evoke.shared_runtime_size = '1MB'\n"
                     )
                     f.write(
-                        "ii42.maintenance_timer_interval_ms = '100ms'\n"
+                        "evoke.maintenance_timer_interval_ms = '100ms'\n"
                     )
                 run([
                     str(pg_ctl),

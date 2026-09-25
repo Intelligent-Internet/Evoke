@@ -48,8 +48,8 @@ METRICS = [
 
 ENGINES = [
     ('upstream_bm25s', 'bm25s'),
-    ('ii42_ids', 'ii42 ids'),
-    ('ii42_text', 'ii42 text[]'),
+    ('evoke_ids', 'evoke ids'),
+    ('evoke_text', 'evoke text[]'),
     ('pg_search', 'pg_search'),
     ('vchord_bm25', 'vchord_bm25'),
 ]

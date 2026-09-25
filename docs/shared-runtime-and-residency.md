@@ -27,7 +27,7 @@ the shared arena. All backends attach that one image; none retains an
 index-sized private copy.
 
 Only when postmaster shared runtime is entirely unavailable may a pure BM25
-index whose physical relation size fits `ii42.workspace_cache_bytes` use the
+index whose physical relation size fits `evoke.workspace_cache_bytes` use the
 bounded backend-local fallback. Simultaneously active fallback snapshots share
 that one per-backend budget; completed queries reuse one idle entry rather than
 retaining a snapshot per index. If shared runtime exists but a fold is absent,
@@ -44,7 +44,7 @@ fields does not create a second cache or a per-field backend snapshot.
 The BM25-only `weight_mask` compatibility argument is intentionally outside the
 ordinary dispatcher: the mask itself spans every document slot. Evoke admits
 that explicit operation only when the physical index fits the finite positive
-`ii42.workspace_cache_bytes` budget together with any other active fallback
+`evoke.workspace_cache_bytes` budget together with any other active fallback
 snapshot; otherwise it fails instead of silently materializing unbounded
 backend state. Semantic mode rejects `weight_mask`.
 
@@ -56,17 +56,17 @@ not change BM25 rows or scores.
 Semantic-enabled indexes are eventual-only and require:
 
 ```conf
-shared_preload_libraries = 'ii42'
-ii42.shared_runtime_size = '64MB'
-ii42.runtime_worker_count = 2
+shared_preload_libraries = 'evoke'
+evoke.shared_runtime_size = '64MB'
+evoke.runtime_worker_count = 2
 ```
 
 Release packages include the digest-locked milestone checkout. A per-index
-`model_path` or server-wide `ii42.sae_model_path` selects a different qualified
+`model_path` or server-wide `evoke.sae_model_path` selects a different qualified
 checkout. Source installs must provision a checkout separately.
 
 Workers use the standard `postgres` database as their connection anchor by
-default. Set `ii42.control_database` only when `postgres` is unavailable or a
+default. Set `evoke.control_database` only when `postgres` is unavailable or a
 different stable, connectable database is preferred. Size the arena and worker
 pool from measured model/session RSS, queue pressure, and optional residency.
 The common resident-fold format supports BM25 and semantic-enabled roots; it
@@ -74,10 +74,10 @@ contains already-derived postings and never owns a model session. An eligible
 semantic accelerator takes precedence over that exact fold because it is the
 index's selected bounded-approximate execution profile.
 Every runtime worker can retain its own bounded session cache.
-By default, `ii42.runtime_reserve_query_lane = on` keeps one worker/response
+By default, `evoke.runtime_reserve_query_lane = on` keeps one worker/response
 lane available for foreground query execution. Controlled offline rebuilds may
 turn it off to let document encoding fill the configured worker pool.
-`ii42.runtime_accelerators` accepts a JSON array of optional remote Evoke
+`evoke.runtime_accelerators` accepts a JSON array of optional remote Evoke
 runtime services. An empty array uses only the local runtime. Non-empty arrays
 declare additive services for document build and maintenance batches: the
 existing async build pipeline sends compatible batches to the currently best
@@ -86,7 +86,7 @@ signature and runtime precision before returning atoms.
 
 Remote accelerators are throughput capacity, not a durable index or foreground
 query dependency. After bulk builds and outstanding semantic maintenance have
-converged, an operator may reload `ii42.runtime_accelerators = '[]'` and stop
+converged, an operator may reload `evoke.runtime_accelerators = '[]'` and stop
 the remote services. Published accelerator objects and resident folds remain
 owned by PostgreSQL; later writes are completed by the bounded local runtime
 workers unless compatible remote services are configured again. Remove remote
@@ -99,7 +99,7 @@ fixed dispatch ratio. `weight=4` is a starting window for a four-worker service,
 not a universal throughput optimum; network latency and batch size affect the
 useful outstanding window. Without a `weight`, a remote starts as one schedulable
 slot. `max_batch_size` is the service's per-request batch cap; without it the
-service uses `ii42.runtime_max_batch_size`. The builder forms variable-size
+service uses `evoke.runtime_max_batch_size`. The builder forms variable-size
 batches so a smaller service remains eligible when larger lanes are busy. The
 local runtime contributes its available document worker slots, subject to the
 query lane reservation. All lanes share one
@@ -136,7 +136,7 @@ fault. The dispatcher records a short cooling interval and immediately tries
 another eligible remote or the local lane for that batch. Other non-200
 responses and transport failures use exponential backoff.
 
-`ii42.runtime_document_pipeline_depth` controls builder-level in-flight
+`evoke.runtime_document_pipeline_depth` controls builder-level in-flight
 document batches. Remote accelerator requests can use that full window because
 they do not occupy local runtime response slots. Local runtime submissions stay
 bounded by local document worker slots, with response slots still acting as a
@@ -145,7 +145,7 @@ therefore does not let one backend queue a long tail of slow local CPU batches
 ahead of faster remote results.
 
 If preload, arena, model checkout, provider, or runtime contract is invalid,
-`ii42_index_status(...)` reports a blocker and `ii42_query(...)` fails closed.
+`evoke_index_status(...)` reports a blocker and `evoke_query(...)` fails closed.
 The product never falls back to backend-local inference or BM25-only scoring.
 
 The packaged P2 checkout does not pin a runtime provider. CPU export
@@ -177,14 +177,14 @@ to `MLComputeUnits=CPUAndGPU` with `RequireStaticInputShapes=1` through ONNX
 Runtime provider options. These are runtime placement defaults, not model
 checkout fields.
 
-The external runtime daemon is `build/ii42-runtime-server`, built with
+The external runtime daemon is `build/evoke-runtime-server`, built with
 `make runtime-server`. It exposes `/health`, `/v1/models`, and `/v1/encode`,
 and dynamically combines compatible document encode requests up to the service
 batch limit across one or more dispatcher lanes. It runs in direct mode: one
 model checkout, no PostgreSQL postmaster, no relation storage, no extension SQL
 installation, and no `--dsn`. Because it has no PostgreSQL dependency, the
 coordinator must pass the checkout signature for the exact model checkout at
-startup with `--checkout-signature` or `II42_CHECKOUT_SIGNATURE`.
+startup with `--checkout-signature` or `EVOKE_CHECKOUT_SIGNATURE`.
 Keep-alive sockets are bounded by `--max-connections` and
 `--connection-idle-timeout-s` (30 seconds by default), so disconnected or idle
 coordinators cannot grow the daemon's thread and file-descriptor usage without
@@ -192,7 +192,7 @@ limit.
 
 The direct service currently supports document encoding for build and
 maintenance acceleration. The PostgreSQL dispatcher consumes
-`ii42.runtime_accelerators` for document build and maintenance batches only;
+`evoke.runtime_accelerators` for document build and maintenance batches only;
 foreground query encoding remains local so query latency and relation-owned
 contract checks stay bounded.
 
@@ -235,7 +235,7 @@ an admission lane under document-work saturation.
 - Model identity includes the digest-validated checkout signature, so replacing
   artifacts at the same path cannot reuse an incompatible session.
 
-`ii42.onnxruntime_intra_op_threads = 0` uses the product auto policy. With
+`evoke.onnxruntime_intra_op_threads = 0` uses the product auto policy. With
 multiple workers, it limits nested ONNX CPU oversubscription. Explicit positive
 values cap each worker.
 
@@ -245,7 +245,7 @@ values cap each worker.
 privileged diagnostic can warm one index explicitly:
 
 ```sql
-SELECT ii42_index_preload('docs_search_idx'::regclass);
+SELECT evoke_index_preload('docs_search_idx'::regclass);
 ```
 
 `64MB` is a minimal runtime example, not a residency ceiling. The postmaster
@@ -283,12 +283,12 @@ change invalidates the marker and requires a new bounded warmup.
    document-length projection, warms query-critical metadata, records a
    serving-authority warm marker, and does not attempt an exact resident fold;
 2. otherwise, when linked L0 is empty and the complete pointer-free scoring
-   image fits the priority-aware `ii42.shared_runtime_size` arena and host
+   image fits the priority-aware `evoke.shared_runtime_size` arena and host
    materialization headroom, it publishes that exact fold into the common
    shared arena;
 3. when no fold is published, it prepares the document-length projection,
    validates the complete COW closure, and warms exact reachable pages when
-   they fit the `ii42.prewarm_max_bytes` page-I/O budget;
+   they fit the `evoke.prewarm_max_bytes` page-I/O budget;
 4. for a larger index, it validates the sealed manifest and query contract,
    then warms query-critical roots, scope-pruning metadata, one page from every
    semantic forward chunk when the budget permits, and a bounded payload
@@ -330,7 +330,7 @@ Bounded preload is a startup latency operation, not a replacement for the
 complete health and maintenance diagnostics. COW readers validate each object
 they touch, so corruption still fails closed on the query path.
 
-`ii42_index_preload(...)` reports `prewarm_scope=exact|bounded`, resident bytes,
+`evoke_index_preload(...)` reports `prewarm_scope=exact|bounded`, resident bytes,
 the page budget, and the pages touched. The default 64 MB page-warm budget prevents an index
 larger than `shared_buffers` from cycling the entire PostgreSQL cache during
 startup. Normal query heat and optional HOT_FOLD maintenance continue to
@@ -384,10 +384,10 @@ Physical replicas receive relation WAL, not server-local model files.
 Privileged runtime/residency diagnostics include:
 
 ```sql
-SELECT ii42_index_runtime_state('docs_search_idx'::regclass);
-SELECT ii42_index_runtime_state_json('docs_search_idx'::regclass);
-SELECT ii42_runtime_service_status();
-SELECT ii42_runtime_cache_clear();
+SELECT evoke_index_runtime_state('docs_search_idx'::regclass);
+SELECT evoke_index_runtime_state_json('docs_search_idx'::regclass);
+SELECT evoke_runtime_service_status();
+SELECT evoke_runtime_cache_clear();
 ```
 
 Interpret the runtime-state fields as root health, linked-L0 debt, runtime
@@ -395,7 +395,7 @@ capacity, worker state, and disposable residency. They do not describe a
 second storage or lifecycle authority. The JSON function is emitted directly
 from the same C snapshot as the text form; it does not reparse diagnostic text.
 
-`ii42_runtime_cache_clear()` clears bounded backend workspace, root
+`evoke_runtime_cache_clear()` clears bounded backend workspace, root
 markers, optional projections, and volatile runtime registry state. It does not
 modify relation pages, the checked root, pending semantic work, or query
 results.

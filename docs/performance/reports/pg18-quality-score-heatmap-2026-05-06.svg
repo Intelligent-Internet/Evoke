@@ -43,8 +43,8 @@
 <text x="82.00" y="296.00" font-size="12" font-weight="700" fill="#5d5348" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif">Dataset</text>
 <text x="298.00" y="296.00" font-size="12" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">Docs</text>
 <text x="390.30" y="290.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">bm25s</text>
-<text x="502.90" y="290.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">ii42 ids</text>
-<text x="615.50" y="290.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">ii42 text[]</text>
+<text x="502.90" y="290.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">evoke ids</text>
+<text x="615.50" y="290.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">evoke text[]</text>
 <text x="728.10" y="290.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">pg_search</text>
 <text x="840.70" y="290.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">vchord_bm25</text>
 <line x1="82.00" y1="330.00" x2="897.00" y2="330.00" stroke="#e2d6c4" stroke-width="1.20"/>
@@ -243,8 +243,8 @@
 <text x="1003.00" y="296.00" font-size="12" font-weight="700" fill="#5d5348" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif">Dataset</text>
 <text x="1219.00" y="296.00" font-size="12" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">Docs</text>
 <text x="1311.30" y="290.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">bm25s</text>
-<text x="1423.90" y="290.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">ii42 ids</text>
-<text x="1536.50" y="290.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">ii42 text[]</text>
+<text x="1423.90" y="290.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">evoke ids</text>
+<text x="1536.50" y="290.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">evoke text[]</text>
 <text x="1649.10" y="290.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">pg_search</text>
 <text x="1761.70" y="290.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">vchord_bm25</text>
 <line x1="1003.00" y1="330.00" x2="1818.00" y2="330.00" stroke="#e2d6c4" stroke-width="1.20"/>
@@ -443,8 +443,8 @@
 <text x="82.00" y="842.00" font-size="12" font-weight="700" fill="#5d5348" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif">Dataset</text>
 <text x="298.00" y="842.00" font-size="12" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">Docs</text>
 <text x="390.30" y="836.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">bm25s</text>
-<text x="502.90" y="836.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">ii42 ids</text>
-<text x="615.50" y="836.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">ii42 text[]</text>
+<text x="502.90" y="836.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">evoke ids</text>
+<text x="615.50" y="836.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">evoke text[]</text>
 <text x="728.10" y="836.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">pg_search</text>
 <text x="840.70" y="836.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">vchord_bm25</text>
 <line x1="82.00" y1="876.00" x2="897.00" y2="876.00" stroke="#e2d6c4" stroke-width="1.20"/>
@@ -643,8 +643,8 @@
 <text x="1003.00" y="842.00" font-size="12" font-weight="700" fill="#5d5348" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif">Dataset</text>
 <text x="1219.00" y="842.00" font-size="12" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">Docs</text>
 <text x="1311.30" y="836.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">bm25s</text>
-<text x="1423.90" y="836.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">ii42 ids</text>
-<text x="1536.50" y="836.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">ii42 text[]</text>
+<text x="1423.90" y="836.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">evoke ids</text>
+<text x="1536.50" y="836.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">evoke text[]</text>
 <text x="1649.10" y="836.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">pg_search</text>
 <text x="1761.70" y="836.00" font-size="11" font-weight="700" fill="#5d5348" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif">vchord_bm25</text>
 <line x1="1003.00" y1="876.00" x2="1818.00" y2="876.00" stroke="#e2d6c4" stroke-width="1.20"/>

@@ -67,7 +67,7 @@ def main():
         'modes': MODES, 'repeats': 3, 'cpu_threads': 4, 'wall_limit_seconds': 240,
         'host_rss_limit_bytes': 16 * 1024 ** 3, 'rank_attempt_resumed': False})
     Task.set_offline(True)
-    task = Task.init(project_name='II42-NG', task_name='NG-0069/dense-rank-diagnostic',
+    task = Task.init(project_name='Evoke-NG', task_name='NG-0069/dense-rank-diagnostic',
         task_type=Task.TaskTypes.testing, reuse_last_task_id=False,
         auto_connect_frameworks=False, auto_connect_arg_parser=False,
         auto_connect_streams=False, auto_resource_monitoring=False)

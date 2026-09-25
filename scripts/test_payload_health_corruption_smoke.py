@@ -10,7 +10,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 from test_convergent_segment_read_smoke import (
     configure_cluster,
     pg_config_value,
@@ -181,7 +181,7 @@ def run_smoke(
         pgdata,
         port,
         '''
-        CREATE EXTENSION ii42;
+        CREATE EXTENSION evoke;
         CREATE TABLE docs (
             id int primary key,
             body text not null
@@ -190,7 +190,7 @@ def run_smoke(
         SELECT gs, pg_catalog.format('health payload doc %s', gs)
         FROM generate_series(1, 2000) gs;
         CREATE INDEX docs_bm25_idx
-            ON docs USING ii42 (body)
+            ON docs USING evoke (body)
             WITH (sae = false, consistency = 'eventual');
         SELECT pg_relation_filepath('docs_bm25_idx'::regclass);
         CHECKPOINT;
@@ -201,7 +201,7 @@ def run_smoke(
         args,
         pgdata,
         port,
-        "SELECT public.ii42_index_generation_audit_internal("
+        "SELECT public.evoke_index_generation_audit_internal("
         "'docs_bm25_idx')::text;",
     )
     if healthy_generation.get('valid') is not True:
@@ -226,7 +226,7 @@ def run_smoke(
         args,
         pgdata,
         port,
-        "SELECT public.ii42_index_runtime_state('docs_bm25_idx');",
+        "SELECT public.evoke_index_runtime_state('docs_bm25_idx');",
     ).stdout.strip()
     if 'payload_health=corrupt' not in state:
         raise AssertionError(f'corrupt payload was not detected: {state}')
@@ -239,7 +239,7 @@ def run_smoke(
         args,
         pgdata,
         port,
-        "SELECT public.ii42_index_runtime_state_json("
+        "SELECT public.evoke_index_runtime_state_json("
         "'docs_bm25_idx')::text;",
     )
     cache_generation = cache_state['generation']
@@ -254,7 +254,7 @@ def run_smoke(
         args,
         pgdata,
         port,
-        "SELECT to_jsonb(detail) FROM public.ii42_index_details("
+        "SELECT to_jsonb(detail) FROM public.evoke_index_details("
         "'docs_bm25_idx') AS detail;",
     )
     if details['pages'] != 1 or details['index_bytes'] != BLCKSZ:
@@ -272,7 +272,7 @@ def run_smoke(
         args,
         pgdata,
         port,
-        "SELECT public.ii42_index_generation_audit_internal("
+        "SELECT public.evoke_index_generation_audit_internal("
         "'docs_bm25_idx')::text;",
     )
     if generation.get('diagnostics_complete') is not False:
@@ -288,7 +288,7 @@ def run_smoke(
         args,
         pgdata,
         port,
-        "SELECT public.ii42_index_status('docs_bm25_idx')::text;",
+        "SELECT public.evoke_index_status('docs_bm25_idx')::text;",
     )
     if status.get('query_ready') is not False:
         raise AssertionError(f'corrupt index is query-ready: {status}')
@@ -305,12 +305,12 @@ def run_smoke(
         args,
         pgdata,
         port,
-        "SELECT public.ii42_index_preload('docs_bm25_idx');",
+        "SELECT public.evoke_index_preload('docs_bm25_idx');",
         check=False,
     )
     if preload.returncode == 0:
         raise AssertionError('corrupt payload preload unexpectedly succeeded')
-    if 'cannot preload corrupt ii42 generation' not in preload.stderr or (
+    if 'cannot preload corrupt evoke generation' not in preload.stderr or (
         'segment_root_out_of_bounds' not in preload.stderr
     ):
         raise AssertionError(
@@ -324,7 +324,7 @@ def run_smoke(
         port,
         '''
         SELECT count(*)
-        FROM public.ii42_query(
+        FROM public.evoke_query(
             'docs_bm25_idx'::regclass,
             'health',
             10
@@ -334,7 +334,7 @@ def run_smoke(
     )
     if query.returncode == 0:
         raise AssertionError('corrupt payload query unexpectedly succeeded')
-    if 'invalid ii42 convergent segment payload' not in query.stderr:
+    if 'invalid evoke convergent segment payload' not in query.stderr:
         raise AssertionError(
             'corrupt payload did not fail fast with the expected error: '
             f'{query.stderr}'
@@ -349,7 +349,7 @@ def run_smoke(
         args,
         pgdata,
         port,
-        "SELECT public.ii42_index_refresh('docs_bm25_idx');",
+        "SELECT public.evoke_index_refresh('docs_bm25_idx');",
     ).stdout.strip()
     if 'payload_health=ok' not in repair:
         raise AssertionError(
@@ -360,7 +360,7 @@ def run_smoke(
         args,
         pgdata,
         port,
-        "SELECT public.ii42_index_runtime_state('docs_bm25_idx');",
+        "SELECT public.evoke_index_runtime_state('docs_bm25_idx');",
     ).stdout.strip()
     if 'payload_health=ok' not in repaired_state:
         raise AssertionError(f'repaired payload is still unhealthy: {repaired_state}')
@@ -371,7 +371,7 @@ def run_smoke(
         port,
         '''
         SELECT count(*)
-        FROM public.ii42_query(
+        FROM public.evoke_query(
             'docs_bm25_idx'::regclass,
             'health',
             10
@@ -385,7 +385,7 @@ def run_smoke(
         args,
         pgdata,
         port,
-        "SELECT public.ii42_index_generation_audit_internal("
+        "SELECT public.evoke_index_generation_audit_internal("
         "'docs_bm25_idx')::text;",
     )
     if repaired_generation.get('valid') is not True:
@@ -435,7 +435,7 @@ def main() -> None:
         else system_sharedir
     )
     workdir = Path(tempfile.mkdtemp(
-        prefix='ii42_payload_health_',
+        prefix='evoke_payload_health_',
         dir='/tmp',
     ))
     pgdata = workdir / 'pgdata'

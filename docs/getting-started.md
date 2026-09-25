@@ -11,7 +11,7 @@ Install a package that matches the PostgreSQL major, operating system, and
 architecture. Then create the extension in the application database:
 
 ```sql
-CREATE EXTENSION IF NOT EXISTS ii42;
+CREATE EXTENSION IF NOT EXISTS evoke;
 ```
 
 No separate schema is required for ordinary use. Custom schema placement is
@@ -34,7 +34,7 @@ INSERT INTO docs (id, title, body) VALUES
     (3, 'Cooking', 'pasta with tomato sauce');
 
 CREATE INDEX docs_body_idx
-ON docs USING ii42 (body);
+ON docs USING evoke (body);
 ```
 
 `sae = false` is the default. This index uses exact Lucene-style BM25 and the
@@ -47,7 +47,7 @@ semantic mode:
 
 ```sql
 SELECT source.id, source.title, hit.score
-FROM ii42_query(
+FROM evoke_query(
     'docs_body_idx'::regclass,
     'reliable database search',
     10
@@ -70,21 +70,21 @@ lexical evidence, and shared workers complete semantic evidence later.
 Before PostgreSQL starts, configure the shared runtime:
 
 ```conf
-shared_preload_libraries = 'ii42'
-ii42.shared_runtime_size = '64MB'
-ii42.runtime_worker_count = 2
+shared_preload_libraries = 'evoke'
+evoke.shared_runtime_size = '64MB'
+evoke.runtime_worker_count = 2
 ```
 
 Restart PostgreSQL after changing `shared_preload_libraries`. Release packages
 include the qualified default model checkout. Source installs must provision a
-qualified checkout at the compiled default path or set `ii42.sae_model_path`.
+qualified checkout at the compiled default path or set `evoke.sae_model_path`.
 Use the public [Beta 1 model download and source-install instructions](examples/semantic-model-checkout.md#download-the-default-model).
 
 Create the optional semantic index:
 
 ```sql
 CREATE INDEX docs_semantic_idx
-ON docs USING ii42 (body)
+ON docs USING evoke (body)
 WITH (sae = true);
 ```
 
@@ -95,7 +95,7 @@ descending score:
 ```sql
 SELECT source.id,
        source.title,
-       ii42_query(
+       evoke_query(
            'docs_semantic_idx'::regclass,
            'semantic retrieval'
        ) AS score
@@ -107,8 +107,8 @@ LIMIT 10;
 ## 5. Check Readiness
 
 ```sql
-SELECT ii42_index_options('docs_semantic_idx'::regclass);
-SELECT ii42_index_status('docs_semantic_idx'::regclass);
+SELECT evoke_index_options('docs_semantic_idx'::regclass);
+SELECT evoke_index_status('docs_semantic_idx'::regclass);
 ```
 
 Require `query_ready = true` before serving traffic. A non-zero semantic
@@ -125,7 +125,7 @@ An index owner may request maintenance with non-blocking lock admission for an
 operational check. Once admitted, the selected action can still take time:
 
 ```sql
-SELECT ii42_index_try_maintain('docs_semantic_idx'::regclass);
+SELECT evoke_index_try_maintain('docs_semantic_idx'::regclass);
 ```
 
 The built-in worker normally performs this work. Do not call maintenance after
@@ -167,9 +167,9 @@ DROP INDEX docs_body_idx;
 | Error or symptom | What to check |
 | --- | --- |
 | Semantic search reports that the shared runtime is unavailable | Configure `shared_preload_libraries`, a positive shared runtime size, and restart PostgreSQL. Verify the configured control database is connectable. |
-| Model or artifact mismatch | Poll `ii42_index_status(...)`, then run `ii42_index_audit(...)` explicitly. `REINDEX` if the immutable model contract changed. |
-| A joined query returns fewer than `k` rows | Check whether a SQL filter was applied after hit generation. For semantic indexes, put it on the base table with planner-native `ORDER BY ii42_query(...) DESC LIMIT k`, or use a supported filtered overload. A scope-backed approximate baseline can also underfill during convergence; see the query contract. |
-| Search is rejected on an RLS table or partitioned parent | Those shapes cannot provide a safe globally exact `ii42_query(...)` result in the current release. |
+| Model or artifact mismatch | Poll `evoke_index_status(...)`, then run `evoke_index_audit(...)` explicitly. `REINDEX` if the immutable model contract changed. |
+| A joined query returns fewer than `k` rows | Check whether a SQL filter was applied after hit generation. For semantic indexes, put it on the base table with planner-native `ORDER BY evoke_query(...) DESC LIMIT k`, or use a supported filtered overload. A scope-backed approximate baseline can also underfill during convergence; see the query contract. |
+| Search is rejected on an RLS table or partitioned parent | Those shapes cannot provide a safe globally exact `evoke_query(...)` result in the current release. |
 
 ## Next Reading
 

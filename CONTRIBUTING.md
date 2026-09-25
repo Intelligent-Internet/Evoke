@@ -64,7 +64,7 @@ the checksum-locked pinned SDK under `.artifacts`, so the host's system
 offline SDK, pass `--onnxruntime-prefix`; the script validates that prefix
 against the repository pin before compiling.
 
-`II42_ENABLE_ONNXRUNTIME=0` is reserved for explicit lexical-only diagnostics
+`EVOKE_ENABLE_ONNXRUNTIME=0` is reserved for explicit lexical-only diagnostics
 and CI coverage; such a binary cannot serve SSR query encoding and must not be
 deployed to a query-serving PostgreSQL instance.
 
@@ -79,7 +79,7 @@ make installcheck PG_CONFIG=/opt/homebrew/opt/postgresql@18/bin/pg_config
 After installation, create the extension in a target database:
 
 ```sql
-CREATE EXTENSION ii42;
+CREATE EXTENSION evoke;
 ```
 
 If you need a non-`public` extension schema, choose it when creating the
@@ -87,7 +87,7 @@ extension:
 
 ```sql
 CREATE SCHEMA ext;
-CREATE EXTENSION ii42 WITH SCHEMA ext;
+CREATE EXTENSION evoke WITH SCHEMA ext;
 ```
 
 The extension is not relocatable after creation because SQL helper functions
@@ -151,16 +151,12 @@ needed for C compilation, but it is required for these complete release
 artifacts and for running SSR indexes after a source-only install.
 
 Provide it with `--model-checkout`, `EVOKE_MILESTONE_MODEL_CHECKOUT`, or the
-ignored local path `.artifacts/evoke-milestone-model`. The legacy
-`II42_MILESTONE_MODEL_CHECKOUT` variable is still accepted during the
-transition. The builder validates
+ignored local path `.artifacts/evoke-milestone-model`. The builder validates
 `packaging/milestone-model.json`, every artifact digest, runtime ABI,
 and exact file inventory before staging it under PostgreSQL's shared-data
 directory. GitHub release workflows fetch the same archive from the protected
 `EVOKE_MILESTONE_MODEL_URL` repository variable and optionally verify
 `EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256` before the content-level validation.
-The legacy `II42_*` variable names remain fallback inputs while external
-repository settings are migrated.
 
 The 382 MiB checkout is deliberately not stored in ordinary Git history.
 Changing the milestone requires a reviewed lock update, full native lifecycle
@@ -180,8 +176,7 @@ python3 scripts/build_milestone_model_archive.py \
 For the current milestone, set `EVOKE_MILESTONE_MODEL_URL` to the commit-pinned
 Hugging Face ZIP URL and `EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256` to the archive
 digest in the [download instructions](docs/examples/semantic-model-checkout.md#download-the-default-model).
-These are public repository variables, not credentials. Keep the legacy
-`II42_*` variables in sync until all active workflows have migrated. For a future
+These are public repository variables, not credentials. For a future
 milestone, publish and validate its immutable ZIP before changing these
 variables. Release jobs fail closed if the archive digest or its content-level
 lock does not match. A fork must set its own release-workflow variables; the
@@ -189,7 +184,7 @@ source-build download command does not require GitHub configuration.
 
 Current release line:
 
-- extension version: read `default_version` from `ii42.control`
+- extension version: read `default_version` from `evoke.control`
 - supported release targets:
   - PostgreSQL `17`
   - PostgreSQL `18`
@@ -247,7 +242,7 @@ The current release practice is:
    sync. Sync waits for successful CI and dry-run results for the same release
    commit, then appends a public snapshot commit without rewriting history.
 5. Public `CI` validates the snapshot. `Prepare Release` tags the exact tested
-   version from `ii42.control` and dispatches public `Release`; it does not
+   version from `evoke.control` and dispatches public `Release`; it does not
    automatically bump the catalog or rewrite existing tags. A changed release
    requires a newly reviewed version, not reuse of an already published tag.
    Documentation, tests, and workflow-only follow-ups can sync without a version

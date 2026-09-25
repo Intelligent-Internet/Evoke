@@ -11,7 +11,7 @@ Date: 2026-03-23
 ## Scope
 
 This benchmark compares the maintenance variants of the same
-`ii42` build on the same local PostgreSQL instance:
+`evoke` build on the same local PostgreSQL instance:
 
 - default realtime maintenance: `consistency = 'realtime'`
 - manual refresh mode: `consistency = 'manual'`
@@ -26,7 +26,7 @@ The benchmark setup was:
 - 100 deleted documents
 - 200 measured queries
 - `top_k = 20`
-- `int4[]` / `ii42_query_ids(...)`
+- `int4[]` / `evoke_query_ids(...)`
 
 Raw output is stored in
 `auto-maintenance-2026-03-23.json`.
@@ -124,9 +124,9 @@ avoid first-read rebuilds, while keeping the canonical query path exact.
 
 Behavioral difference:
 
-- manual mode query after insert: `ii42 index is stale`
-- manual mode query after update: `ii42 index is stale`
-- manual mode query after delete + vacuum: `ii42 index is stale`
+- manual mode query after insert: `evoke index is stale`
+- manual mode query after update: `evoke index is stale`
+- manual mode query after delete + vacuum: `evoke index is stale`
 - automatic mode query after insert: succeeds immediately
 - automatic mode query after update: succeeds immediately
 - automatic mode query after delete + vacuum: succeeds immediately

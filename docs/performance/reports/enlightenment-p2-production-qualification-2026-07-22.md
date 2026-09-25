@@ -42,12 +42,12 @@ This report separates three claims that must not be conflated:
 The qualification uses only the public, converged PostgreSQL path:
 
 ```sql
-CREATE INDEX ... USING ii42(column) WITH (sae = false);
-CREATE INDEX ... USING ii42(column) WITH (sae = true);
+CREATE INDEX ... USING evoke(column) WITH (sae = false);
+CREATE INDEX ... USING evoke(column) WITH (sae = true);
 
-SELECT * FROM ii42_query(index_name, query_text, result_limit);
-SELECT ii42_index_status(index_name);
-SELECT ii42_index_maintain(index_name);
+SELECT * FROM evoke_query(index_name, query_text, result_limit);
+SELECT evoke_index_status(index_name);
+SELECT evoke_index_maintain(index_name);
 ```
 
 `sae = false` and `sae = true` share the same API, relation-owned generation,
@@ -64,15 +64,15 @@ is not an external BM25 plus ANN fusion path.
 | Memory | 377 GiB |
 | PostgreSQL | 18.4, system cluster `/var/lib/postgresql/18/main` |
 | Database | `ii_dev`, 1,281 GiB |
-| Extension | `ii42` 0.2.0 in schema `ii42_ext` |
-| Preloads | `vchord,psql_bm25s,pg_prewarm,ii42` |
+| Extension | `evoke` 0.2.0 in schema `evoke_ext` |
+| Preloads | `vchord,psql_bm25s,pg_prewarm,evoke` |
 | Runtime provider | ONNX Runtime CPU |
 | P2 model | `evoke_p2_m1934_b1125_nfcorpus_full_b2` |
 | Baseline package | `evoke-v0.1.2-linux-x86_64-pg18.zip` |
 | Baseline package SHA-256 | `47eb3219e0eb4583768d184043379fec25ceb11012193e649dd6b8db6ff86762` |
 | P2.2 final package | `0.2.0-20260723-p22-final-v3` |
 | Final package ZIP SHA-256 | `39373a3c8920a64656322f5fee56ab1a786da7d337e45d16c39d4dc52b4c478e` |
-| Installed P2.2 `ii42.so` SHA-256 | `14f7d948da1de927bef49be4a216d312c61716b4ade2df650222c76b398fdee2` |
+| Installed P2.2 `evoke.so` SHA-256 | `14f7d948da1de927bef49be4a216d312c61716b4ade2df650222c76b398fdee2` |
 | 0.2.0 install SQL SHA-256 | `da5fe33ee24dc6aa69271d0605dfc8b853c9f36ff7612a386a1cfb7fee78e7fe` |
 | 0.1.2 to 0.2.0 upgrade SQL SHA-256 | `a1cf020ceab844b2f435c1608b00beafec1d367702445424c91d9cf778b44db9` |
 | Package fingerprint | `3b017fa5af5e64a85e0592d407adb2996d34f8261c11343c4c83c8e7f9a2974d` |
@@ -82,14 +82,14 @@ The final-v1, final-v2 rollback, and qualified P2.2 final-v3 packages are
 archived at:
 
 ```text
-/var/lib/postgresql/18/ii42/packages/0.1.2-20260722-final/
-/var/lib/postgresql/18/ii42/packages/0.1.2-20260722-p22-final-v1/
-/var/lib/postgresql/18/ii42/packages/0.1.2-20260723-p22-final-v2/
-/var/lib/postgresql/18/ii42/packages/0.2.0-20260723-p22-final-v3/
+/var/lib/postgresql/18/evoke/packages/0.1.2-20260722-final/
+/var/lib/postgresql/18/evoke/packages/0.1.2-20260722-p22-final-v1/
+/var/lib/postgresql/18/evoke/packages/0.1.2-20260723-p22-final-v2/
+/var/lib/postgresql/18/evoke/packages/0.2.0-20260723-p22-final-v3/
 ```
 
 The model, package, and exact pre-install backup are confined to
-`/var/lib/postgresql/18/ii42`. Runtime libraries are in PostgreSQL's system
+`/var/lib/postgresql/18/evoke`. Runtime libraries are in PostgreSQL's system
 extension directories, as required for the system instance. No files were
 installed into the application data directories or the `commons` schema.
 ONNX Runtime 1.26 is bundled with `$ORIGIN` RUNPATH.
@@ -106,7 +106,7 @@ base revision but is not a clean-release provenance claim.
 | PubMed | 7,914,653 | 75,000 BM25 rows; 1,987 P2 rows | approximately 80% |
 
 The arXiv and PubMed tables in `commons` remained read-only. Qualification
-tables and indexes are under `ii42_qual_20260722`. The 75k surfaces are
+tables and indexes are under `evoke_qual_20260722`. The 75k surfaces are
 contiguous operational samples, not random or official evaluation splits.
 The PubMed P2 surface combines 1,500 deterministic sampled rows with 500 long
 documents to expose cross-domain and truncation behavior.
@@ -139,14 +139,14 @@ The following gaps were fixed and verified on the installed package:
   outer policy join;
 - model signatures avoid rehashing every artifact on each connection. At the
   time of this qualification, explicit status still performed a deep artifact
-  audit; current releases use bounded `ii42_index_status(...)` readiness and
-  reserve artifact hashing for explicit `ii42_index_audit(...)`;
+  audit; current releases use bounded `evoke_index_status(...)` readiness and
+  reserve artifact hashing for explicit `evoke_index_audit(...)`;
 - runtime service ownership, privilege boundaries, non-`public` install, and
   non-relocatable extension semantics;
 - versioned 0.1.2 to 0.2.0 catalog upgrade with preserved relation identities
   and fresh-install catalog parity;
 - bounded runtime queue and configurable ONNX intra-op thread count;
-- no retired `ii42_model_*`, `ii42_sae_*`, publisher, or split corpus-
+- no retired `evoke_model_*`, `evoke_sae_*`, publisher, or split corpus-
   generation product route.
 
 ## Lifecycle And Recovery
@@ -233,7 +233,7 @@ and returned ready. The completed arXiv and SciFact indexes remained
 query-ready, valid, and signature-matched; the interrupted transactional
 `CREATE INDEX` left no partial relation. The canary was then restarted once
 from a clean state. This is host-level crash-recovery evidence, not an
-ii42-triggered crash.
+evoke-triggered crash.
 
 The legacy generation also passed an explicit model-drift test. Pointing the
 index at a checkout with a changed model identity produced
@@ -350,7 +350,7 @@ One deliberately isolated cost experiment reduced only
 query/document ONNX compilers, tokenizer, lexical vocabulary, calibration
 arrays, atom space, max-atoms limits, and scoring logic remained byte
 identical. Both indexes used the same complete 5,183-document SciFact table,
-300 qrels-bearing queries, `k = 1000`, and native `ii42_query`.
+300 qrels-bearing queries, `k = 1000`, and native `evoke_query`.
 
 | Method | NDCG@10 | MAP@100 | Recall@100 | MRR@20 | CUB | p50 ms | p95 ms | Index bytes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -417,7 +417,7 @@ No query-path memory leak or worker recovery was observed. The approximately
 88 MiB `memory_bytes` diagnostic is resident decoded index payload, not
 per-query workspace.
 
-Testing `ii42.onnxruntime_intra_op_threads` with the real P2 model showed that
+Testing `evoke.onnxruntime_intra_op_threads` with the real P2 model showed that
 the default value `0` was best on this dual-socket old Xeon. Capping it at 2
 or 4 threads increased build time and concurrent latency. The control remains
 useful for host QoS, but the qualified default stays at zero.
@@ -487,7 +487,7 @@ build, storage, and query costs remained substantially higher.
 | Full-text deterministic windows with no silent 512-token truncation | Full-text audit and ABI-v2 lifecycle; explicit input safety bound | passed |
 | Short-text output parity | ABI-v2 short-text parity gate | passed |
 | Exact optimization before lossy work | Accepted arXiv exact A/B preserved all 1,200 rows and exceeded the 20% p50/p95 gate | passed |
-| Native relevance qualification | Four complete held-out qrels rows through `ii42_query`, all with positive five-metric deltas over BM25 | passed |
+| Native relevance qualification | Four complete held-out qrels rows through `evoke_query`, all with positive five-metric deltas over BM25 | passed |
 | Lossy work isolated behind strict Pareto gates | Budget-0.75 changed one semantic variable, failed quality/storage/latency gates, and was rejected | closed by stop rule |
 | RLS and partition behavior is globally correct or fail-closed | Unsupported unsafe shapes reject indexing/search rather than approximate policy-visible ranking | passed |
 | Historical public API and staged deployment | Unified SQL API, the then-tested 0.1.2 to 0.2.0 transition, 18/18 package maturity, rollback, restore, and live postflight | passed for that candidate only |
@@ -529,7 +529,7 @@ qualification tmux session remained.
 
 ### Native held-out relevance gates
 
-The NFCorpus-calibrated ABI-v2 candidate was evaluated through `ii42_query`
+The NFCorpus-calibrated ABI-v2 candidate was evaluated through `evoke_query`
 on the official 5,183-document SciFact corpus with all 300 qrels-bearing test
 queries. No SciFact-specific model or dataset-specific tuning was used.
 
@@ -576,7 +576,7 @@ qualification host.
 The fourth row uses the complete official 171,331-document TREC-COVID corpus
 and all 50 qrels-bearing queries. The strict evaluator verified the document
 and query counts, relation-owned payloads, atomic valid generations, frozen
-model identity, and native `ii42_query` route before accepting the result.
+model identity, and native `evoke_query` route before accepting the result.
 MAP@100 uses the standard cutoff denominator
 `min(relevant_document_count, 100)`.
 

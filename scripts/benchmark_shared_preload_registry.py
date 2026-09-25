@@ -111,7 +111,7 @@ def query_rows(
         cursor.execute(
             f"""
             SELECT source.id, hit.score::float8
-            FROM ii42_query(%s::regclass, %s, 10) AS hit
+            FROM evoke_query(%s::regclass, %s, 10) AS hit
             JOIN {SCHEMA}.docs AS source
               ON source.ctid = hit.ctid
             ORDER BY hit.score DESC, source.id
@@ -128,7 +128,7 @@ def setup(connection: psycopg.Connection[Any]) -> tuple[tuple[int, float], ...]:
     with connection.cursor() as cursor:
         cursor.execute(
             f"""
-            CREATE EXTENSION ii42;
+            CREATE EXTENSION evoke;
             CREATE SCHEMA {SCHEMA};
             CREATE TABLE {SCHEMA}.docs (
                 id integer PRIMARY KEY,
@@ -145,12 +145,12 @@ def setup(connection: psycopg.Connection[Any]) -> tuple[tuple[int, float], ...]:
             FROM generate_series(1, 100) AS ordinal;
             CREATE INDEX docs_idx
             ON {SCHEMA}.docs
-            USING ii42 (body)
+            USING evoke (body)
             WITH (auto_preload = 0);
             """
         )
         cursor.execute(
-            'SELECT ii42_index_preload(%s::regclass)',
+            'SELECT evoke_index_preload(%s::regclass)',
             (INDEX_NAME,),
         )
         preload = str(cursor.fetchone()[0])
@@ -182,7 +182,7 @@ def registry_state(
 ) -> str:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_runtime_state(%s::regclass)',
+            'SELECT evoke_index_runtime_state(%s::regclass)',
             (INDEX_NAME,),
         )
         return str(cursor.fetchone()[0])
@@ -205,12 +205,12 @@ def registry_lifecycle_audit(
                 f"""
                 CREATE INDEX {index_name}
                 ON {SCHEMA}.docs
-                USING ii42 (body)
+                USING evoke (body)
                 WITH (auto_preload = 0)
                 """
             )
             cursor.execute(
-                'SELECT ii42_index_preload(%s::regclass)',
+                'SELECT evoke_index_preload(%s::regclass)',
                 (f'{SCHEMA}.{index_name}',),
             )
             preload = str(cursor.fetchone()[0])
@@ -226,7 +226,7 @@ def registry_lifecycle_audit(
     )
     churn_query_exact = query_rows(connection) == expected
     with connection.cursor() as cursor:
-        cursor.execute('SELECT ii42_runtime_cache_clear()')
+        cursor.execute('SELECT evoke_runtime_cache_clear()')
         clear_result = str(cursor.fetchone()[0])
     after_clear = registry_state(connection)
     clear_entries = raw_state_integer(
@@ -235,7 +235,7 @@ def registry_lifecycle_audit(
     )
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_preload(%s::regclass)',
+            'SELECT evoke_index_preload(%s::regclass)',
             (INDEX_NAME,),
         )
         reload_result = str(cursor.fetchone()[0])
@@ -274,7 +274,7 @@ def invalid_startup_audit(
     initdb = args.pg_bin / 'initdb'
     pg_ctl = args.pg_bin / 'pg_ctl'
     with tempfile.TemporaryDirectory(
-        prefix='ii42_cap3_invalid_',
+        prefix='evoke_cap3_invalid_',
     ) as tmp:
         root = Path(tmp)
         data_dir = root / 'data'
@@ -304,10 +304,10 @@ def invalid_startup_audit(
             encoding='utf-8',
         ) as handle:
             handle.write(
-                'ii42.test_shared_preload_registry_capacity = 1024\n'
+                'evoke.test_shared_preload_registry_capacity = 1024\n'
             )
             handle.write(
-                'ii42.test_shared_preload_registry_fill = 1024\n'
+                'evoke.test_shared_preload_registry_fill = 1024\n'
             )
         result = run(
             [
@@ -330,7 +330,7 @@ def invalid_startup_audit(
             else ''
         )
         expected_error = (
-            'ii42 test registry fill exceeds its capacity' in log_text
+            'evoke test registry fill exceeds its capacity' in log_text
         )
         return {
             'capacity': 1024,
@@ -473,7 +473,7 @@ def observe_capacity(
     initdb = args.pg_bin / 'initdb'
     pg_ctl = args.pg_bin / 'pg_ctl'
     with tempfile.TemporaryDirectory(
-        prefix=f'ii42_cap3_{capacity}_',
+        prefix=f'evoke_cap3_{capacity}_',
     ) as tmp:
         root = Path(tmp)
         data_dir = root / 'data'
@@ -504,11 +504,11 @@ def observe_capacity(
             encoding='utf-8',
         ) as handle:
             handle.write(
-                'ii42.test_shared_preload_registry_capacity = '
+                'evoke.test_shared_preload_registry_capacity = '
                 f'{capacity}\n'
             )
             handle.write(
-                'ii42.test_shared_preload_registry_fill = '
+                'evoke.test_shared_preload_registry_fill = '
                 f'{fill}\n'
             )
 
@@ -521,7 +521,7 @@ def observe_capacity(
             expected = setup(connection)
             with connection.cursor() as cursor:
                 cursor.execute(
-                    'SELECT ii42_index_runtime_state(%s::regclass)',
+                    'SELECT evoke_index_runtime_state(%s::regclass)',
                     (INDEX_NAME,),
                 )
                 raw_state = str(cursor.fetchone()[0])

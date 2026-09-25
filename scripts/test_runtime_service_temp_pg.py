@@ -25,7 +25,7 @@ from pathlib import Path
 
 import psycopg
 
-from ii42_test_support import (
+from evoke_test_support import (
     extension_control_root,
     vacuum_with_session_maintenance_lock,
 )
@@ -90,7 +90,7 @@ def parse_args() -> argparse.Namespace:
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share directory containing extension/ii42.control, '
+            'PostgreSQL share directory containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -106,14 +106,14 @@ def parse_args() -> argparse.Namespace:
         '--use-packaged-model',
         action='store_true',
         help=(
-            'Do not configure ii42.sae_model_path; require the extension '
+            'Do not configure evoke.sae_model_path; require the extension '
             'binary to resolve --model-path as its packaged checkout.'
         ),
     )
     parser.add_argument(
         '--runtime-server-binary',
         type=Path,
-        help='Optional C++ ii42-runtime-server binary to smoke over HTTP.',
+        help='Optional C++ evoke-runtime-server binary to smoke over HTTP.',
     )
     parser.add_argument(
         '--runtime-liveness-timeout-ms',
@@ -317,7 +317,7 @@ def run_cpp_runtime_server_probe(
     with psycopg.connect(dsn, autocommit=True) as conn:
         with conn.cursor() as cursor:
             cursor.execute(
-                'SELECT ii42_index_runtime_plan_internal(%s)',
+                'SELECT evoke_index_runtime_plan_internal(%s)',
                 (str(model_path),),
             )
             plan = cursor.fetchone()[0]
@@ -606,16 +606,16 @@ def run_accelerator_local_failover_backpressure_probe(
         with psycopg.connect(dsn, autocommit=True) as control:
             with control.cursor() as cursor:
                 cursor.execute(
-                    f"ALTER SYSTEM SET ii42.runtime_accelerators = "
+                    f"ALTER SYSTEM SET evoke.runtime_accelerators = "
                     f"'{escaped_config}'"
                 )
                 cursor.execute(
                     "ALTER SYSTEM SET "
-                    "ii42.runtime_document_pipeline_depth = '64'"
+                    "evoke.runtime_document_pipeline_depth = '64'"
                 )
                 cursor.execute('SELECT pg_reload_conf()')
                 wait_accelerator_service_count(cursor, 1)
-                cursor.execute('SELECT ii42_runtime_service_status()')
+                cursor.execute('SELECT evoke_runtime_service_status()')
                 before = dict(cursor.fetchone()[0])
                 cursor.execute(
                     """
@@ -642,7 +642,7 @@ def run_accelerator_local_failover_backpressure_probe(
                         f"""
                         CREATE INDEX accelerator_backpressure_docs_idx
                         ON accelerator_backpressure_docs
-                        USING ii42 (body)
+                        USING evoke (body)
                         WITH (
                             sae = true,
                             model_path = '{escaped_model_path}'
@@ -675,7 +675,7 @@ def run_accelerator_local_failover_backpressure_probe(
                 cursor.execute(
                     """
                     SELECT count(*)
-                    FROM ii42_query(
+                    FROM evoke_query(
                         'accelerator_backpressure_docs_idx'::regclass,
                         'bounded recovery sentinel 42',
                         5
@@ -684,7 +684,7 @@ def run_accelerator_local_failover_backpressure_probe(
                 )
                 if int(cursor.fetchone()[0]) <= 0:
                     raise AssertionError('recovered index returned no hits')
-                cursor.execute('SELECT ii42_runtime_service_status()')
+                cursor.execute('SELECT evoke_runtime_service_status()')
                 after = dict(cursor.fetchone()[0])
                 cursor.execute(
                     'DROP TABLE accelerator_backpressure_docs CASCADE'
@@ -726,9 +726,9 @@ def run_accelerator_local_failover_backpressure_probe(
     finally:
         with psycopg.connect(dsn, autocommit=True) as control:
             with control.cursor() as cursor:
-                cursor.execute('ALTER SYSTEM RESET ii42.runtime_accelerators')
+                cursor.execute('ALTER SYSTEM RESET evoke.runtime_accelerators')
                 cursor.execute(
-                    'ALTER SYSTEM RESET ii42.runtime_document_pipeline_depth'
+                    'ALTER SYSTEM RESET evoke.runtime_document_pipeline_depth'
                 )
                 cursor.execute('SELECT pg_reload_conf()')
                 wait_accelerator_service_count(cursor, 0)
@@ -763,7 +763,7 @@ def run_accelerator_build_cancellation_probe(
     try:
         with control.cursor() as cursor:
             cursor.execute(
-                f"ALTER SYSTEM SET ii42.runtime_accelerators = "
+                f"ALTER SYSTEM SET evoke.runtime_accelerators = "
                 f"'{escaped_config}'"
             )
             cursor.execute('SELECT pg_reload_conf()')
@@ -795,7 +795,7 @@ def run_accelerator_build_cancellation_probe(
                     f"""
                     CREATE INDEX accelerator_cancel_docs_idx
                     ON accelerator_cancel_docs
-                    USING ii42 (body)
+                    USING evoke (body)
                     WITH (
                         sae = true,
                         model_path = '{escaped_model_path}'
@@ -841,7 +841,7 @@ def run_accelerator_build_cancellation_probe(
     finally:
         victim.close()
         with control.cursor() as cursor:
-            cursor.execute('ALTER SYSTEM RESET ii42.runtime_accelerators')
+            cursor.execute('ALTER SYSTEM RESET evoke.runtime_accelerators')
             cursor.execute('SELECT pg_reload_conf()')
             wait_accelerator_service_count(cursor, 0)
         control.close()
@@ -857,7 +857,7 @@ def wait_accelerator_service_count(
     deadline = time.monotonic() + 15
     status: dict[str, object] = {}
     while time.monotonic() < deadline:
-        cursor.execute('SELECT ii42_runtime_service_status()')
+        cursor.execute('SELECT evoke_runtime_service_status()')
         status = dict(cursor.fetchone()[0])
         if int(status.get('accelerator_service_count', -1)) == expected:
             return status
@@ -890,7 +890,7 @@ def run_accelerator_dispatcher_probe(dsn: str, base_url: str) -> None:
         with psycopg.connect(dsn, autocommit=True) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    f"ALTER SYSTEM SET ii42.runtime_accelerators = "
+                    f"ALTER SYSTEM SET evoke.runtime_accelerators = "
                     f"'{escaped_config}'"
                 )
                 cursor.execute('SELECT pg_reload_conf()')
@@ -901,7 +901,7 @@ def run_accelerator_dispatcher_probe(dsn: str, base_url: str) -> None:
                     raise AssertionError(
                         f'accelerator config was not visible: {status}'
                     )
-                cursor.execute('SELECT ii42_runtime_service_status()')
+                cursor.execute('SELECT evoke_runtime_service_status()')
                 before_status = dict(cursor.fetchone()[0])
                 cursor.execute(
                     """
@@ -923,7 +923,7 @@ def run_accelerator_dispatcher_probe(dsn: str, base_url: str) -> None:
                     """
                     CREATE INDEX accelerator_docs_body_idx
                     ON accelerator_docs
-                    USING ii42 (body)
+                    USING evoke (body)
                     WITH (
                         sae = true,
                         consistency = eventual,
@@ -934,7 +934,7 @@ def run_accelerator_dispatcher_probe(dsn: str, base_url: str) -> None:
                 cursor.execute(
                     """
                     SELECT count(*)
-                    FROM ii42_query(
+                    FROM evoke_query(
                         'accelerator_docs_body_idx'::regclass,
                         'accelerator dispatcher document 42',
                         5
@@ -943,7 +943,7 @@ def run_accelerator_dispatcher_probe(dsn: str, base_url: str) -> None:
                 )
                 if int(cursor.fetchone()[0]) <= 0:
                     raise AssertionError('accelerator index returned no hits')
-                cursor.execute('SELECT ii42_runtime_service_status()')
+                cursor.execute('SELECT evoke_runtime_service_status()')
                 after_status = dict(cursor.fetchone()[0])
                 remote_successes_before_maintenance = metric_successes(
                     after_status,
@@ -957,18 +957,18 @@ def run_accelerator_dispatcher_probe(dsn: str, base_url: str) -> None:
                     FROM pg_catalog.generate_series(97, 192) AS value
                     """
                 )
-                cursor.execute('SELECT ii42_index_touch_maintenance()')
+                cursor.execute('SELECT evoke_index_touch_maintenance()')
 
                 deadline = time.monotonic() + 30.0
                 maintenance_status: dict[str, object] = {}
                 maintenance_runtime_status: dict[str, object] = {}
                 while time.monotonic() < deadline:
                     cursor.execute(
-                        "SELECT ii42_index_status("
+                        "SELECT evoke_index_status("
                         "'accelerator_docs_body_idx'::regclass)"
                     )
                     maintenance_status = dict(cursor.fetchone()[0])
-                    cursor.execute('SELECT ii42_runtime_service_status()')
+                    cursor.execute('SELECT evoke_runtime_service_status()')
                     maintenance_runtime_status = dict(cursor.fetchone()[0])
                     completion = maintenance_status.get('generation', {})
                     if not isinstance(completion, dict):
@@ -1044,7 +1044,7 @@ def run_accelerator_dispatcher_probe(dsn: str, base_url: str) -> None:
     finally:
         with psycopg.connect(dsn, autocommit=True) as conn:
             with conn.cursor() as cursor:
-                cursor.execute('ALTER SYSTEM RESET ii42.runtime_accelerators')
+                cursor.execute('ALTER SYSTEM RESET evoke.runtime_accelerators')
                 cursor.execute('SELECT pg_reload_conf()')
                 wait_accelerator_service_count(cursor, 0)
         proxy.shutdown()
@@ -1067,7 +1067,7 @@ def run_accelerator_resilience_probe(dsn: str, base_url: str) -> None:
         with psycopg.connect(dsn, autocommit=True) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    f"ALTER SYSTEM SET ii42.runtime_accelerators = "
+                    f"ALTER SYSTEM SET evoke.runtime_accelerators = "
                     f"'{escaped_config}'"
                 )
                 cursor.execute('SELECT pg_reload_conf()')
@@ -1099,7 +1099,7 @@ def run_accelerator_resilience_probe(dsn: str, base_url: str) -> None:
                     """
                     CREATE INDEX accelerator_failover_docs_body_idx
                     ON accelerator_failover_docs
-                    USING ii42 (body)
+                    USING evoke (body)
                     WITH (
                         sae = true,
                         consistency = eventual
@@ -1109,7 +1109,7 @@ def run_accelerator_resilience_probe(dsn: str, base_url: str) -> None:
                 cursor.execute(
                     """
                     SELECT count(*)
-                    FROM ii42_query(
+                    FROM evoke_query(
                         'accelerator_failover_docs_body_idx'::regclass,
                         'accelerator failover document 42',
                         5
@@ -1152,7 +1152,7 @@ def run_accelerator_resilience_probe(dsn: str, base_url: str) -> None:
                     """
                     CREATE INDEX accelerator_rejoin_docs_body_idx
                     ON accelerator_rejoin_docs
-                    USING ii42 (body)
+                    USING evoke (body)
                     WITH (
                         sae = true,
                         consistency = eventual
@@ -1162,7 +1162,7 @@ def run_accelerator_resilience_probe(dsn: str, base_url: str) -> None:
                 cursor.execute(
                     """
                     SELECT count(*)
-                    FROM ii42_query(
+                    FROM evoke_query(
                         'accelerator_rejoin_docs_body_idx'::regclass,
                         'accelerator rejoin document 42',
                         5
@@ -1180,7 +1180,7 @@ def run_accelerator_resilience_probe(dsn: str, base_url: str) -> None:
     finally:
         with psycopg.connect(dsn, autocommit=True) as conn:
             with conn.cursor() as cursor:
-                cursor.execute('ALTER SYSTEM RESET ii42.runtime_accelerators')
+                cursor.execute('ALTER SYSTEM RESET evoke.runtime_accelerators')
                 cursor.execute('SELECT pg_reload_conf()')
                 wait_accelerator_service_count(cursor, 0)
         if recovered_proxy is not None:
@@ -1247,7 +1247,7 @@ def runtime_service_sql(
     escaped_atom_space = atom_space.replace("'", "''")
     escaped_scoring_profile = scoring_profile.replace("'", "''")
     return f'''
-    CREATE EXTENSION ii42;
+    CREATE EXTENSION evoke;
     CREATE TABLE docs (
         id text PRIMARY KEY,
         body text NOT NULL,
@@ -1263,16 +1263,16 @@ def runtime_service_sql(
 
     CREATE INDEX docs_body_idx
     ON docs
-    USING ii42 (body)
+    USING evoke (body)
     WITH (
         sae = true,
         consistency = eventual
     )
     WHERE btrim(coalesce(body, '')) <> '';
 
-    CREATE ROLE ii42_app_user;
-    GRANT USAGE ON SCHEMA public TO ii42_app_user;
-    GRANT SELECT ON TABLE docs TO ii42_app_user;
+    CREATE ROLE evoke_app_user;
+    GRANT USAGE ON SCHEMA public TO evoke_app_user;
+    GRANT SELECT ON TABLE docs TO evoke_app_user;
 
     DO $$
     DECLARE
@@ -1302,14 +1302,14 @@ def runtime_service_sql(
         SELECT context
         INTO session_cache_context
         FROM pg_settings
-        WHERE name = 'ii42.onnxruntime_session_cache_size';
+        WHERE name = 'evoke.onnxruntime_session_cache_size';
         IF session_cache_context <> 'postmaster' THEN
             RAISE EXCEPTION
                 'runtime session cache must be restart-only: %',
                 session_cache_context;
         END IF;
 
-        service_status := ii42_runtime_service_status();
+        service_status := evoke_runtime_service_status();
         IF (service_status->>'shared_memory_available')::boolean
                 IS DISTINCT FROM true
             OR (service_status->>'worker_ready')::boolean
@@ -1386,7 +1386,7 @@ def runtime_service_sql(
                 service_status;
         END IF;
 
-        options := ii42_index_options('docs_body_idx'::regclass);
+        options := evoke_index_options('docs_body_idx'::regclass);
         IF options->>'index_type' <> 'semantic'
             OR options->>'model_path_source'
                 <> '{escaped_model_path_source}'
@@ -1404,7 +1404,7 @@ def runtime_service_sql(
             'ALTER INDEX docs_body_idx SET (model_path = %L)',
             '{escaped_path}'
         );
-        options := ii42_index_options('docs_body_idx'::regclass);
+        options := evoke_index_options('docs_body_idx'::regclass);
         IF options->>'model_path_source' <> 'index'
             OR options->>'model_path' <> '{escaped_path}' THEN
             RAISE EXCEPTION
@@ -1412,7 +1412,7 @@ def runtime_service_sql(
                 options;
         END IF;
         EXECUTE 'ALTER INDEX docs_body_idx RESET (model_path)';
-        options := ii42_index_options('docs_body_idx'::regclass);
+        options := evoke_index_options('docs_body_idx'::regclass);
         IF options->>'model_path_source'
                 <> '{escaped_model_path_source}'
             OR options->>'model_path' <> '{escaped_path}' THEN
@@ -1420,9 +1420,9 @@ def runtime_service_sql(
                 'default model checkout was not restored: %', options;
         END IF;
 
-        status := ii42_index_status('docs_body_idx'::regclass);
+        status := evoke_index_status('docs_body_idx'::regclass);
         generation := status->'generation';
-        IF status->>'api_version' <> 'ii42_index_v1'
+        IF status->>'api_version' <> 'evoke_index_v1'
             OR (status->>'query_ready')::boolean IS DISTINCT FROM true
             OR status->>'blocker' <> 'none'
             OR (generation->>'atomic')::boolean IS DISTINCT FROM true
@@ -1444,7 +1444,7 @@ def runtime_service_sql(
 
         SELECT count(*), array_agg(docs.id ORDER BY docs.id)
         INTO hit_count, hit_ids
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_body_idx'::regclass,
             'alpha semantic optimization',
             3
@@ -1460,7 +1460,7 @@ def runtime_service_sql(
         END IF;
 
         PERFORM pg_catalog.set_config(
-            'ii42.enable_planner_native',
+            'evoke.enable_planner_native',
             'on',
             true
         );
@@ -1468,22 +1468,22 @@ def runtime_service_sql(
             EXPLAIN (FORMAT JSON, COSTS false, VERBOSE true)
             SELECT id
             FROM docs
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha semantic optimization'
             ) DESC
             LIMIT 3
         $plan$ INTO planner_probe_plan;
         IF planner_probe_plan::text NOT LIKE '%Custom Scan%'
-            OR planner_probe_plan::text NOT LIKE '%II42 Search%'
+            OR planner_probe_plan::text NOT LIKE '%Evoke Search%'
         THEN
             RAISE EXCEPTION
-                'planner-native probe did not select II42 CustomScan: %',
+                'planner-native probe did not select Evoke CustomScan: %',
                 planner_probe_plan;
         END IF;
         SELECT array_agg(docs.id ORDER BY hit.rank)
         INTO function_ordered_ids
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_body_idx'::regclass,
             'alpha semantic optimization',
             3
@@ -1494,7 +1494,7 @@ def runtime_service_sql(
         FROM (
             SELECT id
             FROM docs
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha semantic optimization'
             ) DESC
@@ -1508,7 +1508,7 @@ def runtime_service_sql(
         END IF;
         SELECT array_agg(hit.score ORDER BY hit.rank)
         INTO function_ordered_scores
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_body_idx'::regclass,
             'alpha semantic optimization',
             3
@@ -1516,12 +1516,12 @@ def runtime_service_sql(
         SELECT array_agg(ranked.score ORDER BY ranked.score DESC)
         INTO planner_ordered_scores
         FROM (
-            SELECT ii42_query(
+            SELECT evoke_query(
                        'docs_body_idx'::regclass,
                        'alpha semantic optimization'
                    ) AS score
             FROM docs
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha semantic optimization'
             ) DESC
@@ -1538,7 +1538,7 @@ def runtime_service_sql(
             FROM (
                 SELECT aliased_docs.id
                 FROM docs AS aliased_docs
-                ORDER BY ii42_query(
+                ORDER BY evoke_query(
                     'docs_body_idx'::regclass,
                     'alpha semantic optimization'
                 ) DESC
@@ -1552,7 +1552,7 @@ def runtime_service_sql(
             FROM (
                 SELECT ctid, tableoid
                 FROM docs
-                ORDER BY ii42_query(
+                ORDER BY evoke_query(
                     'docs_body_idx'::regclass,
                     'alpha semantic optimization'
                 ) DESC
@@ -1565,18 +1565,18 @@ def runtime_service_sql(
                 'planner-native scan did not preserve system identity';
         END IF;
 
-        EXECUTE 'CREATE INDEX docs_bm25_idx ON docs USING ii42 (body)';
+        EXECUTE 'CREATE INDEX docs_bm25_idx ON docs USING evoke (body)';
         EXECUTE $plan$
             EXPLAIN (FORMAT JSON, COSTS false)
             SELECT id
             FROM docs
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_bm25_idx'::regclass,
                 'alpha semantic optimization'
             ) DESC
             LIMIT 3
         $plan$ INTO planner_probe_plan;
-        IF planner_probe_plan::text LIKE '%II42 Search%' THEN
+        IF planner_probe_plan::text LIKE '%Evoke Search%' THEN
             RAISE EXCEPTION
                 'planner-native semantic path captured a BM25 index: %',
                 planner_probe_plan;
@@ -1586,7 +1586,7 @@ def runtime_service_sql(
         EXECUTE $ddl$
             CREATE INDEX docs_field_idx
             ON docs
-            USING ii42 (id, body)
+            USING evoke (id, body)
             WITH (
                 sae = true,
                 field_aware = true,
@@ -1595,7 +1595,7 @@ def runtime_service_sql(
         $ddl$;
         SELECT array_agg(docs.id ORDER BY hit.rank)
         INTO field_function_ordered_ids
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_field_idx'::regclass,
             'alpha semantic optimization',
             3
@@ -1606,7 +1606,7 @@ def runtime_service_sql(
         FROM (
             SELECT id
             FROM docs
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_field_idx'::regclass,
                 'alpha semantic optimization'
             ) DESC
@@ -1621,7 +1621,7 @@ def runtime_service_sql(
         END IF;
         SELECT array_agg(docs.id ORDER BY hit.rank)
         INTO field_function_ordered_ids
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_field_idx'::regclass,
             'alpha semantic optimization',
             ARRAY['id', 'body']::text[],
@@ -1634,7 +1634,7 @@ def runtime_service_sql(
         FROM (
             SELECT id
             FROM docs
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_field_idx'::regclass,
                 'alpha semantic optimization',
                 ARRAY['id', 'body']::text[],
@@ -1655,13 +1655,13 @@ def runtime_service_sql(
             EXPLAIN (FORMAT JSON, COSTS false)
             SELECT id
             FROM docs
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha semantic optimization'
             ) ASC
             LIMIT 3
         $plan$ INTO planner_probe_plan;
-        IF planner_probe_plan::text LIKE '%II42 Search%' THEN
+        IF planner_probe_plan::text LIKE '%Evoke Search%' THEN
             RAISE EXCEPTION
                 'planner-native probe accepted ascending order: %',
                 planner_probe_plan;
@@ -1670,14 +1670,14 @@ def runtime_service_sql(
             EXPLAIN (FORMAT JSON, COSTS false)
             SELECT id
             FROM docs
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha semantic optimization'
             ) DESC,
             id
             LIMIT 3
         $plan$ INTO planner_probe_plan;
-        IF planner_probe_plan::text LIKE '%II42 Search%' THEN
+        IF planner_probe_plan::text LIKE '%Evoke Search%' THEN
             RAISE EXCEPTION
                 'planner-native probe accepted a secondary sort key: %',
                 planner_probe_plan;
@@ -1687,13 +1687,13 @@ def runtime_service_sql(
             SELECT docs.id
             FROM docs
             JOIN allowed_docs AS allowed ON allowed.id = docs.id
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha semantic optimization'
             ) DESC
             LIMIT 3
         $plan$ INTO planner_probe_plan;
-        IF planner_probe_plan::text LIKE '%II42 Search%' THEN
+        IF planner_probe_plan::text LIKE '%Evoke Search%' THEN
             RAISE EXCEPTION
                 'planner-native probe accepted a join: %',
                 planner_probe_plan;
@@ -1702,13 +1702,13 @@ def runtime_service_sql(
             EXPLAIN (FORMAT JSON, COSTS false)
             SELECT id
             FROM docs
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 body
             ) DESC
             LIMIT 3
         $plan$ INTO planner_probe_plan;
-        IF planner_probe_plan::text LIKE '%II42 Search%' THEN
+        IF planner_probe_plan::text LIKE '%Evoke Search%' THEN
             RAISE EXCEPTION
                 'planner-native probe accepted a row-dependent query: %',
                 planner_probe_plan;
@@ -1717,13 +1717,13 @@ def runtime_service_sql(
             EXPLAIN (FORMAT JSON, COSTS false)
             SELECT id
             FROM docs
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha semantic optimization'
             ) DESC
             FETCH FIRST 3 ROWS WITH TIES
         $plan$ INTO planner_probe_plan;
-        IF planner_probe_plan::text LIKE '%II42 Search%' THEN
+        IF planner_probe_plan::text LIKE '%Evoke Search%' THEN
             RAISE EXCEPTION
                 'planner-native probe accepted WITH TIES: %',
                 planner_probe_plan;
@@ -1732,14 +1732,14 @@ def runtime_service_sql(
             EXPLAIN (FORMAT JSON, COSTS false)
             SELECT id
             FROM docs
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha semantic optimization'
             ) DESC
             LIMIT 3
             FOR UPDATE
         $plan$ INTO planner_probe_plan;
-        IF planner_probe_plan::text LIKE '%II42 Search%' THEN
+        IF planner_probe_plan::text LIKE '%Evoke Search%' THEN
             RAISE EXCEPTION
                 'planner-native probe accepted row locking: %',
                 planner_probe_plan;
@@ -1748,12 +1748,12 @@ def runtime_service_sql(
             EXPLAIN (FORMAT JSON, COSTS false)
             SELECT id
             FROM docs
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha semantic optimization'
             ) DESC
         $plan$ INTO planner_probe_plan;
-        IF planner_probe_plan::text LIKE '%II42 Search%' THEN
+        IF planner_probe_plan::text LIKE '%Evoke Search%' THEN
             RAISE EXCEPTION
                 'planner-native probe accepted an unbounded query: %',
                 planner_probe_plan;
@@ -1763,18 +1763,18 @@ def runtime_service_sql(
             SELECT id
             FROM docs
             WHERE id = 'doc-a'
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha semantic optimization'
             ) DESC
             LIMIT 3
         $plan$ INTO planner_probe_plan;
-        IF planner_probe_plan::text NOT LIKE '%II42 Search%' THEN
+        IF planner_probe_plan::text NOT LIKE '%Evoke Search%' THEN
             RAISE EXCEPTION
-                'planner-native filtered query missed II42 CustomScan: %',
+                'planner-native filtered query missed Evoke CustomScan: %',
                 planner_probe_plan;
         END IF;
-        IF planner_probe_plan::text NOT LIKE '%II42 Index%'
+        IF planner_probe_plan::text NOT LIKE '%Evoke Index%'
             OR planner_probe_plan::text NOT LIKE '%docs_body_idx%'
             OR planner_probe_plan::text NOT LIKE '%Filtered%'
         THEN
@@ -1784,7 +1784,7 @@ def runtime_service_sql(
         END IF;
         SELECT array_agg(docs.id ORDER BY hit.rank)
         INTO filtered_function_ordered_ids
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_body_idx'::regclass,
             'alpha semantic optimization',
             ARRAY(
@@ -1796,13 +1796,13 @@ def runtime_service_sql(
             3
         ) WITH ORDINALITY AS hit(ctid, doc_id, score, rank)
         JOIN docs ON docs.ctid = hit.ctid;
-        function_probe_trace := ii42_query_trace_internal();
+        function_probe_trace := evoke_query_trace_internal();
         EXECUTE $plan$
             EXPLAIN (FORMAT JSON, COSTS false, VERBOSE true)
             SELECT id
             FROM docs
             WHERE category = 'keep'
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha semantic optimization'
             ) DESC
@@ -1814,13 +1814,13 @@ def runtime_service_sql(
             SELECT id
             FROM docs
             WHERE category = 'keep'
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha semantic optimization'
             ) DESC
             LIMIT 3
         ) AS ranked;
-        planner_probe_trace := ii42_query_trace_internal();
+        planner_probe_trace := evoke_query_trace_internal();
         IF filtered_planner_ordered_ids IS DISTINCT FROM
                 filtered_function_ordered_ids THEN
             RAISE EXCEPTION
@@ -1837,7 +1837,7 @@ def runtime_service_sql(
             SELECT id
             FROM docs
             WHERE category = 'missing'
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha semantic optimization'
             ) DESC
@@ -1850,17 +1850,17 @@ def runtime_service_sql(
         END IF;
 
         EXECUTE $prepare$
-            PREPARE ii42_planner_parameter_probe(text, bigint) AS
+            PREPARE evoke_planner_parameter_probe(text, bigint) AS
             SELECT id
             FROM docs
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 $1
             ) DESC
             LIMIT $2
         $prepare$;
         EXECUTE $execute$
-            EXECUTE ii42_planner_parameter_probe(
+            EXECUTE evoke_planner_parameter_probe(
                 'alpha semantic optimization',
                 3
             )
@@ -1871,7 +1871,7 @@ def runtime_service_sql(
             true
         );
         EXECUTE $execute$
-            EXECUTE ii42_planner_parameter_probe(
+            EXECUTE evoke_planner_parameter_probe(
                 'alpha semantic optimization',
                 2
             )
@@ -1881,33 +1881,33 @@ def runtime_service_sql(
             'auto',
             true
         );
-        EXECUTE 'DEALLOCATE ii42_planner_parameter_probe';
+        EXECUTE 'DEALLOCATE evoke_planner_parameter_probe';
         EXECUTE $prepare$
-            PREPARE ii42_planner_filtered_probe(text, text, bigint) AS
+            PREPARE evoke_planner_filtered_probe(text, text, bigint) AS
             SELECT id
             FROM docs
             WHERE category = $2
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 $1
             ) DESC
             LIMIT $3
         $prepare$;
         EXECUTE $execute$
-            EXECUTE ii42_planner_filtered_probe(
+            EXECUTE evoke_planner_filtered_probe(
                 'alpha semantic optimization',
                 'keep',
                 3
             )
         $execute$;
-        EXECUTE 'DEALLOCATE ii42_planner_filtered_probe';
+        EXECUTE 'DEALLOCATE evoke_planner_filtered_probe';
         PERFORM pg_catalog.set_config(
-            'ii42.enable_planner_native',
+            'evoke.enable_planner_native',
             'off',
             true
         );
 
-        batch_encoding := ii42_runtime_service_query_atoms_batch(
+        batch_encoding := evoke_runtime_service_query_atoms_batch(
             '{escaped_path}',
             'fp16',
             ARRAY[
@@ -1915,7 +1915,7 @@ def runtime_service_sql(
                 'runtime second batch row'
             ]
         );
-        wrapper_encoding := ii42_runtime_service_atoms_batch_internal(
+        wrapper_encoding := evoke_runtime_service_atoms_batch_internal(
             '{escaped_path}',
             'fp16',
             'query',
@@ -1924,7 +1924,7 @@ def runtime_service_sql(
                 'runtime second batch row'
             ]
         );
-        shared_encoding := ii42_runtime_service_query_atoms(
+        shared_encoding := evoke_runtime_service_query_atoms(
             '{escaped_path}',
             'fp16',
             'runtime parity sentinel'
@@ -1957,7 +1957,7 @@ def runtime_service_sql(
                 batch_encoding;
         END IF;
 
-        service_status := ii42_runtime_service_status();
+        service_status := evoke_runtime_service_status();
         IF service_status->>'provider' <> 'auto'
             OR service_status->>'active_provider'
                 NOT IN ('cpu', 'cuda', 'coreml', 'tensorrt')
@@ -1991,7 +1991,7 @@ def run_concurrent_runtime_queries(socket_dir: Path, port: int) -> None:
                         FROM (
                             SELECT id
                             FROM docs
-                            ORDER BY ii42_query(
+                            ORDER BY evoke_query(
                                 'docs_body_idx'::regclass,
                                 %s
                             ) DESC
@@ -2004,7 +2004,7 @@ def run_concurrent_runtime_queries(socket_dir: Path, port: int) -> None:
                     cur.execute(
                         """
                         SELECT count(*)
-                        FROM ii42_query(
+                        FROM evoke_query(
                             'docs_body_idx'::regclass,
                             %s,
                             3
@@ -2031,7 +2031,7 @@ def run_concurrent_runtime_queries(socket_dir: Path, port: int) -> None:
 
     with psycopg.connect(dsn, autocommit=True) as conn:
         with conn.cursor() as cur:
-            cur.execute('SELECT ii42_runtime_service_status()')
+            cur.execute('SELECT evoke_runtime_service_status()')
             status = cur.fetchone()[0]
     if status.get('queue_policy') != 'bounded_affinity_worker_pool':
         raise AssertionError(f'worker-pool queue policy missing: {status}')
@@ -2104,7 +2104,7 @@ def run_planner_native_cancellation_probe(
             cursor.execute('SELECT pg_backend_pid()')
             victim_pid = int(cursor.fetchone()[0])
             cursor.execute(
-                "SET ii42.test_convergent_root_snapshot_pause_ms = '5000'"
+                "SET evoke.test_convergent_root_snapshot_pause_ms = '5000'"
             )
 
         def run_query() -> None:
@@ -2113,7 +2113,7 @@ def run_planner_native_cancellation_probe(
                     """
                     SELECT id
                     FROM docs
-                    ORDER BY ii42_query(
+                    ORDER BY evoke_query(
                         'docs_body_idx'::regclass,
                         'planner native cancellation sentinel'
                     ) DESC
@@ -2141,14 +2141,14 @@ def run_planner_native_cancellation_probe(
                 )
 
         with victim.cursor() as cursor:
-            cursor.execute('RESET ii42.test_convergent_root_snapshot_pause_ms')
+            cursor.execute('RESET evoke.test_convergent_root_snapshot_pause_ms')
             cursor.execute(
                 """
                 SELECT count(*)
                 FROM (
                     SELECT id
                     FROM docs
-                    ORDER BY ii42_query(
+                    ORDER BY evoke_query(
                         'docs_body_idx'::regclass,
                         'planner native post-cancellation sentinel'
                     ) DESC
@@ -2170,7 +2170,7 @@ def run_runtime_batch_cap_reload_probe(
     dsn = f'host={socket_dir} port={port} dbname=postgres'
 
     def fetch_status(cursor: psycopg.Cursor[object]) -> dict[str, object]:
-        cursor.execute('SELECT ii42_runtime_service_status()')
+        cursor.execute('SELECT evoke_runtime_service_status()')
         row = cursor.fetchone()
         if row is None:
             raise AssertionError('runtime status returned no row')
@@ -2216,7 +2216,7 @@ def run_runtime_batch_cap_reload_probe(
             for row in range(count)
         ]
         cursor.execute(
-            'SELECT ii42_runtime_service_document_atoms_batch(%s, %s)',
+            'SELECT evoke_runtime_service_document_atoms_batch(%s, %s)',
             (str(model_path), texts),
         )
         result = cursor.fetchone()[0]
@@ -2229,7 +2229,7 @@ def run_runtime_batch_cap_reload_probe(
     with psycopg.connect(dsn, autocommit=True) as conn:
         with conn.cursor() as cursor:
             cursor.execute(
-                "ALTER SYSTEM SET ii42.runtime_max_batch_size = '2'",
+                "ALTER SYSTEM SET evoke.runtime_max_batch_size = '2'",
             )
             cursor.execute('SELECT pg_reload_conf()')
             low_status = wait_batch_cap(cursor, 2)
@@ -2254,13 +2254,13 @@ def run_runtime_batch_cap_reload_probe(
             encode_document_batch(cursor, 2)
 
             cursor.execute(
-                "ALTER SYSTEM SET ii42.runtime_max_batch_size = '4'",
+                "ALTER SYSTEM SET evoke.runtime_max_batch_size = '4'",
             )
             cursor.execute('SELECT pg_reload_conf()')
             wait_batch_cap(cursor, 4)
             encode_document_batch(cursor, 4)
 
-            cursor.execute('ALTER SYSTEM RESET ii42.runtime_max_batch_size')
+            cursor.execute('ALTER SYSTEM RESET evoke.runtime_max_batch_size')
             cursor.execute('SELECT pg_reload_conf()')
 
 
@@ -2285,7 +2285,7 @@ def run_parallel_worker_probe(
             barrier.wait(timeout=10)
             with conn.cursor() as cursor:
                 cursor.execute(
-                    'SELECT ii42_runtime_service_query_atoms_batch(%s, %s)',
+                    'SELECT evoke_runtime_service_query_atoms_batch(%s, %s)',
                     (str(model_path), texts),
                 )
                 return cursor.fetchone() is not None
@@ -2301,7 +2301,7 @@ def run_parallel_worker_probe(
             last_status: dict[str, object] = {}
             while time.monotonic() < deadline:
                 with control.cursor() as cursor:
-                    cursor.execute('SELECT ii42_runtime_service_status()')
+                    cursor.execute('SELECT evoke_runtime_service_status()')
                     last_status = dict(cursor.fetchone()[0])
                 if int(last_status.get('worker_count_busy', 0)) >= 2:
                     observed_parallel = True
@@ -2345,7 +2345,7 @@ def run_model_affinity_probe(
             barrier.wait(timeout=10)
             with conn.cursor() as cursor:
                 cursor.execute(
-                    'SELECT ii42_runtime_service_query_atoms(%s, %s)',
+                    'SELECT evoke_runtime_service_query_atoms(%s, %s)',
                     (
                         str(alias),
                         f'model affinity round {round_id} for {alias.name}',
@@ -2366,7 +2366,7 @@ def run_model_affinity_probe(
             barrier.wait(timeout=10)
             with conn.cursor() as cursor:
                 cursor.execute(
-                    'SELECT ii42_runtime_service_query_atoms_batch(%s, %s)',
+                    'SELECT evoke_runtime_service_query_atoms_batch(%s, %s)',
                     (str(alias), texts),
                 )
                 result = cursor.fetchone()[0]
@@ -2391,7 +2391,7 @@ def run_model_affinity_probe(
                     )
 
             with control.cursor() as cursor:
-                cursor.execute('SELECT ii42_runtime_service_status()')
+                cursor.execute('SELECT evoke_runtime_service_status()')
                 before = dict(cursor.fetchone()[0])
 
             results = []
@@ -2413,7 +2413,7 @@ def run_model_affinity_probe(
             last_steal_status: dict[str, object] = {}
             while time.monotonic() < steal_deadline:
                 with control.cursor() as cursor:
-                    cursor.execute('SELECT ii42_runtime_service_status()')
+                    cursor.execute('SELECT evoke_runtime_service_status()')
                     last_steal_status = dict(cursor.fetchone()[0])
                 if int(last_steal_status.get('worker_count_busy', 0)) >= 2:
                     observed_affinity_steal = True
@@ -2433,7 +2433,7 @@ def run_model_affinity_probe(
                 )
 
         with control.cursor() as cursor:
-            cursor.execute('SELECT ii42_runtime_service_status()')
+            cursor.execute('SELECT evoke_runtime_service_status()')
             after = dict(cursor.fetchone()[0])
 
     if not all(results):
@@ -2477,14 +2477,14 @@ def run_same_path_checkout_reload_probe(
     dsn = f'host={socket_dir} port={port} dbname=postgres'
 
     def status(cursor: psycopg.Cursor[object]) -> dict[str, object]:
-        cursor.execute('SELECT ii42_runtime_service_status()')
+        cursor.execute('SELECT evoke_runtime_service_status()')
         return dict(cursor.fetchone()[0])
 
     def query(
         cursor: psycopg.Cursor[object],
     ) -> tuple[list[object], str, float]:
         cursor.execute(
-            'SELECT ii42_runtime_service_query_atoms(%s, %s)',
+            'SELECT evoke_runtime_service_query_atoms(%s, %s)',
             (
                 str(checkout_path),
                 'same path checkout cache identity probe',
@@ -2709,7 +2709,7 @@ def run_mixed_query_document_probe(
             barrier.wait(timeout=10)
             with conn.cursor() as cursor:
                 cursor.execute(
-                    'SELECT ii42_runtime_service_document_atoms_batch(%s, %s)',
+                    'SELECT evoke_runtime_service_document_atoms_batch(%s, %s)',
                     (str(model_path), texts),
                 )
                 result = cursor.fetchone()[0]
@@ -2728,7 +2728,7 @@ def run_mixed_query_document_probe(
             last_status: dict[str, object] = {}
             while time.monotonic() < deadline:
                 with control.cursor() as cursor:
-                    cursor.execute('SELECT ii42_runtime_service_status()')
+                    cursor.execute('SELECT evoke_runtime_service_status()')
                     last_status = dict(cursor.fetchone()[0])
                 if (
                     int(last_status.get('document_workers_busy', 0))
@@ -2763,7 +2763,7 @@ def run_mixed_query_document_probe(
 
             with control.cursor() as cursor:
                 cursor.execute(
-                    'SELECT ii42_runtime_service_query_atoms(%s, %s)',
+                    'SELECT evoke_runtime_service_query_atoms(%s, %s)',
                     (
                         str(model_path),
                         'latency-sensitive query lane sentinel',
@@ -2812,7 +2812,7 @@ def run_completed_response_reservation_probe(
 
     def runtime_status() -> dict[str, object]:
         with control.cursor() as cursor:
-            cursor.execute('SELECT ii42_runtime_service_status()')
+            cursor.execute('SELECT evoke_runtime_service_status()')
             return dict(cursor.fetchone()[0])
 
     def encode_document_batch(
@@ -2828,7 +2828,7 @@ def run_completed_response_reservation_probe(
         ]
         with connection.cursor() as cursor:
             cursor.execute(
-                'SELECT ii42_runtime_service_document_atoms_batch(%s, %s)',
+                'SELECT evoke_runtime_service_document_atoms_batch(%s, %s)',
                 (str(model_path), texts),
             )
             result = cursor.fetchone()[0]
@@ -2928,7 +2928,7 @@ def run_completed_response_reservation_probe(
         with control.cursor() as cursor:
             cursor.execute("SET statement_timeout = '15s'")
             cursor.execute(
-                'SELECT ii42_runtime_service_query_atoms(%s, %s)',
+                'SELECT evoke_runtime_service_query_atoms(%s, %s)',
                 (
                     str(model_path),
                     'query admitted beside completed document responses',
@@ -3008,7 +3008,7 @@ def run_single_build_pipeline_probe(
                 FROM generate_series(1, 512) AS value
                 """
             )
-            cursor.execute('SELECT ii42_runtime_service_status()')
+            cursor.execute('SELECT evoke_runtime_service_status()')
             before = dict(cursor.fetchone()[0])
 
         def build_index(index_name: str) -> None:
@@ -3018,7 +3018,7 @@ def run_single_build_pipeline_probe(
                         f"""
                         CREATE INDEX {index_name}
                         ON runtime_pipeline_docs
-                        USING ii42 (body)
+                        USING evoke (body)
                         WITH (
                             sae = true,
                             model_path = '{escaped_model_path}'
@@ -3036,7 +3036,7 @@ def run_single_build_pipeline_probe(
             deadline = time.monotonic() + 30.0
             while time.monotonic() < deadline:
                 with control.cursor() as cursor:
-                    cursor.execute('SELECT ii42_runtime_service_status()')
+                    cursor.execute('SELECT evoke_runtime_service_status()')
                     last_status = dict(cursor.fetchone()[0])
                 if int(last_status.get('document_workers_busy', 0)) >= 2:
                     observed_parallel = True
@@ -3054,15 +3054,15 @@ def run_single_build_pipeline_probe(
 
         build_index('runtime_pipeline_docs_b_idx')
         with control.cursor() as cursor:
-            cursor.execute('SELECT ii42_runtime_service_status()')
+            cursor.execute('SELECT evoke_runtime_service_status()')
             after = dict(cursor.fetchone()[0])
             cursor.execute(
                 """
                 SELECT
                     index_name::text,
-                    (ii42_index_status(index_name)->>'query_ready')::boolean,
+                    (evoke_index_status(index_name)->>'query_ready')::boolean,
                     (
-                        ii42_index_status(index_name)
+                        evoke_index_status(index_name)
                         #>> '{generation,posting,record_count}'
                     )::integer
                 FROM unnest(
@@ -3106,7 +3106,7 @@ def run_single_build_pipeline_probe(
                     cursor.execute(
                         """
                         SELECT source.id, hit.score::float8
-                        FROM ii42_query(%s::regclass, %s, 25) AS hit
+                        FROM evoke_query(%s::regclass, %s, 25) AS hit
                         JOIN runtime_pipeline_docs AS source
                             ON source.ctid = hit.ctid
                         ORDER BY hit.score DESC, source.id
@@ -3142,7 +3142,7 @@ def run_runtime_owner_cancellation_probe(
             cursor.execute('SELECT pg_backend_pid()')
             victim_pid = int(cursor.fetchone()[0])
         with control.cursor() as cursor:
-            cursor.execute('SELECT ii42_runtime_service_status()')
+            cursor.execute('SELECT evoke_runtime_service_status()')
             before = dict(cursor.fetchone()[0])
 
         texts = [
@@ -3156,7 +3156,7 @@ def run_runtime_owner_cancellation_probe(
         def submit_victim() -> str:
             with victim.cursor() as cursor:
                 cursor.execute(
-                    'SELECT ii42_runtime_service_query_atoms_batch(%s, %s)',
+                    'SELECT evoke_runtime_service_query_atoms_batch(%s, %s)',
                     (str(model_path), texts),
                 )
                 row = cursor.fetchone()
@@ -3168,7 +3168,7 @@ def run_runtime_owner_cancellation_probe(
             observed_processing = False
             while time.monotonic() < deadline:
                 with control.cursor() as cursor:
-                    cursor.execute('SELECT ii42_runtime_service_status()')
+                    cursor.execute('SELECT evoke_runtime_service_status()')
                     current = dict(cursor.fetchone()[0])
                 if (
                     current.get('request_processing') is True
@@ -3206,7 +3206,7 @@ def run_runtime_owner_cancellation_probe(
 
         with control.cursor() as cursor:
             cursor.execute(
-                'SELECT ii42_runtime_service_query_atoms(%s, %s)',
+                'SELECT evoke_runtime_service_query_atoms(%s, %s)',
                 (str(model_path), 'post cancellation service sentinel'),
             )
             if cursor.fetchone() is None:
@@ -3218,7 +3218,7 @@ def run_runtime_owner_cancellation_probe(
         after: dict[str, object] = {}
         while time.monotonic() < deadline:
             with control.cursor() as cursor:
-                cursor.execute('SELECT ii42_runtime_service_status()')
+                cursor.execute('SELECT evoke_runtime_service_status()')
                 after = dict(cursor.fetchone()[0])
             if (
                 after.get('request_processing') is False
@@ -3286,7 +3286,7 @@ def run_batch_request_validation_probe(
         (
             'row limit',
             [f'row {index}' for index in range(513)],
-            'invalid ii42 runtime text batch size',
+            'invalid evoke runtime text batch size',
         ),
         (
             'packed text limit',
@@ -3299,7 +3299,7 @@ def run_batch_request_validation_probe(
             for label, texts, expected_error in cases:
                 try:
                     cur.execute(
-                        'SELECT ii42_runtime_service_query_atoms_batch(%s, %s)',
+                        'SELECT evoke_runtime_service_query_atoms_batch(%s, %s)',
                         (str(model_path), texts),
                     )
                 except psycopg.Error as exc:
@@ -3310,7 +3310,7 @@ def run_batch_request_validation_probe(
                 else:
                     raise AssertionError(f'{label} should have failed')
 
-            cur.execute('SELECT ii42_runtime_service_status()')
+            cur.execute('SELECT evoke_runtime_service_status()')
             status = cur.fetchone()[0]
     if status.get('worker_ready') is not True:
         raise AssertionError(
@@ -3343,14 +3343,14 @@ def run_semantic_product_contract_probe(
         with connection.cursor() as cursor:
             expect_database_error(
                 cursor,
-                "SELECT ii42_index_options('docs_pkey'::regclass)",
-                'must use ii42 access method',
+                "SELECT evoke_index_options('docs_pkey'::regclass)",
+                'must use evoke access method',
             )
             expect_database_error(
                 cursor,
                 """
                 CREATE INDEX invalid_sae_k1_idx
-                ON docs USING ii42 (body)
+                ON docs USING evoke (body)
                 WITH (sae = true, k1 = 1.2)
                 """,
                 'not valid with sae=true',
@@ -3358,7 +3358,7 @@ def run_semantic_product_contract_probe(
             cursor.execute(
                 """
                 CREATE INDEX valid_sae_automatic_idx
-                ON docs USING ii42 (body)
+                ON docs USING evoke (body)
                 WITH (
                     sae = true,
                     consistency = eventual
@@ -3373,7 +3373,7 @@ def run_semantic_product_contract_probe(
                     pending_deletes,
                     delta_records,
                     delta_bytes
-                FROM ii42_index_details(
+                FROM evoke_index_details(
                     'valid_sae_automatic_idx'::regclass
                 )
                 """
@@ -3399,13 +3399,13 @@ def run_semantic_product_contract_probe(
                     (
                         status#>>'{generation,primary,physical_blocks}'
                     )::int8 * current_setting('block_size')::int8
-                FROM ii42_index_details(
+                FROM evoke_index_details(
                     'docs_body_idx'::regclass
                 ) AS details
                 CROSS JOIN LATERAL (
                     SELECT jsonb_build_object(
                         'generation',
-                        ii42_index_generation_audit_internal(
+                        evoke_index_generation_audit_internal(
                             'docs_body_idx'::regclass
                         )
                     ) AS status
@@ -3438,7 +3438,7 @@ def run_semantic_product_contract_probe(
                 SELECT
                     recommended_options,
                     recommended_consistency
-                FROM ii42_index_policy_recommend(
+                FROM evoke_index_policy_recommend(
                     'docs_body_idx'::regclass,
                     'balanced'
                 )
@@ -3458,7 +3458,7 @@ def run_semantic_product_contract_probe(
                 SELECT
                     recommended_options,
                     recommended_consistency
-                FROM ii42_index_policy_recommend(
+                FROM evoke_index_policy_recommend(
                     'docs_body_idx'::regclass,
                     'query_first'
                 )
@@ -3477,7 +3477,7 @@ def run_semantic_product_contract_probe(
                 cursor,
                 """
                 SELECT *
-                FROM ii42_index_policy_recommend(
+                FROM evoke_index_policy_recommend(
                     'docs_body_idx'::regclass,
                     'heavy_insert_skew'
                 )
@@ -3498,7 +3498,7 @@ def run_semantic_product_contract_probe(
                     cursor,
                     f"""
                     CREATE INDEX invalid_sae_{consistency}_idx
-                    ON semantic_policy_docs USING ii42 (body)
+                    ON semantic_policy_docs USING evoke (body)
                     WITH (sae = true, consistency = {consistency})
                     """,
                     "SAE indexes require consistency = 'eventual'",
@@ -3528,18 +3528,18 @@ def run_low_memory_semantic_completion_probe(
     with psycopg.connect(dsn, autocommit=True) as connection:
         with connection.cursor() as cursor:
             cursor.execute(
-                'SHOW ii42.maintenance_rebuild_memory_budget',
+                'SHOW evoke.maintenance_rebuild_memory_budget',
             )
             previous_budget = str(cursor.fetchone()[0])
             cursor.execute(
                 "ALTER SYSTEM SET "
-                "ii42.maintenance_rebuild_memory_budget = '1MB'",
+                "evoke.maintenance_rebuild_memory_budget = '1MB'",
             )
             cursor.execute('SELECT pg_reload_conf()')
             deadline = time.monotonic() + 5.0
             while True:
                 cursor.execute(
-                    'SHOW ii42.maintenance_rebuild_memory_budget',
+                    'SHOW evoke.maintenance_rebuild_memory_budget',
                 )
                 if str(cursor.fetchone()[0]) == '1MB':
                     break
@@ -3573,13 +3573,13 @@ def run_low_memory_semantic_completion_probe(
                     """
                     CREATE INDEX semantic_spill_docs_idx
                     ON semantic_spill_docs
-                    USING ii42 (body)
+                    USING evoke (body)
                     WITH (sae = true)
                     """
                 )
                 cursor.execute(
                     """
-                    SELECT ii42_index_status(
+                    SELECT evoke_index_status(
                         'semantic_spill_docs_idx'::regclass
                     )
                     """
@@ -3587,7 +3587,7 @@ def run_low_memory_semantic_completion_probe(
                 initial_status = cursor.fetchone()[0]
                 cursor.execute(
                     """
-                    SELECT ii42_index_runtime_state_json(
+                    SELECT evoke_index_runtime_state_json(
                         'semantic_spill_docs_idx'::regclass
                     )
                     """
@@ -3597,7 +3597,7 @@ def run_low_memory_semantic_completion_probe(
                 cursor.execute(
                     """
                     SELECT count(*)
-                    FROM ii42_query(
+                    FROM evoke_query(
                         'semantic_spill_docs_idx'::regclass,
                         'semantic spill batch group 31',
                         10
@@ -3606,7 +3606,7 @@ def run_low_memory_semantic_completion_probe(
                 )
                 initial_hits = int(cursor.fetchone()[0])
                 cursor.execute(
-                    "SET ii42.test_convergent_l0_rotation_records = '256'"
+                    "SET evoke.test_convergent_l0_rotation_records = '256'"
                 )
                 cursor.execute(
                     """
@@ -3617,7 +3617,7 @@ def run_low_memory_semantic_completion_probe(
                 )
                 cursor.execute(
                     """
-                    SELECT ii42_index_runtime_state_json(
+                    SELECT evoke_index_runtime_state_json(
                         'semantic_spill_docs_idx'::regclass
                     )
                     """
@@ -3629,7 +3629,7 @@ def run_low_memory_semantic_completion_probe(
                 for _ in range(80):
                     cursor.execute(
                         """
-                        SELECT ii42_index_try_maintain(
+                        SELECT evoke_index_try_maintain(
                             'semantic_spill_docs_idx'::regclass
                         )
                         """
@@ -3637,7 +3637,7 @@ def run_low_memory_semantic_completion_probe(
                     budget_results.append(str(cursor.fetchone()[0]))
                     cursor.execute(
                         """
-                        SELECT ii42_index_status(
+                        SELECT evoke_index_status(
                             'semantic_spill_docs_idx'::regclass
                         )
                         """
@@ -3645,7 +3645,7 @@ def run_low_memory_semantic_completion_probe(
                     budget_status = cursor.fetchone()[0]
                     cursor.execute(
                         """
-                        SELECT ii42_index_runtime_state_json(
+                        SELECT evoke_index_runtime_state_json(
                             'semantic_spill_docs_idx'::regclass
                         )
                         """
@@ -3671,7 +3671,7 @@ def run_low_memory_semantic_completion_probe(
                 cursor.execute(
                     """
                     SELECT count(*)
-                    FROM ii42_query(
+                    FROM evoke_query(
                         'semantic_spill_docs_idx'::regclass,
                         'semantic spill batch rebuilt',
                         100
@@ -3685,7 +3685,7 @@ def run_low_memory_semantic_completion_probe(
                 cursor.execute('REINDEX INDEX semantic_spill_docs_idx')
                 cursor.execute(
                     """
-                    SELECT ii42_index_status(
+                    SELECT evoke_index_status(
                         'semantic_spill_docs_idx'::regclass
                     )
                     """
@@ -3693,7 +3693,7 @@ def run_low_memory_semantic_completion_probe(
                 rebuilt_status = cursor.fetchone()[0]
                 cursor.execute(
                     """
-                    SELECT ii42_index_runtime_state_json(
+                    SELECT evoke_index_runtime_state_json(
                         'semantic_spill_docs_idx'::regclass
                     )
                     """
@@ -3703,17 +3703,17 @@ def run_low_memory_semantic_completion_probe(
                 cursor.execute('DROP TABLE semantic_spill_docs')
             finally:
                 cursor.execute(
-                    'RESET ii42.test_convergent_l0_rotation_records'
+                    'RESET evoke.test_convergent_l0_rotation_records'
                 )
                 cursor.execute(
                     'ALTER SYSTEM RESET '
-                    'ii42.maintenance_rebuild_memory_budget',
+                    'evoke.maintenance_rebuild_memory_budget',
                 )
                 cursor.execute('SELECT pg_reload_conf()')
                 deadline = time.monotonic() + 5.0
                 while True:
                     cursor.execute(
-                        'SHOW ii42.maintenance_rebuild_memory_budget',
+                        'SHOW evoke.maintenance_rebuild_memory_budget',
                     )
                     if str(cursor.fetchone()[0]) == previous_budget:
                         break
@@ -3810,7 +3810,7 @@ def run_database_lifecycle_probe(
     port: int,
     worker_count: int,
 ) -> None:
-    database_name = 'ii42_worker_lifecycle_probe'
+    database_name = 'evoke_worker_lifecycle_probe'
     dsn = f'host={socket_dir} port={port} dbname=postgres'
     with psycopg.connect(dsn, autocommit=True) as connection:
         with connection.cursor() as cursor:
@@ -3828,12 +3828,12 @@ def run_database_lifecycle_probe(
                 for application_name, count in cursor.fetchall()
             }
             expected_control_sessions = {
-                'ii42 runtime service': worker_count,
-                'ii42 background supervisor': 1,
+                'evoke runtime service': worker_count,
+                'evoke background supervisor': 1,
             }
             if template_sessions != expected_control_sessions:
                 raise AssertionError(
-                    'ii42 workers did not attach only to the configured '
+                    'evoke workers did not attach only to the configured '
                     f'control database: {template_sessions}'
                 )
 
@@ -3846,7 +3846,7 @@ def run_database_lifecycle_probe(
         )
         with psycopg.connect(probe_dsn, autocommit=True) as probe_connection:
             with probe_connection.cursor() as probe_cursor:
-                probe_cursor.execute('CREATE EXTENSION ii42')
+                probe_cursor.execute('CREATE EXTENSION evoke')
                 probe_cursor.execute(
                     """
                     CREATE TABLE docs (
@@ -3866,7 +3866,7 @@ def run_database_lifecycle_probe(
                     """
                     CREATE INDEX docs_body_idx
                     ON docs
-                    USING ii42 (body)
+                    USING evoke (body)
                     WITH (
                         sae = false,
                         consistency = eventual
@@ -3880,7 +3880,7 @@ def run_database_lifecycle_probe(
                     WHERE id <= 10
                     """
                 )
-                probe_cursor.execute('SELECT ii42_index_touch_maintenance()')
+                probe_cursor.execute('SELECT evoke_index_touch_maintenance()')
 
         # Give the supervisor enough time to visit this database and verify
         # that its one-shot worker releases the database connection afterward.
@@ -3901,7 +3901,7 @@ def run_database_lifecycle_probe(
                 break
             if time.monotonic() >= deadline:
                 raise AssertionError(
-                    'ii42 worker kept application database pinned: '
+                    'evoke worker kept application database pinned: '
                     f'{sessions}'
                 )
             time.sleep(0.1)
@@ -3916,8 +3916,8 @@ def run_control_database_independence_probe(
     model_path: Path,
 ) -> None:
     control_dsn = f'host={socket_dir} port={port} dbname=template1'
-    primary_database = 'ii42_application_primary'
-    second_database = 'ii42_application_second'
+    primary_database = 'evoke_application_primary'
+    second_database = 'evoke_application_second'
     database_names = (primary_database, second_database)
 
     with psycopg.connect(control_dsn, autocommit=True) as control:
@@ -3938,9 +3938,9 @@ def run_control_database_independence_probe(
                 with psycopg.connect(dsn, autocommit=True) as application:
                     with application.cursor() as cursor:
                         if database_name == second_database:
-                            cursor.execute('CREATE EXTENSION ii42')
+                            cursor.execute('CREATE EXTENSION evoke')
                         cursor.execute(
-                            'SELECT ii42_runtime_service_query_atoms(%s, %s)',
+                            'SELECT evoke_runtime_service_query_atoms(%s, %s)',
                             (
                                 str(model_path),
                                 f'control database probe {database_name}',
@@ -3975,7 +3975,7 @@ def run_control_database_independence_probe(
                             """
                             CREATE INDEX control_database_docs_idx
                             ON control_database_docs
-                            USING ii42 (body)
+                            USING evoke (body)
                             WITH (
                                 sae = false,
                                 consistency = eventual
@@ -3990,7 +3990,7 @@ def run_control_database_independence_probe(
                             """
                         )
                         cursor.execute(
-                            'SELECT ii42_index_touch_maintenance()'
+                            'SELECT evoke_index_touch_maintenance()'
                         )
 
             deadline = time.monotonic() + 20.0
@@ -4008,14 +4008,14 @@ def run_control_database_independence_probe(
                                 """
                                 SELECT
                                     (
-                                        ii42_index_status(
+                                        evoke_index_status(
                                             'control_database_docs_idx'
                                                 ::regclass
                                         )
                                         #>> '{details,delta_records}'
                                     )::integer,
                                     (
-                                        ii42_index_status(
+                                        evoke_index_status(
                                             'control_database_docs_idx'
                                                 ::regclass
                                         )
@@ -4086,7 +4086,7 @@ def run_maintenance_lock_contention_probe(
             with lock_conn.cursor() as lock_cur:
                 lock_cur.execute(
                     """
-                    SELECT ii42_index_try_maintenance_lock(
+                    SELECT evoke_index_try_maintenance_lock(
                         'docs_body_idx'::regclass
                     )
                     """,
@@ -4102,11 +4102,11 @@ def run_maintenance_lock_contention_probe(
         try:
             with worker_conn.cursor() as worker_cur:
                 worker_cur.execute(
-                    "SET ii42.test_convergent_l0_rotation_records = '1'"
+                    "SET evoke.test_convergent_l0_rotation_records = '1'"
                 )
                 worker_cur.execute(
                     """
-                    SELECT ii42_index_status('docs_body_idx'::regclass)
+                    SELECT evoke_index_status('docs_body_idx'::regclass)
                     """,
                 )
                 before_status = worker_cur.fetchone()[0]
@@ -4118,7 +4118,7 @@ def run_maintenance_lock_contention_probe(
                 )
                 worker_cur.execute(
                     """
-                    SELECT ii42_index_try_maintain(
+                    SELECT evoke_index_try_maintain(
                         'docs_body_idx'::regclass
                     )
                     """,
@@ -4126,7 +4126,7 @@ def run_maintenance_lock_contention_probe(
                 busy_result = str(worker_cur.fetchone()[0])
                 worker_cur.execute(
                     """
-                    SELECT ii42_index_status('docs_body_idx'::regclass)
+                    SELECT evoke_index_status('docs_body_idx'::regclass)
                     """,
                 )
                 pending_status = worker_cur.fetchone()[0]
@@ -4153,7 +4153,7 @@ def run_maintenance_lock_contention_probe(
             with lock_conn.cursor() as lock_cur:
                 lock_cur.execute(
                     """
-                    SELECT ii42_index_maintenance_unlock(
+                    SELECT evoke_index_maintenance_unlock(
                         'docs_body_idx'::regclass
                     )
                     """,
@@ -4166,13 +4166,13 @@ def run_maintenance_lock_contention_probe(
             for _ in range(32):
                 worker_cur.execute(
                     """
-                    SELECT ii42_index_maintain('docs_body_idx'::regclass)
+                    SELECT evoke_index_maintain('docs_body_idx'::regclass)
                     """,
                 )
                 maintenance_results.append(str(worker_cur.fetchone()[0]))
                 worker_cur.execute(
                     """
-                    SELECT ii42_index_status('docs_body_idx'::regclass)
+                    SELECT evoke_index_status('docs_body_idx'::regclass)
                     """,
                 )
                 converged_status = worker_cur.fetchone()[0]
@@ -4201,7 +4201,7 @@ def run_maintenance_lock_contention_probe(
             worker_cur.execute(
                 """
                 SELECT source.id
-                FROM ii42_query(
+                FROM evoke_query(
                     'docs_body_idx'::regclass,
                     'lock protected semantic lifecycle',
                     4
@@ -4239,7 +4239,7 @@ def run_maintenance_lock_contention_probe(
             )
         with worker_conn.cursor() as worker_cur:
             worker_cur.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
 
 
@@ -4257,7 +4257,7 @@ def run_semantic_generation_reuse_probe(
                 cursor.execute(
                     """
                     SELECT (
-                        ii42_runtime_service_status()->>'encoded_texts'
+                        evoke_runtime_service_status()->>'encoded_texts'
                     )::int8
                     """
                 )
@@ -4269,7 +4269,7 @@ def run_semantic_generation_reuse_probe(
 
             while time.monotonic() < deadline:
                 with worker_conn.cursor() as cursor:
-                    cursor.execute('SELECT ii42_runtime_service_status()')
+                    cursor.execute('SELECT evoke_runtime_service_status()')
                     status = dict(cursor.fetchone()[0])
                 current_encoded = int(status.get('encoded_texts', -1))
                 idle = (
@@ -4299,7 +4299,7 @@ def run_semantic_generation_reuse_probe(
             while time.monotonic() < deadline:
                 with worker_conn.cursor() as cursor:
                     cursor.execute(
-                        'SELECT ii42_index_maintain(%s::regclass)',
+                        'SELECT evoke_index_maintain(%s::regclass)',
                         (index_name,),
                     )
                     current_result = str(cursor.fetchone()[0])
@@ -4307,7 +4307,7 @@ def run_semantic_generation_reuse_probe(
                     if results_out is not None:
                         results_out.append(results[-1])
                     cursor.execute(
-                        'SELECT ii42_index_status(%s::regclass)',
+                        'SELECT evoke_index_status(%s::regclass)',
                         (index_name,),
                     )
                     last_status = dict(cursor.fetchone()[0])
@@ -4351,7 +4351,7 @@ def run_semantic_generation_reuse_probe(
             cursor.execute(
                 """
                 CREATE INDEX semantic_reuse_docs_idx
-                ON semantic_reuse_docs USING ii42 (body)
+                ON semantic_reuse_docs USING evoke (body)
                 WITH (
                     sae = true,
                     consistency = eventual
@@ -4375,7 +4375,7 @@ def run_semantic_generation_reuse_probe(
                 with lock_conn.cursor() as cursor:
                     cursor.execute(
                         """
-                        SELECT ii42_index_try_maintenance_lock(%s::regclass)
+                        SELECT evoke_index_try_maintenance_lock(%s::regclass)
                         """,
                         (index_name,),
                     )
@@ -4383,7 +4383,7 @@ def run_semantic_generation_reuse_probe(
                         return
                 with worker_conn.cursor() as cursor:
                     cursor.execute(
-                        'SELECT ii42_index_status(%s::regclass)',
+                        'SELECT evoke_index_status(%s::regclass)',
                         (index_name,),
                     )
                     last_status = dict(cursor.fetchone()[0])
@@ -4399,7 +4399,7 @@ def run_semantic_generation_reuse_probe(
             with lock_conn.cursor() as cursor:
                 cursor.execute(
                     """
-                    SELECT ii42_index_maintenance_unlock(%s::regclass)
+                    SELECT evoke_index_maintenance_unlock(%s::regclass)
                     """,
                     (index_name,),
                 )
@@ -4409,16 +4409,16 @@ def run_semantic_generation_reuse_probe(
                 cursor.execute(
                     """
                     SELECT
-                        ii42_index_status(
+                        evoke_index_status(
                             'semantic_reuse_docs_idx'::regclass
                         ) || jsonb_build_object(
                             'generation',
-                            ii42_index_generation_audit_internal(
+                            evoke_index_generation_audit_internal(
                                 'semantic_reuse_docs_idx'::regclass
                             )
                         ),
                         pages
-                    FROM ii42_index_details(
+                    FROM evoke_index_details(
                         'semantic_reuse_docs_idx'::regclass
                     )
                     """
@@ -4431,7 +4431,7 @@ def run_semantic_generation_reuse_probe(
                 cursor.execute(
                     """
                     SELECT docs.id
-                    FROM ii42_query(
+                    FROM evoke_query(
                         'semantic_reuse_docs_idx'::regclass,
                         %s,
                         100
@@ -4449,7 +4449,7 @@ def run_semantic_generation_reuse_probe(
                     """
                     SELECT id
                     FROM semantic_reuse_docs
-                    ORDER BY ii42_query(
+                    ORDER BY evoke_query(
                         'semantic_reuse_docs_idx'::regclass,
                         %s
                     ) DESC
@@ -4471,7 +4471,7 @@ def run_semantic_generation_reuse_probe(
 
         with worker_conn.cursor() as cursor:
             cursor.execute(
-                "SET ii42.test_convergent_l0_rotation_records = '1'"
+                "SET evoke.test_convergent_l0_rotation_records = '1'"
             )
         saw_reuse = False
         saw_truncate = False
@@ -4497,7 +4497,7 @@ def run_semantic_generation_reuse_probe(
                     )
                     cursor.execute(
                         """
-                        SELECT ii42_index_try_maintain(
+                        SELECT evoke_index_try_maintain(
                             'semantic_reuse_docs_idx'::regclass
                         )
                         """
@@ -4554,7 +4554,7 @@ def run_semantic_generation_reuse_probe(
             with worker_conn.cursor() as cursor:
                 cursor.execute(
                     """
-                    SELECT ii42_index_try_maintain(
+                    SELECT evoke_index_try_maintain(
                         'semantic_reuse_docs_idx'::regclass
                     )
                     """
@@ -4666,7 +4666,7 @@ def run_semantic_generation_reuse_probe(
         with worker_conn.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT ii42_index_maintain(
+                SELECT evoke_index_maintain(
                     'semantic_reuse_docs_idx'::regclass
                 )
                 """
@@ -4762,7 +4762,7 @@ def run_semantic_generation_reuse_probe(
         with worker_conn.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT ii42_index_try_maintain(
+                SELECT evoke_index_try_maintain(
                     'semantic_reuse_docs_idx'::regclass
                 )
                 """
@@ -4815,7 +4815,7 @@ def run_semantic_generation_reuse_probe(
         with worker_conn.cursor() as cursor:
             cursor.execute('DROP TABLE semantic_reuse_docs')
             cursor.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
 
 
@@ -4835,7 +4835,7 @@ def run_planner_native_scale_probe(
     limit = 20
     natural_sql = '''
         SELECT id,
-               ii42_query(
+               evoke_query(
                    'planner_scale_docs_idx'::regclass,
                    %s,
                    ARRAY['title', 'body']::text[],
@@ -4848,7 +4848,7 @@ def run_planner_native_scale_probe(
     '''
     oracle_sql = '''
         SELECT source.id, hit.score
-        FROM ii42_query(
+        FROM evoke_query(
             'planner_scale_docs_idx'::regclass,
             %s,
             ARRAY['title', 'body']::text[],
@@ -4865,12 +4865,12 @@ def run_planner_native_scale_probe(
     '''
     results: list[dict[str, object]] = []
 
-    def find_ii42_node(node: dict[str, object]) -> dict[str, object]:
-        if node.get('Custom Plan Provider') == 'II42 Search':
+    def find_evoke_node(node: dict[str, object]) -> dict[str, object]:
+        if node.get('Custom Plan Provider') == 'Evoke Search':
             return node
         for child in node.get('Plans', []):
             if isinstance(child, dict):
-                match = find_ii42_node(child)
+                match = find_evoke_node(child)
                 if match:
                     return match
         return {}
@@ -4910,7 +4910,7 @@ def run_planner_native_scale_probe(
             cursor.execute('''
                 CREATE INDEX planner_scale_docs_idx
                 ON planner_scale_docs
-                USING ii42 (title, body)
+                USING evoke (title, body)
                 INCLUDE (bucket)
                 WITH (
                     sae = true,
@@ -4919,13 +4919,13 @@ def run_planner_native_scale_probe(
                 )
             ''')
             cursor.execute('ANALYZE planner_scale_docs')
-            cursor.execute('SET ii42.enable_planner_native = on')
+            cursor.execute('SET evoke.enable_planner_native = on')
 
             maintenance_results: list[str] = []
             status: dict[str, object] = {}
             for attempt in range(240):
                 cursor.execute(
-                    "SELECT ii42_index_status("
+                    "SELECT evoke_index_status("
                     "'planner_scale_docs_idx'::regclass)"
                 )
                 status = dict(cursor.fetchone()[0])
@@ -4942,7 +4942,7 @@ def run_planner_native_scale_probe(
                         f'status={status}'
                     )
                 cursor.execute(
-                    "SELECT ii42_index_maintain("
+                    "SELECT evoke_index_maintain("
                     "'planner_scale_docs_idx'::regclass)"
                 )
                 maintenance_results.append(str(cursor.fetchone()[0]))
@@ -4957,7 +4957,7 @@ def run_planner_native_scale_probe(
                 SELECT id
                 FROM planner_scale_docs
                 WHERE bucket < 500::int4
-                ORDER BY ii42_query(
+                ORDER BY evoke_query(
                     'planner_scale_docs_idx'::regclass,
                     %s,
                     ARRAY['title', 'body']::text[],
@@ -4968,7 +4968,7 @@ def run_planner_native_scale_probe(
                 (query,),
             )
             bitmap_plan = cursor.fetchone()[0]
-            if 'II42 Search' not in json.dumps(bitmap_plan):
+            if 'Evoke Search' not in json.dumps(bitmap_plan):
                 raise AssertionError(
                     'bitmap filter did not use planner-native path: '
                     f'{bitmap_plan}'
@@ -4979,7 +4979,7 @@ def run_planner_native_scale_probe(
                 SELECT id
                 FROM planner_scale_docs
                 WHERE id > %s
-                ORDER BY ii42_query(
+                ORDER BY evoke_query(
                     'planner_scale_docs_idx'::regclass,
                     %s,
                     ARRAY['title', 'body']::text[],
@@ -4990,7 +4990,7 @@ def run_planner_native_scale_probe(
                 (document_count // 2, query),
             )
             indexed_filter_plan = cursor.fetchone()[0]
-            if 'II42 Search' not in json.dumps(indexed_filter_plan):
+            if 'Evoke Search' not in json.dumps(indexed_filter_plan):
                 raise AssertionError(
                     'indexed filter did not use planner-native path: '
                     f'{indexed_filter_plan}'
@@ -5034,7 +5034,7 @@ def run_planner_native_scale_probe(
                     natural_timings_ms.append(
                         (time.perf_counter() - started) * 1000.0
                     )
-                cursor.execute('SELECT ii42_query_trace_internal()')
+                cursor.execute('SELECT evoke_query_trace_internal()')
                 trace = cursor.fetchone()[0]
                 oracle_timings_ms: list[float] = []
                 predicate_timings_ms: list[float] = []
@@ -5070,7 +5070,7 @@ def run_planner_native_scale_probe(
                     SELECT id
                     FROM planner_scale_docs
                     WHERE bucket < %s::int4
-                    ORDER BY ii42_query(
+                    ORDER BY evoke_query(
                         'planner_scale_docs_idx'::regclass,
                         %s,
                         ARRAY['title', 'body']::text[],
@@ -5081,18 +5081,18 @@ def run_planner_native_scale_probe(
                     (threshold, query),
                 )
                 plan = cursor.fetchone()[0]
-                if 'II42 Search' not in json.dumps(plan):
+                if 'Evoke Search' not in json.dumps(plan):
                     raise AssertionError(
                         'scale query did not use planner-native path: '
                         f'{plan}'
                     )
-                ii42_plan = find_ii42_node(plan[0]['Plan'])
+                evoke_plan = find_evoke_node(plan[0]['Plan'])
                 expected_fallback = allowed_rows < limit
                 scope_contract = {
-                    'eligible': ii42_plan.get('Scope Filter Eligible'),
-                    'probes': ii42_plan.get('Scope Filter Probes'),
-                    'complete': ii42_plan.get('Scope Filter Complete'),
-                    'fallback': ii42_plan.get('Scope Filter Fallback'),
+                    'eligible': evoke_plan.get('Scope Filter Eligible'),
+                    'probes': evoke_plan.get('Scope Filter Probes'),
+                    'complete': evoke_plan.get('Scope Filter Complete'),
+                    'fallback': evoke_plan.get('Scope Filter Fallback'),
                 }
                 if scope_contract != {
                     'eligible': True,
@@ -5119,29 +5119,29 @@ def run_planner_native_scale_probe(
                     'predicate_p50_ms': statistics.median(
                         predicate_timings_ms[1:]
                     ),
-                    'scope_filter_eligible': ii42_plan.get(
+                    'scope_filter_eligible': evoke_plan.get(
                         'Scope Filter Eligible'
                     ),
-                    'scope_filter_probes': ii42_plan.get(
+                    'scope_filter_probes': evoke_plan.get(
                         'Scope Filter Probes'
                     ),
-                    'scope_filter_candidates': ii42_plan.get(
+                    'scope_filter_candidates': evoke_plan.get(
                         'Scope Filter Candidates'
                     ),
-                    'scope_filter_matches': ii42_plan.get(
+                    'scope_filter_matches': evoke_plan.get(
                         'Scope Filter Matches'
                     ),
-                    'scope_filter_complete': ii42_plan.get(
+                    'scope_filter_complete': evoke_plan.get(
                         'Scope Filter Complete'
                     ),
-                    'scope_filter_fallback': ii42_plan.get(
+                    'scope_filter_fallback': evoke_plan.get(
                         'Scope Filter Fallback'
                     ),
-                    'plan_startup_cost': ii42_plan.get('Startup Cost'),
-                    'plan_total_cost': ii42_plan.get('Total Cost'),
+                    'plan_startup_cost': evoke_plan.get('Startup Cost'),
+                    'plan_total_cost': evoke_plan.get('Total Cost'),
                     'trace': trace,
                 })
-            cursor.execute('RESET ii42.enable_planner_native')
+            cursor.execute('RESET evoke.enable_planner_native')
             cursor.execute('DROP TABLE planner_scale_docs CASCADE')
     print(json.dumps({
         'planner_native_scale_docs': document_count,
@@ -5160,7 +5160,7 @@ def run_planner_scope_filter_probe(
     query = 'cancer immunotherapy survival'
     natural_sql = '''
         SELECT id,
-               ii42_query(
+               evoke_query(
                    'planner_scope_docs_idx'::regclass,
                    %s,
                    ARRAY['title', 'abstract']::text[],
@@ -5175,7 +5175,7 @@ def run_planner_scope_filter_probe(
     '''
     oracle_sql = '''
         SELECT source.id, hit.score
-        FROM ii42_query(
+        FROM evoke_query(
             'planner_scope_docs_idx'::regclass,
             %s,
             ARRAY['title', 'abstract']::text[],
@@ -5194,7 +5194,7 @@ def run_planner_scope_filter_probe(
     '''
     structured_sql = '''
         SELECT source.id, hit.score
-        FROM ii42_query(
+        FROM evoke_query(
             'planner_scope_docs_idx'::regclass,
             %s,
             ARRAY['title', 'abstract']::text[],
@@ -5220,12 +5220,12 @@ def run_planner_scope_filter_probe(
         '%research%',
     )
 
-    def find_ii42_node(node: dict[str, object]) -> dict[str, object]:
-        if node.get('Custom Plan Provider') == 'II42 Search':
+    def find_evoke_node(node: dict[str, object]) -> dict[str, object]:
+        if node.get('Custom Plan Provider') == 'Evoke Search':
             return node
         for child in node.get('Plans', []):
             if isinstance(child, dict):
-                match = find_ii42_node(child)
+                match = find_evoke_node(child)
                 if match:
                     return match
         return {}
@@ -5240,7 +5240,7 @@ def run_planner_scope_filter_probe(
             parameters,
         )
         plan = cursor.fetchone()[0]
-        ii42_node = find_ii42_node(plan[0]['Plan'])
+        evoke_node = find_evoke_node(plan[0]['Plan'])
         expected = {
             'Scope Filter Eligible': True,
             'Scope Filter Probes': 1,
@@ -5248,7 +5248,7 @@ def run_planner_scope_filter_probe(
             'Scope Filter Fallback': expected_fallback,
         }
         observed = {
-            key: ii42_node.get(key)
+            key: evoke_node.get(key)
             for key in expected
         }
         if observed != expected:
@@ -5256,7 +5256,7 @@ def run_planner_scope_filter_probe(
                 'planner scope route did not satisfy its contract: '
                 f'observed={observed}, plan={plan}'
             )
-        return ii42_node
+        return evoke_node
 
     with psycopg.connect(dsn, autocommit=True) as conn:
         try:
@@ -5313,7 +5313,7 @@ def run_planner_scope_filter_probe(
                 cursor.execute('''
                     CREATE INDEX planner_scope_docs_idx
                     ON planner_scope_docs
-                    USING ii42 (title, abstract)
+                    USING evoke (title, abstract)
                     INCLUDE (publish_day, categories, source_name)
                     WITH (
                         sae = true,
@@ -5322,13 +5322,13 @@ def run_planner_scope_filter_probe(
                     )
                 ''')
                 cursor.execute('ANALYZE planner_scope_docs')
-                cursor.execute('SET ii42.enable_planner_native = on')
+                cursor.execute('SET evoke.enable_planner_native = on')
 
                 maintenance_results: list[str] = []
                 status: dict[str, object] = {}
                 for attempt in range(80):
                     cursor.execute(
-                        "SELECT ii42_index_status("
+                        "SELECT evoke_index_status("
                         "'planner_scope_docs_idx'::regclass)"
                     )
                     status = dict(cursor.fetchone()[0])
@@ -5345,7 +5345,7 @@ def run_planner_scope_filter_probe(
                             f'status={status}'
                         )
                     cursor.execute(
-                        "SELECT ii42_index_maintain("
+                        "SELECT evoke_index_maintain("
                         "'planner_scope_docs_idx'::regclass)"
                     )
                     maintenance_results.append(str(cursor.fetchone()[0]))
@@ -5377,7 +5377,7 @@ def run_planner_scope_filter_probe(
                         text
                     ) AS
                     SELECT id,
-                           ii42_query(
+                           evoke_query(
                                'planner_scope_docs_idx'::regclass,
                                $1,
                                ARRAY['title', 'abstract']::text[],
@@ -5468,7 +5468,7 @@ def run_planner_scope_filter_probe(
                             'candidate membership with bounded delta omission: '
                             f'stale_id={stale_id}, rows={structured_rows}'
                         )
-                    cursor.execute('SELECT ii42_query_trace_internal()')
+                    cursor.execute('SELECT evoke_query_trace_internal()')
                     structured_trace = dict(cursor.fetchone()[0])
                     if structured_trace.get('query_route') != 'scope_filter':
                         raise AssertionError(
@@ -5515,7 +5515,7 @@ def run_planner_scope_filter_probe(
                                 'structured serving scope returned a stale '
                                 f'candidate: rows={shortfall_rows}'
                             )
-                    cursor.execute('SELECT ii42_query_trace_internal()')
+                    cursor.execute('SELECT evoke_query_trace_internal()')
                     shortfall_trace = dict(cursor.fetchone()[0])
                     if (
                         shortfall_trace.get('query_route') != 'scope_filter'
@@ -5530,7 +5530,7 @@ def run_planner_scope_filter_probe(
                 finally:
                     cursor.execute('ROLLBACK')
 
-                cursor.execute('RESET ii42.enable_planner_native')
+                cursor.execute('RESET evoke.enable_planner_native')
                 cursor.execute('DROP TABLE planner_scope_docs CASCADE')
         finally:
             with conn.cursor() as cursor:
@@ -5549,9 +5549,9 @@ def run_app_role_product_query(
         socket_dir,
         port,
         """
-        SET ROLE ii42_app_user;
+        SET ROLE evoke_app_user;
         SELECT count(*)
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_body_idx'::regclass,
             'alpha semantic optimization ordinary app role query',
             3
@@ -5560,15 +5560,15 @@ def run_app_role_product_query(
         FROM (
             SELECT id
             FROM docs
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha semantic optimization ordinary app role query'
             ) DESC
             LIMIT 3
         ) AS ranked;
         SELECT
-            ii42_index_status('docs_body_idx'::regclass)->>'query_ready',
-            ii42_index_status('docs_body_idx'::regclass)
+            evoke_index_status('docs_body_idx'::regclass)->>'query_ready',
+            evoke_index_status('docs_body_idx'::regclass)
                 #>>'{generation,atomic}';
         RESET ROLE;
         """,
@@ -5611,7 +5611,7 @@ def main() -> None:
     pg_ctl = pg_bin / 'pg_ctl'
     psql_bin = pg_bin / 'psql'
 
-    with tempfile.TemporaryDirectory(prefix='ii42_runtime_service_') as tmp:
+    with tempfile.TemporaryDirectory(prefix='evoke_runtime_service_') as tmp:
         root = Path(tmp)
         data_dir = root / 'data'
         socket_dir = root / 'socket'
@@ -5627,7 +5627,7 @@ def main() -> None:
 
         run([str(initdb), '-D', str(data_dir), '-A', 'trust'])
         with (data_dir / 'postgresql.conf').open('a', encoding='utf-8') as f:
-            f.write("\nshared_preload_libraries = 'ii42'\n")
+            f.write("\nshared_preload_libraries = 'evoke'\n")
             if args.extension_libdir is not None:
                 libdir = str(args.extension_libdir).replace("'", "''")
                 f.write(
@@ -5644,22 +5644,22 @@ def main() -> None:
                     f'{control_dir}:$system'
                     "'\n"
                 )
-            f.write("ii42.shared_runtime_size = '64MB'\n")
+            f.write("evoke.shared_runtime_size = '64MB'\n")
             if not args.use_packaged_model:
-                f.write(f"ii42.sae_model_path = '{escaped_model_path}'\n")
-            f.write("ii42.control_database = 'template1'\n")
+                f.write(f"evoke.sae_model_path = '{escaped_model_path}'\n")
+            f.write("evoke.control_database = 'template1'\n")
             f.write(
-                f'ii42.runtime_worker_count = {args.worker_count}\n'
+                f'evoke.runtime_worker_count = {args.worker_count}\n'
             )
             f.write(
-                'ii42.runtime_liveness_timeout = '
+                'evoke.runtime_liveness_timeout = '
                 f"'{args.runtime_liveness_timeout_ms}ms'\n"
             )
             f.write("listen_addresses = ''\n")
             f.write(f'max_worker_processes = {args.worker_count + 8}\n')
-            f.write("ii42.maintenance_timer_interval_ms = '1000ms'\n")
+            f.write("evoke.maintenance_timer_interval_ms = '1000ms'\n")
             f.write(
-                "ii42.maintenance_low_debt_interval_ms = '1000ms'\n"
+                "evoke.maintenance_low_debt_interval_ms = '1000ms'\n"
             )
 
         started = False

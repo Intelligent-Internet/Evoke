@@ -131,7 +131,7 @@ def encode_queries(
 
     for query in queries:
         cursor.execute(
-            'SELECT ii42_encode_text_internal(%s::regclass, %s)',
+            'SELECT evoke_encode_text_internal(%s::regclass, %s)',
             (index_name, query['text']),
         )
         encoded = cursor.fetchone()[0]
@@ -161,7 +161,7 @@ def search(
     statement = sql.SQL(
         """
         SELECT document.doc_id::text, hit.score::double precision
-        FROM ii42_query(%s::regclass, %s, %s) AS hit
+        FROM evoke_query(%s::regclass, %s, %s) AS hit
         JOIN {}.{} AS document ON document.ctid = hit.ctid
         ORDER BY hit.score DESC, hit.doc_id
         """
@@ -233,9 +233,9 @@ def evaluate_ratio(
     dict[str, dict[str, float]],
 ]:
     setting_name = {
-        'term-budget': 'ii42.test_query_semantic_error_budget_ratio',
-        'impact-floor': 'ii42.test_query_semantic_impact_floor_ratio',
-        'df-limit': 'ii42.test_query_max_df_ratio',
+        'term-budget': 'evoke.test_query_semantic_error_budget_ratio',
+        'impact-floor': 'evoke.test_query_semantic_impact_floor_ratio',
+        'df-limit': 'evoke.test_query_max_df_ratio',
     }[strategy]
     cursor.execute(
         'SELECT set_config(%s, %s, false)',
@@ -244,14 +244,14 @@ def evaluate_ratio(
     cursor.execute(
         'SELECT set_config(%s, %s, false)',
         (
-            'ii42.test_query_semantic_work_target_postings',
+            'evoke.test_query_semantic_work_target_postings',
             str(semantic_work_target_postings),
         ),
     )
     cursor.execute(
         'SELECT set_config(%s, %s, false)',
         (
-            'ii42.test_query_semantic_min_support_ratio',
+            'evoke.test_query_semantic_min_support_ratio',
             format(support_ratio, '.17g'),
         ),
     )
@@ -316,7 +316,7 @@ def evaluate_ratio(
             continue
         stats, _probe_ms = call_probe(
             cursor,
-            'ii42_query_topk',
+            'evoke_query_topk',
             index_name,
             query,
             k,

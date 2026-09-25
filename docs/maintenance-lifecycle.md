@@ -102,7 +102,7 @@ debt remains actionable. The build reads one immutable completed-posting
 snapshot; later semantic output stays in L0 and makes that baseline stale
 without invalidating it. The active L0 checkpoints immediately at 65,536
 records or 512 pages. Below those limits, coalesced debt becomes eligible for a
-low-priority checkpoint after `ii42.maintenance_low_debt_interval_ms`, one hour
+low-priority checkpoint after `evoke.maintenance_low_debt_interval_ms`, one hour
 by default. A compatible accelerator refresh likewise starts immediately at
 65,536 sealed records or 512 MiB, or periodically for smaller sealed debt.
 Successful sealing or accelerator publication starts a fresh low-debt interval,
@@ -118,7 +118,7 @@ An unsuccessful accelerator attempt establishes a per-index retry cooldown. A
 lost root CAS, busy reader fence, concurrent builder, resource block, or build
 error cannot turn the one-second preload supervisor tick into continuous corpus
 scans. A successful or no-longer-due attempt clears the retry gate. The
-cooldown uses `ii42.maintenance_timer_interval_ms`; it suppresses only another
+cooldown uses `evoke.maintenance_timer_interval_ms`; it suppresses only another
 accelerator attempt, so semantic completion, L0 rotation, sealing, and other
 urgent structural work remain independently eligible.
 
@@ -199,7 +199,7 @@ the fence before the FSM handoff. Direct reuse-arena paths have a stronger
 requirement: the acquired fence covers every reused-page write and the
 replacement-root publication. Conditional acquisition yields to existing
 readers, but a successfully held fence can delay new readers. See
-[the reclamation implementation](../src/ii42_am_reclamation.c); the fence is
+[the reclamation implementation](../src/evoke_am_reclamation.c); the fence is
 not universally limited to a metapage exchange.
 
 Because pure reclamation changes only page ownership, not query authority,
@@ -238,7 +238,7 @@ posting streams bounded.
 
 Automatic maintenance does not enter this ladder for ordinary convergence. If
 an automatic rebuild-like action exceeds
-`ii42.maintenance_rebuild_memory_budget`, it preserves the readable root and
+`evoke.maintenance_rebuild_memory_budget`, it preserves the readable root and
 reports a blocker instead of forcing host swap.
 
 The semantic query accelerator is durable derived relation data, not another
@@ -355,11 +355,11 @@ index independently on the subscriber.
 ## Operator Surface
 
 ```sql
-SELECT ii42_index_status('docs_search_idx'::regclass);
-SELECT * FROM ii42_index_details('docs_search_idx'::regclass);
-SELECT ii42_index_try_maintain('docs_search_idx'::regclass);
-SELECT ii42_index_maintain('docs_search_idx'::regclass);
-SELECT * FROM ii42_index_maintain_due(2);
+SELECT evoke_index_status('docs_search_idx'::regclass);
+SELECT * FROM evoke_index_details('docs_search_idx'::regclass);
+SELECT evoke_index_try_maintain('docs_search_idx'::regclass);
+SELECT evoke_index_maintain('docs_search_idx'::regclass);
+SELECT * FROM evoke_index_maintain_due(2);
 DROP INDEX docs_search_idx;
 ```
 
@@ -376,8 +376,8 @@ cannot make progress. This is not a one-second deadline for a single admitted
 action: an accelerator build can take longer. The budget avoids repeated
 one-launch-per-term overhead without allowing an unlimited action loop.
 
-`ii42_index_status(...)` is safe for routine readiness polling and does not walk
-the full relation. Storage qualification uses `ii42_index_audit(...)`
+`evoke_index_status(...)` is safe for routine readiness polling and does not walk
+the full relation. Storage qualification uses `evoke_index_audit(...)`
 explicitly; its cost is proportional to index size and it should not be placed
 in dashboards or health checks. The `_internal` generation-audit helper is an
 extension implementation boundary, not the operator entrypoint.

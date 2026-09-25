@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure exact block-max selectivity on a page-native II42 index."""
+"""Measure exact block-max selectivity on a page-native Evoke index."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--index', required=True)
     parser.add_argument('--encode-dsn')
     parser.add_argument('--encode-index')
-    parser.add_argument('--probe-library', default='$libdir/ii42')
+    parser.add_argument('--probe-library', default='$libdir/evoke')
     parser.add_argument('--lexical-dims', type=int, required=True)
     parser.add_argument('--semantic-dims', type=int, required=True)
     parser.add_argument('--field-count', type=int, default=1)
@@ -44,13 +44,13 @@ def bind_probe(cursor: psycopg.Cursor[Any], probe_library: str) -> None:
     cursor.execute(
         sql.SQL(
             """
-        CREATE FUNCTION pg_temp.ii42_query_block_cost(
+        CREATE FUNCTION pg_temp.evoke_query_block_cost(
             regclass,
             int4[],
             real[],
             int4
         ) RETURNS jsonb
-        AS {}, 'ii42_test_query_block_cost'
+        AS {}, 'evoke_test_query_block_cost'
         LANGUAGE C STRICT
         """
         ).format(sql.Literal(probe_library))
@@ -110,7 +110,7 @@ def audit_query(
     k: int,
 ) -> dict[str, Any]:
     encode_cursor.execute(
-        'SELECT ii42_encode_text_internal(%s::regclass, %s)',
+        'SELECT evoke_encode_text_internal(%s::regclass, %s)',
         (encode_index_name, query_text),
     )
     encoded = encode_cursor.fetchone()[0]
@@ -123,7 +123,7 @@ def audit_query(
     started = time.perf_counter()
     audit_cursor.execute(
         """
-        SELECT pg_temp.ii42_query_block_cost(
+        SELECT pg_temp.evoke_query_block_cost(
             %s::regclass,
             %s::int4[],
             %s::real[],

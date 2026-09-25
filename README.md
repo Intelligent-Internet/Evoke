@@ -17,7 +17,7 @@ AI-era RAG, this provides a more convenient, precise, and integrated retrieval
 solution: exact lexical ranking and semantic recall through one SQL interface,
 one transactional relation, and one maintenance and replication lifecycle.
 
-One `USING ii42` index can run in either of two modes:
+One `USING evoke` index can run in either of two modes:
 
 - **Exact BM25** is the default and the performance foundation. It provides
   corpus-statistics-based lexical ranking without model inference.
@@ -32,9 +32,9 @@ literal API or GUC names.
 
 Both modes use the same index and lifecycle APIs. BM25 keeps its ordinary
 PostgreSQL operator/index-scan surface. RAG and semantic applications use one
-`ii42_query(...)` family: two- and four-argument scalar overloads mark natural
+`evoke_query(...)` family: two- and four-argument scalar overloads mark natural
 ranked SQL, while overloads with an explicit `k` return hit rows. Both modes use
-`ii42_index_status(...)` and the `ii42_index_maintain*` functions. Index removal
+`evoke_index_status(...)` and the `evoke_index_maintain*` functions. Index removal
 follows the ordinary PostgreSQL lifecycle.
 
 ## Product Shape
@@ -43,7 +43,7 @@ follows the ordinary PostgreSQL lifecycle.
 table rows
     |
     v
-CREATE INDEX ... USING ii42
+CREATE INDEX ... USING evoke
     |
     +-- BM25: lexical postings
     |
@@ -54,7 +54,7 @@ CREATE INDEX ... USING ii42
 one relation-owned page-native index
     |
     v
-ii42_query(...): natural SQL or explicit hit rows
+evoke_query(...): natural SQL or explicit hit rows
 ```
 
 The current storage path is page-native v3:
@@ -101,7 +101,7 @@ Project support, contribution, conduct, and security policies are defined in
   folding for raw-text BM25 indexes.
 - Planner-visible natural SQL for semantic ranking, including ordinary
   PostgreSQL predicates and field-aware weights.
-- One explicit `ii42_query(...)` hit API for BM25, semantic, filtered, and
+- One explicit `evoke_query(...)` hit API for BM25, semantic, filtered, and
   field-aware retrieval.
 - Transactional `INSERT`, `UPDATE`, and `DELETE` with MVCC-correct reads.
 - WAL durability, restart/crash recovery, `VACUUM`, `REINDEX`, and physical
@@ -153,7 +153,7 @@ PostgreSQL major, and dependency ABI. Verify the checksum and compare
 `BUILD-INFO.txt` with the target `pg_config` directories before copying files.
 For a fresh installation, copy the package before starting PostgreSQL. When
 replacing an installation loaded through `shared_preload_libraries`, first
-quiesce Evoke maintenance and stop PostgreSQL; never overwrite `ii42` or its
+quiesce Evoke maintenance and stop PostgreSQL; never overwrite `evoke` or its
 bundled ONNX Runtime beneath a running postmaster. Follow the complete
 [deployment boundary](docs/upgrading.md#deployment-boundary), including the
 required restart and installed-package validation.
@@ -168,7 +168,7 @@ On Linux, use `sha256sum -c`. Then create the extension in each database that
 will own Evoke indexes:
 
 ```sql
-CREATE EXTENSION ii42;
+CREATE EXTENSION evoke;
 ```
 
 This ordinary installation is sufficient. A separate extension schema is
@@ -230,7 +230,7 @@ make PG_CONFIG=/path/to/pg_config installcheck
 
 Source builds require ONNX Runtime by default so a query-serving installation
 cannot silently omit semantic inference. A lexical-only diagnostic build must opt
-out explicitly with `II42_ENABLE_ONNXRUNTIME=0`; do not install that build on a
+out explicitly with `EVOKE_ENABLE_ONNXRUNTIME=0`; do not install that build on a
 PostgreSQL server that serves `sae = true` indexes. See
 [Contributing](CONTRIBUTING.md) for build and validation details.
 Source installs do not download a model implicitly; install a checkout at the
@@ -244,7 +244,7 @@ For single-column, multicolumn, field-aware, and semantic variants in one
 beginner flow, see [Getting Started](docs/getting-started.md).
 
 ```sql
-CREATE EXTENSION IF NOT EXISTS ii42;
+CREATE EXTENSION IF NOT EXISTS evoke;
 
 CREATE TABLE docs (
     id bigint PRIMARY KEY,
@@ -258,10 +258,10 @@ INSERT INTO docs (id, title, body) VALUES
     (3, 'Orange', 'orange citrus fruit'),
     (4, 'Cat guide', 'small cat animal care');
 
-CREATE INDEX docs_body_idx ON docs USING ii42 (body);
+CREATE INDEX docs_body_idx ON docs USING evoke (body);
 
 SELECT d.id, d.title, hit.score
-FROM ii42_query(
+FROM evoke_query(
     'docs_body_idx'::regclass,
     'apple fruit',
     10
@@ -278,20 +278,20 @@ Release packages include the locked milestone checkout. Configure the shared
 runtime before starting PostgreSQL:
 
 ```conf
-shared_preload_libraries = 'ii42'
-ii42.shared_runtime_size = '64MB'
+shared_preload_libraries = 'evoke'
+evoke.shared_runtime_size = '64MB'
 ```
 
 Restart PostgreSQL, then create the index:
 
 ```sql
 CREATE INDEX docs_semantic_idx
-ON docs USING ii42 (body)
+ON docs USING evoke (body)
 WITH (sae = true);
 
 SELECT d.id,
        d.title,
-       ii42_query(
+       evoke_query(
            'docs_semantic_idx'::regclass,
            'database search architecture'
        ) AS score
@@ -314,22 +314,22 @@ runtime, model, field, filter, preload, and lifecycle configuration.
 
 | Task | API |
 | --- | --- |
-| Create | `CREATE INDEX ... USING ii42` |
-| Natural semantic search | `ORDER BY ii42_query(index, query, ...) DESC LIMIT k` |
-| Explicit hit search | `ii42_query(index, query, k, ...)` |
-| Options | `ii42_index_options(index)` |
-| Status | `ii42_index_status(index)` |
-| Details | `ii42_index_details(index)` |
-| Maintain | `ii42_index_maintain(index)` |
-| Maintain if not busy | `ii42_index_try_maintain(index)` |
-| Maintain due indexes | `ii42_index_maintain_due(max_indexes)` |
-| Compose Evoke indexes | `ii42_fusion_query(...)` |
-| Compose Evoke and vector candidates | `ii42_hybrid_fuse_candidates(...)` |
+| Create | `CREATE INDEX ... USING evoke` |
+| Natural semantic search | `ORDER BY evoke_query(index, query, ...) DESC LIMIT k` |
+| Explicit hit search | `evoke_query(index, query, k, ...)` |
+| Options | `evoke_index_options(index)` |
+| Status | `evoke_index_status(index)` |
+| Details | `evoke_index_details(index)` |
+| Maintain | `evoke_index_maintain(index)` |
+| Maintain if not busy | `evoke_index_try_maintain(index)` |
+| Maintain due indexes | `evoke_index_maintain_due(max_indexes)` |
+| Compose Evoke indexes | `evoke_fusion_query(...)` |
+| Compose Evoke and vector candidates | `evoke_hybrid_fuse_candidates(...)` |
 
 Exact-BM25 rowset and token-level diagnostic helpers remain extension-owner
 surfaces. Runtime inspection and control have separate privileges described in
 the [API reference](docs/api-reference.md#privilege-summary).
-Prefer ordinary SQL plus `ii42_query(...)`
+Prefer ordinary SQL plus `evoke_query(...)`
 for one semantic index when its supported query shape applies. Fusion and
 hybrid APIs compose independently retrieved sources without changing any
 source index.
@@ -351,8 +351,8 @@ and mutation stream; it does not build a side index.
 Use:
 
 ```sql
-SELECT ii42_index_status('docs_body_idx'::regclass);
-SELECT ii42_index_maintain('docs_body_idx'::regclass);
+SELECT evoke_index_status('docs_body_idx'::regclass);
+SELECT evoke_index_maintain('docs_body_idx'::regclass);
 DROP INDEX docs_body_idx;
 ```
 
@@ -366,7 +366,7 @@ DROP INDEX docs_body_idx;
   unsupported, or insufficient scope probes fall back to complete-subset
   scoring. Newly matching post-baseline rows may wait for background
   convergence under the approximate semantic contract.
-- `ii42_query(...)` supports structured
+- `evoke_query(...)` supports structured
   `eq`/`in`/`overlap`/`ilike`/`ilike_any`/`range` predicates for explicit
   subset top-k. Fully scope-backed requests use the same compatible published
   baseline and current-row recheck as planner-native search; they may omit

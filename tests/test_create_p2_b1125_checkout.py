@@ -43,7 +43,7 @@ def test_create_p2_b1125_checkout_artifacts(tmp_path: Path) -> None:
             '--semantic-dims',
             '4',
             '--model-id',
-            'ii42_p2_test',
+            'evoke_p2_test',
         ],
         check=True,
     )
@@ -56,7 +56,7 @@ def test_create_p2_b1125_checkout_artifacts(tmp_path: Path) -> None:
     atom_space = read_json(output / 'sae/atom_space.json')
     contract = read_json(output / 'provenance/p2_contract.json')
 
-    assert manifest['model_id'] == 'ii42_p2_test'
+    assert manifest['model_id'] == 'evoke_p2_test'
     assert manifest['latent_dims'] == 7
     assert manifest['runtime'] == 'offline_precomputed_atoms'
     assert 'runtime_parameters' not in manifest
@@ -77,6 +77,9 @@ def test_create_p2_b1125_checkout_artifacts(tmp_path: Path) -> None:
     assert scoring['query_compiler']['semantic_encoder']['active_dims'] == 50
     assert scoring['query_compiler']['semantic_encoder']['pooling'] == (
         'relu_log1p_masked_max'
+    )
+    assert scoring['query_compiler']['lexical_encoder']['tokenizer'] == (
+        'evoke_plain_query_v1'
     )
 
     assert atom_space['lexical']['start'] == 0
@@ -117,7 +120,7 @@ def test_create_p2_b1125_native_runtime_checkout(tmp_path: Path) -> None:
         (runtime / name).write_text('{}\n')
     calibration.write_bytes(struct.pack(
         '<8sIIQ6f',
-        b'II42P2R1',
+        b'EVOKP2R1',
         1,
         6,
         2,
@@ -148,7 +151,7 @@ def test_create_p2_b1125_native_runtime_checkout(tmp_path: Path) -> None:
             '--semantic-dims',
             '4',
             '--model-id',
-            'ii42_p2_native_test',
+            'evoke_p2_native_test',
         ],
         check=True,
     )
@@ -196,6 +199,10 @@ def test_create_p2_b1125_native_runtime_checkout(tmp_path: Path) -> None:
         'method': 'column_rms_over_all_documents',
         'runtime_artifact': 'calibration/query_calibration_rms.f32',
     }
+    contract = read_json(output / 'provenance/p2_contract.json')
+    assert contract['query_calibration_runtime']['path'] == (
+        'calibration/query_calibration_rms.f32'
+    )
 
 
 def test_create_p2_b1125_runtime_requires_calibration(tmp_path: Path) -> None:

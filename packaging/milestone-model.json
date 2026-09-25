@@ -6,7 +6,7 @@
     "revision": "ad82b1fd09541c998c8d45045d601c51fdb8a9b7",
     "license": "Apache-2.0"
   },
-  "manifest_sha256": "b61060a3958ee56209de47a34ee5cbe08351bfeb3fcbbfdcbf477403210764f7",
+  "manifest_sha256": "dd0993f0638a3f683fbb6475a8509c228d8f6547aab90a0b762b1ff6fd7d0041",
   "manifest_contract": {
     "api_version": "evoke_model_v1",
     "model_id": "evoke_p2_p22_nfcorpus_v2_smoke",
@@ -31,7 +31,7 @@
     },
     "p2_contract": {
       "path": "provenance/p2_contract.json",
-      "sha256": "435dc02e56ad72044fda8ac94575eef0a2a09e36d5b326e0dbebdf92f1e6e42c"
+      "sha256": "3a786c143a10f064963a9ec083ef9b413ccd13d61e8b37ffdd5bf553e34c164d"
     },
     "query_calibration_runtime": {
       "path": "calibration/query_calibration_rms.f32",
@@ -47,7 +47,7 @@
     },
     "scoring_profile": {
       "path": "calibration/scoring_profile.json",
-      "sha256": "d765be8b428f623a772f3a94104c4aa58948a96aac2d60aa8acd3064e5cfbad6"
+      "sha256": "159eb83074b987a55d45bb2b96688e9c28d9deb9f988898db72ba15f5b77eeb9"
     },
     "semantic_runtime": {
       "path": "encoder/semantic_runtime.json",

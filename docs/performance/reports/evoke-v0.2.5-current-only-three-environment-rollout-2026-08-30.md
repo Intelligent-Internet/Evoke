@@ -69,7 +69,7 @@ removed separately.
 - `commons.data_policy_wa_chunks__content__bm25_idx`
 - `commons.data_pubmed__title_abstract__field_aware_bm25_idx`
 - `commons.sys_chunks__content__bm25_idx`
-- `ii42_cf_eval.pubmed_250k_ii42_idx`
+- `evoke_cf_eval.pubmed_250k_evoke_idx`
 
 The PubMed accelerator publication finished successfully. All ten roots have
 active postings, matching contracts and signatures, healthy lightweight
@@ -77,25 +77,25 @@ payload checks, and ready/current generation state.
 
 ### Mac: 19/19
 
-- `ii42_beir15.docs_arguana_bm25_idx`
-- `ii42_beir15.docs_fiqa_bm25_idx`
-- `ii42_beir15.docs_nfcorpus_bm25_idx`
-- `ii42_beir15.docs_scifact_bm25_idx`
-- `ii42_broad10.docs_arguana_bm25_idx`
-- `ii42_shared15.docs_arguana_bm25_idx`
-- `ii42_shared15.docs_climate_fever_bm25_idx`
-- `ii42_shared15.docs_cqadupstack_bm25_idx`
-- `ii42_shared15.docs_dbpedia_entity_bm25_idx`
-- `ii42_shared15.docs_fever_bm25_idx`
-- `ii42_shared15.docs_fiqa_bm25_idx`
-- `ii42_shared15.docs_hotpotqa_bm25_idx`
-- `ii42_shared15.docs_msmarco_bm25_idx`
-- `ii42_shared15.docs_nfcorpus_bm25_idx`
-- `ii42_shared15.docs_nq_bm25_idx`
-- `ii42_shared15.docs_quora_bm25_idx`
-- `ii42_shared15.docs_scidocs_bm25_idx`
-- `ii42_shared15.docs_scifact_bm25_idx`
-- `ii42_shared15.docs_webis_touche2020_bm25_idx`
+- `evoke_beir15.docs_arguana_bm25_idx`
+- `evoke_beir15.docs_fiqa_bm25_idx`
+- `evoke_beir15.docs_nfcorpus_bm25_idx`
+- `evoke_beir15.docs_scifact_bm25_idx`
+- `evoke_broad10.docs_arguana_bm25_idx`
+- `evoke_shared15.docs_arguana_bm25_idx`
+- `evoke_shared15.docs_climate_fever_bm25_idx`
+- `evoke_shared15.docs_cqadupstack_bm25_idx`
+- `evoke_shared15.docs_dbpedia_entity_bm25_idx`
+- `evoke_shared15.docs_fever_bm25_idx`
+- `evoke_shared15.docs_fiqa_bm25_idx`
+- `evoke_shared15.docs_hotpotqa_bm25_idx`
+- `evoke_shared15.docs_msmarco_bm25_idx`
+- `evoke_shared15.docs_nfcorpus_bm25_idx`
+- `evoke_shared15.docs_nq_bm25_idx`
+- `evoke_shared15.docs_quora_bm25_idx`
+- `evoke_shared15.docs_scidocs_bm25_idx`
+- `evoke_shared15.docs_scifact_bm25_idx`
+- `evoke_shared15.docs_webis_touche2020_bm25_idx`
 
 All nineteen roots have active postings, matching contracts and signatures,
 healthy lightweight payload checks, and ready/current generation state.
@@ -227,14 +227,14 @@ No environment has material memory or disk pressure blocking qualification.
   files.
 - Mac's installed historical version and upgrade SQL scripts are expected
   extension upgrade support, not stale rollout artifacts.
-- Temporary Azure storage account `ii42deploy20260827` was deleted from
+- Temporary Azure storage account `evokedeploy20260827` was deleted from
   `ii-commons-east-group` and a subsequent account listing returned no match.
 - The Azure runtime fleet was deliberately retained, but Shadow no longer
-  dispatches to it because `ii42.runtime_accelerators=[]` after bulk rebuilds.
+  dispatches to it because `evoke.runtime_accelerators=[]` after bulk rebuilds.
 
 The Mac qualification scope is the declared `postgres` target. Historical
 benchmark databases with older extension catalogs and a separate alpha test
-cluster under `/Volumes/Betty/Tmp/ii42-alpha-mass-pubmed-full/data` are outside
+cluster under `/Volumes/Betty/Tmp/evoke-alpha-mass-pubmed-full/data` are outside
 this rollout and were left untouched. These do not block the target's
 qualification.
 

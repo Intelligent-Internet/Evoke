@@ -1,12 +1,12 @@
-EXTENSION = ii42
-MODULE_big = ii42
+EXTENSION = evoke
+MODULE_big = evoke
 .DEFAULT_GOAL := all
 
 PG_CONFIG ?= pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs 2>/dev/null)
 PG_SHAREDIR := $(shell $(PG_CONFIG) --sharedir 2>/dev/null)
-II42_PACKAGED_MODEL_PATH := \
-    $(if $(PG_SHAREDIR),$(PG_SHAREDIR),/usr/local/share)/ii42/models/default
+EVOKE_PACKAGED_MODEL_PATH := \
+    $(if $(PG_SHAREDIR),$(PG_SHAREDIR),/usr/local/share)/evoke/models/default
 
 ICU_CPPFLAGS := $(shell \
     if pkg-config --exists icu-i18n icu-uc 2>/dev/null; then \
@@ -85,112 +85,112 @@ HOST_CPU_AVX2_STATUS := $(shell \
         echo unknown; \
     fi)
 
-ifeq ($(II42_FORCE_SCALAR),1)
-PG_CPPFLAGS += -DII42_FORCE_SCALAR=1
-$(warning Building ii42 with AVX2 dispatch disabled; query scoring \
+ifeq ($(EVOKE_FORCE_SCALAR),1)
+PG_CPPFLAGS += -DEVOKE_FORCE_SCALAR=1
+$(warning Building evoke with AVX2 dispatch disabled; query scoring \
 may be slower on this machine.)
 else ifeq ($(HOST_CPU_AVX2_STATUS),no)
-$(warning Building ii42 on a host without AVX2 support; the \
+$(warning Building evoke on a host without AVX2 support; the \
 extension will build and run, but this machine will use the scalar \
 scoring path and may be slower.)
 else ifeq ($(HOST_CPU_AVX2_STATUS),unknown)
-$(warning Could not detect host AVX2 support; ii42 will still \
+$(warning Could not detect host AVX2 support; evoke will still \
 build, but may fall back to the scalar scoring path on this machine.)
 endif
 
 OBJS = \
-	src/ii42_am.o \
-	src/ii42_am_accelerator.o \
-    src/ii42_am_build.o \
-    src/ii42_am_hot_fold.o \
-    src/ii42_am_maintenance.o \
-    src/ii42_am_meta.o \
-    src/ii42_am_mutation.o \
-    src/ii42_am_options.o \
-    src/ii42_am_preload.o \
-    src/ii42_am_resident_fold.o \
-    src/ii42_am_reclamation.o \
-    src/ii42_am_scheduler.o \
-    src/ii42_am_scan.o \
-    src/ii42_am_sql.o \
-    src/ii42_am_test_support.o \
-    src/ii42_filter.o \
-    src/ii42_pg.o \
-    src/ii42_pg_common.o \
-    src/ii42_planner.o \
-    src/ii42_semantic.o \
-    src/ii42_semantic_accelerator.o \
-    src/ii42_semantic_accelerator_builder.o \
-    src/ii42_semantic_accelerator_directory.o \
-    src/ii42_semantic_forward.o \
-    src/ii42_semantic_forward_bound.o \
-	src/ii42_semantic_impact_frontier.o \
-	src/ii42_scope.o \
-	src/ii42_scope_pg.o \
-    src/ii42_weighted_space_saving.o \
-    src/ii42_semantic_bmp.o \
-    src/ii42_block_ranges.o \
-    src/ii42_core.o \
-    src/ii42_page_query.o \
-    src/ii42_query.o \
-    src/ii42_p2_runtime.o \
-	src/ii42_document_tid_lookup.o \
-    src/ii42_document_cow.o \
-    src/ii42_initial_fold_stream.o \
-    src/ii42_lexicon_cow.o \
-    src/ii42_prefix_cow.o \
-    src/ii42_posting_heat.o \
-    src/ii42_segment_pages.o \
-    src/ii42_segments.o \
-    src/ii42_term_cow.o \
-    src/ii42_storage.o \
-    src/ii42_stem.o
-OBJS += src/ii42_text.o
+	src/evoke_am.o \
+	src/evoke_am_accelerator.o \
+    src/evoke_am_build.o \
+    src/evoke_am_hot_fold.o \
+    src/evoke_am_maintenance.o \
+    src/evoke_am_meta.o \
+    src/evoke_am_mutation.o \
+    src/evoke_am_options.o \
+    src/evoke_am_preload.o \
+    src/evoke_am_resident_fold.o \
+    src/evoke_am_reclamation.o \
+    src/evoke_am_scheduler.o \
+    src/evoke_am_scan.o \
+    src/evoke_am_sql.o \
+    src/evoke_am_test_support.o \
+    src/evoke_filter.o \
+    src/evoke_pg.o \
+    src/evoke_pg_common.o \
+    src/evoke_planner.o \
+    src/evoke_semantic.o \
+    src/evoke_semantic_accelerator.o \
+    src/evoke_semantic_accelerator_builder.o \
+    src/evoke_semantic_accelerator_directory.o \
+    src/evoke_semantic_forward.o \
+    src/evoke_semantic_forward_bound.o \
+	src/evoke_semantic_impact_frontier.o \
+	src/evoke_scope.o \
+	src/evoke_scope_pg.o \
+    src/evoke_weighted_space_saving.o \
+    src/evoke_semantic_bmp.o \
+    src/evoke_block_ranges.o \
+    src/evoke_core.o \
+    src/evoke_page_query.o \
+    src/evoke_query.o \
+    src/evoke_p2_runtime.o \
+	src/evoke_document_tid_lookup.o \
+    src/evoke_document_cow.o \
+    src/evoke_initial_fold_stream.o \
+    src/evoke_lexicon_cow.o \
+    src/evoke_prefix_cow.o \
+    src/evoke_posting_heat.o \
+    src/evoke_segment_pages.o \
+    src/evoke_segments.o \
+    src/evoke_term_cow.o \
+    src/evoke_storage.o \
+    src/evoke_stem.o
+OBJS += src/evoke_text.o
 
-II42_HEADERS := $(wildcard src/*.h)
-$(OBJS): $(II42_HEADERS)
+EVOKE_HEADERS := $(wildcard src/*.h)
+$(OBJS): $(EVOKE_HEADERS)
 
-src/ii42_am.o src/ii42_semantic.o: \
-    src/ii42_semantic.h \
-    src/ii42_runtime_service.h
+src/evoke_am.o src/evoke_semantic.o: \
+    src/evoke_semantic.h \
+    src/evoke_runtime_service.h
 
-src/ii42_segment_pages.o: \
-    src/ii42_segment_pages.h \
-    src/ii42_segments.h
+src/evoke_segment_pages.o: \
+    src/evoke_segment_pages.h \
+    src/evoke_segments.h
 
-src/ii42_document_cow.o: \
-    src/ii42_document_cow.h \
-    src/ii42_segments.h
+src/evoke_document_cow.o: \
+    src/evoke_document_cow.h \
+    src/evoke_segments.h
 
-src/ii42_lexicon_cow.o: \
-    src/ii42_lexicon_cow.h \
-    src/ii42_core.h
+src/evoke_lexicon_cow.o: \
+    src/evoke_lexicon_cow.h \
+    src/evoke_core.h
 
-src/ii42_prefix_cow.o: \
-    src/ii42_prefix_cow.h \
-    src/ii42_segments.h
+src/evoke_prefix_cow.o: \
+    src/evoke_prefix_cow.h \
+    src/evoke_segments.h
 
-src/ii42_term_cow.o: \
-    src/ii42_term_cow.h \
-    src/ii42_segments.h
+src/evoke_term_cow.o: \
+    src/evoke_term_cow.h \
+    src/evoke_segments.h
 
-II42_EXTENSION_VERSION := $(shell sed -n \
-    "s/^default_version = '\(.*\)'$$/\1/p" ii42.control)
-DATA = sql/ii42--$(II42_EXTENSION_VERSION).sql
-REGRESS = ii42_integration
+EVOKE_EXTENSION_VERSION := $(shell sed -n \
+    "s/^default_version = '\(.*\)'$$/\1/p" evoke.control)
+DATA = sql/evoke--$(EVOKE_EXTENSION_VERSION).sql
+REGRESS = evoke_integration
 
-II42_RUNTIME_SERVER := build/ii42-runtime-server
-II42_RUNTIME_SERVER_SRC := src/ii42_runtime_server.cc
-II42_RUNTIME_SERVER_CXXFLAGS ?= \
+EVOKE_RUNTIME_SERVER := build/evoke-runtime-server
+EVOKE_RUNTIME_SERVER_SRC := src/evoke_runtime_server.cc
+EVOKE_RUNTIME_SERVER_CXXFLAGS ?= \
     -std=c++17 -Wall -Wextra -Wpedantic -O2
-II42_RUNTIME_SERVER_CPPFLAGS := \
+EVOKE_RUNTIME_SERVER_CPPFLAGS := \
     $(shell pkg-config --cflags jansson 2>/dev/null) \
     $(ICU_CPPFLAGS) \
     $(OPENSSL_CPPFLAGS) \
     $(shell pkg-config --cflags libonnxruntime 2>/dev/null) \
-    -DII42_PACKAGED_MODEL_PATH='"$(II42_PACKAGED_MODEL_PATH)"'
-II42_RUNTIME_SERVER_LDFLAGS :=
-II42_RUNTIME_SERVER_LIBS := \
+    -DEVOKE_PACKAGED_MODEL_PATH='"$(EVOKE_PACKAGED_MODEL_PATH)"'
+EVOKE_RUNTIME_SERVER_LDFLAGS :=
+EVOKE_RUNTIME_SERVER_LIBS := \
     $(shell pkg-config --libs jansson 2>/dev/null || echo -ljansson) \
     $(ICU_LIBS) \
     $(OPENSSL_LIBS) \
@@ -199,38 +199,38 @@ II42_RUNTIME_SERVER_LIBS := \
     -pthread
 
 .PHONY: runtime-server
-runtime-server: $(II42_RUNTIME_SERVER)
+runtime-server: $(EVOKE_RUNTIME_SERVER)
 
-$(II42_RUNTIME_SERVER): $(II42_RUNTIME_SERVER_SRC)
+$(EVOKE_RUNTIME_SERVER): $(EVOKE_RUNTIME_SERVER_SRC)
 	mkdir -p $(dir $@)
-	$(CXX) $(II42_RUNTIME_SERVER_CXXFLAGS) \
-	    $(II42_RUNTIME_SERVER_CPPFLAGS) \
+	$(CXX) $(EVOKE_RUNTIME_SERVER_CXXFLAGS) \
+	    $(EVOKE_RUNTIME_SERVER_CPPFLAGS) \
 	    -o $@ $< \
-	    $(II42_RUNTIME_SERVER_LDFLAGS) \
-	    $(II42_RUNTIME_SERVER_LIBS)
+	    $(EVOKE_RUNTIME_SERVER_LDFLAGS) \
+	    $(EVOKE_RUNTIME_SERVER_LIBS)
 
 PG_CPPFLAGS += \
     -I$(CURDIR)/src \
     $(ICU_CPPFLAGS) \
-    -DII42_PACKAGED_MODEL_PATH='"$(II42_PACKAGED_MODEL_PATH)"'
+    -DEVOKE_PACKAGED_MODEL_PATH='"$(EVOKE_PACKAGED_MODEL_PATH)"'
 SHLIB_LINK += $(ICU_LIBS) $(DL_LIBS)
 
-II42_ENABLE_ONNXRUNTIME ?= 1
-ifneq ($(II42_ENABLE_ONNXRUNTIME),0)
-ifneq ($(II42_ENABLE_ONNXRUNTIME),1)
-$(error II42_ENABLE_ONNXRUNTIME must be 0 or 1)
+EVOKE_ENABLE_ONNXRUNTIME ?= 1
+ifneq ($(EVOKE_ENABLE_ONNXRUNTIME),0)
+ifneq ($(EVOKE_ENABLE_ONNXRUNTIME),1)
+$(error EVOKE_ENABLE_ONNXRUNTIME must be 0 or 1)
 endif
 endif
 
-II42_ONNXRUNTIME_REQUIRED_VERSION := $(shell tr -d '[:space:]' \
+EVOKE_ONNXRUNTIME_REQUIRED_VERSION := $(shell tr -d '[:space:]' \
     < packaging/onnxruntime.version)
 
-II42_CLEAN_ONLY_GOALS := clean clean-ii42-runtime-server
-II42_BUILD_GOALS := $(if $(MAKECMDGOALS),\
-    $(filter-out $(II42_CLEAN_ONLY_GOALS),$(MAKECMDGOALS)),default)
+EVOKE_CLEAN_ONLY_GOALS := clean clean-evoke-runtime-server
+EVOKE_BUILD_GOALS := $(if $(MAKECMDGOALS),\
+    $(filter-out $(EVOKE_CLEAN_ONLY_GOALS),$(MAKECMDGOALS)),default)
 
-ifneq ($(strip $(II42_BUILD_GOALS)),)
-ifeq ($(II42_ENABLE_ONNXRUNTIME),1)
+ifneq ($(strip $(EVOKE_BUILD_GOALS)),)
+ifeq ($(EVOKE_ENABLE_ONNXRUNTIME),1)
 ONNXRUNTIME_CPPFLAGS := $(shell pkg-config --cflags libonnxruntime 2>/dev/null)
 ONNXRUNTIME_LIBS := $(shell pkg-config --libs libonnxruntime 2>/dev/null)
 ONNXRUNTIME_VERSION := $(shell pkg-config --modversion libonnxruntime 2>/dev/null)
@@ -238,13 +238,13 @@ ONNXRUNTIME_LIB_DIRS := $(filter -L%,$(ONNXRUNTIME_LIBS))
 ONNXRUNTIME_LINK_LIBS := $(filter-out -L%,$(ONNXRUNTIME_LIBS))
 HOST_OS := $(shell uname -s)
 ifeq ($(strip $(ONNXRUNTIME_CPPFLAGS)),)
-$(error II42_ENABLE_ONNXRUNTIME=1 requires pkg-config libonnxruntime)
+$(error EVOKE_ENABLE_ONNXRUNTIME=1 requires pkg-config libonnxruntime)
 endif
-ifneq ($(ONNXRUNTIME_VERSION),$(II42_ONNXRUNTIME_REQUIRED_VERSION))
-$(error II42 requires ONNX Runtime $(II42_ONNXRUNTIME_REQUIRED_VERSION), \
+ifneq ($(ONNXRUNTIME_VERSION),$(EVOKE_ONNXRUNTIME_REQUIRED_VERSION))
+$(error Evoke requires ONNX Runtime $(EVOKE_ONNXRUNTIME_REQUIRED_VERSION), \
     but pkg-config resolved $(ONNXRUNTIME_VERSION))
 endif
-PG_CPPFLAGS += -DII42_ENABLE_ONNXRUNTIME=1 $(ONNXRUNTIME_CPPFLAGS)
+PG_CPPFLAGS += -DEVOKE_ENABLE_ONNXRUNTIME=1 $(ONNXRUNTIME_CPPFLAGS)
 # Put ONNX Runtime library directories before PostgreSQL's default linker
 # search path. Some distributions ship a CPU-only libonnxruntime under
 # /usr/lib; accelerator builds must not accidentally bind that library when a
@@ -262,8 +262,8 @@ endif
 
 include $(PGXS)
 
-.PHONY: clean-ii42-runtime-server
-clean: clean-ii42-runtime-server
+.PHONY: clean-evoke-runtime-server
+clean: clean-evoke-runtime-server
 
-clean-ii42-runtime-server:
-	rm -f $(II42_RUNTIME_SERVER)
+clean-evoke-runtime-server:
+	rm -f $(EVOKE_RUNTIME_SERVER)

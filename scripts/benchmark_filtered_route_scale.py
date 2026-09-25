@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare exact filtered query routes across small native II42 roots."""
+"""Compare exact filtered query routes across small native Evoke roots."""
 
 from __future__ import annotations
 
@@ -213,7 +213,7 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help=(
             'Load native scorer/status/trace symbols from this exact shared '
-            'library instead of the installed $libdir/ii42 binary.'
+            'library instead of the installed $libdir/evoke binary.'
         ),
     )
     return parser.parse_args()
@@ -236,12 +236,12 @@ def split_qualified_name(value: str) -> tuple[str, str]:
 
 def configure_route(cursor: psycopg.Cursor[Any], route: Route) -> None:
     settings = {
-        'ii42.test_disable_semantic_accelerator': (
+        'evoke.test_disable_semantic_accelerator': (
             'on' if route.disable_accelerator else 'off'
         ),
-        'ii42.test_force_semantic_bmp': 'on' if route.force_bmp else 'off',
-        'ii42.test_disable_semantic_bmp': 'off',
-        'ii42.test_filtered_forward_route': route.forward_route,
+        'evoke.test_force_semantic_bmp': 'on' if route.force_bmp else 'off',
+        'evoke.test_disable_semantic_bmp': 'off',
+        'evoke.test_filtered_forward_route': route.forward_route,
     }
     for name, value in settings.items():
         cursor.execute('SELECT set_config(%s, %s, false)', (name, value))
@@ -254,27 +254,27 @@ def bind_candidate_probes(
     library = (
         str(candidate_library.resolve())
         if candidate_library is not None
-        else '$libdir/ii42'
+        else '$libdir/evoke'
     )
     cursor.execute(
         sql.SQL(
             """
-        CREATE OR REPLACE FUNCTION pg_temp.ii42_filtered_route_trace()
+        CREATE OR REPLACE FUNCTION pg_temp.evoke_filtered_route_trace()
         RETURNS jsonb
-        AS {}, 'ii42_query_trace_internal'
+        AS {}, 'evoke_query_trace_internal'
         LANGUAGE C VOLATILE PARALLEL UNSAFE
         """
         ).format(sql.Literal(library))
     )
     if candidate_library is None:
         return (
-            'ii42_index_semantic_query_native_internal',
-            'ii42_index_generation_status_internal',
+            'evoke_index_semantic_query_native_internal',
+            'evoke_index_generation_status_internal',
         )
     cursor.execute(
         sql.SQL(
             """
-        CREATE OR REPLACE FUNCTION pg_temp.ii42_filtered_route_query(
+        CREATE OR REPLACE FUNCTION pg_temp.evoke_filtered_route_query(
             regclass, int4[], real[], text[], real[], int4, text,
             int4[], tid[], jsonb
         )
@@ -286,7 +286,7 @@ def bind_candidate_probes(
             rerank_slice_hits int8, rerank_score_terms int8,
             rerank_doc_terms int8, memory_bytes int8
         )
-        AS {}, 'ii42_index_semantic_query_native_internal'
+        AS {}, 'evoke_index_semantic_query_native_internal'
         LANGUAGE C VOLATILE PARALLEL UNSAFE
         """
         ).format(sql.Literal(library))
@@ -294,18 +294,18 @@ def bind_candidate_probes(
     cursor.execute(
         sql.SQL(
             """
-        CREATE OR REPLACE FUNCTION pg_temp.ii42_filtered_route_status(
+        CREATE OR REPLACE FUNCTION pg_temp.evoke_filtered_route_status(
             regclass
         )
         RETURNS jsonb
-        AS {}, 'ii42_index_generation_readiness_internal_c'
+        AS {}, 'evoke_index_generation_readiness_internal_c'
         LANGUAGE C STABLE PARALLEL SAFE STRICT
         """
         ).format(sql.Literal(library))
     )
     return (
-        'pg_temp.ii42_filtered_route_query',
-        'pg_temp.ii42_filtered_route_status',
+        'pg_temp.evoke_filtered_route_query',
+        'pg_temp.evoke_filtered_route_status',
     )
 
 
@@ -321,7 +321,7 @@ def build_filters(
     result: dict[str, int] = {}
 
     cursor.execute(
-        'CREATE TEMP TABLE ii42_filtered_route_sets ('
+        'CREATE TEMP TABLE evoke_filtered_route_sets ('
         'name text PRIMARY KEY, tids tid[], allowed_count bigint NOT NULL'
         ') ON COMMIT PRESERVE ROWS'
     )
@@ -330,7 +330,7 @@ def build_filters(
         if spec.range_column is not None:
             cursor.execute(
                 sql.SQL(
-                    'INSERT INTO pg_temp.ii42_filtered_route_sets '
+                    'INSERT INTO pg_temp.evoke_filtered_route_sets '
                     'SELECT %s, array_agg(ctid ORDER BY ctid), count(*) '
                     'FROM {} WHERE {} >= %s RETURNING allowed_count'
                 ).format(relation, sql.Identifier(spec.range_column)),
@@ -341,7 +341,7 @@ def build_filters(
         if spec.modulus is None:
             cursor.execute(
                 sql.SQL(
-                    'INSERT INTO pg_temp.ii42_filtered_route_sets '
+                    'INSERT INTO pg_temp.evoke_filtered_route_sets '
                     'SELECT %s, NULL::tid[], count(*) FROM {} '
                     'RETURNING allowed_count'
                 ).format(relation),
@@ -351,7 +351,7 @@ def build_filters(
             continue
         cursor.execute(
             sql.SQL(
-                'INSERT INTO pg_temp.ii42_filtered_route_sets '
+                'INSERT INTO pg_temp.evoke_filtered_route_sets '
                 'SELECT %s, array_agg(ctid ORDER BY ctid), count(*) '
                 'FROM {} WHERE mod({}, %s) = %s '
                 'RETURNING allowed_count'
@@ -370,7 +370,7 @@ def encode_query(
 ) -> tuple[list[int], list[float], str]:
     if query_vector_table is None:
         cursor.execute(
-            'SELECT ii42_encode_text_internal(%s::regclass, %s)',
+            'SELECT evoke_encode_text_internal(%s::regclass, %s)',
             (index_name, text),
         )
         encoded = cursor.fetchone()[0]
@@ -428,7 +428,7 @@ def execute_query(
             NULL,
             (
                 SELECT tids
-                FROM pg_temp.ii42_filtered_route_sets
+                FROM pg_temp.evoke_filtered_route_sets
                 WHERE name = %s
             ),
             NULL
@@ -449,7 +449,7 @@ def execute_query(
     )
     hits = [(int(row[0]), str(row[1])) for row in cursor.fetchall()]
     elapsed_ms = 1000.0 * (time.perf_counter() - started)
-    cursor.execute('SELECT pg_temp.ii42_filtered_route_trace()')
+    cursor.execute('SELECT pg_temp.evoke_filtered_route_trace()')
     trace = cursor.fetchone()[0]
     if not isinstance(trace, dict):
         raise RuntimeError('query trace is not a JSON object')
@@ -833,7 +833,7 @@ def main() -> int:
     ]
 
     result = {
-        'schema': 'ii42_filtered_route_scale_v2',
+        'schema': 'evoke_filtered_route_scale_v2',
         'index': args.index,
         'table': args.table,
         'document_count': int(document_count),

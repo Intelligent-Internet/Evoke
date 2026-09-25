@@ -974,7 +974,7 @@ def main() -> int:
                     variants.append(variant)
                     print(json.dumps(variant, sort_keys=True), flush=True)
     result = {
-        'schema': 'ii42_seismic_npz_oracle_v2',
+        'schema': 'evoke_seismic_npz_oracle_v2',
         'dataset_root': (
             str(args.dataset_root) if args.dataset_root is not None else None
         ),

@@ -22,7 +22,7 @@ SPEC.loader.exec_module(MODULE)
 def test_qualification_report_accepts_bounded_family_memory() -> None:
     report = MODULE.qualification_report(
         {
-            'ii42 build: heap scan': {
+            'evoke build: heap scan': {
                 'family_MaxProcessHwm_bytes': 700,
                 'family_Private_bytes': 650,
                 'family_Pss_bytes': 680,
@@ -42,7 +42,7 @@ def test_qualification_report_accepts_bounded_family_memory() -> None:
 def test_qualification_report_rejects_runtime_worker_hwm() -> None:
     report = MODULE.qualification_report(
         {
-            'ii42 build: heap scan': {
+            'evoke build: heap scan': {
                 'family_MaxProcessHwm_bytes': 900,
                 'family_Private_bytes': 650,
                 'family_Pss_bytes': 680,

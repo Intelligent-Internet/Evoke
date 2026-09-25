@@ -13,7 +13,7 @@ from typing import Any
 
 import psycopg
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -39,7 +39,7 @@ def parse_args() -> argparse.Namespace:
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share directory containing extension/ii42.control, '
+            'PostgreSQL share directory containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -125,7 +125,7 @@ def query_count(connection: psycopg.Connection[Any]) -> int:
         cursor.execute(
             '''
             SELECT count(*)
-            FROM ii42_query_tokens(
+            FROM evoke_query_tokens(
                 'failure_test.docs_idx'::regclass,
                 ARRAY['failure', 'safety'],
                 20,
@@ -163,7 +163,7 @@ def set_fault(
 
 def clear_cache(connection: psycopg.Connection[Any]) -> None:
     with connection.cursor() as cursor:
-        cursor.execute('SELECT ii42_runtime_cache_clear()')
+        cursor.execute('SELECT evoke_runtime_cache_clear()')
 
 
 def expect_fault(
@@ -186,14 +186,14 @@ def expect_fault(
 
 
 def expect_scan_fault(connection: psycopg.Connection[Any]) -> None:
-    setting = 'ii42.test_search_error_after_rank'
+    setting = 'evoke.test_search_error_after_rank'
 
     set_fault(connection, setting, True)
     try:
         scan_count(connection)
     except psycopg.Error as error:
         expected = (
-            'injected ii42 page-native search result construction error'
+            'injected evoke page-native search result construction error'
         )
         if expected not in str(error):
             raise AssertionError(
@@ -209,14 +209,14 @@ def expect_query_operator_fault(
     connection: psycopg.Connection[Any],
     statement: str,
 ) -> None:
-    setting = 'ii42.test_query_operator_error_after_parse'
+    setting = 'evoke.test_query_operator_error_after_parse'
 
     set_fault(connection, setting, True)
     try:
         with connection.cursor() as cursor:
             cursor.execute(statement)
     except psycopg.Error as error:
-        expected = 'injected ii42 query operator after parse error'
+        expected = 'injected evoke query operator after parse error'
         if expected not in str(error):
             raise AssertionError(
                 f'unexpected query operator cleanup error: {error}'
@@ -230,28 +230,28 @@ def expect_query_operator_fault(
 def query_operator_statements() -> tuple[str, ...]:
     return (
         '''
-        SELECT ii42_op_match_query_tokens(
+        SELECT evoke_op_match_query_tokens(
             ARRAY['failure', 'safety']::text[],
             'failure AND safety'
         )
         ''',
         '''
-        SELECT ii42_match_prepared_query(
+        SELECT evoke_match_prepared_query(
             ARRAY['failure', 'safety']::text[],
-            ii42_prepared_query(
+            evoke_prepared_query(
                 'failure_test.docs_idx'::regclass,
                 'failure AND safety'
             )
         )
         ''',
         '''
-        SELECT ii42_highlight(
+        SELECT evoke_highlight(
             ARRAY['failure', 'safety']::text[],
             'failure AND safety'
         )
         ''',
         '''
-        SELECT ii42_snippet(
+        SELECT evoke_snippet(
             ARRAY['failure', 'safety']::text[],
             'failure AND safety',
             8
@@ -278,7 +278,7 @@ def setup(connection: psycopg.Connection[Any]) -> None:
     with connection.cursor() as cursor:
         cursor.execute(
             '''
-            CREATE EXTENSION ii42;
+            CREATE EXTENSION evoke;
             CREATE SCHEMA failure_test;
             CREATE TABLE failure_test.docs (
                 id integer PRIMARY KEY,
@@ -296,7 +296,7 @@ def setup(connection: psycopg.Connection[Any]) -> None:
             FROM generate_series(1, 5000) AS value;
             CREATE INDEX docs_idx
             ON failure_test.docs
-            USING ii42 (tokens)
+            USING evoke (tokens)
             WITH (
                 consistency = 'eventual'
             );
@@ -326,8 +326,8 @@ def run_failure_matrix(
     for _ in range(iterations):
         expect_fault(
             connection,
-            'ii42.test_search_error_after_rank',
-            'injected ii42 search result construction error',
+            'evoke.test_search_error_after_rank',
+            'injected evoke search result construction error',
         )
     if query_count(connection) != 20:
         raise AssertionError('search cleanup retry did not return 20 hits')
@@ -352,8 +352,8 @@ def run_failure_matrix(
     for _ in range(iterations):
         expect_fault(
             connection,
-            'ii42.test_search_error_after_rank',
-            'injected ii42 search result construction error',
+            'evoke.test_search_error_after_rank',
+            'injected evoke search result construction error',
         )
         clear_cache(connection)
 
@@ -384,7 +384,7 @@ def main() -> None:
         args.extension_control_dir = extension_control_root(
             args.extension_control_dir
         )
-    workdir = Path(tempfile.mkdtemp(prefix='ii42_cache_failure_', dir='/tmp'))
+    workdir = Path(tempfile.mkdtemp(prefix='evoke_cache_failure_', dir='/tmp'))
     data_dir = workdir / 'pgdata'
     port = free_port()
     pg_ctl = args.pg_bin / 'pg_ctl'

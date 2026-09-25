@@ -16,7 +16,7 @@ A/8192 是固定品質參考，不是完美 relevance oracle。B/8192 保留為�
 |---|---|
 | [M91/M92 sparse-teacher compression](../sae-m91-m92-support-compression-results-report.md) 曾改善早期排名但傷害 coverage | 壓縮蒸餾並非新發明；不能只用 teacher KL 或 nDCG，必須獨立看全背景 Recall。舊 latent SAE 與本次成熟詞彙頭／修正後目標不同，舊的 k384 失敗不是跨模型容量定理 |
 | [M1518 DF-FLOPS](../m1500-m1599/ii42-m1518-df-flops-paired-smoke-report.md) 降低 head concentration，仍全庫觸及 | 不能只改善 DF 直方圖或改 penalty 係數，必須量 query 分佈下的整體工作量 |
-| [M1933](../m1900-m1999/ii42-m1933-semantic-budget-frontier-report.md)／[M1934](../m1900-m1999/ii42-m1934-fixed-budget-unseen-transfer-report.md) 的固定容量改善有可轉移但有限的收益 | 保留 deterministic pruning 作必要對照；神經訓練必須勝過同成本、不訓練的 publisher，否則不增加模型複雜度 |
+| [M1933](../m1900-m1999/evoke-m1933-semantic-budget-frontier-report.md)／[M1934](../m1900-m1999/evoke-m1934-fixed-budget-unseen-transfer-report.md) 的固定容量改善有可轉移但有限的收益 | 保留 deterministic pruning 作必要對照；神經訓練必須勝過同成本、不訓練的 publisher，否則不增加模型複雜度 |
 | [NG82](ng0082-progress.zh.md)／[NG83](ng0083-progress.zh.md) 的 utility mask 使真實排名下降 | 不重做逐 posting utility 相加或全局 mask 選擇；直接在最終 masked hybrid 分數上訓練、評估 |
 | [NG87](ng0087-clean-base-teacher-ab.zh.md) 的 full-std quality-only 訓練 | 現在有完成訓練、可校驗的較好 endpoint；測試它的排序能否在預算內重學，而不是在原退化 checkpoint 上增加多個互相拉扯的 loss |
 

@@ -37,7 +37,7 @@ def backend_sample() -> dict[str, object]:
 
 def bounded_build_report() -> dict[str, object]:
     return {
-        'application_name': 'ii42_cq3e',
+        'application_name': 'evoke_cq3e',
         'completed_unix': 200.0,
         'database': 'postgres',
         'host': '/tmp/pg',
@@ -53,7 +53,7 @@ def bounded_build_report() -> dict[str, object]:
             'max_swap_bytes': 0,
         },
         'phase_peaks': {
-            'ii42 build: heap scan': {
+            'evoke build: heap scan': {
                 'status_VmHWM_bytes': 700,
                 'status_VmSwap_bytes': 0,
             },
@@ -81,7 +81,7 @@ def bounded_build_report() -> dict[str, object]:
 
 def bounded_family_report() -> dict[str, object]:
     return {
-        'application_name': 'ii42_cq3e',
+        'application_name': 'evoke_cq3e',
         'backend_started_unix': 100.0,
         'completed_unix': 201.0,
         'coverage_started_seconds_after_backend': 1.0,
@@ -97,7 +97,7 @@ def bounded_family_report() -> dict[str, object]:
             'max_swap_bytes': 0,
         },
         'family_phase_peaks': {
-            'ii42 build: heap scan': {
+            'evoke build: heap scan': {
                 'family_MaxProcessHwm_bytes': 900,
                 'family_Private_bytes': 850,
                 'family_Pss_bytes': 880,
@@ -126,7 +126,7 @@ def test_reports_accept_complete_bounded_evidence() -> None:
     assert MODULE.build_report_errors(bounded_build_report()) == []
     assert MODULE.family_report_errors(
         bounded_family_report(),
-        'ii42_cq3e',
+        'evoke_cq3e',
     ) == []
     assert MODULE.cross_report_errors(
         bounded_build_report(),
@@ -158,7 +158,7 @@ def test_build_report_requires_loaded_binary_binding() -> None:
 def test_build_report_recomputes_embedded_family_memory() -> None:
     report = bounded_build_report()
     report['family_phase_peaks'] = {
-        'ii42 build: heap scan': {
+        'evoke build: heap scan': {
             'family_MaxProcessHwm_bytes': 900,
             'family_Private_bytes': 850,
             'family_Pss_bytes': 880,
@@ -184,11 +184,11 @@ def test_build_report_recomputes_embedded_family_memory() -> None:
 def test_family_report_recomputes_memory_and_identity() -> None:
     report = bounded_family_report()
     report['application_name'] = 'other'
-    report['family_phase_peaks']['ii42 build: heap scan'][
+    report['family_phase_peaks']['evoke build: heap scan'][
         'runtime_worker_Hwm_bytes'
     ] = 1_100
 
-    assert MODULE.family_report_errors(report, 'ii42_cq3e') == [
+    assert MODULE.family_report_errors(report, 'evoke_cq3e') == [
         'full rebuild peak RSS exceeds limit: 1100 > 1000 bytes',
         'process-family application identity differs',
         'process-family recorded memory summary is inconsistent',
@@ -208,7 +208,7 @@ def test_family_report_rejects_late_or_unstable_observation() -> None:
         },
     ]
 
-    assert MODULE.family_report_errors(report, 'ii42_cq3e') == [
+    assert MODULE.family_report_errors(report, 'evoke_cq3e') == [
         'process-family backend identity is missing or unstable',
         'process-family observation began too late: 5.1 seconds',
     ]

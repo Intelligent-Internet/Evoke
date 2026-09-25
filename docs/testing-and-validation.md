@@ -3,7 +3,7 @@
 Evoke validation is layered so a scorer unit test cannot hide an invalid
 PostgreSQL lifecycle. Product acceptance uses the installed or explicitly
 staged extension, one page-native index path, the public explicit-hit
-`ii42_query(..., k, ...)` route, and planner-native scalar `ii42_query(...)`
+`evoke_query(..., k, ...)` route, and planner-native scalar `evoke_query(...)`
 SQL.
 
 ## Fast Checks
@@ -66,7 +66,7 @@ python3 scripts/test_unified_index_lifecycle_smoke.py \
     --concurrent-readers 4 \
     --concurrent-writers 2 \
     --soak-queries 100 \
-    --output /tmp/ii42-unified-lifecycle.json
+    --output /tmp/evoke-unified-lifecycle.json
 ```
 
 To bind the run to staged source, provide both `--extension-libdir` and
@@ -76,7 +76,7 @@ the resolved package roots.
 The lifecycle gate must prove:
 
 1. BM25 and `sae = true` publish one checked relation root and use
-   `ii42_query(...)`.
+   `evoke_query(...)`.
 2. Lexical and semantic atoms occupy one posting namespace; no second index,
    registry, or application-managed payload exists.
 3. SSR is eventual-only: foreground DML publishes lexical evidence and pending
@@ -104,9 +104,9 @@ The lifecycle gate must prove:
    incompatibility, not merely until the next manifest publication.
 10. A failed build or model-contract mismatch preserves the previous readable
     root and fails closed.
-11. `ii42_index_status(...)` exposes readiness, semantic debt, convergence,
+11. `evoke_index_status(...)` exposes readiness, semantic debt, convergence,
     and blockers without a relation-sized or model-sized walk.
-    `ii42_index_audit(...)` separately validates COW closure, reachability,
+    `evoke_index_audit(...)` separately validates COW closure, reachability,
     reclaim markers, derived accelerator objects, and model SHA-256 identities.
 12. PostgreSQL `DROP INDEX` removes the complete relation-owned index lifecycle
     without an external cleanup step.
@@ -168,10 +168,10 @@ failures.
 ```bash
 python3 scripts/test_unified_index_lifecycle_smoke.py \
     --model-path /path/to/model-checkout \
-    --output /tmp/ii42-page-native-lifecycle.json
+    --output /tmp/evoke-page-native-lifecycle.json
 
 python3 scripts/test_backend_memory_ownership.py \
-    --output /tmp/ii42-backend-memory.json
+    --output /tmp/evoke-backend-memory.json
 
 python3 scripts/test_convergent_segment_read_smoke.py
 python3 scripts/test_convergent_vacuum_frontier_smoke.py
@@ -250,7 +250,7 @@ python3 scripts/run_product_maturity_suite.py \
     --source-package-root /path/to/psql_bm25s-package \
     --model-path /path/to/model-checkout \
     --skip-benchmark \
-    --output /tmp/ii42-product-maturity.json
+    --output /tmp/evoke-product-maturity.json
 ```
 
 The package suite verifies the extension binary, control file, install SQL,
@@ -267,9 +267,9 @@ self-consistent `psql_bm25s` package:
 ```bash
 python3 scripts/test_psql_bm25s_source_migration_smoke.py \
     --source-package-root /path/to/psql_bm25s-package \
-    --extension-libdir /path/to/ii42-stage/pkglibdir \
-    --extension-control-dir /path/to/ii42-stage/sharedir \
-    --output /tmp/ii42-source-migration.json
+    --extension-libdir /path/to/evoke-stage/pkglibdir \
+    --extension-control-dir /path/to/evoke-stage/sharedir \
+    --output /tmp/evoke-source-migration.json
 ```
 
 It keeps both products queryable during side-by-side validation, exercises
@@ -310,10 +310,10 @@ See [Performance Evidence](performance/README.md).
 ## Native Quality Evaluation
 
 Quality evaluation must query relation-owned indexes through
-`ii42_query(...)` and join TIDs back to the corpus table:
+`evoke_query(...)` and join TIDs back to the corpus table:
 
 ```bash
-python3 scripts/evaluate_ii42_native_qrels.py \
+python3 scripts/evaluate_evoke_native_qrels.py \
     --dsn 'host=/path/to/socket port=55432 dbname=postgres' \
     --dataset scifact \
     --schema bench \

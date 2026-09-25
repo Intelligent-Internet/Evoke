@@ -12,7 +12,7 @@ import tempfile
 import time
 from pathlib import Path
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -50,7 +50,7 @@ def parse_args() -> argparse.Namespace:
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share directory containing extension/ii42.control, '
+            'PostgreSQL share directory containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -133,13 +133,13 @@ def init_cluster(args: argparse.Namespace, pgdata: Path, port: int) -> None:
             )
         conf.write(f"unix_socket_directories = '{pgdata}'\n")
         conf.write(f'port = {port}\n')
-        conf.write("shared_preload_libraries = 'ii42'\n")
+        conf.write("shared_preload_libraries = 'evoke'\n")
         conf.write(
-            f"ii42.shared_runtime_size = '{args.cache_mb}MB'\n"
+            f"evoke.shared_runtime_size = '{args.cache_mb}MB'\n"
         )
-        conf.write('ii42.maintenance_worker_limit = 1\n')
-        conf.write("ii42.preload_timer_interval_ms = '1000ms'\n")
-        conf.write("ii42.maintenance_timer_interval_ms = '1000ms'\n")
+        conf.write('evoke.maintenance_worker_limit = 1\n')
+        conf.write("evoke.preload_timer_interval_ms = '1000ms'\n")
+        conf.write("evoke.maintenance_timer_interval_ms = '1000ms'\n")
 
     run([
         str(bindir / 'pg_ctl'),
@@ -183,7 +183,7 @@ def require_invalid_auto_preload(
             tokens text[] not null
         );
         CREATE INDEX docs_invalid_bm25_idx
-            ON docs_invalid USING ii42 (tokens)
+            ON docs_invalid USING evoke (tokens)
             WITH (auto_preload = -1);
         ''',
         check=False,
@@ -204,7 +204,7 @@ def setup(args: argparse.Namespace, pgdata: Path, port: int) -> None:
         pgdata,
         port,
         '''
-        CREATE EXTENSION ii42;
+        CREATE EXTENSION evoke;
         ''',
     )
     require_invalid_auto_preload(args, pgdata, port)
@@ -235,16 +235,16 @@ def setup(args: argparse.Namespace, pgdata: Path, port: int) -> None:
         FROM generate_series(1, 2000) gs;
 
         CREATE INDEX docs_high_bm25_idx
-            ON docs_high USING ii42 (tokens)
+            ON docs_high USING evoke (tokens)
             WITH (auto_preload = 10);
         CREATE INDEX docs_low_bm25_idx
-            ON docs_low USING ii42 (tokens)
+            ON docs_low USING evoke (tokens)
             WITH (auto_preload = 1);
         CREATE INDEX docs_stale_bm25_idx
-            ON docs_stale USING ii42 (tokens)
+            ON docs_stale USING evoke (tokens)
             WITH (consistency = 'manual', auto_preload = 5);
         CREATE INDEX docs_cold_bm25_idx
-            ON docs_cold USING ii42 (tokens);
+            ON docs_cold USING evoke (tokens);
 
         INSERT INTO docs_stale VALUES
             (2001, ARRAY['auto', 'preload', 'stale', 'delta']);
@@ -265,7 +265,7 @@ def setup(args: argparse.Namespace, pgdata: Path, port: int) -> None:
         '\n'.join(
             f'''
             CREATE INDEX docs_many_bm25_{i:03d}_idx
-                ON docs_many USING ii42 (tokens)
+                ON docs_many USING evoke (tokens)
                 WITH (auto_preload = 1);
             '''
             for i in range(MANY_INDEX_COUNT)
@@ -284,7 +284,7 @@ def state(
         pgdata,
         port,
         f"""
-        SELECT public.ii42_index_runtime_state(
+        SELECT public.evoke_index_runtime_state(
             '{index_name}'::regclass
         );
         """,
@@ -380,7 +380,7 @@ def wait_for_many_preload(
               ON namespace.oid = relation.relnamespace
             WHERE namespace.nspname = 'public'
               AND relation.relname ~ '^docs_many_bm25_[0-9]{3}_idx$'
-              AND public.ii42_index_shared_preload_resident(
+              AND public.evoke_index_shared_preload_resident(
                     relation.oid
                   );
             ''',
@@ -413,7 +413,7 @@ def main() -> None:
         )
 
     workdir = Path(tempfile.mkdtemp(
-        prefix='ii42_shared_auto_preload_',
+        prefix='evoke_shared_auto_preload_',
         dir='/tmp',
     ))
     pgdata = workdir / 'pgdata'

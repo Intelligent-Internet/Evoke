@@ -49,7 +49,7 @@ def test_architecture_source_map_references_existing_entry_points() -> None:
         implementation = (ARCHITECTURE.parent / target).read_text(
             encoding='utf-8'
         )
-        symbols = re.findall(r'`(ii42_[a-z0-9_]+)`', entries)
+        symbols = re.findall(r'`(evoke_[a-z0-9_]+)`', entries)
         assert symbols, target
         for symbol in symbols:
             # Match definitions, not a mention in a comment or a call site.
@@ -77,13 +77,13 @@ def test_architecture_diagrams_are_ascii_and_fences_are_balanced(
     ('source_path', 'macro', 'description'),
     (
         (
-            'src/ii42_am.c',
-            'II42_AM_FILTER_RESOLVE_MAX_ROWS',
+            'src/evoke_am.c',
+            'EVOKE_AM_FILTER_RESOLVE_MAX_ROWS',
             '{value:,}-match limit',
         ),
         (
-            'src/ii42_scope_pg.c',
-            'II42_SCOPE_SNAPSHOT_BATCH_DOCUMENTS',
+            'src/evoke_scope_pg.c',
+            'EVOKE_SCOPE_SNAPSHOT_BATCH_DOCUMENTS',
             'at most {value} document slots',
         ),
     ),
@@ -110,28 +110,28 @@ def test_architecture_batch_limits_match_source(
     ('source_path', 'macro', 'description'),
     (
         (
-            'src/ii42_lexicon_cow.h',
-            'II42_LEXICON_COW_BUCKET_TARGET_BYTES',
+            'src/evoke_lexicon_cow.h',
+            'EVOKE_LEXICON_COW_BUCKET_TARGET_BYTES',
             'bucket target is {value:,} bytes',
         ),
         (
-            'src/ii42_prefix_cow.h',
-            'II42_PREFIX_COW_LEAF_MAX_ENTRIES',
+            'src/evoke_prefix_cow.h',
+            'EVOKE_PREFIX_COW_LEAF_MAX_ENTRIES',
             'Prefix leaves hold at most {value} entries',
         ),
         (
-            'src/ii42_prefix_cow.h',
-            'II42_PREFIX_COW_NODE_MAX_CHILDREN',
+            'src/evoke_prefix_cow.h',
+            'EVOKE_PREFIX_COW_NODE_MAX_CHILDREN',
             'internal nodes at most {value} child',
         ),
         (
-            'src/ii42_segments.h',
-            'II42_SEGMENT_MANIFEST_VERSION',
+            'src/evoke_segments.h',
+            'EVOKE_SEGMENT_MANIFEST_VERSION',
             'current manifest writer emits version {value}',
         ),
         (
-            'src/ii42_segments.h',
-            'II42_TERM_DIRECTORY_MAX_EXTENTS_PER_TERM',
+            'src/evoke_segments.h',
+            'EVOKE_TERM_DIRECTORY_MAX_EXTENTS_PER_TERM',
             'At most {value} extents per term',
         ),
     ),
@@ -153,9 +153,9 @@ def test_convergent_storage_limits_match_source(
 
 
 def test_maintenance_reclaim_threshold_matches_source() -> None:
-    implementation = (REPO_ROOT / 'src/ii42_am.c').read_text(encoding='utf-8')
+    implementation = (REPO_ROOT / 'src/evoke_am.c').read_text(encoding='utf-8')
     match = re.search(
-        r'^#define II42_AM_RECLAIM_RETIRED_RANGE_THRESHOLD '
+        r'^#define EVOKE_AM_RECLAIM_RETIRED_RANGE_THRESHOLD '
         r'UINT32_C\((\d+)\)$',
         implementation,
         re.M,
@@ -185,8 +185,8 @@ def test_engineering_archive_preserves_and_indexes_reports(name: str) -> None:
 @pytest.mark.parametrize(
     'relative',
     (
-        'docs/research-sae/reports/designs/ii42-rebrand-plan.md',
-        'docs/research-sae/reports/designs/ii42-sae-productization-plan.md',
+        'docs/research-sae/reports/designs/evoke-rebrand-plan.md',
+        'docs/research-sae/reports/designs/evoke-sae-productization-plan.md',
         'docs/performance/reports/maintenance-pre-merge-review.md',
         'docs/performance/reports/maintenance-final-status.md',
     ),

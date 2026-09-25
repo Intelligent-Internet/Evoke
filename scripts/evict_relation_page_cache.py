@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evict one isolated II42 relation from the Linux page cache."""
+"""Evict one isolated Evoke relation from the Linux page cache."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             'Checkpoint one isolated PostgreSQL instance, evict only the '
-            'target II42 relation main fork, and record mincore evidence.'
+            'target Evoke relation main fork, and record mincore evidence.'
         ),
     )
     parser.add_argument('--dsn', required=True)
@@ -65,12 +65,12 @@ def extension_schema(connection: psycopg.Connection[Any]) -> str:
             FROM pg_extension AS extension
             JOIN pg_namespace AS namespace
               ON namespace.oid = extension.extnamespace
-            WHERE extension.extname = 'ii42'
+            WHERE extension.extname = 'evoke'
             """
         )
         row = cursor.fetchone()
     if row is None:
-        raise RuntimeError('ii42 is not installed')
+        raise RuntimeError('evoke is not installed')
     return catalog_text(row[0])
 
 
@@ -219,8 +219,8 @@ def relation_details(
         raise RuntimeError('target index does not exist')
     relkind = catalog_text(row[1])
     access_method = catalog_text(row[2])
-    if relkind != 'i' or access_method != 'ii42':
-        raise RuntimeError('target relation is not an II42 index')
+    if relkind != 'i' or access_method != 'evoke':
+        raise RuntimeError('target relation is not an Evoke index')
     return {
         'oid': int(row[0]),
         'relkind': relkind,
@@ -363,13 +363,13 @@ def main() -> int:
         generation_before = call_json(
             connection,
             schema,
-            'ii42_index_generation_status_internal',
+            'evoke_index_generation_status_internal',
             args.index,
         )
         runtime_before = call_json(
             connection,
             schema,
-            'ii42_index_runtime_state_json',
+            'evoke_index_runtime_state_json',
             args.index,
         )
         if generation_before.get('valid') is not True:
@@ -396,13 +396,13 @@ def main() -> int:
         generation_after = call_json(
             connection,
             schema_after,
-            'ii42_index_generation_status_internal',
+            'evoke_index_generation_status_internal',
             args.index,
         )
         runtime_after = call_json(
             connection,
             schema_after,
-            'ii42_index_runtime_state_json',
+            'evoke_index_runtime_state_json',
             args.index,
         )
     stable = publication_stable(
@@ -434,7 +434,7 @@ def main() -> int:
         )
     )
     output = {
-        'schema': 'ii42_relation_page_cache_eviction_v1',
+        'schema': 'evoke_relation_page_cache_eviction_v1',
         'started_at_epoch': started,
         'finished_at_epoch': time.time(),
         'guard': guard,

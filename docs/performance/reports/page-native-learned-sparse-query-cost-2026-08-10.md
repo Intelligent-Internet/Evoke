@@ -102,12 +102,12 @@ level; it cannot be the final pruning unit.
 The raw read-only result is retained outside the repository at:
 
 ```text
-/tmp/ii42-shadow-pubmed-machine-learning-block-cost-20260810.json
+/tmp/evoke-shadow-pubmed-machine-learning-block-cost-20260810.json
 ```
 
 ## Implemented Exact Structure
 
-The new `ii42_semantic_bmp` module builds a signed, exact block-forward index:
+The new `evoke_semantic_bmp` module builds a signed, exact block-forward index:
 
 - b16 document blocks;
 - b256 superblocks containing 16 b16 blocks;
@@ -246,7 +246,7 @@ The size is intentionally disqualifying evidence for the dual format: this
 medium corpus already demonstrates that appending a full forward BMP copy to
 the legacy exact stream is not a product storage answer.
 
-Six public `ii42_query(...)` queries were compared with BMP routing enabled
+Six public `evoke_query(...)` queries were compared with BMP routing enabled
 and with the legacy exact scorer forced. The guarded and legacy top-100 rows
 were identical for every query. All six queries contained only 0.3-0.6 million
 semantic postings, so the production route now rejects BMP before allocating
@@ -264,9 +264,9 @@ preserving forced-path coverage in integration tests.
 The raw evidence is retained outside the repository:
 
 ```text
-/tmp/ii42-fiqa-semantic-bmp-ab-20260810.json
-/tmp/ii42-fiqa-public-search-ab-route-v2-20260810.json
-/tmp/ii42-fiqa-public-search-ab-min-work-v3-20260810.json
+/tmp/evoke-fiqa-semantic-bmp-ab-20260810.json
+/tmp/evoke-fiqa-public-search-ab-route-v2-20260810.json
+/tmp/evoke-fiqa-public-search-ab-min-work-v3-20260810.json
 ```
 
 ### Query-local coarse-directory reuse
@@ -397,8 +397,8 @@ outward-quantized bounds. A caller-owned `serialize_into` path also lets the
 publication layer write into its final immutable buffer without another
 serialized copy.
 
-The page publication caller invokes `ii42_segment_payload_serialize()`
-directly; it does not call `ii42_segment_payload_serialized_size()` first.
+The page publication caller invokes `evoke_segment_payload_serialize()`
+directly; it does not call `evoke_segment_payload_serialized_size()` first.
 Consequently the standalone size API cannot create a second publication
 prepass. Delta-width discovery remains bounded to the current term's runs
 inside the one publication operation rather than rebuilding or re-inferring
@@ -505,7 +505,7 @@ slots. Its top-k matched the complete snapshot oracle. Both routes consumed the
 same v7 packed stream.
 
 Ten representative FIQA-style queries were each run three times through the
-public `ii42_query(...)` entrypoint after restart. The warm end-to-end
+public `evoke_query(...)` entrypoint after restart. The warm end-to-end
 distribution was:
 
 | Samples | p50 | p95 | Minimum | Maximum |
@@ -606,7 +606,7 @@ abs(score_exact(q, d) - score_approx(q, d)) <= E(q)
 Eligible terms are ordered by logical postings saved per unit of absolute
 error bound. Lexical terms are never omitted. Missing or incompatible BMP
 metadata fails closed, and any mutable L0 projection disables approximation.
-The hidden `ii42.test_query_semantic_error_budget_ratio` A/B control defaults
+The hidden `evoke.test_query_semantic_error_budget_ratio` A/B control defaults
 to zero, so the public product path remains exact.
 
 Three fixed budgets were evaluated, without a threshold search. Full qrels
@@ -722,7 +722,7 @@ has been demonstrated directly on learned sparse indexes
 a strong candidate set by reading a bounded impact-ordered prefix and then
 completing candidate scores with exact lookups; pair prefixes improve the
 moderate-budget regime, while full score completion is important for quality
-([SPRAWL](https://www.pinecone.io/research/SIGIR25c.pdf)). II42 can test the
+([SPRAWL](https://www.pinecone.io/research/SIGIR25c.pdf)). Evoke can test the
 same principle without introducing a second authority. The current hot-fold
 payload is lexical-impact-only, so it cannot directly supply P2 semantic
 candidates. Its root-versioned shared-cache lifecycle and posting-heat policy
@@ -867,7 +867,7 @@ only if native validation exposes row-level harm that candidate completion
 alone cannot repair.
 
 The standalone Seismic index includes its own forward score store. Space-C
-used about 171 MB on FIQA, 96 MB on SciDocs, and 296 MB on TREC-COVID. II42
+used about 171 MB on FIQA, 96 MB on SciDocs, and 296 MB on TREC-COVID. Evoke
 must not copy that score authority: the product accelerator may store only
 cluster summaries and candidate document references, while exact candidate
 scores come from the existing packed v7 stream. A DotVByte variant reduced the
@@ -876,7 +876,7 @@ under the tested setting; that trade is rejected for the first product slice.
 
 ### Native prototype and lifecycle boundary
 
-`ii42_semantic_accelerator` is the derived metadata and query module used by
+`evoke_semantic_accelerator` is the derived metadata and query module used by
 the PostgreSQL extension. It has checksummed little-endian term, directory,
 and forward formats; sorted term ownership; outward-quantized maximum
 summaries; bounded document deduplication; and an exact-score callback.
@@ -901,7 +901,7 @@ binary-search scorer.
 The maintenance worker builds the accelerator only from a sealed, converged
 root, without rerunning the encoder. Before loading the sealed snapshot it
 estimates workspace from physical postings, logical postings, and document
-slots, and applies `ii42.maintenance_rebuild_memory_budget`. An insufficient
+slots, and applies `evoke.maintenance_rebuild_memory_budget`. An insufficient
 budget returns `accelerator_memory_budget`, leaves the exact root readable,
 does not busy-loop an immediate work hint, and is retried by periodic
 reconciliation after capacity changes. A successful root change invalidates
@@ -1068,9 +1068,9 @@ can become a product route.
 The retained raw A/B evidence is outside the repository:
 
 ```text
-/Volumes/Betty/Tmp/ii42-fiqa-accelerator-v8.json
-/Volumes/Betty/Tmp/ii42-fiqa-accelerator-v15-reuse.json
-/tmp/ii42-product-v15-rss-smoke.json
+/Volumes/Betty/Tmp/evoke-fiqa-accelerator-v8.json
+/Volumes/Betty/Tmp/evoke-fiqa-accelerator-v15-reuse.json
+/tmp/evoke-product-v15-rss-smoke.json
 ```
 
 The product integration is a root-versioned, disposable accelerator for a
@@ -1313,7 +1313,7 @@ The next PubMed/ArXiv build must use an isolated out-of-place index and the
 normal convergent lifecycle. It is not necessary to minimize index bytes or
 one-time build duration before query qualification. The required sequence is:
 
-1. Set `ii42.maintenance_rebuild_memory_budget` to a deliberate host budget.
+1. Set `evoke.maintenance_rebuild_memory_budget` to a deliberate host budget.
    Record the estimator, PostgreSQL backend peak RSS, runtime-server peak RSS,
    elapsed encoder time, and accelerator publication time separately. The
    product benchmark samples the build backend and runtime workers during
@@ -1389,7 +1389,7 @@ loss function.
   geometric clusters, sparse maximum summaries, static posting pruning, and
   candidate score completion. The
   [official implementation](https://github.com/TusKANNy/seismic) is used only
-  as the external representation oracle; II42 must retain its own root and
+  as the external representation oracle; Evoke must retain its own root and
   lifecycle contract.
 - [SeismicWave](https://arxiv.org/abs/2408.04443) supports ordered cluster
   traversal and optional kNN expansion. Only ordered traversal is present in
@@ -1397,10 +1397,10 @@ loss function.
   maintenance gate.
 - [Bridging Dense and Sparse MIPS](https://arxiv.org/abs/2309.09013) motivates
   sparse IVF and cluster pruning, but the FIQA audit rejects one corpus-global
-  IVF as the II42 product structure.
+  IVF as the Evoke product structure.
 - [Anytime Ranking](https://arxiv.org/abs/2104.08976) supports query-time
-  latency/quality policies over document-ordered topical ranges. II42 exposes
+  latency/quality policies over document-ordered topical ranges. Evoke exposes
   a bounded policy instead of pretending that an approximate route is exact.
 - The [official BMP implementation](https://github.com/pisa-engine/BMP) is the
-  closest implementation reference. II42 must still adapt the design to
+  closest implementation reference. Evoke must still adapt the design to
   PostgreSQL MVCC, convergent segments, folds, and exact fallback.

@@ -93,7 +93,7 @@ def main() -> int:
         for row in rows:
             started = time.perf_counter()
             payload = conn.execute(
-                'SELECT ii42_runtime_service_query_atoms(%s, %s)',
+                'SELECT evoke_runtime_service_query_atoms(%s, %s)',
                 (str(args.model_path), row['text']),
             ).fetchone()[0]
             wall_latencies.append((time.perf_counter() - started) * 1000.0)

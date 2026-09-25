@@ -1,13 +1,13 @@
 *
 !Makefile
 !CMakeLists.txt
-!ii42.control
+!evoke.control
 !LICENSE
 !README.md
 !src/
 !src/**
 !sql/
-!sql/ii42--*.sql
+!sql/evoke--*.sql
 !packaging/
 !packaging/onnxruntime.version
 !packaging/onnxruntime.sha256

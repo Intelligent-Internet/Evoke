@@ -6,7 +6,7 @@ Status: local read-only experiment; not a product default
 
 ## Question
 
-Can an II42 query omit semantic atoms whose posting lists cover most of the
+Can an Evoke query omit semantic atoms whose posting lists cover most of the
 corpus because those atoms contribute little ranking discrimination?
 
 The useful version of the hypothesis is not a global high-DF blacklist. It is
@@ -20,7 +20,7 @@ a query-aware admission rule for semantic atoms that combine:
 ## Safety boundary
 
 The experiment used the installed local PostgreSQL 18 instance and existing
-v3 II42 indexes. It did not rebuild or mutate an index, change a catalog, alter
+v3 Evoke indexes. It did not rebuild or mutate an index, change a catalog, alter
 the Shadow rebuild, or modify the public query contract. All A/B controls were
 session-local hidden test GUCs.
 
@@ -36,8 +36,8 @@ research controls; none remains as an additional runtime authority.
 
 | Surface | Documents | Queries | Index |
 | --- | ---: | ---: | --- |
-| FIQA official | 57,638 | 648 | `ii42_beir15.docs_fiqa_bm25_idx` |
-| NFCorpus official | 3,633 | 323 | `ii42_beir15.docs_nfcorpus_bm25_idx` |
+| FIQA official | 57,638 | 648 | `evoke_beir15.docs_fiqa_bm25_idx` |
+| NFCorpus official | 3,633 | 323 | `evoke_beir15.docs_nfcorpus_bm25_idx` |
 
 SciFact was intentionally not rebuilt for this side experiment. Its local
 index still used obsolete metapage v2 and the current runtime correctly
@@ -342,7 +342,7 @@ inference or a root rebuild. The native A/B results are:
 | TREC 50, v4 int8 m64 | 136.51 | 153.34 | 160.17 | 0.9834 | 0.92 |
 
 After promoting the route and restarting Shadow with the installed product
-binary, the same fixed workloads were repeated through `ii42_query` with no
+binary, the same fixed workloads were repeated through `evoke_query` with no
 accelerator tuning GUCs. This checks the actual session defaults rather than a
 manually reconstructed preset:
 

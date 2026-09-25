@@ -3,11 +3,11 @@
 Date: 2026-03-23
 
 This note reviews [`paradedb/paradedb`](https://github.com/paradedb/paradedb)
-from the perspective of `ii42`.
+from the perspective of `evoke`.
 
 The goal is not to reproduce ParadeDB's architecture. The goal is to identify
 what is genuinely useful for a `bm25s`-aligned PostgreSQL extension and
-separate that from ideas that would pull `ii42` away from its current
+separate that from ideas that would pull `evoke` away from its current
 design goals.
 
 ## Scope
@@ -35,7 +35,7 @@ ParadeDB is not a `bm25s` port. It is a broader PostgreSQL search and
 analytics system built around `pg_search`, `pgrx`, Tantivy, custom scan
 hooks, and a BM25 covering index.
 
-That distinction matters. `ii42` is centered on a `bm25s`-aligned C
+That distinction matters. `evoke` is centered on a `bm25s`-aligned C
 core with PostgreSQL-native persistence and explicit SQL retrieval APIs.
 ParadeDB is centered on a broader operator-driven and planner-driven search
 system, with heavier control over planning and execution.
@@ -68,7 +68,7 @@ The lesson is that a mature search extension benefits from having:
 - multiple SQL entry points layered on top of it
 - a clear distinction between convenience syntax and exact execution
 
-This is useful to `ii42`. We already have a real raw-query AST and a
+This is useful to `evoke`. We already have a real raw-query AST and a
 canonical `rowset` path. ParadeDB reinforces that the next useful step
 is not more ad hoc operators, but better prepared and index-bound query
 values, plus cleaner API layering around the existing core.
@@ -91,7 +91,7 @@ The implementation side also reflects this priority:
 - filter pushdown and sort requirements are part of the design, not an
   afterthought
 
-For `ii42`, the useful lesson is not "adopt ParadeDB's custom scan
+For `evoke`, the useful lesson is not "adopt ParadeDB's custom scan
 stack". The useful lesson is:
 
 - make filtered ranked scans a first-class optimization target
@@ -108,7 +108,7 @@ non-text fields and certain literal-tokenized text fields.
 This matters because the common real-world query is not just "search, then
 rank". It is "search, filter, sort, limit".
 
-`ii42` already moved in this direction with:
+`evoke` already moved in this direction with:
 
 - index-aware `@@`
 - combined `@@` plus ordered `<=>` scan support
@@ -133,7 +133,7 @@ ParadeDB documents:
 This is one of the strongest non-code aspects of the project. A mature search
 extension needs not only a fast engine, but also clear operational guidance.
 
-For `ii42`, this suggests two worthwhile directions:
+For `evoke`, this suggests two worthwhile directions:
 
 - better performance-path observability and explainability
 - clearer documentation around read/write tradeoffs and future mutable-index
@@ -150,7 +150,7 @@ The best ParadeDB API ideas are not the symbols themselves. They are:
 This matters because corpus-dependent ranking semantics are easier to reason
 about when the query can explicitly name or bind an index context.
 
-This aligns closely with a future `ii42` direction:
+This aligns closely with a future `evoke` direction:
 
 - prepared query values
 - index-bound query values
@@ -164,16 +164,16 @@ ParadeDB's engine is built around Tantivy and a different storage and
 execution model. That is not a small implementation detail. It is a
 different system.
 
-`ii42` should not absorb this by degrees until it silently stops being a
+`evoke` should not absorb this by degrees until it silently stops being a
 `bm25s`-aligned PostgreSQL port.
 
 ### 2. Do not adopt the full custom-scan takeover model
 
-ParadeDB uses custom scans much more aggressively than `ii42`.
+ParadeDB uses custom scans much more aggressively than `evoke`.
 That makes sense for ParadeDB's goals, but it would be too disruptive as a
 default direction for this project.
 
-`ii42` should learn from ParadeDB's filtered Top-K and planner
+`evoke` should learn from ParadeDB's filtered Top-K and planner
 observability ideas, but it should not blindly inherit a large custom scan
 stack unless there is a clear, measured gain that the current AM path cannot
 achieve.
@@ -184,7 +184,7 @@ ParadeDB's covering BM25 index is a coherent choice for its system, but it
 comes with strong schema coupling and reindex requirements.
 
 That model is not obviously wrong, but it is not an automatic fit for
-`ii42`, whose current strength is a narrower, more explicit, and more
+`evoke`, whose current strength is a narrower, more explicit, and more
 portable `bm25s`-aligned design.
 
 ### 4. Do not adopt operator semantics that depend on planner rewriting
@@ -193,7 +193,7 @@ Some ParadeDB operators are really planner-rewrite entry points and panic if
 they are evaluated directly in the wrong shape.
 
 That is acceptable inside ParadeDB's architecture, but it is not a good
-semantic model for `ii42`. Our SQL surfaces should stay explicit about
+semantic model for `evoke`. Our SQL surfaces should stay explicit about
 which path is canonical and should degrade in a controlled, documented way
 rather than rely on planner-only magic.
 
@@ -202,11 +202,11 @@ rather than rely on planner-only magic.
 ParadeDB's tokenizer surface is broad and powerful. That is a strength.
 But it comes with a heavier dependency story.
 
-`ii42` can learn from the idea of tokenizer profiles and richer
+`evoke` can learn from the idea of tokenizer profiles and richer
 normalization objects without making a large external tokenizer stack a hard
 dependency.
 
-## Net Assessment For `ii42`
+## Net Assessment For `evoke`
 
 ParadeDB is valuable mainly in four areas:
 
@@ -234,7 +234,7 @@ The main things to reject are:
 
 ## Resulting Direction
 
-After comparing ParadeDB to the current `ii42` design, the right
+After comparing ParadeDB to the current `evoke` design, the right
 strategy is:
 
 - keep the existing `bm25s`-aligned C core

@@ -15,7 +15,7 @@ from typing import Any
 
 import psycopg
 
-from ii42_test_support import (
+from evoke_test_support import (
     REPO_ROOT,
     create_short_socket_root,
     ensure_temp_root,
@@ -30,7 +30,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             'Verify side-by-side source-table migration from psql_bm25s '
-            'to the current ii42 index.'
+            'to the current evoke index.'
         ),
     )
     parser.add_argument(
@@ -51,7 +51,7 @@ def parse_args() -> argparse.Namespace:
         '--extension-libdir',
         type=Path,
         help=(
-            'Directory containing the staged current ii42 shared library. '
+            'Directory containing the staged current evoke shared library. '
             'Must be supplied with --extension-control-dir.'
         ),
     )
@@ -60,7 +60,7 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help=(
             'Staged PostgreSQL share or extension directory containing '
-            'ii42.control. Must be supplied with --extension-libdir.'
+            'evoke.control. Must be supplied with --extension-libdir.'
         ),
     )
     parser.add_argument(
@@ -140,7 +140,7 @@ def new_hits(conn: psycopg.Connection[Any], query: str) -> list[Hit]:
     rows = conn.execute(
         '''
         SELECT docs.id, hit.score
-        FROM ii42_ext.ii42_query(
+        FROM evoke_ext.evoke_query(
             'docs_new_idx'::regclass,
             %s,
             100
@@ -192,10 +192,10 @@ def require_current_index(
     conn: psycopg.Connection[Any],
 ) -> dict[str, Any]:
     row = conn.execute(
-        "SELECT ii42_ext.ii42_index_status('docs_new_idx'::regclass)"
+        "SELECT evoke_ext.evoke_index_status('docs_new_idx'::regclass)"
     ).fetchone()
     if row is None or not isinstance(row[0], dict):
-        raise AssertionError('current ii42 index status is unavailable')
+        raise AssertionError('current evoke index status is unavailable')
     status = row[0]
     generation = status.get('generation')
     if (
@@ -207,7 +207,7 @@ def require_current_index(
         or generation.get('atomic') is not True
         or generation.get('valid') is not True
     ):
-        raise AssertionError(f'current ii42 index is not ready: {status}')
+        raise AssertionError(f'current evoke index is not ready: {status}')
     return status
 
 
@@ -240,7 +240,7 @@ def require_converged_current_index(
     status = require_current_index(conn)
     if not current_index_is_converged(status, expected_docs):
         raise AssertionError(
-            f'current ii42 index is not converged: {status}'
+            f'current evoke index is not converged: {status}'
         )
     return status
 
@@ -256,14 +256,14 @@ def maintain_current_index_until_converged(
         if current_index_is_converged(status, expected_docs):
             return status, phases
         row = conn.execute(
-            "SELECT ii42_ext.ii42_index_maintain("
+            "SELECT evoke_ext.evoke_index_maintain("
             "'docs_new_idx'::regclass)"
         ).fetchone()
         phases.append(str(row[0]) if row is not None else '<no result>')
 
     status = require_current_index(conn)
     raise AssertionError(
-        'current ii42 index did not converge after '
+        'current evoke index did not converge after '
         f'{max_attempts} maintenance phases: phases={phases}, '
         f'status={status}'
     )
@@ -338,17 +338,17 @@ def main() -> None:
             args.extension_control_dir
         )
         target_libraries = [
-            target_libdir / name for name in ('ii42.so', 'ii42.dylib')
+            target_libdir / name for name in ('evoke.so', 'evoke.dylib')
         ]
         if not any(path.is_file() for path in target_libraries):
             raise FileNotFoundError(
-                f'current ii42 library is missing from {target_libdir}'
+                f'current evoke library is missing from {target_libdir}'
             )
         if not (
-            target_sharedir / 'extension' / 'ii42.control'
+            target_sharedir / 'extension' / 'evoke.control'
         ).is_file():
             raise FileNotFoundError(
-                'current ii42 control file is missing below '
+                'current evoke control file is missing below '
                 f'{target_sharedir}'
             )
     escaped_source_libdir = str(source_libdir).replace("'", "''")
@@ -369,11 +369,11 @@ def main() -> None:
     temp_root = ensure_temp_root(args.temp_root)
     root = Path(
         tempfile.mkdtemp(
-            prefix='ii42_source_migration_',
+            prefix='evoke_source_migration_',
             dir=temp_root,
         )
     )
-    socket_root = create_short_socket_root('ii42_source_migration_socket_')
+    socket_root = create_short_socket_root('evoke_source_migration_socket_')
     data_dir = root / 'data'
     socket_dir = socket_root / 's'
     log_path = root / 'postgres.log'
@@ -384,7 +384,7 @@ def main() -> None:
     )
     started = False
     summary: dict[str, Any] = {
-        'api_version': 'ii42_index_v1',
+        'api_version': 'evoke_index_v1',
         'suite': 'psql_bm25s_source_table_migration',
         'checks': {},
         'passed': False,
@@ -421,7 +421,7 @@ def main() -> None:
         append_config(
             data_dir / 'postgresql.conf',
             [
-                "shared_preload_libraries = 'ii42'",
+                "shared_preload_libraries = 'evoke'",
                 (
                     "dynamic_library_path = '"
                     f"{dynamic_library_path}'"
@@ -453,29 +453,29 @@ def main() -> None:
                 '''
                 SELECT name::text
                 FROM pg_available_extensions
-                WHERE name IN ('ii42', 'psql_bm25s')
+                WHERE name IN ('evoke', 'psql_bm25s')
                 ORDER BY name
                 '''
             ).fetchall()
             available_names = [str(row[0]) for row in available]
             if available_names != [
-                'ii42',
+                'evoke',
                 'psql_bm25s',
             ]:
                 raise RuntimeError(
-                    'both ii42 and psql_bm25s extension packages are '
+                    'both evoke and psql_bm25s extension packages are '
                     'required for this migration smoke; found '
                     f'{available_names}'
                 )
             conn.execute(
                 'CREATE EXTENSION psql_bm25s WITH SCHEMA public'
             )
-            conn.execute('CREATE SCHEMA ii42_ext')
+            conn.execute('CREATE SCHEMA evoke_ext')
             conn.execute(
-                'CREATE EXTENSION ii42 WITH SCHEMA ii42_ext'
+                'CREATE EXTENSION evoke WITH SCHEMA evoke_ext'
             )
             old_version = extension_version(conn, 'psql_bm25s')
-            new_version = extension_version(conn, 'ii42')
+            new_version = extension_version(conn, 'evoke')
 
             conn.execute(
                 '''
@@ -501,7 +501,7 @@ def main() -> None:
             conn.execute(
                 '''
                 CREATE INDEX CONCURRENTLY docs_new_idx
-                ON docs USING ii42 (body)
+                ON docs USING evoke (body)
                 WITH (sae = false)
                 '''
             )
@@ -523,7 +523,7 @@ def main() -> None:
             conn.execute(
                 '''
                 CREATE INDEX CONCURRENTLY docs_new_idx
-                ON docs USING ii42 (body)
+                ON docs USING evoke (body)
                 WITH (sae = false)
                 '''
             )
@@ -567,9 +567,9 @@ def main() -> None:
             conn.execute('DROP EXTENSION psql_bm25s')
             if relation_exists(conn, 'docs_old_idx'):
                 raise AssertionError('old index remains after cutover')
-            if extension_version(conn, 'ii42') != new_version:
+            if extension_version(conn, 'evoke') != new_version:
                 raise AssertionError(
-                    'dropping psql_bm25s changed the ii42 extension'
+                    'dropping psql_bm25s changed the evoke extension'
                 )
             require_converged_current_index(conn, expected_docs=4)
             if new_hits(conn, updated_query) != current_cutover_hits:

@@ -14,7 +14,7 @@ from typing import Any
 
 import psycopg
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 from test_onnxruntime_smoke import REPO_ROOT
 from test_runtime_service_temp_pg import runtime_service_sql, run
 
@@ -54,7 +54,7 @@ def parse_args() -> argparse.Namespace:
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share directory containing extension/ii42.control, '
+            'PostgreSQL share directory containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -63,7 +63,7 @@ def parse_args() -> argparse.Namespace:
 
 def fetch_status(conn: psycopg.Connection[Any]) -> dict[str, Any]:
     with conn.cursor() as cur:
-        cur.execute('SELECT ii42_runtime_service_status()')
+        cur.execute('SELECT evoke_runtime_service_status()')
         row = cur.fetchone()
     if row is None:
         raise AssertionError('runtime status returned no row')
@@ -86,7 +86,7 @@ def setup_runtime_cluster(
     run([str(initdb), '-D', str(data_dir), '-A', 'trust'])
     escaped_model_path = str(model_path).replace("'", "''")
     with (data_dir / 'postgresql.conf').open('a', encoding='utf-8') as handle:
-        handle.write("\nshared_preload_libraries = 'ii42'\n")
+        handle.write("\nshared_preload_libraries = 'evoke'\n")
         if extension_libdir is not None:
             libdir = str(extension_libdir).replace("'", "''")
             handle.write(
@@ -101,13 +101,13 @@ def setup_runtime_cluster(
                 f'{control_dir}:$system'
                 "'\n"
             )
-        handle.write("ii42.shared_runtime_size = '64MB'\n")
-        handle.write(f"ii42.sae_model_path = '{escaped_model_path}'\n")
-        handle.write("ii42.control_database = 'template1'\n")
-        handle.write('ii42.runtime_worker_count = 2\n')
+        handle.write("evoke.shared_runtime_size = '64MB'\n")
+        handle.write(f"evoke.sae_model_path = '{escaped_model_path}'\n")
+        handle.write("evoke.control_database = 'template1'\n")
+        handle.write('evoke.runtime_worker_count = 2\n')
         handle.write("listen_addresses = ''\n")
         handle.write('max_worker_processes = 16\n')
-        handle.write("ii42.maintenance_timer_interval_ms = '1000ms'\n")
+        handle.write("evoke.maintenance_timer_interval_ms = '1000ms'\n")
 
     run([
         str(pg_ctl),
@@ -200,7 +200,7 @@ def product_query_rows(
         cur.execute(
             """
             SELECT doc_id
-            FROM ii42_query(
+            FROM evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha semantic optimization runtime restart',
                 3
@@ -224,7 +224,7 @@ def run_long_runtime_batch(dsn: str, model_path: Path) -> None:
     with psycopg.connect(dsn, autocommit=True) as conn:
         with conn.cursor() as cur:
             cur.execute(
-                'SELECT ii42_runtime_service_document_atoms_batch(%s, %s)',
+                'SELECT evoke_runtime_service_document_atoms_batch(%s, %s)',
                 (str(model_path), texts),
             )
             cur.fetchone()
@@ -271,7 +271,7 @@ def main() -> None:
     pg_bin = Path(args.pg_bin)
     pg_ctl = pg_bin / 'pg_ctl'
 
-    with tempfile.TemporaryDirectory(prefix='ii42_runtime_restart_') as tmp:
+    with tempfile.TemporaryDirectory(prefix='evoke_runtime_restart_') as tmp:
         root = Path(tmp)
         data_dir = root / 'data'
         socket_dir = root / 'socket'

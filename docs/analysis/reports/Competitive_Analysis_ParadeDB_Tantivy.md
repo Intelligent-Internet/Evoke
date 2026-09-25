@@ -4,17 +4,17 @@ Date: 2026-04-02
 
 This note reviews
 [`paradedb/tantivy`](https://github.com/paradedb/tantivy) from the
-perspective of `ii42`.
+perspective of `evoke`.
 
-The goal is not to reproduce Tantivy or turn `ii42` into a Lucene-style
+The goal is not to reproduce Tantivy or turn `evoke` into a Lucene-style
 segment engine. The goal is to identify where Tantivy's speed comes from,
 separate inherited Tantivy strengths from ParadeDB-specific changes, and
 record what is worth learning.
 
 The initial version of this note was based on source inspection only.
-It now also records the follow-up `ii42` branch exploration, the
+It now also records the follow-up `evoke` branch exploration, the
 full local `main` vs branch validation, and the cloud PG18 rerun used
-to refresh the published `ii42` benchmark columns.
+to refresh the published `evoke` benchmark columns.
 
 ## Scope and Sources
 
@@ -65,7 +65,7 @@ The biggest performance levers visible in `paradedb/tantivy` are:
 5. block-oriented compression and SIMD-friendly inner loops in low-level data
    structures
 
-The most important competitive conclusion for `ii42` is:
+The most important competitive conclusion for `evoke` is:
 
 - Tantivy is fast because it is engineered as a complete search engine core,
   not because of one isolated trick.
@@ -264,11 +264,11 @@ For competitive analysis, this matters because it changes the lesson:
 - the relevant comparison target is not just ParadeDB's SQL APIs but also the
   broader Tantivy engine design underneath them
 
-## What `ii42` Can Learn
+## What `evoke` Can Learn
 
 ### 1. Specialize top-k harder
 
-Tantivy treats top-k as a dedicated algorithmic problem. `ii42` should
+Tantivy treats top-k as a dedicated algorithmic problem. `evoke` should
 continue moving in that direction for ranked scan paths.
 
 Useful directions:
@@ -282,7 +282,7 @@ Useful directions:
 Tantivy has a strong pattern of: if field layout enables a better path, use
 it explicitly.
 
-For `ii42`, the lesson is not "become a full fast-field engine". The
+For `evoke`, the lesson is not "become a full fast-field engine". The
 lesson is:
 
 - make execution-path dispatch more explicit
@@ -292,7 +292,7 @@ lesson is:
 ### 3. Improve filter/sort side-structure strategy
 
 Tantivy's range, sort, and filter story is strong because it has side
-structures designed for them. That suggests continued work on `ii42`
+structures designed for them. That suggests continued work on `evoke`
 side data for:
 
 - filtered top-k
@@ -304,7 +304,7 @@ without changing the core BM25 contract.
 ### 4. Keep storage-layout performance in scope
 
 Tantivy gains from compact readers, compact documents, buffered merge readers,
-and memory-mapped access. For `ii42`, this reinforces that:
+and memory-mapped access. For `evoke`, this reinforces that:
 
 - on-disk layout and deserialization shape are performance-critical
 - index loading and scan-start costs deserve just as much attention as pure
@@ -313,7 +313,7 @@ and memory-mapped access. For `ii42`, this reinforces that:
 ### 5. Separate worth learning from worth adopting
 
 Tantivy's whole design is coherent, but it is coherent for a segment-based
-search engine library. `ii42` should learn from:
+search engine library. `evoke` should learn from:
 
 - execution specialization
 - collector design
@@ -354,7 +354,7 @@ That is important because it confirms the code-reading conclusion:
 - the right lessons from Tantivy were execution specialization and bounded
   collectors
 - the wins came from narrowing candidate sets earlier and ranking less work
-- the wins did **not** require turning `ii42` into a segment engine
+- the wins did **not** require turning `evoke` into a segment engine
 
 The ideas that did **not** survive repeated validation were also revealing:
 
@@ -392,12 +392,12 @@ Compared code states:
 
 Aggregate outcome:
 
-- `ii42_ids`
+- `evoke_ids`
   - median query delta: `+18.60%`
   - mean query delta: `+20.98%`
   - wins: `14/15`
   - median build delta: `+2.69%`
-- `ii42_text`
+- `evoke_text`
   - median query delta: `+24.52%`
   - mean query delta: `+18.84%`
   - wins: `13/15`
@@ -493,10 +493,10 @@ correct reading is:
 
 After the local `main` vs branch validation was complete, the same
 branch was rerun on Google Cloud in the project PG18 matrix shape, but
-only for the two `ii42` paths:
+only for the two `evoke` paths:
 
-- `ii42_ids`
-- `ii42_text`
+- `evoke_ids`
+- `evoke_text`
 
 That rerun was then merged back into the existing project-wide PG18
 matrix by replacing only those `30` cells and carrying forward the other
@@ -510,12 +510,12 @@ Raw rerun data is archived in:
 
 Aggregate outcome versus the previously documented `2026-03-31` matrix:
 
-- `ii42_ids`
+- `evoke_ids`
   - median query delta: `+37.93%`
   - mean query delta: `+31.24%`
   - wins: `13/15`
   - median build delta: `-3.58%`
-- `ii42_text`
+- `evoke_text`
   - median query delta: `+16.12%`
   - mean query delta: `+27.62%`
   - wins: `15/15`
@@ -597,14 +597,14 @@ than this competitive-analysis thread:
 
 Those are still plausible performance directions, but they are larger
 design cycles in their own right. They should be evaluated as general
-`ii42` future work, not as one more extension of this Tantivy
+`evoke` future work, not as one more extension of this Tantivy
 study.
 
 ## Not Suitable for This Project
 
 ### 1. Do not turn into a Tantivy clone
 
-`ii42` is valuable partly because it remains a `bm25s`-aligned,
+`evoke` is valuable partly because it remains a `bm25s`-aligned,
 PostgreSQL-native extension with explicit SQL retrieval APIs. Replacing that
 with a Tantivy-shaped engine would dissolve the project into something else.
 
@@ -631,7 +631,7 @@ mature search-engine core with several reinforcing properties:
 - disciplined segment and merge engineering
 - low-level block and SIMD optimizations
 
-The most important competitive takeaway for `ii42` is therefore not
+The most important competitive takeaway for `evoke` is therefore not
 "reproduce Tantivy". It is:
 
 - keep the BM25 core contract
@@ -641,5 +641,5 @@ The most important competitive takeaway for `ii42` is therefore not
 - treat broader engine architecture differences as context, not a blueprint
 
 In short: Tantivy is fast mostly because it is an aggressively engineered
-search core. The useful lessons for `ii42` are execution specialization
+search core. The useful lessons for `evoke` are execution specialization
 and layout discipline, not wholesale architectural imitation.

@@ -2,7 +2,7 @@
   "created_at": "2026-04-02T21:48:00.179176+00:00",
   "official_source": "https://github.com/xhluca/bm25-benchmarks (BM25S single-threaded table)",
   "paths": [
-    "ii42_text"
+    "evoke_text"
   ],
   "results": {
     "arguana": {
@@ -15,7 +15,7 @@
         "tokens": 947471,
         "vocab_size": 22713
       },
-      "ii42_text": {
+      "evoke_text": {
         "build_bytes": 9158656,
         "build_ms": 167.5025070000089,
         "query": {
@@ -38,7 +38,7 @@
         "tokens": 318190131,
         "vocab_size": 3115002
       },
-      "ii42_text": {
+      "evoke_text": {
         "build_bytes": 2893324288,
         "build_ms": 91728.48343499993,
         "query": {
@@ -61,7 +61,7 @@
         "tokens": 44857487,
         "vocab_size": 873200
       },
-      "ii42_text": {
+      "evoke_text": {
         "build_bytes": 351059968,
         "build_ms": 9291.73428400003,
         "query": {
@@ -84,7 +84,7 @@
         "tokens": 162336259,
         "vocab_size": 2744583
       },
-      "ii42_text": {
+      "evoke_text": {
         "build_bytes": 1648541696,
         "build_ms": 45047.597964999964,
         "query": {
@@ -107,7 +107,7 @@
         "tokens": 318184332,
         "vocab_size": 3115013
       },
-      "ii42_text": {
+      "evoke_text": {
         "build_bytes": 2893283328,
         "build_ms": 94593.96311400007,
         "query": {
@@ -130,7 +130,7 @@
         "tokens": 5189073,
         "vocab_size": 59853
       },
-      "ii42_text": {
+      "evoke_text": {
         "build_bytes": 45744128,
         "build_ms": 1059.3052269999957,
         "query": {
@@ -153,7 +153,7 @@
         "tokens": 169530288,
         "vocab_size": 2549160
       },
-      "ii42_text": {
+      "evoke_text": {
         "build_bytes": 1705336832,
         "build_ms": 50378.30390499999,
         "query": {
@@ -176,7 +176,7 @@
         "tokens": 340859911,
         "vocab_size": 1431983
       },
-      "ii42_text": {
+      "evoke_text": {
         "build_bytes": 3222036480,
         "build_ms": 87827.69346700002,
         "query": {
@@ -199,7 +199,7 @@
         "tokens": 614081,
         "vocab_size": 19117
       },
-      "ii42_text": {
+      "evoke_text": {
         "build_bytes": 5029888,
         "build_ms": 113.11808300000337,
         "query": {
@@ -222,7 +222,7 @@
         "tokens": 148249812,
         "vocab_size": 892745
       },
-      "ii42_text": {
+      "evoke_text": {
         "build_bytes": 1449902080,
         "build_ms": 40803.48065899994,
         "query": {
@@ -245,7 +245,7 @@
         "tokens": 4202151,
         "vocab_size": 65377
       },
-      "ii42_text": {
+      "evoke_text": {
         "build_bytes": 55517184,
         "build_ms": 1064.5575770000023,
         "query": {
@@ -268,7 +268,7 @@
         "tokens": 3211248,
         "vocab_size": 58804
       },
-      "ii42_text": {
+      "evoke_text": {
         "build_bytes": 26664960,
         "build_ms": 633.0072209999997,
         "query": {
@@ -291,7 +291,7 @@
         "tokens": 812074,
         "vocab_size": 26559
       },
-      "ii42_text": {
+      "evoke_text": {
         "build_bytes": 6660096,
         "build_ms": 150.08957000000578,
         "query": {
@@ -314,7 +314,7 @@
         "tokens": 20231413,
         "vocab_size": 174893
       },
-      "ii42_text": {
+      "evoke_text": {
         "build_bytes": 161382400,
         "build_ms": 4605.911388999999,
         "query": {
@@ -337,7 +337,7 @@
         "tokens": 74180347,
         "vocab_size": 354228
       },
-      "ii42_text": {
+      "evoke_text": {
         "build_bytes": 512172032,
         "build_ms": 16510.605417999985,
         "query": {

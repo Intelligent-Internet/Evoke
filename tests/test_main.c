@@ -1,24 +1,24 @@
-#include "ii42_block_ranges.h"
-#include "ii42_core.h"
-#include "ii42_document_cow.h"
-#include "ii42_document_tid_lookup.h"
-#include "ii42_lexicon_cow.h"
-#include "ii42_prefix_cow.h"
-#include "ii42_posting_heat.h"
-#include "ii42_query.h"
-#include "ii42_semantic_accelerator.h"
-#include "ii42_semantic_accelerator_builder.h"
-#include "ii42_semantic_accelerator_directory.h"
-#include "ii42_semantic_bmp.h"
-#include "ii42_semantic_forward.h"
-#include "ii42_semantic_forward_bound.h"
-#include "ii42_semantic_impact_frontier.h"
-#include "ii42_scope.h"
-#include "ii42_segments.h"
-#include "ii42_storage.h"
-#include "ii42_term_cow.h"
-#include "ii42_text.h"
-#include "ii42_weighted_space_saving.h"
+#include "evoke_block_ranges.h"
+#include "evoke_core.h"
+#include "evoke_document_cow.h"
+#include "evoke_document_tid_lookup.h"
+#include "evoke_lexicon_cow.h"
+#include "evoke_prefix_cow.h"
+#include "evoke_posting_heat.h"
+#include "evoke_query.h"
+#include "evoke_semantic_accelerator.h"
+#include "evoke_semantic_accelerator_builder.h"
+#include "evoke_semantic_accelerator_directory.h"
+#include "evoke_semantic_bmp.h"
+#include "evoke_semantic_forward.h"
+#include "evoke_semantic_forward_bound.h"
+#include "evoke_semantic_impact_frontier.h"
+#include "evoke_scope.h"
+#include "evoke_segments.h"
+#include "evoke_storage.h"
+#include "evoke_term_cow.h"
+#include "evoke_text.h"
+#include "evoke_weighted_space_saving.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -39,11 +39,11 @@
 #define ASSERT_STATUS_OK(expr)                                                  \
     do                                                                          \
     {                                                                           \
-        ii42_status _status = (expr);                                     \
-        if (_status != II42_OK)                                           \
+        evoke_status _status = (expr);                                     \
+        if (_status != EVOKE_OK)                                           \
         {                                                                       \
             fprintf(stderr, "unexpected status at %s:%d: %s (%s)\n",            \
-                    __FILE__, __LINE__, #expr, ii42_strerror(_status));   \
+                    __FILE__, __LINE__, #expr, evoke_strerror(_status));   \
             exit(1);                                                            \
         }                                                                       \
     } while (0)
@@ -255,7 +255,7 @@ assert_uint32_array(
 
 static void
 assert_retired_ranges(
-    const ii42_block_range *ranges,
+    const evoke_block_range *ranges,
     size_t range_count,
     uint32_t high_watermark
 )
@@ -329,10 +329,10 @@ assert_uint32_array_present(
     assert_uint32_array(actual, expected, len);
 }
 
-static ii42_doc_ids
+static evoke_doc_ids
 make_doc(uint32_t *ids, size_t len)
 {
-    ii42_doc_ids doc;
+    evoke_doc_ids doc;
 
     doc.token_ids = ids;
     doc.len = len;
@@ -341,8 +341,8 @@ make_doc(uint32_t *ids, size_t len)
 
 static void
 assert_index_layout_equal(
-    const ii42_index *actual,
-    const ii42_index *expected
+    const evoke_index *actual,
+    const evoke_index *expected
 )
 {
     uint32_t i;
@@ -422,8 +422,8 @@ write_u64_le(uint8_t *dst, uint64_t value)
 
 static void
 initialize_test_object_ref(
-    ii42_segment_object_ref *ref,
-    ii42_segment_object_kind kind,
+    evoke_segment_object_ref *ref,
+    evoke_segment_object_kind kind,
     uint32_t start_block,
     uint32_t page_count,
     uint64_t manifest_id,
@@ -442,16 +442,16 @@ initialize_test_object_ref(
 
 static void
 initialize_test_document_directory(
-    ii42_segment_manifest *manifest,
+    evoke_segment_manifest *manifest,
     uint32_t start_block,
     uint64_t object_checksum
 )
 {
     manifest->flags |=
-        II42_SEGMENT_MANIFEST_FLAG_DOCUMENT_DIRECTORY;
+        EVOKE_SEGMENT_MANIFEST_FLAG_DOCUMENT_DIRECTORY;
     initialize_test_object_ref(
         &manifest->document_directory,
-        II42_SEGMENT_OBJECT_DOCUMENT_DIRECTORY,
+        EVOKE_SEGMENT_OBJECT_DOCUMENT_DIRECTORY,
         start_block,
         1,
         manifest->manifest_id,
@@ -460,17 +460,17 @@ initialize_test_document_directory(
 }
 
 static void
-initialize_test_segment_manifest(ii42_segment_manifest *manifest)
+initialize_test_segment_manifest(evoke_segment_manifest *manifest)
 {
-    ii42_segment_manifest_init(manifest);
+    evoke_segment_manifest_init(manifest);
     manifest->flags =
-        II42_SEGMENT_MANIFEST_FLAG_SAE |
-        II42_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY |
-        II42_SEGMENT_MANIFEST_FLAG_NEUTRAL_FOLD |
-        II42_SEGMENT_MANIFEST_FLAG_IMPACT_FOLD |
-        II42_SEGMENT_MANIFEST_FLAG_DOCUMENT_DIRECTORY |
-        II42_SEGMENT_MANIFEST_FLAG_LEXICON_LOOKUP |
-        II42_SEGMENT_MANIFEST_FLAG_PREFIX_LOOKUP;
+        EVOKE_SEGMENT_MANIFEST_FLAG_SAE |
+        EVOKE_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY |
+        EVOKE_SEGMENT_MANIFEST_FLAG_NEUTRAL_FOLD |
+        EVOKE_SEGMENT_MANIFEST_FLAG_IMPACT_FOLD |
+        EVOKE_SEGMENT_MANIFEST_FLAG_DOCUMENT_DIRECTORY |
+        EVOKE_SEGMENT_MANIFEST_FLAG_LEXICON_LOOKUP |
+        EVOKE_SEGMENT_MANIFEST_FLAG_PREFIX_LOOKUP;
     manifest->manifest_id = 9;
     manifest->parent_manifest_id = 8;
     manifest->max_sequence = 120;
@@ -485,7 +485,7 @@ initialize_test_segment_manifest(ii42_segment_manifest *manifest)
     manifest->vocab_size = 4;
     initialize_test_object_ref(
         &manifest->query_contract,
-        II42_SEGMENT_OBJECT_QUERY_CONTRACT,
+        EVOKE_SEGMENT_OBJECT_QUERY_CONTRACT,
         24,
         2,
         manifest->manifest_id,
@@ -493,7 +493,7 @@ initialize_test_segment_manifest(ii42_segment_manifest *manifest)
     );
     initialize_test_object_ref(
         &manifest->term_directory,
-        II42_SEGMENT_OBJECT_TERM_DIRECTORY,
+        EVOKE_SEGMENT_OBJECT_TERM_DIRECTORY,
         30,
         2,
         manifest->manifest_id,
@@ -501,7 +501,7 @@ initialize_test_segment_manifest(ii42_segment_manifest *manifest)
     );
     initialize_test_object_ref(
         &manifest->neutral_fold,
-        II42_SEGMENT_OBJECT_NEUTRAL_FOLD,
+        EVOKE_SEGMENT_OBJECT_NEUTRAL_FOLD,
         40,
         4,
         manifest->manifest_id,
@@ -509,7 +509,7 @@ initialize_test_segment_manifest(ii42_segment_manifest *manifest)
     );
     initialize_test_object_ref(
         &manifest->impact_fold,
-        II42_SEGMENT_OBJECT_IMPACT_FOLD,
+        EVOKE_SEGMENT_OBJECT_IMPACT_FOLD,
         50,
         4,
         manifest->manifest_id,
@@ -517,7 +517,7 @@ initialize_test_segment_manifest(ii42_segment_manifest *manifest)
     );
     initialize_test_object_ref(
         &manifest->document_directory,
-        II42_SEGMENT_OBJECT_DOCUMENT_DIRECTORY,
+        EVOKE_SEGMENT_OBJECT_DOCUMENT_DIRECTORY,
         56,
         2,
         manifest->manifest_id,
@@ -525,7 +525,7 @@ initialize_test_segment_manifest(ii42_segment_manifest *manifest)
     );
     initialize_test_object_ref(
         &manifest->lexicon_lookup,
-        II42_SEGMENT_OBJECT_LEXICON_LOOKUP,
+        EVOKE_SEGMENT_OBJECT_LEXICON_LOOKUP,
         58,
         1,
         manifest->manifest_id,
@@ -533,7 +533,7 @@ initialize_test_segment_manifest(ii42_segment_manifest *manifest)
     );
     initialize_test_object_ref(
         &manifest->prefix_lookup,
-        II42_SEGMENT_OBJECT_PREFIX_LOOKUP,
+        EVOKE_SEGMENT_OBJECT_PREFIX_LOOKUP,
         60,
         1,
         manifest->manifest_id,
@@ -582,9 +582,9 @@ initialize_test_segment_manifest(ii42_segment_manifest *manifest)
     manifest->segments[0].block_count = 8;
     manifest->segments[0].size_class = 2;
     manifest->segments[0].flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_LEXICAL |
-        II42_SEGMENT_FLAG_SEMANTIC;
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_LEXICAL |
+        EVOKE_SEGMENT_FLAG_SEMANTIC;
     manifest->segments[0].payload_bytes = 32768;
     manifest->segments[0].payload_owner_manifest_id =
         manifest->parent_manifest_id;
@@ -602,10 +602,10 @@ initialize_test_segment_manifest(ii42_segment_manifest *manifest)
     manifest->segments[1].start_block = 20;
     manifest->segments[1].block_count = 2;
     manifest->segments[1].flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_LEXICAL |
-        II42_SEGMENT_FLAG_PENDING |
-        II42_SEGMENT_FLAG_RETIREMENTS;
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_LEXICAL |
+        EVOKE_SEGMENT_FLAG_PENDING |
+        EVOKE_SEGMENT_FLAG_RETIREMENTS;
     manifest->segments[1].payload_bytes = 8192;
     manifest->segments[1].payload_owner_manifest_id =
         manifest->manifest_id;
@@ -614,47 +614,47 @@ initialize_test_segment_manifest(ii42_segment_manifest *manifest)
 static void
 test_block_range_inventory_classifies_physical_debt(void)
 {
-    const ii42_block_range retired_ranges[] = {
+    const evoke_block_range retired_ranges[] = {
         {5, 3},
         {10, 2}
     };
-    ii42_block_range_inventory inventory;
-    ii42_block_range_allocator allocator;
+    evoke_block_range_inventory inventory;
+    evoke_block_range_allocator allocator;
     uint32_t start_block = 0;
 
-    ii42_block_range_inventory_init(&inventory);
-    ii42_block_range_allocator_init(&allocator);
-    ASSERT_STATUS_OK(ii42_block_range_inventory_add(
+    evoke_block_range_inventory_init(&inventory);
+    evoke_block_range_allocator_init(&allocator);
+    ASSERT_STATUS_OK(evoke_block_range_inventory_add(
         &inventory,
         8,
         2
     ));
-    ASSERT_STATUS_OK(ii42_block_range_inventory_add(
+    ASSERT_STATUS_OK(evoke_block_range_inventory_add(
         &inventory,
         0,
         1
     ));
-    ASSERT_STATUS_OK(ii42_block_range_inventory_add(
+    ASSERT_STATUS_OK(evoke_block_range_inventory_add(
         &inventory,
         1,
         2
     ));
-    ASSERT_STATUS_OK(ii42_block_range_inventory_add(
+    ASSERT_STATUS_OK(evoke_block_range_inventory_add(
         &inventory,
         1,
         2
     ));
-    ASSERT_STATUS_OK(ii42_block_range_inventory_add(
+    ASSERT_STATUS_OK(evoke_block_range_inventory_add(
         &inventory,
         8,
         2
     ));
-    ASSERT_STATUS_OK(ii42_block_range_inventory_add(
+    ASSERT_STATUS_OK(evoke_block_range_inventory_add(
         &inventory,
         3,
         2
     ));
-    ASSERT_STATUS_OK(ii42_block_range_inventory_finalize(
+    ASSERT_STATUS_OK(evoke_block_range_inventory_finalize(
         &inventory,
         12
     ));
@@ -667,13 +667,13 @@ test_block_range_inventory_classifies_physical_debt(void)
     ASSERT_TRUE(inventory.reachable_block_count == 7);
     ASSERT_TRUE(inventory.interior_unreachable_block_count == 5);
     ASSERT_TRUE(inventory.highest_reachable_block_exclusive == 10);
-    ASSERT_STATUS_OK(ii42_block_range_allocator_build(
+    ASSERT_STATUS_OK(evoke_block_range_allocator_build(
         &inventory,
         &allocator
     ));
     ASSERT_TRUE(allocator.range_count == 2);
     ASSERT_TRUE(allocator.available_block_count == 5);
-    ASSERT_TRUE(ii42_block_range_allocator_allocate_best_fit(
+    ASSERT_TRUE(evoke_block_range_allocator_allocate_best_fit(
         &allocator,
         2,
         &start_block
@@ -681,7 +681,7 @@ test_block_range_inventory_classifies_physical_debt(void)
     ASSERT_TRUE(start_block == 10);
     ASSERT_TRUE(allocator.available_block_count == 3);
     ASSERT_TRUE(allocator.allocated_block_count == 2);
-    ASSERT_TRUE(ii42_block_range_allocator_allocate_best_fit(
+    ASSERT_TRUE(evoke_block_range_allocator_allocate_best_fit(
         &allocator,
         3,
         &start_block
@@ -689,77 +689,77 @@ test_block_range_inventory_classifies_physical_debt(void)
     ASSERT_TRUE(start_block == 5);
     ASSERT_TRUE(allocator.range_count == 0);
     ASSERT_TRUE(allocator.available_block_count == 0);
-    ASSERT_TRUE(!ii42_block_range_allocator_allocate_best_fit(
+    ASSERT_TRUE(!evoke_block_range_allocator_allocate_best_fit(
         &allocator,
         1,
         &start_block
     ));
-    ii42_block_range_allocator_free(&allocator);
-    ii42_block_range_inventory_free(&inventory);
+    evoke_block_range_allocator_free(&allocator);
+    evoke_block_range_inventory_free(&inventory);
 
-    ii42_block_range_allocator_init(&allocator);
-    ASSERT_STATUS_OK(ii42_block_range_allocator_build_free(
+    evoke_block_range_allocator_init(&allocator);
+    ASSERT_STATUS_OK(evoke_block_range_allocator_build_free(
         retired_ranges,
         sizeof(retired_ranges) / sizeof(retired_ranges[0]),
         12,
         &allocator
     ));
     ASSERT_TRUE(allocator.available_block_count == 5);
-    ASSERT_TRUE(ii42_block_range_allocator_allocate_best_fit(
+    ASSERT_TRUE(evoke_block_range_allocator_allocate_best_fit(
         &allocator,
         2,
         &start_block
     ));
     ASSERT_TRUE(start_block == 10);
-    ASSERT_TRUE(ii42_block_range_allocator_allocate_best_fit(
+    ASSERT_TRUE(evoke_block_range_allocator_allocate_best_fit(
         &allocator,
         3,
         &start_block
     ));
     ASSERT_TRUE(start_block == 5);
-    ii42_block_range_allocator_free(&allocator);
+    evoke_block_range_allocator_free(&allocator);
 
-    ii42_block_range_inventory_init(&inventory);
-    ii42_block_range_allocator_init(&allocator);
-    ASSERT_STATUS_OK(ii42_block_range_inventory_add(
+    evoke_block_range_inventory_init(&inventory);
+    evoke_block_range_allocator_init(&allocator);
+    ASSERT_STATUS_OK(evoke_block_range_inventory_add(
         &inventory,
         0,
         4
     ));
-    ASSERT_STATUS_OK(ii42_block_range_inventory_add(
+    ASSERT_STATUS_OK(evoke_block_range_inventory_add(
         &inventory,
         2,
         4
     ));
-    ASSERT_TRUE(ii42_block_range_inventory_finalize(
+    ASSERT_TRUE(evoke_block_range_inventory_finalize(
         &inventory,
         8
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_block_range_allocator_build(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_block_range_allocator_build(
         &inventory,
         &allocator
-    ) == II42_ERR_INVALID);
-    ii42_block_range_allocator_free(&allocator);
-    ii42_block_range_inventory_free(&inventory);
+    ) == EVOKE_ERR_INVALID);
+    evoke_block_range_allocator_free(&allocator);
+    evoke_block_range_inventory_free(&inventory);
 
-    ii42_block_range_inventory_init(&inventory);
-    ii42_block_range_allocator_init(&allocator);
-    ASSERT_STATUS_OK(ii42_block_range_inventory_add(
+    evoke_block_range_inventory_init(&inventory);
+    evoke_block_range_allocator_init(&allocator);
+    ASSERT_STATUS_OK(evoke_block_range_inventory_add(
         &inventory,
         0,
         1
     ));
-    ASSERT_STATUS_OK(ii42_block_range_inventory_add(
+    ASSERT_STATUS_OK(evoke_block_range_inventory_add(
         &inventory,
         9,
         2
     ));
-    ASSERT_TRUE(ii42_block_range_inventory_finalize(
+    ASSERT_TRUE(evoke_block_range_inventory_finalize(
         &inventory,
         10
-    ) == II42_ERR_RANGE);
-    ii42_block_range_allocator_free(&allocator);
-    ii42_block_range_inventory_free(&inventory);
+    ) == EVOKE_ERR_RANGE);
+    evoke_block_range_allocator_free(&allocator);
+    evoke_block_range_inventory_free(&inventory);
 }
 
 static void
@@ -768,30 +768,30 @@ test_segment_page_header_roundtrip_and_validation(void)
     static const uint8_t object_bytes[] = {
         0x10U, 0x20U, 0x30U, 0x40U, 0x50U
     };
-    ii42_segment_page_header header;
-    ii42_segment_page_header restored;
-    uint8_t bytes[II42_SEGMENT_PAGE_HEADER_SIZE];
-    uint8_t mutated[II42_SEGMENT_PAGE_HEADER_SIZE];
+    evoke_segment_page_header header;
+    evoke_segment_page_header restored;
+    uint8_t bytes[EVOKE_SEGMENT_PAGE_HEADER_SIZE];
+    uint8_t mutated[EVOKE_SEGMENT_PAGE_HEADER_SIZE];
     uint8_t page_payload[116];
     uint64_t checksum;
     uint32_t page_checksum;
     uint32_t page_count = 0;
     const size_t page_content_bytes = 256;
 
-    checksum = ii42_segment_blob_checksum(
+    checksum = evoke_segment_blob_checksum(
         object_bytes,
         sizeof(object_bytes)
     );
-    page_checksum = ii42_segment_page_payload_checksum(
+    page_checksum = evoke_segment_page_payload_checksum(
         object_bytes,
         sizeof(object_bytes)
     );
     ASSERT_TRUE(checksum != 0);
-    ASSERT_TRUE(checksum != ii42_segment_blob_checksum(
+    ASSERT_TRUE(checksum != evoke_segment_blob_checksum(
         object_bytes,
         sizeof(object_bytes) - 1
     ));
-    ASSERT_STATUS_OK(ii42_segment_page_count_required(
+    ASSERT_STATUS_OK(evoke_segment_page_count_required(
         500,
         page_content_bytes,
         &page_count
@@ -799,7 +799,7 @@ test_segment_page_header_roundtrip_and_validation(void)
     ASSERT_TRUE(page_count == 3);
 
     memset(&header, 0, sizeof(header));
-    header.object_kind = II42_SEGMENT_OBJECT_PAYLOAD;
+    header.object_kind = EVOKE_SEGMENT_OBJECT_PAYLOAD;
     header.object_id = 41;
     header.owner_manifest_id = 9;
     header.object_bytes = 500;
@@ -807,14 +807,14 @@ test_segment_page_header_roundtrip_and_validation(void)
     header.payload_checksum = page_checksum;
     header.page_count = page_count;
     header.used_bytes = 192;
-    ASSERT_STATUS_OK(ii42_segment_page_header_serialize(
+    ASSERT_STATUS_OK(evoke_segment_page_header_serialize(
         &header,
         page_content_bytes,
         bytes,
         sizeof(bytes)
     ));
     memset(&restored, 0, sizeof(restored));
-    ASSERT_STATUS_OK(ii42_segment_page_header_deserialize(
+    ASSERT_STATUS_OK(evoke_segment_page_header_deserialize(
         bytes,
         sizeof(bytes),
         page_content_bytes,
@@ -832,13 +832,13 @@ test_segment_page_header_roundtrip_and_validation(void)
 
     header.ordinal = 2;
     header.used_bytes = 116;
-    ASSERT_STATUS_OK(ii42_segment_page_header_serialize(
+    ASSERT_STATUS_OK(evoke_segment_page_header_serialize(
         &header,
         page_content_bytes,
         bytes,
         sizeof(bytes)
     ));
-    ASSERT_STATUS_OK(ii42_segment_page_header_deserialize(
+    ASSERT_STATUS_OK(evoke_segment_page_header_deserialize(
         bytes,
         sizeof(bytes),
         page_content_bytes,
@@ -848,64 +848,64 @@ test_segment_page_header_roundtrip_and_validation(void)
     ASSERT_TRUE(restored.used_bytes == 116);
 
     memset(page_payload, 0xA5, sizeof(page_payload));
-    restored.payload_checksum = ii42_segment_page_payload_checksum(
+    restored.payload_checksum = evoke_segment_page_payload_checksum(
         page_payload,
         sizeof(page_payload)
     );
-    ASSERT_STATUS_OK(ii42_segment_page_payload_validate(
+    ASSERT_STATUS_OK(evoke_segment_page_payload_validate(
         &restored,
         page_payload,
         sizeof(page_payload)
     ));
     page_payload[17] ^= 0x1U;
-    ASSERT_TRUE(ii42_segment_page_payload_validate(
+    ASSERT_TRUE(evoke_segment_page_payload_validate(
         &restored,
         page_payload,
         sizeof(page_payload)
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     memcpy(mutated, bytes, sizeof(mutated));
     mutated[16] ^= 0x1U;
-    ASSERT_TRUE(ii42_segment_page_header_deserialize(
+    ASSERT_TRUE(evoke_segment_page_header_deserialize(
         mutated,
         sizeof(mutated),
         page_content_bytes,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     header.used_bytes = 115;
-    ASSERT_TRUE(ii42_segment_page_header_serialize(
+    ASSERT_TRUE(evoke_segment_page_header_serialize(
         &header,
         page_content_bytes,
         bytes,
         sizeof(bytes)
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     header.used_bytes = 116;
-    header.object_kind = II42_SEGMENT_OBJECT_INVALID;
-    ASSERT_TRUE(ii42_segment_page_header_serialize(
+    header.object_kind = EVOKE_SEGMENT_OBJECT_INVALID;
+    ASSERT_TRUE(evoke_segment_page_header_serialize(
         &header,
         page_content_bytes,
         bytes,
         sizeof(bytes)
-    ) == II42_ERR_FORMAT);
-    header.object_kind = II42_SEGMENT_OBJECT_PAYLOAD;
+    ) == EVOKE_ERR_FORMAT);
+    header.object_kind = EVOKE_SEGMENT_OBJECT_PAYLOAD;
     header.payload_checksum = 0;
-    ASSERT_TRUE(ii42_segment_page_header_serialize(
+    ASSERT_TRUE(evoke_segment_page_header_serialize(
         &header,
         page_content_bytes,
         bytes,
         sizeof(bytes)
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_segment_page_count_required(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_page_count_required(
         0,
         page_content_bytes,
         &page_count
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_segment_page_count_required(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_page_count_required(
         500,
-        II42_SEGMENT_PAGE_HEADER_SIZE,
+        EVOKE_SEGMENT_PAGE_HEADER_SIZE,
         &page_count
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 }
 
 static void
@@ -914,33 +914,33 @@ test_active_l0_header_and_frontier_validation(void)
     static const uint8_t payload[] = {
         0x01U, 0x03U, 0x05U, 0x07U, 0x09U
     };
-    ii42_active_l0_page_header header;
-    ii42_active_l0_page_header restored;
-    ii42_active_l0_frontier frontier;
-    uint8_t bytes[II42_ACTIVE_L0_PAGE_HEADER_SIZE];
-    uint8_t mutated[II42_ACTIVE_L0_PAGE_HEADER_SIZE];
+    evoke_active_l0_page_header header;
+    evoke_active_l0_page_header restored;
+    evoke_active_l0_frontier frontier;
+    uint8_t bytes[EVOKE_ACTIVE_L0_PAGE_HEADER_SIZE];
+    uint8_t mutated[EVOKE_ACTIVE_L0_PAGE_HEADER_SIZE];
     const size_t page_content_bytes = 256;
 
     memset(&header, 0, sizeof(header));
     header.segment_id = 17;
     header.min_sequence = 101;
     header.max_sequence = 105;
-    header.payload_checksum = ii42_segment_blob_checksum(
+    header.payload_checksum = evoke_segment_blob_checksum(
         payload,
         sizeof(payload)
     );
     header.ordinal = 2;
-    header.next_block = II42_ACTIVE_L0_NO_NEXT_BLOCK;
+    header.next_block = EVOKE_ACTIVE_L0_NO_NEXT_BLOCK;
     header.frame_count = 3;
     header.used_bytes = sizeof(payload);
-    ASSERT_STATUS_OK(ii42_active_l0_page_header_serialize(
+    ASSERT_STATUS_OK(evoke_active_l0_page_header_serialize(
         &header,
         page_content_bytes,
         bytes,
         sizeof(bytes)
     ));
     memset(&restored, 0, sizeof(restored));
-    ASSERT_STATUS_OK(ii42_active_l0_page_header_deserialize(
+    ASSERT_STATUS_OK(evoke_active_l0_page_header_deserialize(
         bytes,
         sizeof(bytes),
         page_content_bytes,
@@ -953,7 +953,7 @@ test_active_l0_header_and_frontier_validation(void)
     ASSERT_TRUE(restored.next_block == header.next_block);
     ASSERT_TRUE(restored.frame_count == header.frame_count);
     ASSERT_TRUE(restored.used_bytes == header.used_bytes);
-    ASSERT_STATUS_OK(ii42_active_l0_page_payload_validate(
+    ASSERT_STATUS_OK(evoke_active_l0_page_payload_validate(
         &restored,
         payload,
         sizeof(payload)
@@ -961,47 +961,47 @@ test_active_l0_header_and_frontier_validation(void)
 
     memcpy(mutated, bytes, sizeof(mutated));
     mutated[24] ^= 0x1U;
-    ASSERT_TRUE(ii42_active_l0_page_header_deserialize(
+    ASSERT_TRUE(evoke_active_l0_page_header_deserialize(
         mutated,
         sizeof(mutated),
         page_content_bytes,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     mutated[0] = payload[0] ^ 0x1U;
-    ASSERT_TRUE(ii42_active_l0_page_payload_validate(
+    ASSERT_TRUE(evoke_active_l0_page_payload_validate(
         &header,
         mutated,
         sizeof(payload)
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     header.next_block = 0;
-    ASSERT_TRUE(ii42_active_l0_page_header_serialize(
+    ASSERT_TRUE(evoke_active_l0_page_header_serialize(
         &header,
         page_content_bytes,
         bytes,
         sizeof(bytes)
-    ) == II42_ERR_FORMAT);
-    header.next_block = II42_ACTIVE_L0_NO_NEXT_BLOCK;
+    ) == EVOKE_ERR_FORMAT);
+    header.next_block = EVOKE_ACTIVE_L0_NO_NEXT_BLOCK;
     header.used_bytes = page_content_bytes;
-    ASSERT_TRUE(ii42_active_l0_page_header_serialize(
+    ASSERT_TRUE(evoke_active_l0_page_header_serialize(
         &header,
         page_content_bytes,
         bytes,
         sizeof(bytes)
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     memset(&frontier, 0, sizeof(frontier));
-    ASSERT_STATUS_OK(ii42_active_l0_frontier_validate(
+    ASSERT_STATUS_OK(evoke_active_l0_frontier_validate(
         &frontier,
         true
     ));
-    ASSERT_TRUE(ii42_active_l0_frontier_validate(
+    ASSERT_TRUE(evoke_active_l0_frontier_validate(
         &frontier,
         false
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     frontier.segment_id = 18;
-    ASSERT_STATUS_OK(ii42_active_l0_frontier_validate(
+    ASSERT_STATUS_OK(evoke_active_l0_frontier_validate(
         &frontier,
         false
     ));
@@ -1012,36 +1012,36 @@ test_active_l0_header_and_frontier_validation(void)
     frontier.tail_block = 45;
     frontier.page_count = 3;
     frontier.record_count = 12;
-    ASSERT_STATUS_OK(ii42_active_l0_frontier_validate(
+    ASSERT_STATUS_OK(evoke_active_l0_frontier_validate(
         &frontier,
         false
     ));
-    frontier.page_count = II42_ACTIVE_L0_MAX_PAGES + 1;
-    ASSERT_TRUE(ii42_active_l0_frontier_validate(
+    frontier.page_count = EVOKE_ACTIVE_L0_MAX_PAGES + 1;
+    ASSERT_TRUE(evoke_active_l0_frontier_validate(
         &frontier,
         false
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     frontier.page_count = 4;
     frontier.record_count = 1;
     frontier.max_sequence = frontier.min_sequence;
-    ASSERT_STATUS_OK(ii42_active_l0_frontier_validate(
+    ASSERT_STATUS_OK(evoke_active_l0_frontier_validate(
         &frontier,
         false
     ));
-    frontier.record_count = II42_ACTIVE_L0_MAX_RECORDS + 1;
+    frontier.record_count = EVOKE_ACTIVE_L0_MAX_RECORDS + 1;
     frontier.max_sequence =
         frontier.min_sequence + frontier.record_count - 1;
-    ASSERT_TRUE(ii42_active_l0_frontier_validate(
+    ASSERT_TRUE(evoke_active_l0_frontier_validate(
         &frontier,
         false
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 }
 
 static void
 test_l0_record_and_frame_roundtrip(void)
 {
     static const uint8_t fingerprint[
-        II42_DOCUMENT_FINGERPRINT_BYTES
+        EVOKE_DOCUMENT_FINGERPRINT_BYTES
     ] = {
         0x01U, 0x02U, 0x03U, 0x04U,
         0x05U, 0x06U, 0x07U, 0x08U,
@@ -1050,18 +1050,18 @@ test_l0_record_and_frame_roundtrip(void)
     };
     static const uint8_t bird[] = "bird";
     static const uint8_t river[] = "river";
-    ii42_l0_lexical_atom numeric_atoms[2];
-    ii42_l0_lexical_atom text_atoms[2];
-    ii42_l0_lexical_atom decoded_atoms[2];
-    ii42_l0_lexical_atom restored_atom;
-    ii42_l0_semantic_atom semantic_atoms[2];
-    ii42_l0_semantic_atom decoded_semantic_atoms[2];
-    ii42_l0_semantic_atom restored_semantic_atom;
-    ii42_l0_record record;
-    ii42_l0_record_view view;
-    ii42_l0_frame_header frame;
-    ii42_l0_frame_header restored_frame;
-    uint8_t frame_bytes[II42_L0_FRAME_HEADER_SIZE];
+    evoke_l0_lexical_atom numeric_atoms[2];
+    evoke_l0_lexical_atom text_atoms[2];
+    evoke_l0_lexical_atom decoded_atoms[2];
+    evoke_l0_lexical_atom restored_atom;
+    evoke_l0_semantic_atom semantic_atoms[2];
+    evoke_l0_semantic_atom decoded_semantic_atoms[2];
+    evoke_l0_semantic_atom restored_semantic_atom;
+    evoke_l0_record record;
+    evoke_l0_record_view view;
+    evoke_l0_frame_header frame;
+    evoke_l0_frame_header restored_frame;
+    uint8_t frame_bytes[EVOKE_L0_FRAME_HEADER_SIZE];
     uint8_t *bytes = NULL;
     uint8_t *mutated = NULL;
     size_t size = 0;
@@ -1072,8 +1072,8 @@ test_l0_record_and_frame_roundtrip(void)
     numeric_atoms[1].term_id = 8;
     numeric_atoms[1].term_frequency = 1;
     memset(&record, 0, sizeof(record));
-    record.kind = II42_L0_RECORD_UPSERT;
-    record.term_encoding = II42_L0_TERM_ENCODING_NUMERIC;
+    record.kind = EVOKE_L0_RECORD_UPSERT;
+    record.term_encoding = EVOKE_L0_TERM_ENCODING_NUMERIC;
     record.sequence = 11;
     record.document_slot = 7;
     record.record_xid = 3;
@@ -1083,13 +1083,13 @@ test_l0_record_and_frame_roundtrip(void)
     record.semantic_input_fingerprint = fingerprint;
     record.atoms = numeric_atoms;
     record.atom_count = 2;
-    ASSERT_STATUS_OK(ii42_l0_record_serialize(
+    ASSERT_STATUS_OK(evoke_l0_record_serialize(
         &record,
         &bytes,
         &size
     ));
-    ASSERT_TRUE(size == II42_L0_RECORD_HEADER_SIZE + 16);
-    ASSERT_STATUS_OK(ii42_l0_record_view_parse(bytes, size, &view));
+    ASSERT_TRUE(size == EVOKE_L0_RECORD_HEADER_SIZE + 16);
+    ASSERT_STATUS_OK(evoke_l0_record_view_parse(bytes, size, &view));
     ASSERT_TRUE(view.kind == record.kind);
     ASSERT_TRUE(view.term_encoding == record.term_encoding);
     ASSERT_TRUE(view.sequence == record.sequence);
@@ -1100,14 +1100,14 @@ test_l0_record_and_frame_roundtrip(void)
         fingerprint,
         sizeof(fingerprint)
     ) == 0);
-    ASSERT_STATUS_OK(ii42_l0_record_view_atom(
+    ASSERT_STATUS_OK(evoke_l0_record_view_atom(
         &view,
         1,
         &restored_atom
     ));
     ASSERT_TRUE(restored_atom.term_id == 8);
     ASSERT_TRUE(restored_atom.term_frequency == 1);
-    ASSERT_STATUS_OK(ii42_l0_record_view_decode_atoms(
+    ASSERT_STATUS_OK(evoke_l0_record_view_decode_atoms(
         &view,
         decoded_atoms,
         2
@@ -1117,17 +1117,17 @@ test_l0_record_and_frame_roundtrip(void)
     ASSERT_TRUE(decoded_atoms[1].term_id == 8);
 
     memset(&frame, 0, sizeof(frame));
-    frame.flags = II42_L0_FRAME_FLAG_START | II42_L0_FRAME_FLAG_END;
+    frame.flags = EVOKE_L0_FRAME_FLAG_START | EVOKE_L0_FRAME_FLAG_END;
     frame.sequence = record.sequence;
-    frame.record_checksum = ii42_segment_blob_checksum(bytes, size);
+    frame.record_checksum = evoke_segment_blob_checksum(bytes, size);
     frame.record_bytes = (uint32_t) size;
     frame.fragment_bytes = (uint32_t) size;
-    ASSERT_STATUS_OK(ii42_l0_frame_header_serialize(
+    ASSERT_STATUS_OK(evoke_l0_frame_header_serialize(
         &frame,
         frame_bytes,
         sizeof(frame_bytes)
     ));
-    ASSERT_STATUS_OK(ii42_l0_frame_header_deserialize(
+    ASSERT_STATUS_OK(evoke_l0_frame_header_deserialize(
         frame_bytes,
         sizeof(frame_bytes),
         &restored_frame
@@ -1135,22 +1135,22 @@ test_l0_record_and_frame_roundtrip(void)
     ASSERT_TRUE(restored_frame.sequence == frame.sequence);
     ASSERT_TRUE(restored_frame.record_checksum == frame.record_checksum);
     ASSERT_TRUE(restored_frame.flags == frame.flags);
-    frame.flags = II42_L0_FRAME_FLAG_END;
-    ASSERT_TRUE(ii42_l0_frame_header_serialize(
+    frame.flags = EVOKE_L0_FRAME_FLAG_END;
+    ASSERT_TRUE(evoke_l0_frame_header_serialize(
         &frame,
         frame_bytes,
         sizeof(frame_bytes)
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     mutated = malloc(size);
     ASSERT_TRUE(mutated != NULL);
     memcpy(mutated, bytes, size);
     mutated[32] ^= 0x1U;
-    ASSERT_TRUE(ii42_l0_record_view_parse(
+    ASSERT_TRUE(evoke_l0_record_view_parse(
         mutated,
         size,
         &view
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     free(mutated);
     free(bytes);
     mutated = NULL;
@@ -1163,16 +1163,16 @@ test_l0_record_and_frame_roundtrip(void)
     text_atoms[1].term_frequency = 1;
     text_atoms[1].term_bytes = river;
     text_atoms[1].term_bytes_len = sizeof(river) - 1;
-    record.term_encoding = II42_L0_TERM_ENCODING_UTF8;
+    record.term_encoding = EVOKE_L0_TERM_ENCODING_UTF8;
     record.sequence = 12;
     record.atoms = text_atoms;
-    ASSERT_STATUS_OK(ii42_l0_record_serialize(
+    ASSERT_STATUS_OK(evoke_l0_record_serialize(
         &record,
         &bytes,
         &size
     ));
-    ASSERT_STATUS_OK(ii42_l0_record_view_parse(bytes, size, &view));
-    ASSERT_STATUS_OK(ii42_l0_record_view_atom(
+    ASSERT_STATUS_OK(evoke_l0_record_view_parse(bytes, size, &view));
+    ASSERT_STATUS_OK(evoke_l0_record_view_atom(
         &view,
         0,
         &restored_atom
@@ -1185,7 +1185,7 @@ test_l0_record_and_frame_roundtrip(void)
         bird,
         sizeof(bird) - 1
     ) == 0);
-    ASSERT_STATUS_OK(ii42_l0_record_view_decode_atoms(
+    ASSERT_STATUS_OK(evoke_l0_record_view_decode_atoms(
         &view,
         decoded_atoms,
         2
@@ -1203,26 +1203,26 @@ test_l0_record_and_frame_roundtrip(void)
     text_atoms[1].term_frequency = 2;
     text_atoms[1].term_bytes = bird;
     text_atoms[1].term_bytes_len = sizeof(bird) - 1;
-    ASSERT_TRUE(ii42_l0_record_serialized_size(
+    ASSERT_TRUE(evoke_l0_record_serialized_size(
         &record,
         &size
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     memset(&record, 0, sizeof(record));
-    record.kind = II42_L0_RECORD_RETIRE;
-    record.term_encoding = II42_L0_TERM_ENCODING_NONE;
+    record.kind = EVOKE_L0_RECORD_RETIRE;
+    record.term_encoding = EVOKE_L0_TERM_ENCODING_NONE;
     record.sequence = 13;
     record.document_slot = 7;
     record.record_xid = 3;
     record.document_length = 4;
-    ASSERT_STATUS_OK(ii42_l0_record_serialize(
+    ASSERT_STATUS_OK(evoke_l0_record_serialize(
         &record,
         &bytes,
         &size
     ));
-    ASSERT_TRUE(size == II42_L0_RECORD_HEADER_SIZE);
-    ASSERT_STATUS_OK(ii42_l0_record_view_parse(bytes, size, &view));
-    ASSERT_TRUE(view.kind == II42_L0_RECORD_RETIRE);
+    ASSERT_TRUE(size == EVOKE_L0_RECORD_HEADER_SIZE);
+    ASSERT_STATUS_OK(evoke_l0_record_view_parse(bytes, size, &view));
+    ASSERT_TRUE(view.kind == EVOKE_L0_RECORD_RETIRE);
     ASSERT_TRUE(view.atom_count == 0);
     ASSERT_TRUE(view.document_length == 4);
     free(bytes);
@@ -1234,22 +1234,22 @@ test_l0_record_and_frame_roundtrip(void)
     semantic_atoms[1].term_id = 19;
     semantic_atoms[1].impact = 1.5f;
     memset(&record, 0, sizeof(record));
-    record.kind = II42_L0_RECORD_SEMANTIC_COMPLETE;
-    record.term_encoding = II42_L0_TERM_ENCODING_NUMERIC;
+    record.kind = EVOKE_L0_RECORD_SEMANTIC_COMPLETE;
+    record.term_encoding = EVOKE_L0_TERM_ENCODING_NUMERIC;
     record.sequence = 14;
     record.document_slot = 7;
     record.record_xid = 4;
     record.semantic_input_fingerprint = fingerprint;
     record.semantic_atoms = semantic_atoms;
     record.atom_count = 2;
-    ASSERT_STATUS_OK(ii42_l0_record_serialize(
+    ASSERT_STATUS_OK(evoke_l0_record_serialize(
         &record,
         &bytes,
         &size
     ));
-    ASSERT_TRUE(size == II42_L0_RECORD_HEADER_SIZE + 16);
-    ASSERT_STATUS_OK(ii42_l0_record_view_parse(bytes, size, &view));
-    ASSERT_TRUE(view.kind == II42_L0_RECORD_SEMANTIC_COMPLETE);
+    ASSERT_TRUE(size == EVOKE_L0_RECORD_HEADER_SIZE + 16);
+    ASSERT_STATUS_OK(evoke_l0_record_view_parse(bytes, size, &view));
+    ASSERT_TRUE(view.kind == EVOKE_L0_RECORD_SEMANTIC_COMPLETE);
     ASSERT_TRUE(view.document_slot == 7);
     ASSERT_TRUE(view.atom_count == 2);
     ASSERT_TRUE(memcmp(
@@ -1257,49 +1257,49 @@ test_l0_record_and_frame_roundtrip(void)
         fingerprint,
         sizeof(fingerprint)
     ) == 0);
-    ASSERT_STATUS_OK(ii42_l0_record_view_semantic_atom(
+    ASSERT_STATUS_OK(evoke_l0_record_view_semantic_atom(
         &view,
         1,
         &restored_semantic_atom
     ));
     ASSERT_TRUE(restored_semantic_atom.term_id == 19);
     assert_float_close(restored_semantic_atom.impact, 1.5f);
-    ASSERT_STATUS_OK(ii42_l0_record_view_decode_semantic_atoms(
+    ASSERT_STATUS_OK(evoke_l0_record_view_decode_semantic_atoms(
         &view,
         decoded_semantic_atoms,
         2
     ));
     ASSERT_TRUE(decoded_semantic_atoms[0].term_id == 12);
     assert_float_close(decoded_semantic_atoms[0].impact, 0.75f);
-    ASSERT_TRUE(ii42_l0_record_view_atom(
+    ASSERT_TRUE(evoke_l0_record_view_atom(
         &view,
         0,
         &restored_atom
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
     free(bytes);
     bytes = NULL;
 
     semantic_atoms[0].impact = 0.0f;
-    ASSERT_TRUE(ii42_l0_record_serialized_size(
+    ASSERT_TRUE(evoke_l0_record_serialized_size(
         &record,
         &size
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     semantic_atoms[0].impact = NAN;
-    ASSERT_TRUE(ii42_l0_record_serialized_size(
+    ASSERT_TRUE(evoke_l0_record_serialized_size(
         &record,
         &size
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     semantic_atoms[0].impact = 0.75f;
     semantic_atoms[1].term_id = 12;
-    ASSERT_TRUE(ii42_l0_record_serialized_size(
+    ASSERT_TRUE(evoke_l0_record_serialized_size(
         &record,
         &size
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     semantic_atoms[1].term_id = 19;
 
     memset(&record, 0, sizeof(record));
-    record.kind = II42_L0_RECORD_SEMANTIC_QUARANTINE;
-    record.term_encoding = II42_L0_TERM_ENCODING_NONE;
+    record.kind = EVOKE_L0_RECORD_SEMANTIC_QUARANTINE;
+    record.term_encoding = EVOKE_L0_TERM_ENCODING_NONE;
     record.sequence = 15;
     record.document_slot = 7;
     record.record_xid = 5;
@@ -1309,14 +1309,14 @@ test_l0_record_and_frame_roundtrip(void)
     record.semantic_pending_since = 12000;
     record.semantic_error_hash = UINT64_C(0x123456789abcdef0);
     record.semantic_input_fingerprint = fingerprint;
-    ASSERT_STATUS_OK(ii42_l0_record_serialize(
+    ASSERT_STATUS_OK(evoke_l0_record_serialize(
         &record,
         &bytes,
         &size
     ));
-    ASSERT_TRUE(size == II42_L0_RECORD_HEADER_SIZE);
-    ASSERT_STATUS_OK(ii42_l0_record_view_parse(bytes, size, &view));
-    ASSERT_TRUE(view.kind == II42_L0_RECORD_SEMANTIC_QUARANTINE);
+    ASSERT_TRUE(size == EVOKE_L0_RECORD_HEADER_SIZE);
+    ASSERT_STATUS_OK(evoke_l0_record_view_parse(bytes, size, &view));
+    ASSERT_TRUE(view.kind == EVOKE_L0_RECORD_SEMANTIC_QUARANTINE);
     ASSERT_TRUE(view.semantic_failure_count == 3);
     ASSERT_TRUE(view.semantic_error_code == 17);
     ASSERT_TRUE(view.semantic_retry_after == 12345);
@@ -1332,16 +1332,16 @@ test_l0_record_and_frame_roundtrip(void)
     free(bytes);
 
     record.semantic_retry_after = 11999;
-    ASSERT_TRUE(ii42_l0_record_serialized_size(
+    ASSERT_TRUE(evoke_l0_record_serialized_size(
         &record,
         &size
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     record.semantic_retry_after = 12345;
     record.semantic_input_fingerprint = NULL;
-    ASSERT_TRUE(ii42_l0_record_serialized_size(
+    ASSERT_TRUE(evoke_l0_record_serialized_size(
         &record,
         &size
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 }
 
 static void
@@ -1350,10 +1350,10 @@ test_segment_read_root_validation(void)
     static const uint8_t manifest_bytes[] = {
         0x4dU, 0x61U, 0x6eU, 0x69U, 0x66U, 0x65U, 0x73U, 0x74U
     };
-    ii42_segment_read_root root;
-    ii42_segment_read_root restored;
-    uint8_t bytes[II42_SEGMENT_READ_ROOT_SERIALIZED_SIZE];
-    uint8_t mutated[II42_SEGMENT_READ_ROOT_SERIALIZED_SIZE];
+    evoke_segment_read_root root;
+    evoke_segment_read_root restored;
+    uint8_t bytes[EVOKE_SEGMENT_READ_ROOT_SERIALIZED_SIZE];
+    uint8_t mutated[EVOKE_SEGMENT_READ_ROOT_SERIALIZED_SIZE];
 
     memset(&root, 0, sizeof(root));
     memset(&restored, 0, sizeof(restored));
@@ -1363,18 +1363,18 @@ test_segment_read_root_validation(void)
     root.reusable_document_slot_cursor = 3;
     root.next_segment_id = 12;
     root.published_block_high_watermark = 100;
-    root.manifest.object_kind = II42_SEGMENT_OBJECT_MANIFEST;
+    root.manifest.object_kind = EVOKE_SEGMENT_OBJECT_MANIFEST;
     root.manifest.start_block = 10;
     root.manifest.page_count = 2;
     root.manifest.object_id = 9;
     root.manifest.owner_manifest_id = 9;
     root.manifest.object_bytes = sizeof(manifest_bytes);
-    root.manifest.object_checksum = ii42_segment_blob_checksum(
+    root.manifest.object_checksum = evoke_segment_blob_checksum(
         manifest_bytes,
         sizeof(manifest_bytes)
     );
     root.active_l0.segment_id = 11;
-    ASSERT_STATUS_OK(ii42_segment_read_root_validate(&root));
+    ASSERT_STATUS_OK(evoke_segment_read_root_validate(&root));
 
     root.pending_l0.segment_id = 10;
     root.pending_l0.min_sequence = 1;
@@ -1392,13 +1392,13 @@ test_segment_read_root_validation(void)
     root.active_l0.page_count = 3;
     root.active_l0.record_count = 4;
     root.next_sequence = 13;
-    ASSERT_STATUS_OK(ii42_segment_read_root_validate(&root));
-    ASSERT_STATUS_OK(ii42_segment_read_root_serialize(
+    ASSERT_STATUS_OK(evoke_segment_read_root_validate(&root));
+    ASSERT_STATUS_OK(evoke_segment_read_root_serialize(
         &root,
         bytes,
         sizeof(bytes)
     ));
-    ASSERT_STATUS_OK(ii42_segment_read_root_deserialize(
+    ASSERT_STATUS_OK(evoke_segment_read_root_deserialize(
         bytes,
         sizeof(bytes),
         &restored
@@ -1426,50 +1426,50 @@ test_segment_read_root_validation(void)
     ASSERT_TRUE(restored.next_segment_id == root.next_segment_id);
     memcpy(mutated, bytes, sizeof(mutated));
     mutated[80] ^= 0x1U;
-    ASSERT_TRUE(ii42_segment_read_root_deserialize(
+    ASSERT_TRUE(evoke_segment_read_root_deserialize(
         mutated,
         sizeof(mutated),
         &restored
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_segment_read_root_deserialize(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_read_root_deserialize(
         bytes,
         sizeof(bytes) - 1,
         &restored
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
 
     root.next_sequence = 12;
-    ASSERT_TRUE(ii42_segment_read_root_validate(
+    ASSERT_TRUE(evoke_segment_read_root_validate(
         &root
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     root.next_sequence = 13;
     root.pending_l0.max_sequence = 9;
-    ASSERT_TRUE(ii42_segment_read_root_validate(
+    ASSERT_TRUE(evoke_segment_read_root_validate(
         &root
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     root.pending_l0.max_sequence = 8;
     root.active_l0.tail_block = 100;
-    ASSERT_TRUE(ii42_segment_read_root_validate(
+    ASSERT_TRUE(evoke_segment_read_root_validate(
         &root
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     root.active_l0.tail_block = 35;
     root.next_segment_id = 11;
-    ASSERT_TRUE(ii42_segment_read_root_validate(
+    ASSERT_TRUE(evoke_segment_read_root_validate(
         &root
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     root.next_segment_id = 12;
     root.reusable_document_slot_cursor = 8;
-    ASSERT_TRUE(ii42_segment_read_root_validate(
+    ASSERT_TRUE(evoke_segment_read_root_validate(
         &root
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     root.reusable_document_slot_cursor = 3;
     root.manifest.owner_manifest_id = 8;
-    ASSERT_TRUE(ii42_segment_read_root_validate(
+    ASSERT_TRUE(evoke_segment_read_root_validate(
         &root
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     root.manifest.owner_manifest_id = root.manifest.object_id;
     memset(&root.pending_l0, 0, sizeof(root.pending_l0));
-    ASSERT_STATUS_OK(ii42_segment_read_root_rotate_l0(&root));
+    ASSERT_STATUS_OK(evoke_segment_read_root_rotate_l0(&root));
     ASSERT_TRUE(root.pending_l0.segment_id == 11);
     ASSERT_TRUE(root.pending_l0.min_sequence == 9);
     ASSERT_TRUE(root.pending_l0.max_sequence == 12);
@@ -1480,14 +1480,14 @@ test_segment_read_root_validation(void)
     ASSERT_TRUE(root.next_document_slot == 7);
     ASSERT_TRUE(root.reusable_document_slot_cursor == 3);
     ASSERT_TRUE(
-        ii42_segment_read_root_rotate_l0(&root) == II42_ERR_FORMAT
+        evoke_segment_read_root_rotate_l0(&root) == EVOKE_ERR_FORMAT
     );
 
     {
-        ii42_active_l0_frontier active;
-        ii42_active_l0_frontier pending;
-        ii42_segment_object_ref compaction_ref;
-        ii42_segment_object_ref manifest_ref;
+        evoke_active_l0_frontier active;
+        evoke_active_l0_frontier pending;
+        evoke_segment_object_ref compaction_ref;
+        evoke_segment_object_ref manifest_ref;
         uint64_t active_segment_id;
         uint32_t published_block_high_watermark;
 
@@ -1503,22 +1503,22 @@ test_segment_read_root_validation(void)
         pending = root.pending_l0;
         initialize_test_object_ref(
             &compaction_ref,
-            II42_SEGMENT_OBJECT_MANIFEST,
+            EVOKE_SEGMENT_OBJECT_MANIFEST,
             root.published_block_high_watermark,
             2,
             root.next_segment_id,
             0x1233
         );
         ASSERT_TRUE(
-            ii42_segment_read_root_replace_manifest(
+            evoke_segment_read_root_replace_manifest(
                 &root,
                 &compaction_ref,
                 root.published_block_high_watermark - 1
-            ) == II42_ERR_FORMAT
+            ) == EVOKE_ERR_FORMAT
         );
         published_block_high_watermark =
             root.published_block_high_watermark + 2;
-        ASSERT_STATUS_OK(ii42_segment_read_root_replace_manifest(
+        ASSERT_STATUS_OK(evoke_segment_read_root_replace_manifest(
             &root,
             &compaction_ref,
             published_block_high_watermark
@@ -1541,23 +1541,23 @@ test_segment_read_root_validation(void)
 
         initialize_test_object_ref(
             &manifest_ref,
-            II42_SEGMENT_OBJECT_MANIFEST,
+            EVOKE_SEGMENT_OBJECT_MANIFEST,
             root.published_block_high_watermark,
             2,
             root.next_segment_id,
             0x1234
         );
         ASSERT_TRUE(
-            ii42_segment_read_root_seal_pending(
+            evoke_segment_read_root_seal_pending(
                 &root,
                 &manifest_ref,
                 root.published_block_high_watermark - 1
-            ) == II42_ERR_FORMAT
+            ) == EVOKE_ERR_FORMAT
         );
 
         published_block_high_watermark =
             root.published_block_high_watermark + 3;
-        ASSERT_STATUS_OK(ii42_segment_read_root_seal_pending(
+        ASSERT_STATUS_OK(evoke_segment_read_root_seal_pending(
             &root,
             &manifest_ref,
             published_block_high_watermark
@@ -1575,11 +1575,11 @@ test_segment_read_root_validation(void)
         manifest_ref.object_id = root.next_segment_id + 1;
         manifest_ref.owner_manifest_id = manifest_ref.object_id;
         ASSERT_TRUE(
-            ii42_segment_read_root_seal_pending(
+            evoke_segment_read_root_seal_pending(
                 &root,
                 &manifest_ref,
                 root.published_block_high_watermark + 2
-            ) == II42_ERR_FORMAT
+            ) == EVOKE_ERR_FORMAT
         );
 
         active_segment_id = root.active_l0.segment_id;
@@ -1587,13 +1587,13 @@ test_segment_read_root_validation(void)
         root.active_l0.segment_id = active_segment_id;
         initialize_test_object_ref(
             &manifest_ref,
-            II42_SEGMENT_OBJECT_MANIFEST,
+            EVOKE_SEGMENT_OBJECT_MANIFEST,
             root.published_block_high_watermark,
             2,
             root.next_segment_id,
             0x1235
         );
-        ASSERT_STATUS_OK(ii42_segment_read_root_replace_manifest(
+        ASSERT_STATUS_OK(evoke_segment_read_root_replace_manifest(
             &root,
             &manifest_ref,
             root.published_block_high_watermark + 2
@@ -1605,25 +1605,25 @@ test_segment_read_root_validation(void)
 static void
 test_segment_manifest_roundtrip_and_validation(void)
 {
-    ii42_segment_manifest manifest;
-    ii42_segment_manifest restored;
+    evoke_segment_manifest manifest;
+    evoke_segment_manifest restored;
     uint8_t *bytes = NULL;
     uint8_t *mutated = NULL;
     size_t size = 0;
 
     initialize_test_segment_manifest(&manifest);
     manifest.segments[1].semantic_state_count = 1;
-    manifest.segments[1].flags |= II42_SEGMENT_FLAG_SEMANTIC;
-    ii42_segment_manifest_init(&restored);
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&manifest));
-    ASSERT_STATUS_OK(ii42_segment_manifest_serialize(
+    manifest.segments[1].flags |= EVOKE_SEGMENT_FLAG_SEMANTIC;
+    evoke_segment_manifest_init(&restored);
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&manifest));
+    ASSERT_STATUS_OK(evoke_segment_manifest_serialize(
         &manifest,
         &bytes,
         &size
     ));
     ASSERT_TRUE(bytes != NULL);
     ASSERT_TRUE(size > 592);
-    ASSERT_STATUS_OK(ii42_segment_manifest_deserialize(
+    ASSERT_STATUS_OK(evoke_segment_manifest_deserialize(
         bytes,
         size,
         &restored
@@ -1685,48 +1685,48 @@ test_segment_manifest_roundtrip_and_validation(void)
     ASSERT_TRUE(mutated != NULL);
     memcpy(mutated, bytes, size);
     mutated[size - 1] ^= 0x1U;
-    ASSERT_TRUE(ii42_segment_manifest_deserialize(
+    ASSERT_TRUE(evoke_segment_manifest_deserialize(
         mutated,
         size,
         &restored
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_segment_manifest_deserialize(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_manifest_deserialize(
         bytes,
         size - 1,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     memcpy(mutated, bytes, size);
     mutated[4] = 0xFFU;
-    ASSERT_TRUE(ii42_segment_manifest_deserialize(
+    ASSERT_TRUE(evoke_segment_manifest_deserialize(
         mutated,
         size,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     manifest.segments[1].min_sequence = 100;
-    ASSERT_TRUE(ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT);
     manifest.segments[1].min_sequence = 101;
     manifest.segments[1].start_block = 8;
-    ASSERT_TRUE(ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT);
     manifest.segments[1].start_block = 20;
     manifest.impact_statistics_epoch = 6;
-    ASSERT_TRUE(ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT);
     manifest.impact_statistics_epoch = 7;
-    manifest.segments[1].flags &= ~II42_SEGMENT_FLAG_SEALED;
-    ASSERT_TRUE(ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT);
-    manifest.segments[1].flags |= II42_SEGMENT_FLAG_SEALED;
+    manifest.segments[1].flags &= ~EVOKE_SEGMENT_FLAG_SEALED;
+    ASSERT_TRUE(evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT);
+    manifest.segments[1].flags |= EVOKE_SEGMENT_FLAG_SEALED;
     manifest.segments[1].payload_owner_manifest_id =
         manifest.manifest_id + 1;
-    ASSERT_TRUE(ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT);
     manifest.segments[1].payload_owner_manifest_id =
         manifest.manifest_id;
     manifest.query_contract.object_id = manifest.parent_manifest_id;
     manifest.query_contract.owner_manifest_id =
         manifest.parent_manifest_id;
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&manifest));
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&manifest));
     manifest.query_contract.object_id++;
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT
     );
     manifest.query_contract.object_id =
         manifest.query_contract.owner_manifest_id;
@@ -1734,125 +1734,125 @@ test_segment_manifest_roundtrip_and_validation(void)
     manifest.query_contract.object_id =
         manifest.query_contract.owner_manifest_id;
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT
     );
     manifest.query_contract.object_id = manifest.manifest_id;
     manifest.query_contract.owner_manifest_id = manifest.manifest_id;
     manifest.document_directory.object_id = 77;
     manifest.document_directory.owner_manifest_id =
         manifest.parent_manifest_id;
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&manifest));
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&manifest));
     manifest.document_directory.owner_manifest_id =
         manifest.manifest_id + 1;
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT
     );
     manifest.document_directory.owner_manifest_id =
         manifest.parent_manifest_id;
     manifest.flags &=
-        ~II42_SEGMENT_MANIFEST_FLAG_DOCUMENT_DIRECTORY;
+        ~EVOKE_SEGMENT_MANIFEST_FLAG_DOCUMENT_DIRECTORY;
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT
     );
     manifest.flags |=
-        II42_SEGMENT_MANIFEST_FLAG_DOCUMENT_DIRECTORY;
+        EVOKE_SEGMENT_MANIFEST_FLAG_DOCUMENT_DIRECTORY;
     manifest.document_directory.start_block =
         manifest.segments[0].start_block;
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT
     );
     manifest.document_directory.start_block = 56;
     manifest.lexicon_lookup.owner_manifest_id =
         manifest.parent_manifest_id;
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&manifest));
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&manifest));
     manifest.lexicon_lookup.owner_manifest_id = manifest.manifest_id + 1;
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT
     );
     manifest.lexicon_lookup.owner_manifest_id = manifest.manifest_id;
     manifest.lexicon_hash_seed = 0;
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT
     );
     manifest.lexicon_hash_seed = UINT64_C(0x42C0FFEE12345678);
-    manifest.flags &= ~II42_SEGMENT_MANIFEST_FLAG_LEXICON_LOOKUP;
+    manifest.flags &= ~EVOKE_SEGMENT_MANIFEST_FLAG_LEXICON_LOOKUP;
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT
     );
-    manifest.flags |= II42_SEGMENT_MANIFEST_FLAG_LEXICON_LOOKUP;
+    manifest.flags |= EVOKE_SEGMENT_MANIFEST_FLAG_LEXICON_LOOKUP;
     manifest.lexicon_lookup.start_block =
         manifest.segments[0].start_block;
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT
     );
     manifest.lexicon_lookup.start_block = 58;
     manifest.prefix_lookup.owner_manifest_id =
         manifest.parent_manifest_id;
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&manifest));
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&manifest));
     manifest.prefix_lookup.owner_manifest_id = manifest.manifest_id + 1;
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT
     );
     manifest.prefix_lookup.owner_manifest_id = manifest.manifest_id;
-    manifest.flags &= ~II42_SEGMENT_MANIFEST_FLAG_PREFIX_LOOKUP;
+    manifest.flags &= ~EVOKE_SEGMENT_MANIFEST_FLAG_PREFIX_LOOKUP;
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT
     );
-    manifest.flags |= II42_SEGMENT_MANIFEST_FLAG_PREFIX_LOOKUP;
+    manifest.flags |= EVOKE_SEGMENT_MANIFEST_FLAG_PREFIX_LOOKUP;
     manifest.prefix_lookup.start_block =
         manifest.segments[0].start_block;
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT
     );
     manifest.prefix_lookup.start_block = 60;
     manifest.parent_manifest_id = manifest.manifest_id;
-    ASSERT_TRUE(ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT);
     manifest.parent_manifest_id = 8;
     manifest.visible_document_count = 4;
     manifest.doc_frequencies[0] = 5;
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&manifest));
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&manifest));
     manifest.doc_frequencies[0] = 6;
-    ASSERT_TRUE(ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT);
     manifest.doc_frequencies[0] = 3;
     manifest.visible_document_count = 6;
-    ASSERT_TRUE(ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT);
     manifest.visible_document_count = 5;
     manifest.document_slot_count = (uint64_t) UINT32_MAX + 1;
-    ASSERT_TRUE(ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT);
     manifest.document_slot_count = 5;
     manifest.retired_ranges[0].start_block = 1;
-    ASSERT_TRUE(ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT);
     manifest.retired_ranges[0].start_block = 10;
     manifest.retired_ranges[1].start_block = 12;
-    ASSERT_TRUE(ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT);
     manifest.retired_ranges[1].start_block = 14;
 
     free(bytes);
     free(mutated);
-    ii42_segment_manifest_free(&manifest);
-    ii42_segment_manifest_free(&restored);
+    evoke_segment_manifest_free(&manifest);
+    evoke_segment_manifest_free(&restored);
 }
 
 static void
 test_cow_segment_manifest_roundtrip_and_validation(void)
 {
-    ii42_segment_manifest manifest;
-    ii42_segment_manifest restored;
+    evoke_segment_manifest manifest;
+    evoke_segment_manifest restored;
     uint8_t *bytes = NULL;
     size_t size = 0;
 
     initialize_test_segment_manifest(&manifest);
-    ii42_segment_manifest_init(&restored);
-    manifest.flags &= ~II42_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
-    manifest.flags |= II42_SEGMENT_MANIFEST_FLAG_COW_TERM_DIRECTORY;
+    evoke_segment_manifest_init(&restored);
+    manifest.flags &= ~EVOKE_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
+    manifest.flags |= EVOKE_SEGMENT_MANIFEST_FLAG_COW_TERM_DIRECTORY;
     manifest.term_directory.object_id = 71;
     manifest.term_directory.owner_manifest_id =
         manifest.parent_manifest_id;
     free(manifest.doc_frequencies);
     manifest.doc_frequencies = NULL;
 
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&manifest));
-    ASSERT_STATUS_OK(ii42_segment_manifest_serialize(
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&manifest));
+    ASSERT_STATUS_OK(evoke_segment_manifest_serialize(
         &manifest,
         &bytes,
         &size
@@ -1863,14 +1863,14 @@ test_cow_segment_manifest_roundtrip_and_validation(void)
         (size_t) manifest.segment_count * 120 +
         (size_t) manifest.retired_range_count * 8
     );
-    ASSERT_STATUS_OK(ii42_segment_manifest_deserialize(
+    ASSERT_STATUS_OK(evoke_segment_manifest_deserialize(
         bytes,
         size,
         &restored
     ));
     ASSERT_TRUE(
         (restored.flags &
-         II42_SEGMENT_MANIFEST_FLAG_COW_TERM_DIRECTORY) != 0
+         EVOKE_SEGMENT_MANIFEST_FLAG_COW_TERM_DIRECTORY) != 0
     );
     ASSERT_TRUE(restored.doc_frequencies == NULL);
     ASSERT_TRUE(
@@ -1882,83 +1882,83 @@ test_cow_segment_manifest_roundtrip_and_validation(void)
         manifest.parent_manifest_id
     );
 
-    manifest.flags |= II42_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
+    manifest.flags |= EVOKE_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT
     );
-    manifest.flags &= ~II42_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
+    manifest.flags &= ~EVOKE_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
     manifest.doc_frequencies = calloc(
         manifest.vocab_size,
         sizeof(*manifest.doc_frequencies)
     );
     ASSERT_TRUE(manifest.doc_frequencies != NULL);
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT
     );
     free(manifest.doc_frequencies);
     manifest.doc_frequencies = NULL;
     manifest.term_directory.owner_manifest_id =
         manifest.manifest_id + 1;
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&manifest) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&manifest) == EVOKE_ERR_FORMAT
     );
 
     free(bytes);
-    ii42_segment_manifest_free(&manifest);
-    ii42_segment_manifest_free(&restored);
+    evoke_segment_manifest_free(&manifest);
+    evoke_segment_manifest_free(&restored);
 }
 
 static void
 test_semantic_accelerator_manifest_lifecycle(void)
 {
-    ii42_segment_manifest manifest;
-    ii42_segment_manifest restored;
-    ii42_segment_manifest legacy_restored;
-    ii42_segment_manifest descendant;
-    ii42_segment_read_root root = {0};
+    evoke_segment_manifest manifest;
+    evoke_segment_manifest restored;
+    evoke_segment_manifest legacy_restored;
+    evoke_segment_manifest descendant;
+    evoke_segment_read_root root = {0};
     uint8_t *bytes = NULL;
     size_t size = 0;
     uint64_t before_checksum;
     uint64_t after_checksum;
 
     initialize_test_segment_manifest(&manifest);
-    ii42_segment_manifest_init(&restored);
-    ii42_segment_manifest_init(&legacy_restored);
-    ii42_segment_manifest_init(&descendant);
-    manifest.flags &= ~II42_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
-    manifest.flags |= II42_SEGMENT_MANIFEST_FLAG_COW_TERM_DIRECTORY;
+    evoke_segment_manifest_init(&restored);
+    evoke_segment_manifest_init(&legacy_restored);
+    evoke_segment_manifest_init(&descendant);
+    manifest.flags &= ~EVOKE_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
+    manifest.flags |= EVOKE_SEGMENT_MANIFEST_FLAG_COW_TERM_DIRECTORY;
     free(manifest.doc_frequencies);
     manifest.doc_frequencies = NULL;
-    manifest.flags |= II42_SEGMENT_MANIFEST_FLAG_SEMANTIC_ACCELERATOR;
+    manifest.flags |= EVOKE_SEGMENT_MANIFEST_FLAG_SEMANTIC_ACCELERATOR;
     initialize_test_object_ref(
         &manifest.semantic_accelerator_directory,
-        II42_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_DIRECTORY,
+        EVOKE_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_DIRECTORY,
         62,
         1,
         manifest.manifest_id,
         manifest.manifest_id
     );
     manifest.semantic_accelerator_max_sequence = manifest.max_sequence;
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&manifest));
-    ASSERT_STATUS_OK(ii42_segment_manifest_authority_checksum(
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&manifest));
+    ASSERT_STATUS_OK(evoke_segment_manifest_authority_checksum(
         &manifest,
         &before_checksum
     ));
-    ASSERT_STATUS_OK(ii42_segment_manifest_serialize(
+    ASSERT_STATUS_OK(evoke_segment_manifest_serialize(
         &manifest,
         &bytes,
         &size
     ));
-    ASSERT_STATUS_OK(ii42_segment_manifest_deserialize(
+    ASSERT_STATUS_OK(evoke_segment_manifest_deserialize(
         bytes,
         size,
         &restored
     ));
-    ASSERT_TRUE(ii42_segment_object_ref_equal(
+    ASSERT_TRUE(evoke_segment_object_ref_equal(
         &manifest.semantic_accelerator_directory,
         &restored.semantic_accelerator_directory
     ));
-    ASSERT_STATUS_OK(ii42_segment_manifest_authority_checksum(
+    ASSERT_STATUS_OK(evoke_segment_manifest_authority_checksum(
         &restored,
         &after_checksum
     ));
@@ -1966,7 +1966,7 @@ test_semantic_accelerator_manifest_lifecycle(void)
 
     test_write_u16_le(
         bytes + 4,
-        II42_SEGMENT_MANIFEST_LEGACY_VERSION
+        EVOKE_SEGMENT_MANIFEST_LEGACY_VERSION
     );
     test_write_u64_le(bytes + 576, 0);
     test_write_u64_le(bytes + 584, 0);
@@ -1974,7 +1974,7 @@ test_semantic_accelerator_manifest_lifecycle(void)
         bytes + 584,
         test_segment_manifest_checksum(bytes, size)
     );
-    ASSERT_STATUS_OK(ii42_segment_manifest_deserialize(
+    ASSERT_STATUS_OK(evoke_segment_manifest_deserialize(
         bytes,
         size,
         &legacy_restored
@@ -1983,67 +1983,67 @@ test_semantic_accelerator_manifest_lifecycle(void)
         legacy_restored.semantic_accelerator_max_sequence == 0
     );
     ASSERT_TRUE(
-        ii42_segment_manifest_semantic_accelerator_baseline_sequence(
+        evoke_segment_manifest_semantic_accelerator_baseline_sequence(
             &legacy_restored
         ) == legacy_restored.max_sequence
     );
 
     root.root_id = manifest.manifest_id;
     root.next_segment_id = manifest.manifest_id + 1;
-    ASSERT_STATUS_OK(ii42_segment_manifest_build_identity(
+    ASSERT_STATUS_OK(evoke_segment_manifest_build_identity(
         &root,
         &manifest,
         &descendant
     ));
     ASSERT_TRUE(
         (descendant.flags &
-         II42_SEGMENT_MANIFEST_FLAG_SEMANTIC_ACCELERATOR) != 0
+         EVOKE_SEGMENT_MANIFEST_FLAG_SEMANTIC_ACCELERATOR) != 0
     );
-    ASSERT_TRUE(ii42_segment_object_ref_equal(
+    ASSERT_TRUE(evoke_segment_object_ref_equal(
         &manifest.semantic_accelerator_directory,
         &descendant.semantic_accelerator_directory
     ));
     ASSERT_TRUE(
-        ii42_segment_manifest_semantic_accelerator_baseline_sequence(
+        evoke_segment_manifest_semantic_accelerator_baseline_sequence(
             &descendant
         ) == manifest.max_sequence
     );
     ASSERT_TRUE(descendant.retired_range_count == 0);
     ASSERT_TRUE(descendant.retired_ranges == NULL);
-    ASSERT_STATUS_OK(ii42_segment_manifest_authority_checksum(
+    ASSERT_STATUS_OK(evoke_segment_manifest_authority_checksum(
         &descendant,
         &after_checksum
     ));
     ASSERT_TRUE(before_checksum == after_checksum);
 
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&descendant));
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&descendant));
     descendant.semantic_accelerator_directory.owner_manifest_id =
         descendant.manifest_id + 1;
     ASSERT_TRUE(
-        ii42_segment_manifest_validate(&descendant) == II42_ERR_FORMAT
+        evoke_segment_manifest_validate(&descendant) == EVOKE_ERR_FORMAT
     );
 
-    ASSERT_TRUE(ii42_segment_manifest_semantic_accelerator_eligible(
+    ASSERT_TRUE(evoke_segment_manifest_semantic_accelerator_eligible(
         &root,
         &manifest
     ));
     root.active_l0.record_count = 1;
-    ASSERT_TRUE(ii42_segment_manifest_semantic_accelerator_eligible(
+    ASSERT_TRUE(evoke_segment_manifest_semantic_accelerator_eligible(
         &root,
         &manifest
     ));
     root.active_l0.record_count = 0;
     root.pending_l0.record_count = 1;
-    ASSERT_TRUE(ii42_segment_manifest_semantic_accelerator_eligible(
+    ASSERT_TRUE(evoke_segment_manifest_semantic_accelerator_eligible(
         &root,
         &manifest
     ));
 
     free(bytes);
-    ii42_segment_manifest_free(&descendant);
-    ii42_segment_manifest_free(&legacy_restored);
-    ii42_segment_manifest_free(&restored);
-    ii42_segment_manifest_free(&manifest);
+    evoke_segment_manifest_free(&descendant);
+    evoke_segment_manifest_free(&legacy_restored);
+    evoke_segment_manifest_free(&restored);
+    evoke_segment_manifest_free(&manifest);
 }
 
 static void
@@ -2055,13 +2055,13 @@ test_document_tid_lookup_roundtrip(void)
         UINT64_C(0x00030004)
     };
     const uint32_t slots[] = {3, 0, 4};
-    ii42_document_tid_lookup_view view;
+    evoke_document_tid_lookup_view view;
     uint8_t *bytes = NULL;
     size_t size = 0;
     uint64_t key = 0;
     uint32_t slot = 0;
 
-    ASSERT_STATUS_OK(ii42_document_tid_lookup_serialize(
+    ASSERT_STATUS_OK(evoke_document_tid_lookup_serialize(
         UINT64_C(0x1020304050607080),
         keys,
         slots,
@@ -2070,7 +2070,7 @@ test_document_tid_lookup_roundtrip(void)
         &bytes,
         &size
     ));
-    ASSERT_STATUS_OK(ii42_document_tid_lookup_open(
+    ASSERT_STATUS_OK(evoke_document_tid_lookup_open(
         bytes,
         size,
         UINT64_C(0x1020304050607080),
@@ -2080,48 +2080,48 @@ test_document_tid_lookup_roundtrip(void)
     ));
     ASSERT_TRUE(view.entry_count == 3);
     ASSERT_TRUE(view.document_slot_count == 5);
-    ASSERT_STATUS_OK(ii42_document_tid_lookup_entry(
+    ASSERT_STATUS_OK(evoke_document_tid_lookup_entry(
         &view,
         1,
         &key,
         &slot
     ));
     ASSERT_TRUE(key == keys[1] && slot == slots[1]);
-    ASSERT_TRUE(ii42_document_tid_lookup_find(&view, keys[2], &slot));
+    ASSERT_TRUE(evoke_document_tid_lookup_find(&view, keys[2], &slot));
     ASSERT_TRUE(slot == slots[2]);
-    ASSERT_TRUE(!ii42_document_tid_lookup_find(
+    ASSERT_TRUE(!evoke_document_tid_lookup_find(
         &view,
         UINT64_C(0x00040001),
         &slot
     ));
-    ASSERT_TRUE(ii42_document_tid_lookup_open(
+    ASSERT_TRUE(evoke_document_tid_lookup_open(
         bytes,
         size,
         UINT64_C(0x1020304050607081),
         3,
         5,
         &view
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     bytes[size - 1U] ^= UINT8_C(1);
-    ASSERT_TRUE(ii42_document_tid_lookup_open(
+    ASSERT_TRUE(evoke_document_tid_lookup_open(
         bytes,
         size,
         UINT64_C(0x1020304050607080),
         3,
         5,
         &view
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     free(bytes);
 }
 
 static void
 test_semantic_accelerator_directory_roundtrip(void)
 {
-    ii42_semantic_accelerator_directory directory;
-    ii42_semantic_accelerator_directory forward_only;
-    ii42_semantic_accelerator_directory retired;
-    ii42_semantic_accelerator_directory restored;
-    ii42_semantic_accelerator_directory_summary summary;
+    evoke_semantic_accelerator_directory directory;
+    evoke_semantic_accelerator_directory forward_only;
+    evoke_semantic_accelerator_directory retired;
+    evoke_semantic_accelerator_directory restored;
+    evoke_semantic_accelerator_directory_summary summary;
     uint8_t *bytes = NULL;
     uint8_t *retired_bytes = NULL;
     size_t forward_offset = 0;
@@ -2131,10 +2131,10 @@ test_semantic_accelerator_directory_roundtrip(void)
     size_t size = 0;
     uint32_t index;
 
-    ii42_semantic_accelerator_directory_init(&directory);
-    ii42_semantic_accelerator_directory_init(&forward_only);
-    ii42_semantic_accelerator_directory_init(&retired);
-    ii42_semantic_accelerator_directory_init(&restored);
+    evoke_semantic_accelerator_directory_init(&directory);
+    evoke_semantic_accelerator_directory_init(&forward_only);
+    evoke_semantic_accelerator_directory_init(&retired);
+    evoke_semantic_accelerator_directory_init(&restored);
     directory.source_manifest_id = 41;
     directory.source_authority_checksum = UINT64_C(0x1020304050607080);
     directory.owner_manifest_id = 42;
@@ -2144,9 +2144,9 @@ test_semantic_accelerator_directory_roundtrip(void)
     directory.forward_chunk_count = 2;
     directory.forward_document_shift = 9;
     directory.builder_policy_id =
-        II42_SEMANTIC_ACCELERATOR_CURRENT_POLICY;
+        EVOKE_SEMANTIC_ACCELERATOR_CURRENT_POLICY;
     directory.retained_document_cap =
-        II42_SEMANTIC_ACCELERATOR_RETAINED_DOCUMENT_CAP;
+        EVOKE_SEMANTIC_ACCELERATOR_RETAINED_DOCUMENT_CAP;
     directory.terms = calloc(directory.term_count, sizeof(*directory.terms));
     directory.forward_chunks = calloc(
         directory.forward_chunk_count,
@@ -2204,7 +2204,7 @@ test_semantic_accelerator_directory_roundtrip(void)
     directory.terms[0].term_id = 7;
     initialize_test_object_ref(
         &directory.terms[0].term_object,
-        II42_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_TERM,
+        EVOKE_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_TERM,
         90,
         3,
         directory.terms[0].term_id + 1,
@@ -2215,7 +2215,7 @@ test_semantic_accelerator_directory_roundtrip(void)
     directory.terms[1].term_id = 29;
     initialize_test_object_ref(
         &directory.terms[1].term_object,
-        II42_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_TERM,
+        EVOKE_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_TERM,
         100,
         2,
         directory.terms[1].term_id + 1,
@@ -2229,7 +2229,7 @@ test_semantic_accelerator_directory_roundtrip(void)
     directory.forward_chunks[0].row_data_offset = 4096;
     initialize_test_object_ref(
         &directory.forward_chunks[0].forward_object,
-        II42_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_FORWARD,
+        EVOKE_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_FORWARD,
         110,
         8,
         1,
@@ -2244,7 +2244,7 @@ test_semantic_accelerator_directory_roundtrip(void)
     directory.forward_chunks[1].row_data_offset = 4096;
     initialize_test_object_ref(
         &directory.forward_chunks[1].forward_object,
-        II42_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_FORWARD,
+        EVOKE_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_FORWARD,
         120,
         8,
         2,
@@ -2265,7 +2265,7 @@ test_semantic_accelerator_directory_roundtrip(void)
     }
     initialize_test_object_ref(
         &directory.scope_object,
-        II42_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_SCOPE,
+        EVOKE_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_SCOPE,
         130,
         2,
         1,
@@ -2274,7 +2274,7 @@ test_semantic_accelerator_directory_roundtrip(void)
     directory.scope_object.owner_manifest_id = directory.owner_manifest_id;
     initialize_test_object_ref(
         &directory.tid_lookup_object,
-        II42_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_TID_LOOKUP,
+        EVOKE_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_TID_LOOKUP,
         140,
         2,
         1,
@@ -2284,7 +2284,7 @@ test_semantic_accelerator_directory_roundtrip(void)
         directory.owner_manifest_id;
     initialize_test_object_ref(
         &directory.forward_bound_shards[0],
-        II42_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_FORWARD_BOUND,
+        EVOKE_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_FORWARD_BOUND,
         150,
         2,
         1,
@@ -2294,7 +2294,7 @@ test_semantic_accelerator_directory_roundtrip(void)
         directory.owner_manifest_id;
     initialize_test_object_ref(
         &directory.forward_bound_shards[1],
-        II42_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_FORWARD_BOUND,
+        EVOKE_SEGMENT_OBJECT_SEMANTIC_ACCELERATOR_FORWARD_BOUND,
         160,
         2,
         2,
@@ -2303,18 +2303,18 @@ test_semantic_accelerator_directory_roundtrip(void)
     directory.forward_bound_shards[1].owner_manifest_id =
         directory.owner_manifest_id;
 
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_directory_validate(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_directory_validate(
         &directory
     ));
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_directory_serialize(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_directory_serialize(
         &directory,
         &bytes,
         &size
     ));
     ASSERT_STATUS_OK(
-        ii42_semantic_accelerator_directory_summary_deserialize(
+        evoke_semantic_accelerator_directory_summary_deserialize(
             bytes,
-            II42_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE,
+            EVOKE_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE,
             &summary
         )
     );
@@ -2330,32 +2330,32 @@ test_semantic_accelerator_directory_roundtrip(void)
     ASSERT_TRUE(summary.forward_bound_term_bytes_count == 128);
     ASSERT_TRUE(summary.forward_bound_shard_count == 2);
     ASSERT_TRUE(
-        ii42_semantic_accelerator_directory_summary_has_scope(&summary)
+        evoke_semantic_accelerator_directory_summary_has_scope(&summary)
     );
     ASSERT_TRUE(
-        ii42_semantic_accelerator_directory_summary_has_tid_lookup(
+        evoke_semantic_accelerator_directory_summary_has_tid_lookup(
             &summary
         )
     );
     ASSERT_TRUE(
-        ii42_semantic_accelerator_directory_summary_is_current(&summary)
+        evoke_semantic_accelerator_directory_summary_is_current(&summary)
     );
     ASSERT_TRUE(
-        ii42_semantic_accelerator_directory_summary_has_complete_forward(
+        evoke_semantic_accelerator_directory_summary_has_complete_forward(
             &summary
         )
     );
     ASSERT_STATUS_OK(
-        ii42_semantic_accelerator_directory_forward_slice(
+        evoke_semantic_accelerator_directory_forward_slice(
             bytes,
-            II42_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE,
+            EVOKE_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE,
             &summary,
             &forward_offset,
             &forward_size
         )
     );
     ASSERT_STATUS_OK(
-        ii42_semantic_accelerator_forward_directory_deserialize(
+        evoke_semantic_accelerator_forward_directory_deserialize(
             &summary,
             bytes + forward_offset,
             forward_size,
@@ -2373,25 +2373,25 @@ test_semantic_accelerator_directory_roundtrip(void)
     ASSERT_TRUE(forward_only.forward_bound_shard_count == 2);
     ASSERT_TRUE(forward_only.forward_bound_shards != NULL);
     ASSERT_TRUE(
-        ii42_semantic_accelerator_directory_find_forward_bound(
+        evoke_semantic_accelerator_directory_find_forward_bound(
             &forward_only,
             127
         ) == &forward_only.forward_bound_shards[1]
     );
     ASSERT_TRUE(
-        ii42_semantic_accelerator_directory_find_forward(
+        evoke_semantic_accelerator_directory_find_forward(
             &forward_only,
             700
         ) == &forward_only.forward_chunks[1]
     );
     ASSERT_TRUE(
-        ii42_semantic_accelerator_directory_summary_deserialize(
+        evoke_semantic_accelerator_directory_summary_deserialize(
             bytes,
-            II42_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE - 1,
+            EVOKE_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE - 1,
             &summary
-        ) == II42_ERR_FORMAT
+        ) == EVOKE_ERR_FORMAT
     );
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_directory_deserialize(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_directory_deserialize(
         bytes,
         size,
         &restored
@@ -2410,43 +2410,43 @@ test_semantic_accelerator_directory_roundtrip(void)
     ASSERT_TRUE(restored.forward_bound_term_bytes[7] == 800);
     ASSERT_TRUE(restored.forward_bound_shard_count == 2);
     ASSERT_TRUE(
-        ii42_semantic_accelerator_directory_find_forward_bound(
+        evoke_semantic_accelerator_directory_find_forward_bound(
             &restored,
             127
         ) == &restored.forward_bound_shards[1]
     );
-    ASSERT_TRUE(ii42_semantic_accelerator_directory_has_scope(&restored));
+    ASSERT_TRUE(evoke_semantic_accelerator_directory_has_scope(&restored));
     ASSERT_TRUE(
-        ii42_semantic_accelerator_directory_has_tid_lookup(&restored)
+        evoke_semantic_accelerator_directory_has_tid_lookup(&restored)
     );
-    ASSERT_TRUE(ii42_semantic_accelerator_directory_is_current(&restored));
+    ASSERT_TRUE(evoke_semantic_accelerator_directory_is_current(&restored));
     ASSERT_TRUE(
         restored.retained_document_cap ==
-        II42_SEMANTIC_ACCELERATOR_RETAINED_DOCUMENT_CAP
+        EVOKE_SEMANTIC_ACCELERATOR_RETAINED_DOCUMENT_CAP
     );
-    ASSERT_TRUE(ii42_semantic_accelerator_directory_has_complete_forward(
+    ASSERT_TRUE(evoke_semantic_accelerator_directory_has_complete_forward(
         &restored
     ));
     ASSERT_TRUE(
-        ii42_semantic_accelerator_directory_find(&restored, 29) != NULL
+        evoke_semantic_accelerator_directory_find(&restored, 29) != NULL
     );
     ASSERT_TRUE(
-        ii42_semantic_accelerator_directory_find(&restored, 8) == NULL
+        evoke_semantic_accelerator_directory_find(&restored, 8) == NULL
     );
     ASSERT_TRUE(
-        ii42_semantic_accelerator_directory_find_forward(
+        evoke_semantic_accelerator_directory_find_forward(
             &restored,
             700
         ) == &restored.forward_chunks[1]
     );
 
-    retired_size = II42_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
+    retired_size = EVOKE_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
         (size_t) directory.term_count * 56U +
         (size_t) directory.forward_chunk_count * 56U;
     retired_bytes = calloc(retired_size, 1U);
     ASSERT_TRUE(retired_bytes != NULL);
     retired_forward_offset =
-        II42_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
+        EVOKE_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
         (size_t) directory.term_count * 56U;
     memcpy(
         retired_bytes,
@@ -2475,27 +2475,27 @@ test_semantic_accelerator_directory_roundtrip(void)
         )
     );
     ASSERT_STATUS_OK(
-        ii42_semantic_accelerator_directory_summary_deserialize(
+        evoke_semantic_accelerator_directory_summary_deserialize(
             retired_bytes,
-            II42_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE,
+            EVOKE_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE,
             &summary
         )
     );
     ASSERT_TRUE(
-        !ii42_semantic_accelerator_directory_summary_format_is_current(
+        !evoke_semantic_accelerator_directory_summary_format_is_current(
             &summary
         )
     );
     ASSERT_TRUE(
-        !ii42_semantic_accelerator_directory_summary_is_current(&summary)
+        !evoke_semantic_accelerator_directory_summary_is_current(&summary)
     );
-    ASSERT_TRUE(ii42_semantic_accelerator_directory_deserialize(
+    ASSERT_TRUE(evoke_semantic_accelerator_directory_deserialize(
         retired_bytes,
         retired_size,
         &retired
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_STATUS_OK(
-        ii42_semantic_accelerator_directory_deserialize_retired(
+        evoke_semantic_accelerator_directory_deserialize_retired(
             retired_bytes,
             retired_size,
             &retired
@@ -2510,7 +2510,7 @@ test_semantic_accelerator_directory_roundtrip(void)
     ) == 0);
 
     free(retired_bytes);
-    retired_size = II42_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
+    retired_size = EVOKE_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
         (size_t) directory.term_count * 56U +
         (size_t) directory.forward_chunk_count * 64U;
     retired_bytes = calloc(retired_size, 1U);
@@ -2535,9 +2535,9 @@ test_semantic_accelerator_directory_roundtrip(void)
         )
     );
     ASSERT_STATUS_OK(
-        ii42_semantic_accelerator_directory_summary_deserialize(
+        evoke_semantic_accelerator_directory_summary_deserialize(
             retired_bytes,
-            II42_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE,
+            EVOKE_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE,
             &summary
         )
     );
@@ -2545,17 +2545,17 @@ test_semantic_accelerator_directory_roundtrip(void)
     ASSERT_TRUE(summary.forward_entry_size == 64);
     ASSERT_TRUE(summary.forward_term_work_count == 0);
     ASSERT_TRUE(
-        !ii42_semantic_accelerator_directory_summary_format_is_current(
+        !evoke_semantic_accelerator_directory_summary_format_is_current(
             &summary
         )
     );
-    ASSERT_TRUE(ii42_semantic_accelerator_directory_deserialize(
+    ASSERT_TRUE(evoke_semantic_accelerator_directory_deserialize(
         retired_bytes,
         retired_size,
         &retired
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_STATUS_OK(
-        ii42_semantic_accelerator_directory_deserialize_retired(
+        evoke_semantic_accelerator_directory_deserialize_retired(
             retired_bytes,
             retired_size,
             &retired
@@ -2567,7 +2567,7 @@ test_semantic_accelerator_directory_roundtrip(void)
     ASSERT_TRUE(retired.forward_term_work == NULL);
 
     free(retired_bytes);
-    retired_size = II42_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
+    retired_size = EVOKE_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
         (size_t) directory.term_count * 56U +
         (size_t) directory.forward_chunk_count * 64U +
         (size_t) directory.vocab_size * sizeof(uint64_t);
@@ -2593,7 +2593,7 @@ test_semantic_accelerator_directory_roundtrip(void)
         )
     );
     ASSERT_STATUS_OK(
-        ii42_semantic_accelerator_directory_deserialize_retired(
+        evoke_semantic_accelerator_directory_deserialize_retired(
             retired_bytes,
             retired_size,
             &retired
@@ -2603,7 +2603,7 @@ test_semantic_accelerator_directory_roundtrip(void)
     ASSERT_TRUE(retired.forward_bound_shards == NULL);
 
     free(retired_bytes);
-    retired_size = II42_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
+    retired_size = EVOKE_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
         (size_t) directory.term_count * 56U +
         (size_t) directory.forward_chunk_count * 64U +
         (size_t) directory.vocab_size * sizeof(uint64_t) +
@@ -2611,7 +2611,7 @@ test_semantic_accelerator_directory_roundtrip(void)
     retired_bytes = malloc(retired_size);
     ASSERT_TRUE(retired_bytes != NULL);
     retired_forward_offset =
-        II42_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
+        EVOKE_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
         (size_t) directory.term_count * 56U +
         (size_t) directory.forward_chunk_count * 64U +
         (size_t) directory.vocab_size * sizeof(uint64_t);
@@ -2628,7 +2628,7 @@ test_semantic_accelerator_directory_roundtrip(void)
     {
         write_u32_le(
             retired_bytes +
-                II42_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
+                EVOKE_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
                 (size_t) directory.term_count * 56U +
                 (size_t) index * 64U + 12U,
             0
@@ -2643,7 +2643,7 @@ test_semantic_accelerator_directory_roundtrip(void)
         )
     );
     ASSERT_STATUS_OK(
-        ii42_semantic_accelerator_directory_deserialize_retired(
+        evoke_semantic_accelerator_directory_deserialize_retired(
             retired_bytes,
             retired_size,
             &retired
@@ -2652,7 +2652,7 @@ test_semantic_accelerator_directory_roundtrip(void)
     ASSERT_TRUE(retired.forward_term_work[29] == 420);
     ASSERT_TRUE(retired.forward_bound_shard_count == 2);
     ASSERT_TRUE(
-        ii42_semantic_accelerator_directory_find_forward_bound(
+        evoke_semantic_accelerator_directory_find_forward_bound(
             &retired,
             127
         ) == &retired.forward_bound_shards[1]
@@ -2676,7 +2676,7 @@ test_semantic_accelerator_directory_roundtrip(void)
         size_t bound_ref_bytes =
             (size_t) directory.forward_bound_shard_count * 48U;
         size_t prefix_size =
-            II42_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE + term_bytes +
+            EVOKE_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE + term_bytes +
             forward_bytes + work_bytes + chunk_cost_bytes;
 
         retired_size = prefix_size + metric_bytes + bound_ref_bytes;
@@ -2692,7 +2692,7 @@ test_semantic_accelerator_directory_roundtrip(void)
         {
             write_u32_le(
                 retired_bytes +
-                    II42_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
+                    EVOKE_SEMANTIC_ACCELERATOR_DIRECTORY_HEADER_SIZE +
                     term_bytes + (size_t) index * 64U + 12U,
                 0
             );
@@ -2709,7 +2709,7 @@ test_semantic_accelerator_directory_roundtrip(void)
         )
     );
     ASSERT_STATUS_OK(
-        ii42_semantic_accelerator_directory_deserialize_retired(
+        evoke_semantic_accelerator_directory_deserialize_retired(
             retired_bytes,
             retired_size,
             &retired
@@ -2725,11 +2725,11 @@ test_semantic_accelerator_directory_roundtrip(void)
         bytes + 64,
         test_semantic_accelerator_directory_checksum(bytes, size)
     );
-    ASSERT_TRUE(ii42_semantic_accelerator_directory_deserialize(
+    ASSERT_TRUE(evoke_semantic_accelerator_directory_deserialize(
         bytes,
         size,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     test_write_u16_le(bytes + 4, 10);
     test_write_u64_le(bytes + 64, 0);
@@ -2738,18 +2738,18 @@ test_semantic_accelerator_directory_roundtrip(void)
         test_semantic_accelerator_directory_checksum(bytes, size)
     );
     bytes[size - 1] ^= 0x01U;
-    ASSERT_TRUE(ii42_semantic_accelerator_directory_deserialize(
+    ASSERT_TRUE(evoke_semantic_accelerator_directory_deserialize(
         bytes,
         size,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     free(retired_bytes);
     free(bytes);
-    ii42_semantic_accelerator_directory_free(&forward_only);
-    ii42_semantic_accelerator_directory_free(&retired);
-    ii42_semantic_accelerator_directory_free(&restored);
-    ii42_semantic_accelerator_directory_free(&directory);
+    evoke_semantic_accelerator_directory_free(&forward_only);
+    evoke_semantic_accelerator_directory_free(&retired);
+    evoke_semantic_accelerator_directory_free(&restored);
+    evoke_semantic_accelerator_directory_free(&directory);
 }
 
 static void
@@ -2758,7 +2758,7 @@ test_scope_roundtrip_and_validation(void)
     const uint32_t date_documents[] = {0, 2};
     const uint32_t ai_documents[] = {1};
     const uint32_t lg_documents[] = {0, 2};
-    const ii42_scope_column columns[] = {
+    const evoke_scope_column columns[] = {
         {
             .index_attribute = 3,
             .heap_attribute = 3,
@@ -2780,10 +2780,10 @@ test_scope_roundtrip_and_validation(void)
             .value_count = 2
         }
     };
-    ii42_scope_value values[] = {
+    evoke_scope_value values[] = {
         {
             .column_index = 0,
-            .kind = II42_SCOPE_VALUE_SCALAR,
+            .kind = EVOKE_SCOPE_VALUE_SCALAR,
             .value = (const uint8_t *) "20260400",
             .value_size = 8,
             .documents = date_documents,
@@ -2791,7 +2791,7 @@ test_scope_roundtrip_and_validation(void)
         },
         {
             .column_index = 1,
-            .kind = II42_SCOPE_VALUE_ARRAY_ELEMENT,
+            .kind = EVOKE_SCOPE_VALUE_ARRAY_ELEMENT,
             .value = (const uint8_t *) "cs.AI",
             .value_size = 5,
             .documents = ai_documents,
@@ -2799,7 +2799,7 @@ test_scope_roundtrip_and_validation(void)
         },
         {
             .column_index = 1,
-            .kind = II42_SCOPE_VALUE_ARRAY_ELEMENT,
+            .kind = EVOKE_SCOPE_VALUE_ARRAY_ELEMENT,
             .value = (const uint8_t *) "cs.LG",
             .value_size = 5,
             .documents = lg_documents,
@@ -2807,16 +2807,16 @@ test_scope_roundtrip_and_validation(void)
         }
     };
     const uint64_t authority = UINT64_C(0x1020304050607080);
-    ii42_scope_header header;
-    ii42_scope_column_entry column;
-    ii42_scope_value_entry value;
-    ii42_scope_writer bounded_writer;
+    evoke_scope_header header;
+    evoke_scope_column_entry column;
+    evoke_scope_value_entry value;
+    evoke_scope_writer bounded_writer;
     uint8_t *bytes = NULL;
     uint8_t *corrupted = NULL;
     uint8_t *stale = NULL;
     size_t size = 0;
 
-    ASSERT_STATUS_OK(ii42_scope_serialize(
+    ASSERT_STATUS_OK(evoke_scope_serialize(
         authority,
         3,
         columns,
@@ -2826,9 +2826,9 @@ test_scope_roundtrip_and_validation(void)
         &bytes,
         &size
     ));
-    ASSERT_TRUE(size > II42_SCOPE_HEADER_SIZE);
-    ii42_scope_writer_init(&bounded_writer);
-    ASSERT_TRUE(ii42_scope_writer_begin(
+    ASSERT_TRUE(size > EVOKE_SCOPE_HEADER_SIZE);
+    evoke_scope_writer_init(&bounded_writer);
+    ASSERT_TRUE(evoke_scope_writer_begin(
         &bounded_writer,
         authority,
         3,
@@ -2838,14 +2838,14 @@ test_scope_roundtrip_and_validation(void)
         18,
         5,
         size - 1U
-    ) == II42_ERR_NOMEM);
+    ) == EVOKE_ERR_NOMEM);
     ASSERT_TRUE(bounded_writer.bytes == NULL);
     ASSERT_TRUE(bounded_writer.total_size == size);
-    ii42_scope_writer_free(&bounded_writer);
-    ASSERT_STATUS_OK(ii42_scope_validate(bytes, size, authority));
-    ASSERT_STATUS_OK(ii42_scope_header_deserialize(
+    evoke_scope_writer_free(&bounded_writer);
+    ASSERT_STATUS_OK(evoke_scope_validate(bytes, size, authority));
+    ASSERT_STATUS_OK(evoke_scope_header_deserialize(
         bytes,
-        II42_SCOPE_HEADER_SIZE,
+        EVOKE_SCOPE_HEADER_SIZE,
         size,
         authority,
         &header
@@ -2853,18 +2853,18 @@ test_scope_roundtrip_and_validation(void)
     ASSERT_TRUE(header.document_count == 3);
     ASSERT_TRUE(header.column_count == 2);
     ASSERT_TRUE(header.value_count == 3);
-    ASSERT_TRUE(header.version == II42_SCOPE_CURRENT_VERSION);
-    ASSERT_TRUE(ii42_scope_header_is_current(&header));
-    ASSERT_TRUE(header.gram_block_values == II42_SCOPE_GRAM_BLOCK_VALUES);
-    ASSERT_TRUE(header.gram_filter_bytes == II42_SCOPE_GRAM_FILTER_BYTES);
+    ASSERT_TRUE(header.version == EVOKE_SCOPE_CURRENT_VERSION);
+    ASSERT_TRUE(evoke_scope_header_is_current(&header));
+    ASSERT_TRUE(header.gram_block_values == EVOKE_SCOPE_GRAM_BLOCK_VALUES);
+    ASSERT_TRUE(header.gram_filter_bytes == EVOKE_SCOPE_GRAM_FILTER_BYTES);
     ASSERT_TRUE(header.gram_filter_offset ==
         header.dictionary_offset + header.dictionary_size);
-    ASSERT_TRUE(header.gram_filter_size == II42_SCOPE_GRAM_FILTER_BYTES);
+    ASSERT_TRUE(header.gram_filter_size == EVOKE_SCOPE_GRAM_FILTER_BYTES);
     ASSERT_TRUE(header.postings_offset ==
         header.gram_filter_offset + header.gram_filter_size);
     ASSERT_TRUE(header.total_size == size);
     {
-        uint32_t bit = ii42_scope_ascii_gram_bit('s', '.', 'a');
+        uint32_t bit = evoke_scope_ascii_gram_bit('s', '.', 'a');
 
     ASSERT_TRUE((bytes[header.gram_filter_offset + bit / 8U] &
             (uint8_t) (1U << (bit % 8U))) != 0);
@@ -2873,7 +2873,7 @@ test_scope_roundtrip_and_validation(void)
     bytes = NULL;
     values[2].value = (const uint8_t *) "\xe2\x84\xaa";
     values[2].value_size = 3;
-    ASSERT_STATUS_OK(ii42_scope_serialize(
+    ASSERT_STATUS_OK(evoke_scope_serialize(
         authority,
         3,
         columns,
@@ -2883,14 +2883,14 @@ test_scope_roundtrip_and_validation(void)
         &bytes,
         &size
     ));
-    ASSERT_STATUS_OK(ii42_scope_header_deserialize(
+    ASSERT_STATUS_OK(evoke_scope_header_deserialize(
         bytes,
-        II42_SCOPE_HEADER_SIZE,
+        EVOKE_SCOPE_HEADER_SIZE,
         size,
         authority,
         &header
     ));
-    for (uint32_t byte = 0; byte < II42_SCOPE_GRAM_FILTER_BYTES; byte++)
+    for (uint32_t byte = 0; byte < EVOKE_SCOPE_GRAM_FILTER_BYTES; byte++)
     {
         ASSERT_TRUE(bytes[header.gram_filter_offset + byte] == UINT8_MAX);
     }
@@ -2898,7 +2898,7 @@ test_scope_roundtrip_and_validation(void)
     bytes = NULL;
     values[2].gram_value = (const uint8_t *) "kelvin";
     values[2].gram_value_size = 6;
-    ASSERT_STATUS_OK(ii42_scope_serialize(
+    ASSERT_STATUS_OK(evoke_scope_serialize(
         authority,
         3,
         columns,
@@ -2908,21 +2908,21 @@ test_scope_roundtrip_and_validation(void)
         &bytes,
         &size
     ));
-    ASSERT_STATUS_OK(ii42_scope_header_deserialize(
+    ASSERT_STATUS_OK(evoke_scope_header_deserialize(
         bytes,
-        II42_SCOPE_HEADER_SIZE,
+        EVOKE_SCOPE_HEADER_SIZE,
         size,
         authority,
         &header
     ));
     {
-        uint32_t bit = ii42_scope_ascii_gram_bit('k', 'e', 'l');
+        uint32_t bit = evoke_scope_ascii_gram_bit('k', 'e', 'l');
         bool unsaturated = false;
 
         ASSERT_TRUE((bytes[header.gram_filter_offset + bit / 8U] &
             (uint8_t) (1U << (bit % 8U))) != 0);
         for (uint32_t byte = 0;
-             byte < II42_SCOPE_GRAM_FILTER_BYTES;
+             byte < EVOKE_SCOPE_GRAM_FILTER_BYTES;
              byte++)
         {
             if (bytes[header.gram_filter_offset + byte] != UINT8_MAX)
@@ -2946,38 +2946,38 @@ test_scope_roundtrip_and_validation(void)
         test_write_u16_le(stale + 4, retired_version);
         test_write_u64_le(stale + 72, test_scope_checksum(stale, size));
         ASSERT_TRUE(
-            ii42_scope_validate(stale, size, authority) == II42_ERR_FORMAT
+            evoke_scope_validate(stale, size, authority) == EVOKE_ERR_FORMAT
         );
-        ASSERT_TRUE(ii42_scope_header_deserialize(
+        ASSERT_TRUE(evoke_scope_header_deserialize(
             stale,
-            II42_SCOPE_HEADER_SIZE,
+            EVOKE_SCOPE_HEADER_SIZE,
             size,
             authority,
             &header
-        ) == II42_ERR_FORMAT);
+        ) == EVOKE_ERR_FORMAT);
         free(stale);
         stale = NULL;
     }
-    ASSERT_STATUS_OK(ii42_scope_header_deserialize(
+    ASSERT_STATUS_OK(evoke_scope_header_deserialize(
         bytes,
-        II42_SCOPE_HEADER_SIZE,
+        EVOKE_SCOPE_HEADER_SIZE,
         size,
         authority,
         &header
     ));
-    ASSERT_STATUS_OK(ii42_scope_column_entry_deserialize(
-        bytes + II42_SCOPE_HEADER_SIZE,
-        2 * II42_SCOPE_COLUMN_ENTRY_SIZE,
+    ASSERT_STATUS_OK(evoke_scope_column_entry_deserialize(
+        bytes + EVOKE_SCOPE_HEADER_SIZE,
+        2 * EVOKE_SCOPE_COLUMN_ENTRY_SIZE,
         &header,
         1,
         &column
     ));
     ASSERT_TRUE(column.heap_attribute == 4);
     ASSERT_TRUE(column.element_type_oid == 25);
-    ASSERT_STATUS_OK(ii42_scope_value_entry_deserialize(
-        bytes + II42_SCOPE_HEADER_SIZE +
-            2 * II42_SCOPE_COLUMN_ENTRY_SIZE,
-        3 * II42_SCOPE_VALUE_ENTRY_SIZE,
+    ASSERT_STATUS_OK(evoke_scope_value_entry_deserialize(
+        bytes + EVOKE_SCOPE_HEADER_SIZE +
+            2 * EVOKE_SCOPE_COLUMN_ENTRY_SIZE,
+        3 * EVOKE_SCOPE_VALUE_ENTRY_SIZE,
         &header,
         2,
         &value
@@ -2986,7 +2986,7 @@ test_scope_roundtrip_and_validation(void)
     ASSERT_TRUE(value.document_count == 2);
     ASSERT_TRUE((value.gram_mask &
         (UINT32_C(1) <<
-            (ii42_scope_ascii_gram_bit('k', 'e', 'l') % 32U))) != 0);
+            (evoke_scope_ascii_gram_bit('k', 'e', 'l') % 32U))) != 0);
     ASSERT_TRUE(test_read_u32_le(
         bytes + header.postings_offset + value.postings_offset
     ) == 0);
@@ -2999,14 +2999,14 @@ test_scope_roundtrip_and_validation(void)
     memcpy(corrupted, bytes, size);
     corrupted[size - 1] ^= 1U;
     ASSERT_TRUE(
-        ii42_scope_validate(corrupted, size, authority) == II42_ERR_FORMAT
+        evoke_scope_validate(corrupted, size, authority) == EVOKE_ERR_FORMAT
     );
     free(corrupted);
     corrupted = NULL;
 
     values[1].value = (const uint8_t *) "cs.ZZ";
     values[2].value = (const uint8_t *) "cs.AA";
-    ASSERT_TRUE(ii42_scope_serialize(
+    ASSERT_TRUE(evoke_scope_serialize(
         authority,
         3,
         columns,
@@ -3015,7 +3015,7 @@ test_scope_roundtrip_and_validation(void)
         3,
         &corrupted,
         &size
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     free(bytes);
 }
@@ -3032,7 +3032,7 @@ test_scope_ascii_ilike_contains(void)
     size_t literal_size = 0;
     bool matches = false;
 
-    ASSERT_TRUE(ii42_scope_ascii_ilike_contains_pattern(
+    ASSERT_TRUE(evoke_scope_ascii_ilike_contains_pattern(
         pattern,
         sizeof(pattern) - 1U,
         &literal,
@@ -3040,7 +3040,7 @@ test_scope_ascii_ilike_contains(void)
     ));
     ASSERT_TRUE(literal_size == 6);
     ASSERT_TRUE(memcmp(literal, "Cancer", literal_size) == 0);
-    ASSERT_TRUE(ii42_scope_ascii_case_insensitive_contains(
+    ASSERT_TRUE(evoke_scope_ascii_case_insensitive_contains(
         value,
         sizeof(value) - 1U,
         literal,
@@ -3048,7 +3048,7 @@ test_scope_ascii_ilike_contains(void)
         &matches
     ));
     ASSERT_TRUE(matches);
-    ASSERT_TRUE(ii42_scope_ascii_case_insensitive_contains(
+    ASSERT_TRUE(evoke_scope_ascii_case_insensitive_contains(
         miss,
         sizeof(miss) - 1U,
         literal,
@@ -3056,32 +3056,32 @@ test_scope_ascii_ilike_contains(void)
         &matches
     ));
     ASSERT_TRUE(!matches);
-    ASSERT_TRUE(!ii42_scope_ascii_case_insensitive_contains(
+    ASSERT_TRUE(!evoke_scope_ascii_case_insensitive_contains(
         non_ascii,
         sizeof(non_ascii),
         literal,
         literal_size,
         &matches
     ));
-    ASSERT_TRUE(!ii42_scope_ascii_ilike_contains_pattern(
+    ASSERT_TRUE(!evoke_scope_ascii_ilike_contains_pattern(
         (const uint8_t *) "Cancer%",
         7,
         &literal,
         &literal_size
     ));
-    ASSERT_TRUE(!ii42_scope_ascii_ilike_contains_pattern(
+    ASSERT_TRUE(!evoke_scope_ascii_ilike_contains_pattern(
         (const uint8_t *) "%Can_er%",
         8,
         &literal,
         &literal_size
     ));
-    ASSERT_TRUE(!ii42_scope_ascii_ilike_contains_pattern(
+    ASSERT_TRUE(!evoke_scope_ascii_ilike_contains_pattern(
         (const uint8_t *) "%Can\\%er%",
         9,
         &literal,
         &literal_size
     ));
-    ASSERT_TRUE(!ii42_scope_ascii_ilike_contains_pattern(
+    ASSERT_TRUE(!evoke_scope_ascii_ilike_contains_pattern(
         (const uint8_t *) "%Can%er%",
         8,
         &literal,
@@ -3092,14 +3092,14 @@ test_scope_ascii_ilike_contains(void)
             '%', 'c', UINT8_C(0xc3), UINT8_C(0xa9), '%'
         };
 
-        ASSERT_TRUE(!ii42_scope_ascii_ilike_contains_pattern(
+        ASSERT_TRUE(!evoke_scope_ascii_ilike_contains_pattern(
             non_ascii_pattern,
             sizeof(non_ascii_pattern),
             &literal,
             &literal_size
         ));
     }
-    ASSERT_TRUE(ii42_scope_ascii_ilike_contains_pattern(
+    ASSERT_TRUE(evoke_scope_ascii_ilike_contains_pattern(
         (const uint8_t *) "%%",
         2,
         &literal,
@@ -3122,20 +3122,20 @@ test_semantic_forward_chunk_roundtrip(void)
         4.0
     };
     const uint8_t operations[] = {
-        II42_SEMANTIC_FORWARD_FLOAT_IMPACT,
-        II42_SEMANTIC_FORWARD_DOUBLE_PRODUCT,
-        II42_SEMANTIC_FORWARD_FLOAT_IMPACT,
-        II42_SEMANTIC_FORWARD_FLOAT_IMPACT,
-        II42_SEMANTIC_FORWARD_DOUBLE_PRODUCT,
-        II42_SEMANTIC_FORWARD_FLOAT_IMPACT
+        EVOKE_SEMANTIC_FORWARD_FLOAT_IMPACT,
+        EVOKE_SEMANTIC_FORWARD_DOUBLE_PRODUCT,
+        EVOKE_SEMANTIC_FORWARD_FLOAT_IMPACT,
+        EVOKE_SEMANTIC_FORWARD_FLOAT_IMPACT,
+        EVOKE_SEMANTIC_FORWARD_DOUBLE_PRODUCT,
+        EVOKE_SEMANTIC_FORWARD_FLOAT_IMPACT
     };
     const uint32_t query_ids[] = {1, 7, 9};
     const float query_weights[] = {1.0f, 2.0f, 0.5f};
     const uint32_t ordered_query_ids[] = {7, 2, 7};
     const float ordered_query_weights[] = {2.0f, 3.0f, -1.0f};
-    ii42_semantic_forward_chunk chunk;
-    ii42_semantic_forward_chunk restored;
-    ii42_semantic_forward_header header;
+    evoke_semantic_forward_chunk chunk;
+    evoke_semantic_forward_chunk restored;
+    evoke_semantic_forward_header header;
     uint8_t *bytes = NULL;
     uint8_t *mutated = NULL;
     uint8_t allowed_document_bitmap[] = {
@@ -3148,8 +3148,8 @@ test_semantic_forward_chunk_roundtrip(void)
     uint64_t transposed_postings_examined = 0;
     uint64_t transposed_bytes_read = 0;
 
-    ii42_semantic_forward_chunk_init(&chunk);
-    ii42_semantic_forward_chunk_init(&restored);
+    evoke_semantic_forward_chunk_init(&chunk);
+    evoke_semantic_forward_chunk_init(&restored);
     chunk.source_authority_checksum = UINT64_C(0x1122334455667788);
     chunk.first_document = 100;
     chunk.document_count = 3;
@@ -3159,14 +3159,14 @@ test_semantic_forward_chunk_roundtrip(void)
     chunk.term_ids = (uint32_t *) term_ids;
     chunk.operations = (uint8_t *) operations;
     chunk.contributions = (double *) contributions;
-    ASSERT_STATUS_OK(ii42_semantic_forward_chunk_serialize(
+    ASSERT_STATUS_OK(evoke_semantic_forward_chunk_serialize(
         &chunk,
         &bytes,
         &size
     ));
-    ASSERT_STATUS_OK(ii42_semantic_forward_header_deserialize(
+    ASSERT_STATUS_OK(evoke_semantic_forward_header_deserialize(
         bytes,
-        ii42_semantic_forward_header_size(),
+        evoke_semantic_forward_header_size(),
         size,
         chunk.source_authority_checksum,
         &header
@@ -3176,12 +3176,12 @@ test_semantic_forward_chunk_roundtrip(void)
     ASSERT_TRUE(header.posting_count == chunk.posting_count);
     ASSERT_TRUE(header.vocab_size == chunk.vocab_size);
     ASSERT_TRUE(
-        header.format_version == II42_SEMANTIC_FORWARD_TRANSPOSE_VERSION
+        header.format_version == EVOKE_SEMANTIC_FORWARD_TRANSPOSE_VERSION
     );
     ASSERT_TRUE(header.transpose_sparse_posting_count == 6);
     ASSERT_TRUE(header.transpose_dense_term_count == 0);
     ASSERT_TRUE(
-        header.row_offsets_offset == ii42_semantic_forward_header_size()
+        header.row_offsets_offset == evoke_semantic_forward_header_size()
     );
     ASSERT_TRUE(
         header.row_data_offset == header.row_offsets_offset +
@@ -3195,7 +3195,7 @@ test_semantic_forward_chunk_roundtrip(void)
     );
     ASSERT_TRUE(header.quantization_bits == 8);
     ASSERT_TRUE(size > 158 && size < 256);
-    ASSERT_STATUS_OK(ii42_semantic_forward_score_transposed_sorted(
+    ASSERT_STATUS_OK(evoke_semantic_forward_score_transposed_sorted(
         bytes,
         size,
         chunk.source_authority_checksum,
@@ -3222,7 +3222,7 @@ test_semantic_forward_chunk_roundtrip(void)
                 ((size_t) document + 1U) * sizeof(uint32_t)
         );
 
-        ASSERT_STATUS_OK(ii42_semantic_forward_score_serialized_row_sorted(
+        ASSERT_STATUS_OK(evoke_semantic_forward_score_serialized_row_sorted(
             bytes + header.row_data_offset + row_start,
             (size_t) row_end - row_start,
             query_ids,
@@ -3237,7 +3237,7 @@ test_semantic_forward_chunk_roundtrip(void)
             sizeof(score)
         ) == 0);
     }
-    ASSERT_STATUS_OK(ii42_semantic_forward_score_transposed_sorted(
+    ASSERT_STATUS_OK(evoke_semantic_forward_score_transposed_sorted(
         bytes,
         size,
         chunk.source_authority_checksum,
@@ -3252,7 +3252,7 @@ test_semantic_forward_chunk_roundtrip(void)
         &transposed_bytes_read
     ));
     ASSERT_TRUE(transposed_scores[1] == 0.0f);
-    ASSERT_STATUS_OK(ii42_semantic_forward_score_serialized_row_sorted(
+    ASSERT_STATUS_OK(evoke_semantic_forward_score_serialized_row_sorted(
         bytes + header.row_data_offset +
             test_read_u32_le(bytes + header.row_offsets_offset),
         test_read_u32_le(
@@ -3266,13 +3266,13 @@ test_semantic_forward_chunk_roundtrip(void)
     ));
     ASSERT_TRUE(serialized_posting_count == 3);
     ASSERT_TRUE(fabsf(score - 1.5f) < 1e-2f);
-    ASSERT_STATUS_OK(ii42_semantic_forward_chunk_deserialize(
+    ASSERT_STATUS_OK(evoke_semantic_forward_chunk_deserialize(
         bytes,
         size,
         chunk.source_authority_checksum,
         &restored
     ));
-    ASSERT_STATUS_OK(ii42_semantic_forward_chunk_score(
+    ASSERT_STATUS_OK(evoke_semantic_forward_chunk_score(
         &restored,
         100,
         query_ids,
@@ -3281,7 +3281,7 @@ test_semantic_forward_chunk_roundtrip(void)
         &score
     ));
     ASSERT_TRUE(fabsf(score - 1.5f) < 1e-2f);
-    ASSERT_STATUS_OK(ii42_semantic_forward_chunk_score_sorted(
+    ASSERT_STATUS_OK(evoke_semantic_forward_chunk_score_sorted(
         &restored,
         100,
         query_ids,
@@ -3290,7 +3290,7 @@ test_semantic_forward_chunk_roundtrip(void)
         &score
     ));
     ASSERT_TRUE(fabsf(score - 1.5f) < 1e-2f);
-    ASSERT_STATUS_OK(ii42_semantic_forward_chunk_score(
+    ASSERT_STATUS_OK(evoke_semantic_forward_chunk_score(
         &restored,
         101,
         query_ids,
@@ -3299,7 +3299,7 @@ test_semantic_forward_chunk_roundtrip(void)
         &score
     ));
     ASSERT_TRUE(fabsf(score - 4.0f) < 1e-2f);
-    ASSERT_STATUS_OK(ii42_semantic_forward_chunk_score(
+    ASSERT_STATUS_OK(evoke_semantic_forward_chunk_score(
         &restored,
         102,
         query_ids,
@@ -3308,7 +3308,7 @@ test_semantic_forward_chunk_roundtrip(void)
         &score
     ));
     ASSERT_TRUE(fabsf(score - 5.0f) < 1e-2f);
-    ASSERT_STATUS_OK(ii42_semantic_forward_chunk_score(
+    ASSERT_STATUS_OK(evoke_semantic_forward_chunk_score(
         &restored,
         100,
         ordered_query_ids,
@@ -3317,7 +3317,7 @@ test_semantic_forward_chunk_roundtrip(void)
         &score
     ));
     ASSERT_TRUE(fabsf(score - 2.25f) < 1e-2f);
-    ASSERT_STATUS_OK(ii42_semantic_forward_score_row_sorted(
+    ASSERT_STATUS_OK(evoke_semantic_forward_score_row_sorted(
         restored.term_ids,
         restored.operations,
         restored.contributions,
@@ -3328,7 +3328,7 @@ test_semantic_forward_chunk_roundtrip(void)
         &score
     ));
     ASSERT_TRUE(fabsf(score - 1.5f) < 1e-2f);
-    ASSERT_STATUS_OK(ii42_semantic_forward_score_row(
+    ASSERT_STATUS_OK(evoke_semantic_forward_score_row(
         restored.term_ids,
         restored.operations,
         restored.contributions,
@@ -3350,40 +3350,40 @@ test_semantic_forward_chunk_roundtrip(void)
         mutated + 40,
         test_semantic_forward_checksum(mutated, size)
     );
-    ASSERT_TRUE(ii42_semantic_forward_chunk_deserialize(
+    ASSERT_TRUE(evoke_semantic_forward_chunk_deserialize(
         mutated,
         size,
         chunk.source_authority_checksum,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     test_write_u16_le(bytes + 4, 5);
-    ASSERT_TRUE(ii42_semantic_forward_header_deserialize(
+    ASSERT_TRUE(evoke_semantic_forward_header_deserialize(
         bytes,
-        ii42_semantic_forward_header_size(),
+        evoke_semantic_forward_header_size(),
         size,
         chunk.source_authority_checksum,
         &header
-    ) == II42_ERR_FORMAT);
-    test_write_u16_le(bytes + 4, II42_SEMANTIC_FORWARD_TRANSPOSE_VERSION);
-    ASSERT_TRUE(ii42_semantic_forward_header_deserialize(
+    ) == EVOKE_ERR_FORMAT);
+    test_write_u16_le(bytes + 4, EVOKE_SEMANTIC_FORWARD_TRANSPOSE_VERSION);
+    ASSERT_TRUE(evoke_semantic_forward_header_deserialize(
         bytes,
-        ii42_semantic_forward_header_size(),
+        evoke_semantic_forward_header_size(),
         size - 1U,
         chunk.source_authority_checksum,
         &header
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     bytes[size - 1U] ^= UINT8_C(0x01);
-    ASSERT_TRUE(ii42_semantic_forward_chunk_deserialize(
+    ASSERT_TRUE(evoke_semantic_forward_chunk_deserialize(
         bytes,
         size,
         chunk.source_authority_checksum,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     free(mutated);
     free(bytes);
-    ii42_semantic_forward_chunk_free(&restored);
-    ii42_semantic_forward_chunk_init(&chunk);
+    evoke_semantic_forward_chunk_free(&restored);
+    evoke_semantic_forward_chunk_init(&chunk);
 }
 
 typedef struct test_semantic_forward_bound_entries
@@ -3393,7 +3393,7 @@ typedef struct test_semantic_forward_bound_entries
     uint32_t count;
 } test_semantic_forward_bound_entries;
 
-static ii42_status
+static evoke_status
 test_semantic_forward_bound_collect(
     void *context,
     uint32_t block_id,
@@ -3404,12 +3404,12 @@ test_semantic_forward_bound_collect(
 
     if (entries == NULL || entries->count >= 4)
     {
-        return II42_ERR_RANGE;
+        return EVOKE_ERR_RANGE;
     }
     entries->block_ids[entries->count] = block_id;
     entries->maxima[entries->count] = maximum;
     entries->count++;
-    return II42_OK;
+    return EVOKE_OK;
 }
 
 static void
@@ -3420,7 +3420,7 @@ test_semantic_forward_bound_roundtrip(void)
     uint8_t payload[32] = {0};
     uint8_t *bytes = NULL;
     uint8_t *mutated = NULL;
-    ii42_semantic_forward_bound_summary summary;
+    evoke_semantic_forward_bound_summary summary;
     test_semantic_forward_bound_entries entries = {0};
     size_t payload_size = 0;
     size_t encoded_size = 0;
@@ -3429,7 +3429,7 @@ test_semantic_forward_bound_roundtrip(void)
     size_t term_size = 0;
     uint32_t entry_count = 0;
 
-    ASSERT_STATUS_OK(ii42_semantic_forward_bound_encode_entry(
+    ASSERT_STATUS_OK(evoke_semantic_forward_bound_encode_entry(
         payload + payload_size,
         sizeof(payload) - payload_size,
         0,
@@ -3437,7 +3437,7 @@ test_semantic_forward_bound_roundtrip(void)
         &encoded_size
     ));
     payload_size += encoded_size;
-    ASSERT_STATUS_OK(ii42_semantic_forward_bound_encode_entry(
+    ASSERT_STATUS_OK(evoke_semantic_forward_bound_encode_entry(
         payload + payload_size,
         sizeof(payload) - payload_size,
         3,
@@ -3447,7 +3447,7 @@ test_semantic_forward_bound_roundtrip(void)
     payload_size += encoded_size;
     offsets[1] = payload_size;
     offsets[2] = payload_size;
-    ASSERT_STATUS_OK(ii42_semantic_forward_bound_encode_entry(
+    ASSERT_STATUS_OK(evoke_semantic_forward_bound_encode_entry(
         payload + payload_size,
         sizeof(payload) - payload_size,
         5,
@@ -3457,7 +3457,7 @@ test_semantic_forward_bound_roundtrip(void)
     payload_size += encoded_size;
     offsets[3] = payload_size;
 
-    ASSERT_STATUS_OK(ii42_semantic_forward_bound_shard_serialize(
+    ASSERT_STATUS_OK(evoke_semantic_forward_bound_shard_serialize(
         authority,
         64,
         100,
@@ -3469,9 +3469,9 @@ test_semantic_forward_bound_roundtrip(void)
         &bytes,
         &object_size
     ));
-    ASSERT_STATUS_OK(ii42_semantic_forward_bound_header_deserialize(
+    ASSERT_STATUS_OK(evoke_semantic_forward_bound_header_deserialize(
         bytes,
-        II42_SEMANTIC_FORWARD_BOUND_HEADER_SIZE,
+        EVOKE_SEMANTIC_FORWARD_BOUND_HEADER_SIZE,
         object_size,
         authority,
         &summary
@@ -3482,7 +3482,7 @@ test_semantic_forward_bound_roundtrip(void)
     ASSERT_TRUE(summary.vocab_size == 100);
     ASSERT_TRUE(summary.block_shift == 3);
 
-    ASSERT_STATUS_OK(ii42_semantic_forward_bound_term_slice(
+    ASSERT_STATUS_OK(evoke_semantic_forward_bound_term_slice(
         &summary,
         bytes + summary.offsets_offset,
         2U * sizeof(uint64_t),
@@ -3490,7 +3490,7 @@ test_semantic_forward_bound_roundtrip(void)
         &term_offset,
         &term_size
     ));
-    ASSERT_STATUS_OK(ii42_semantic_forward_bound_visit(
+    ASSERT_STATUS_OK(evoke_semantic_forward_bound_visit(
         bytes + term_offset,
         term_size,
         8,
@@ -3505,7 +3505,7 @@ test_semantic_forward_bound_roundtrip(void)
     ASSERT_TRUE(entries.maxima[0] == 1.5f);
     ASSERT_TRUE(entries.maxima[1] == 2.5f);
 
-    ASSERT_STATUS_OK(ii42_semantic_forward_bound_term_slice(
+    ASSERT_STATUS_OK(evoke_semantic_forward_bound_term_slice(
         &summary,
         bytes + summary.offsets_offset + sizeof(uint64_t),
         2U * sizeof(uint64_t),
@@ -3514,7 +3514,7 @@ test_semantic_forward_bound_roundtrip(void)
         &term_size
     ));
     ASSERT_TRUE(term_size == 0);
-    ASSERT_STATUS_OK(ii42_semantic_forward_bound_visit(
+    ASSERT_STATUS_OK(evoke_semantic_forward_bound_visit(
         bytes + term_offset,
         term_size,
         8,
@@ -3524,7 +3524,7 @@ test_semantic_forward_bound_roundtrip(void)
     ));
     ASSERT_TRUE(entry_count == 0);
 
-    ASSERT_STATUS_OK(ii42_semantic_forward_bound_term_slice(
+    ASSERT_STATUS_OK(evoke_semantic_forward_bound_term_slice(
         &summary,
         bytes + summary.offsets_offset + 2U * sizeof(uint64_t),
         2U * sizeof(uint64_t),
@@ -3533,7 +3533,7 @@ test_semantic_forward_bound_roundtrip(void)
         &term_size
     ));
     memset(&entries, 0, sizeof(entries));
-    ASSERT_STATUS_OK(ii42_semantic_forward_bound_visit(
+    ASSERT_STATUS_OK(evoke_semantic_forward_bound_visit(
         bytes + term_offset,
         term_size,
         8,
@@ -3549,35 +3549,35 @@ test_semantic_forward_bound_roundtrip(void)
     ASSERT_TRUE(mutated != NULL);
     memcpy(mutated, bytes, object_size);
     mutated[0] ^= UINT8_C(0x01);
-    ASSERT_TRUE(ii42_semantic_forward_bound_header_deserialize(
+    ASSERT_TRUE(evoke_semantic_forward_bound_header_deserialize(
         mutated,
-        II42_SEMANTIC_FORWARD_BOUND_HEADER_SIZE,
+        EVOKE_SEMANTIC_FORWARD_BOUND_HEADER_SIZE,
         object_size,
         authority,
         &summary
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     memcpy(mutated, bytes, object_size);
     test_write_u64_le(
-        mutated + II42_SEMANTIC_FORWARD_BOUND_HEADER_SIZE +
+        mutated + EVOKE_SEMANTIC_FORWARD_BOUND_HEADER_SIZE +
             sizeof(uint64_t),
         test_read_u64_le(
-            mutated + II42_SEMANTIC_FORWARD_BOUND_HEADER_SIZE +
+            mutated + EVOKE_SEMANTIC_FORWARD_BOUND_HEADER_SIZE +
                 2U * sizeof(uint64_t)
         ) + 1U
     );
-    ASSERT_TRUE(ii42_semantic_forward_bound_term_slice(
+    ASSERT_TRUE(evoke_semantic_forward_bound_term_slice(
         &summary,
-        mutated + II42_SEMANTIC_FORWARD_BOUND_HEADER_SIZE +
+        mutated + EVOKE_SEMANTIC_FORWARD_BOUND_HEADER_SIZE +
             sizeof(uint64_t),
         2U * sizeof(uint64_t),
         65,
         &term_offset,
         &term_size
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     memcpy(mutated, bytes, object_size);
-    ASSERT_STATUS_OK(ii42_semantic_forward_bound_term_slice(
+    ASSERT_STATUS_OK(evoke_semantic_forward_bound_term_slice(
         &summary,
         mutated + summary.offsets_offset,
         2U * sizeof(uint64_t),
@@ -3585,15 +3585,15 @@ test_semantic_forward_bound_roundtrip(void)
         &term_offset,
         &term_size
     ));
-    mutated[term_offset + ii42_semantic_forward_bound_entry_size(0)] = 0;
-    ASSERT_TRUE(ii42_semantic_forward_bound_visit(
+    mutated[term_offset + evoke_semantic_forward_bound_entry_size(0)] = 0;
+    ASSERT_TRUE(evoke_semantic_forward_bound_visit(
         mutated + term_offset,
         term_size,
         8,
         test_semantic_forward_bound_collect,
         &entries,
         &entry_count
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     free(mutated);
     free(bytes);
@@ -3608,12 +3608,12 @@ test_semantic_forward_adaptive_dense_lane(void)
         1.0, 0.5, 3.0, 5.0, 7.0, -0.5
     };
     const uint8_t operations[] = {
-        II42_SEMANTIC_FORWARD_FLOAT_IMPACT,
-        II42_SEMANTIC_FORWARD_FLOAT_IMPACT,
-        II42_SEMANTIC_FORWARD_FLOAT_IMPACT,
-        II42_SEMANTIC_FORWARD_FLOAT_IMPACT,
-        II42_SEMANTIC_FORWARD_FLOAT_IMPACT,
-        II42_SEMANTIC_FORWARD_FLOAT_IMPACT
+        EVOKE_SEMANTIC_FORWARD_FLOAT_IMPACT,
+        EVOKE_SEMANTIC_FORWARD_FLOAT_IMPACT,
+        EVOKE_SEMANTIC_FORWARD_FLOAT_IMPACT,
+        EVOKE_SEMANTIC_FORWARD_FLOAT_IMPACT,
+        EVOKE_SEMANTIC_FORWARD_FLOAT_IMPACT,
+        EVOKE_SEMANTIC_FORWARD_FLOAT_IMPACT
     };
     const uint32_t query_ids[] = {3, 9};
     const float query_weights[] = {0.25f, 2.0f};
@@ -3624,9 +3624,9 @@ test_semantic_forward_adaptive_dense_lane(void)
             (UINT8_C(1) << 7)
         )
     };
-    ii42_semantic_forward_chunk chunk;
-    ii42_semantic_forward_chunk restored;
-    ii42_semantic_forward_header header;
+    evoke_semantic_forward_chunk chunk;
+    evoke_semantic_forward_chunk restored;
+    evoke_semantic_forward_header header;
     uint8_t *bytes = NULL;
     uint8_t *mutated = NULL;
     float scores[8] = {0};
@@ -3636,8 +3636,8 @@ test_semantic_forward_adaptive_dense_lane(void)
     uint64_t bytes_read = 0;
     size_t size = 0;
 
-    ii42_semantic_forward_chunk_init(&chunk);
-    ii42_semantic_forward_chunk_init(&restored);
+    evoke_semantic_forward_chunk_init(&chunk);
+    evoke_semantic_forward_chunk_init(&restored);
     chunk.source_authority_checksum = UINT64_C(0x8877665544332211);
     chunk.first_document = 200;
     chunk.document_count = 8;
@@ -3648,14 +3648,14 @@ test_semantic_forward_adaptive_dense_lane(void)
     chunk.operations = (uint8_t *) operations;
     chunk.contributions = (double *) contributions;
 
-    ASSERT_STATUS_OK(ii42_semantic_forward_chunk_serialize(
+    ASSERT_STATUS_OK(evoke_semantic_forward_chunk_serialize(
         &chunk,
         &bytes,
         &size
     ));
-    ASSERT_STATUS_OK(ii42_semantic_forward_header_deserialize(
+    ASSERT_STATUS_OK(evoke_semantic_forward_header_deserialize(
         bytes,
-        ii42_semantic_forward_header_size(),
+        evoke_semantic_forward_header_size(),
         size,
         chunk.source_authority_checksum,
         &header
@@ -3670,10 +3670,10 @@ test_semantic_forward_adaptive_dense_lane(void)
             (size_t) chunk.document_count * sizeof(float) +
             ((size_t) chunk.vocab_size + 1U) * sizeof(uint32_t) +
             (size_t) chunk.posting_count *
-                II42_SEMANTIC_FORWARD_TRANSPOSE_ENTRY_SIZE
+                EVOKE_SEMANTIC_FORWARD_TRANSPOSE_ENTRY_SIZE
     );
 
-    ASSERT_STATUS_OK(ii42_semantic_forward_score_transposed_sorted(
+    ASSERT_STATUS_OK(evoke_semantic_forward_score_transposed_sorted(
         bytes,
         size,
         chunk.source_authority_checksum,
@@ -3699,7 +3699,7 @@ test_semantic_forward_adaptive_dense_lane(void)
                 ((size_t) document + 1U) * sizeof(uint32_t)
         );
 
-        ASSERT_STATUS_OK(ii42_semantic_forward_score_serialized_row_sorted(
+        ASSERT_STATUS_OK(evoke_semantic_forward_score_serialized_row_sorted(
             bytes + header.row_data_offset + row_start,
             (size_t) row_end - row_start,
             query_ids,
@@ -3715,7 +3715,7 @@ test_semantic_forward_adaptive_dense_lane(void)
         ) == 0);
     }
 
-    ASSERT_STATUS_OK(ii42_semantic_forward_score_transposed_sorted(
+    ASSERT_STATUS_OK(evoke_semantic_forward_score_transposed_sorted(
         bytes,
         size,
         chunk.source_authority_checksum,
@@ -3735,7 +3735,7 @@ test_semantic_forward_adaptive_dense_lane(void)
     ASSERT_TRUE(scores[5] == 0.0f);
     ASSERT_TRUE(scores[6] == 0.0f);
 
-    ASSERT_STATUS_OK(ii42_semantic_forward_chunk_deserialize(
+    ASSERT_STATUS_OK(evoke_semantic_forward_chunk_deserialize(
         bytes,
         size,
         chunk.source_authority_checksum,
@@ -3750,17 +3750,17 @@ test_semantic_forward_adaptive_dense_lane(void)
         mutated + 40,
         test_semantic_forward_checksum(mutated, size)
     );
-    ASSERT_TRUE(ii42_semantic_forward_chunk_deserialize(
+    ASSERT_TRUE(evoke_semantic_forward_chunk_deserialize(
         mutated,
         size,
         chunk.source_authority_checksum,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     free(mutated);
     free(bytes);
-    ii42_semantic_forward_chunk_free(&restored);
-    ii42_semantic_forward_chunk_init(&chunk);
+    evoke_semantic_forward_chunk_free(&restored);
+    evoke_semantic_forward_chunk_init(&chunk);
 }
 
 static void
@@ -3775,9 +3775,9 @@ test_semantic_impact_frontier_roundtrip(void)
     uint8_t payload[64] = {0};
     uint8_t *bytes = NULL;
     uint8_t *mutated = NULL;
-    ii42_semantic_impact_frontier_summary summary;
-    ii42_semantic_impact_frontier_cursor cursor;
-    ii42_semantic_impact_frontier_block block;
+    evoke_semantic_impact_frontier_summary summary;
+    evoke_semantic_impact_frontier_cursor cursor;
+    evoke_semantic_impact_frontier_block block;
     size_t encoded_size = 0;
     size_t object_size = 0;
     size_t payload_size = 0;
@@ -3788,73 +3788,73 @@ test_semantic_impact_frontier_roundtrip(void)
     float impact = 0.0f;
     float rounded = 0.0f;
 
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_round_up(
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_round_up(
         1.0 + 1e-8,
         &rounded
     ));
     ASSERT_TRUE((double) rounded >= 1.0 + 1e-8);
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_encode_block(
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_encode_block(
         payload + payload_size,
         sizeof(payload) - payload_size,
         1,
         first_documents,
         first_impacts,
         3,
-        II42_SEMANTIC_IMPACT_PRECISION_F32,
+        EVOKE_SEMANTIC_IMPACT_PRECISION_F32,
         &encoded_size
     ));
     payload_size += encoded_size;
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_encode_block(
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_encode_block(
         payload + payload_size,
         sizeof(payload) - payload_size,
         3,
         second_documents,
         second_impacts,
         2,
-        II42_SEMANTIC_IMPACT_PRECISION_F32,
+        EVOKE_SEMANTIC_IMPACT_PRECISION_F32,
         &encoded_size
     ));
     payload_size += encoded_size;
     offsets[1] = payload_size;
     offsets[2] = payload_size;
 
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_shard_serialize(
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_shard_serialize(
         authority,
         2048,
         100,
         64,
         2,
-        II42_SEMANTIC_IMPACT_PRECISION_F32,
+        EVOKE_SEMANTIC_IMPACT_PRECISION_F32,
         offsets,
         payload,
         payload_size,
         &bytes,
         &object_size
     ));
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_header_deserialize(
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_header_deserialize(
         bytes,
-        II42_SEMANTIC_IMPACT_FRONTIER_HEADER_SIZE,
+        EVOKE_SEMANTIC_IMPACT_FRONTIER_HEADER_SIZE,
         object_size,
         authority,
         &summary
     ));
     ASSERT_TRUE(summary.block_shift == 6);
     ASSERT_TRUE(
-        summary.impact_precision == II42_SEMANTIC_IMPACT_PRECISION_F32
+        summary.impact_precision == EVOKE_SEMANTIC_IMPACT_PRECISION_F32
     );
     ASSERT_TRUE(summary.document_count == 2048);
-    ASSERT_TRUE(ii42_semantic_impact_frontier_header_deserialize(
+    ASSERT_TRUE(evoke_semantic_impact_frontier_header_deserialize(
         bytes,
-        II42_SEMANTIC_IMPACT_FRONTIER_HEADER_SIZE,
+        EVOKE_SEMANTIC_IMPACT_FRONTIER_HEADER_SIZE,
         object_size,
         authority + 1U,
         &summary
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_semantic_impact_frontier_round_up(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_semantic_impact_frontier_round_up(
         NAN,
         &rounded
-    ) == II42_ERR_INVALID);
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_term_slice(
+    ) == EVOKE_ERR_INVALID);
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_term_slice(
         &summary,
         bytes + summary.offsets_offset,
         3U * sizeof(uint64_t),
@@ -3866,7 +3866,7 @@ test_semantic_impact_frontier_roundtrip(void)
         size_t empty_offset = 0;
         size_t empty_size = 1;
 
-        ASSERT_STATUS_OK(ii42_semantic_impact_frontier_term_slice(
+        ASSERT_STATUS_OK(evoke_semantic_impact_frontier_term_slice(
             &summary,
             bytes + summary.offsets_offset,
             3U * sizeof(uint64_t),
@@ -3876,23 +3876,23 @@ test_semantic_impact_frontier_roundtrip(void)
         ));
         ASSERT_TRUE(empty_offset == summary.payload_offset + payload_size);
         ASSERT_TRUE(empty_size == 0);
-        ASSERT_TRUE(ii42_semantic_impact_frontier_term_slice(
+        ASSERT_TRUE(evoke_semantic_impact_frontier_term_slice(
             &summary,
             bytes + summary.offsets_offset,
             2U * sizeof(uint64_t),
             65,
             &empty_offset,
             &empty_size
-        ) == II42_ERR_RANGE);
+        ) == EVOKE_ERR_RANGE);
     }
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_cursor_init(
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_cursor_init(
         &cursor,
         bytes + term_offset,
         term_size,
         8,
         summary.impact_precision
     ));
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_cursor_next(
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_cursor_next(
         &cursor,
         &block,
         &has_block
@@ -3900,7 +3900,7 @@ test_semantic_impact_frontier_roundtrip(void)
     ASSERT_TRUE(has_block);
     ASSERT_TRUE(block.block_id == 1);
     ASSERT_TRUE(block.posting_count == 3);
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_block_posting(
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_block_posting(
         &block,
         1,
         &local_document,
@@ -3908,7 +3908,7 @@ test_semantic_impact_frontier_roundtrip(void)
     ));
     ASSERT_TRUE(local_document == 2);
     ASSERT_TRUE(impact == 1.25f);
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_cursor_next(
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_cursor_next(
         &cursor,
         &block,
         &has_block
@@ -3916,7 +3916,7 @@ test_semantic_impact_frontier_roundtrip(void)
     ASSERT_TRUE(has_block);
     ASSERT_TRUE(block.block_id == 4);
     ASSERT_TRUE(block.posting_count == 2);
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_cursor_next(
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_cursor_next(
         &cursor,
         &block,
         &has_block
@@ -3930,60 +3930,60 @@ test_semantic_impact_frontier_roundtrip(void)
     mutated[9] = UINT8_C(0x00);
     mutated[10] = UINT8_C(0x00);
     mutated[11] = UINT8_C(0x40);
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_cursor_init(
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_cursor_init(
         &cursor,
         mutated,
         term_size,
         8,
         summary.impact_precision
     ));
-    ASSERT_TRUE(ii42_semantic_impact_frontier_cursor_next(
+    ASSERT_TRUE(evoke_semantic_impact_frontier_cursor_next(
         &cursor,
         &block,
         &has_block
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     memcpy(mutated, bytes + term_offset, term_size);
-    mutated[ii42_semantic_impact_frontier_block_size(
+    mutated[evoke_semantic_impact_frontier_block_size(
         1,
         3,
         summary.impact_precision
     )] = 0;
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_cursor_init(
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_cursor_init(
         &cursor,
         mutated,
         term_size,
         8,
         summary.impact_precision
     ));
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_cursor_next(
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_cursor_next(
         &cursor,
         &block,
         &has_block
     ));
-    ASSERT_TRUE(ii42_semantic_impact_frontier_cursor_next(
+    ASSERT_TRUE(evoke_semantic_impact_frontier_cursor_next(
         &cursor,
         &block,
         &has_block
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_cursor_init(
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_cursor_init(
         &cursor,
         bytes + term_offset,
         term_size - 1U,
         8,
         summary.impact_precision
     ));
-    ASSERT_STATUS_OK(ii42_semantic_impact_frontier_cursor_next(
+    ASSERT_STATUS_OK(evoke_semantic_impact_frontier_cursor_next(
         &cursor,
         &block,
         &has_block
     ));
-    ASSERT_TRUE(ii42_semantic_impact_frontier_cursor_next(
+    ASSERT_TRUE(evoke_semantic_impact_frontier_cursor_next(
         &cursor,
         &block,
         &has_block
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     {
         const uint8_t duplicate_documents[] = {1, 1};
@@ -3991,36 +3991,36 @@ test_semantic_impact_frontier_roundtrip(void)
         const double ordered_impacts[] = {1.0, 0.5};
         const double unordered_impacts[] = {0.5, 1.0};
 
-        ASSERT_TRUE(ii42_semantic_impact_frontier_encode_block(
+        ASSERT_TRUE(evoke_semantic_impact_frontier_encode_block(
             mutated,
             term_size,
             0,
             duplicate_documents,
             ordered_impacts,
             2,
-            II42_SEMANTIC_IMPACT_PRECISION_F32,
+            EVOKE_SEMANTIC_IMPACT_PRECISION_F32,
             &encoded_size
-        ) == II42_ERR_INVALID);
-        ASSERT_TRUE(ii42_semantic_impact_frontier_encode_block(
+        ) == EVOKE_ERR_INVALID);
+        ASSERT_TRUE(evoke_semantic_impact_frontier_encode_block(
             mutated,
             term_size,
             0,
             second_documents,
             unordered_impacts,
             2,
-            II42_SEMANTIC_IMPACT_PRECISION_F32,
+            EVOKE_SEMANTIC_IMPACT_PRECISION_F32,
             &encoded_size
-        ) == II42_ERR_INVALID);
-        ASSERT_TRUE(ii42_semantic_impact_frontier_encode_block(
+        ) == EVOKE_ERR_INVALID);
+        ASSERT_TRUE(evoke_semantic_impact_frontier_encode_block(
             mutated,
             term_size,
             0,
             out_of_range_documents,
             ordered_impacts,
             1,
-            II42_SEMANTIC_IMPACT_PRECISION_F32,
+            EVOKE_SEMANTIC_IMPACT_PRECISION_F32,
             &encoded_size
-        ) == II42_ERR_INVALID);
+        ) == EVOKE_ERR_INVALID);
     }
 
     free(mutated);
@@ -4030,10 +4030,10 @@ test_semantic_impact_frontier_roundtrip(void)
 static void
 test_semantic_impact_frontier_precision_profiles(void)
 {
-    const ii42_semantic_impact_precision precisions[] = {
-        II42_SEMANTIC_IMPACT_PRECISION_F32,
-        II42_SEMANTIC_IMPACT_PRECISION_FP16,
-        II42_SEMANTIC_IMPACT_PRECISION_U8
+    const evoke_semantic_impact_precision precisions[] = {
+        EVOKE_SEMANTIC_IMPACT_PRECISION_F32,
+        EVOKE_SEMANTIC_IMPACT_PRECISION_FP16,
+        EVOKE_SEMANTIC_IMPACT_PRECISION_U8
     };
     const uint8_t documents[] = {3, 9, 1};
     const double impacts[] = {1.503, 1.249, 0.501};
@@ -4042,15 +4042,15 @@ test_semantic_impact_frontier_precision_profiles(void)
          precision_index < sizeof(precisions) / sizeof(precisions[0]);
          precision_index++)
     {
-        ii42_semantic_impact_precision precision =
+        evoke_semantic_impact_precision precision =
             precisions[precision_index];
         uint64_t offsets[2] = {0};
         uint8_t payload[64] = {0};
         uint8_t replay[64] = {0};
         uint8_t *bytes = NULL;
-        ii42_semantic_impact_frontier_summary summary;
-        ii42_semantic_impact_frontier_cursor cursor;
-        ii42_semantic_impact_frontier_block block;
+        evoke_semantic_impact_frontier_summary summary;
+        evoke_semantic_impact_frontier_cursor cursor;
+        evoke_semantic_impact_frontier_block block;
         double replay_impacts[3] = {0};
         size_t payload_size = 0;
         size_t replay_size = 0;
@@ -4059,7 +4059,7 @@ test_semantic_impact_frontier_precision_profiles(void)
         size_t term_size = 0;
         bool has_block = false;
 
-        ASSERT_STATUS_OK(ii42_semantic_impact_frontier_encode_block(
+        ASSERT_STATUS_OK(evoke_semantic_impact_frontier_encode_block(
             payload,
             sizeof(payload),
             2,
@@ -4070,7 +4070,7 @@ test_semantic_impact_frontier_precision_profiles(void)
             &payload_size
         ));
         offsets[1] = payload_size;
-        ASSERT_STATUS_OK(ii42_semantic_impact_frontier_shard_serialize(
+        ASSERT_STATUS_OK(evoke_semantic_impact_frontier_shard_serialize(
             UINT64_C(0x1234),
             512,
             64,
@@ -4083,15 +4083,15 @@ test_semantic_impact_frontier_precision_profiles(void)
             &bytes,
             &object_size
         ));
-        ASSERT_STATUS_OK(ii42_semantic_impact_frontier_header_deserialize(
+        ASSERT_STATUS_OK(evoke_semantic_impact_frontier_header_deserialize(
             bytes,
-            II42_SEMANTIC_IMPACT_FRONTIER_HEADER_SIZE,
+            EVOKE_SEMANTIC_IMPACT_FRONTIER_HEADER_SIZE,
             object_size,
             UINT64_C(0x1234),
             &summary
         ));
         ASSERT_TRUE(summary.impact_precision == precision);
-        ASSERT_STATUS_OK(ii42_semantic_impact_frontier_term_slice(
+        ASSERT_STATUS_OK(evoke_semantic_impact_frontier_term_slice(
             &summary,
             bytes + summary.offsets_offset,
             2U * sizeof(uint64_t),
@@ -4099,14 +4099,14 @@ test_semantic_impact_frontier_precision_profiles(void)
             &term_offset,
             &term_size
         ));
-        ASSERT_STATUS_OK(ii42_semantic_impact_frontier_cursor_init(
+        ASSERT_STATUS_OK(evoke_semantic_impact_frontier_cursor_init(
             &cursor,
             bytes + term_offset,
             term_size,
             8,
             summary.impact_precision
         ));
-        ASSERT_STATUS_OK(ii42_semantic_impact_frontier_cursor_next(
+        ASSERT_STATUS_OK(evoke_semantic_impact_frontier_cursor_next(
             &cursor,
             &block,
             &has_block
@@ -4115,14 +4115,14 @@ test_semantic_impact_frontier_precision_profiles(void)
         ASSERT_TRUE(block.posting_count == 3);
         ASSERT_TRUE(
             block.posting_width == 1U +
-                ii42_semantic_bmp_impact_width(precision)
+                evoke_semantic_bmp_impact_width(precision)
         );
         for (uint32_t posting_index = 0; posting_index < 3; posting_index++)
         {
             uint8_t local_document = 0;
             float impact = 0.0f;
 
-            ASSERT_STATUS_OK(ii42_semantic_impact_frontier_block_posting(
+            ASSERT_STATUS_OK(evoke_semantic_impact_frontier_block_posting(
                 &block,
                 posting_index,
                 &local_document,
@@ -4132,7 +4132,7 @@ test_semantic_impact_frontier_precision_profiles(void)
             ASSERT_TRUE(impact > 0.0f);
             replay_impacts[posting_index] = impact;
         }
-        ASSERT_STATUS_OK(ii42_semantic_impact_frontier_encode_block(
+        ASSERT_STATUS_OK(evoke_semantic_impact_frontier_encode_block(
             replay,
             sizeof(replay),
             2,
@@ -4153,53 +4153,53 @@ test_semantic_impact_frontier_precision_profiles(void)
         uint8_t bytes[8] = {0};
         size_t size = 0;
 
-        ASSERT_TRUE(ii42_semantic_impact_frontier_encode_block(
+        ASSERT_TRUE(evoke_semantic_impact_frontier_encode_block(
             bytes,
             sizeof(bytes),
             0,
             &document,
             &negative_impact,
             1,
-            II42_SEMANTIC_IMPACT_PRECISION_U8,
+            EVOKE_SEMANTIC_IMPACT_PRECISION_U8,
             &size
-        ) == II42_ERR_INVALID);
+        ) == EVOKE_ERR_INVALID);
     }
 }
 
 static void
 test_segment_manifest_published_closure(void)
 {
-    ii42_segment_manifest manifest;
-    ii42_segment_object_ref manifest_ref;
-    ii42_segment_object_ref payload_ref;
+    evoke_segment_manifest manifest;
+    evoke_segment_object_ref manifest_ref;
+    evoke_segment_object_ref payload_ref;
 
     initialize_test_segment_manifest(&manifest);
     initialize_test_object_ref(
         &manifest_ref,
-        II42_SEGMENT_OBJECT_MANIFEST,
+        EVOKE_SEGMENT_OBJECT_MANIFEST,
         61,
         2,
         manifest.manifest_id,
         104
     );
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate_published(
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate_published(
         &manifest,
         &manifest_ref,
         64
     ));
-    ASSERT_STATUS_OK(ii42_segment_descriptor_payload_ref(
+    ASSERT_STATUS_OK(evoke_segment_descriptor_payload_ref(
         &manifest,
         &manifest.segments[1],
         &payload_ref
     ));
     ASSERT_TRUE(
-        payload_ref.object_kind == II42_SEGMENT_OBJECT_PAYLOAD
+        payload_ref.object_kind == EVOKE_SEGMENT_OBJECT_PAYLOAD
     );
     ASSERT_TRUE(payload_ref.object_id == 2);
     ASSERT_TRUE(payload_ref.owner_manifest_id == manifest.manifest_id);
     ASSERT_TRUE(payload_ref.start_block == 20);
     ASSERT_TRUE(payload_ref.page_count == 2);
-    ASSERT_STATUS_OK(ii42_segment_descriptor_payload_ref(
+    ASSERT_STATUS_OK(evoke_segment_descriptor_payload_ref(
         &manifest,
         &manifest.segments[0],
         &payload_ref
@@ -4208,48 +4208,48 @@ test_segment_manifest_published_closure(void)
         payload_ref.owner_manifest_id == manifest.parent_manifest_id
     );
 
-    ASSERT_TRUE(ii42_segment_manifest_validate_published(
+    ASSERT_TRUE(evoke_segment_manifest_validate_published(
         &manifest,
         &manifest_ref,
         53
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     manifest.retired_ranges[1].start_block = 63;
     manifest.retired_ranges[1].block_count = 2;
-    ASSERT_TRUE(ii42_segment_manifest_validate_published(
+    ASSERT_TRUE(evoke_segment_manifest_validate_published(
         &manifest,
         &manifest_ref,
         64
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     manifest.retired_ranges[1].start_block = 14;
     manifest.retired_ranges[1].block_count = 1;
     manifest_ref.start_block = 10;
-    ASSERT_TRUE(ii42_segment_manifest_validate_published(
+    ASSERT_TRUE(evoke_segment_manifest_validate_published(
         &manifest,
         &manifest_ref,
         64
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     manifest_ref.start_block = 51;
-    ASSERT_TRUE(ii42_segment_manifest_validate_published(
+    ASSERT_TRUE(evoke_segment_manifest_validate_published(
         &manifest,
         &manifest_ref,
         64
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     manifest_ref.start_block =
         manifest.document_directory.start_block;
-    ASSERT_TRUE(ii42_segment_manifest_validate_published(
+    ASSERT_TRUE(evoke_segment_manifest_validate_published(
         &manifest,
         &manifest_ref,
         64
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     manifest_ref.start_block = 60;
     manifest_ref.object_id++;
-    ASSERT_TRUE(ii42_segment_manifest_validate_published(
+    ASSERT_TRUE(evoke_segment_manifest_validate_published(
         &manifest,
         &manifest_ref,
         64
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
-    ii42_segment_manifest_free(&manifest);
+    evoke_segment_manifest_free(&manifest);
 }
 
 static void
@@ -4258,23 +4258,23 @@ test_segment_query_contract_roundtrip(void)
     const char *doc0[] = {"cat", "cat", "feline"};
     const char *doc1[] = {"dog", "friend"};
     const char *doc2[] = {"cat", "bird", "bird"};
-    ii42_doc_tokens docs[] = {
+    evoke_doc_tokens docs[] = {
         {.tokens = doc0, .len = 3},
         {.tokens = doc1, .len = 2},
         {.tokens = doc2, .len = 3}
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_BM25PLUS,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_BM25PLUS,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_segment_manifest manifest;
-    ii42_segment_query_contract contract;
-    ii42_segment_query_contract restored;
-    ii42_index index;
-    ii42_index metadata_index;
+    evoke_segment_manifest manifest;
+    evoke_segment_query_contract contract;
+    evoke_segment_query_contract restored;
+    evoke_index index;
+    evoke_index metadata_index;
     const char *query_tokens[] = {"cat", "missing"};
     uint32_t *query_ids = NULL;
     size_t query_len = 0;
@@ -4282,12 +4282,12 @@ test_segment_query_contract_roundtrip(void)
     uint8_t *mutated = NULL;
     size_t size = 0;
 
-    ii42_index_init(&index);
-    ii42_segment_manifest_init(&manifest);
-    ii42_segment_query_contract_init(&contract);
-    ii42_segment_query_contract_init(&restored);
-    ii42_index_init(&metadata_index);
-    ASSERT_STATUS_OK(ii42_build_index_from_tokens(
+    evoke_index_init(&index);
+    evoke_segment_manifest_init(&manifest);
+    evoke_segment_query_contract_init(&contract);
+    evoke_segment_query_contract_init(&restored);
+    evoke_index_init(&metadata_index);
+    ASSERT_STATUS_OK(evoke_build_index_from_tokens(
         docs,
         3,
         &params,
@@ -4296,21 +4296,21 @@ test_segment_query_contract_roundtrip(void)
 
     manifest.manifest_id = 7;
     manifest.vocab_size = index.vocab_size;
-    ASSERT_STATUS_OK(ii42_segment_query_contract_build(
+    ASSERT_STATUS_OK(evoke_segment_query_contract_build(
         &index,
         &manifest,
         &contract
     ));
     ASSERT_TRUE(
         (contract.flags &
-         II42_QUERY_CONTRACT_FLAG_VOCABULARY) != 0
+         EVOKE_QUERY_CONTRACT_FLAG_VOCABULARY) != 0
     );
     ASSERT_TRUE(contract.vocab_size == index.vocab_size);
     ASSERT_TRUE(contract.params.method == params.method);
     ASSERT_TRUE(
-        contract.block_shift == II42_DEFAULT_POSTING_BLOCK_SHIFT
+        contract.block_shift == EVOKE_DEFAULT_POSTING_BLOCK_SHIFT
     );
-    ASSERT_STATUS_OK(ii42_segment_query_contract_serialize(
+    ASSERT_STATUS_OK(evoke_segment_query_contract_serialize(
         &contract,
         &manifest,
         &bytes,
@@ -4318,7 +4318,7 @@ test_segment_query_contract_roundtrip(void)
     ));
     ASSERT_TRUE(bytes != NULL);
     ASSERT_TRUE(size == 96);
-    ASSERT_STATUS_OK(ii42_segment_query_contract_deserialize(
+    ASSERT_STATUS_OK(evoke_segment_query_contract_deserialize(
         bytes,
         size,
         &manifest,
@@ -4329,26 +4329,26 @@ test_segment_query_contract_roundtrip(void)
     ASSERT_TRUE(restored.block_shift == contract.block_shift);
     ASSERT_TRUE(restored.vocab == NULL);
     {
-        ii42_segment_manifest descendant = manifest;
+        evoke_segment_manifest descendant = manifest;
 
         descendant.parent_manifest_id = manifest.manifest_id;
         descendant.manifest_id = manifest.manifest_id + 1;
         initialize_test_object_ref(
             &descendant.query_contract,
-            II42_SEGMENT_OBJECT_QUERY_CONTRACT,
+            EVOKE_SEGMENT_OBJECT_QUERY_CONTRACT,
             1,
             1,
             manifest.manifest_id,
             100
         );
-        ASSERT_STATUS_OK(ii42_segment_query_contract_deserialize(
+        ASSERT_STATUS_OK(evoke_segment_query_contract_deserialize(
             bytes,
             size,
             &descendant,
             &restored
         ));
         descendant.vocab_size++;
-        ASSERT_STATUS_OK(ii42_segment_query_contract_deserialize(
+        ASSERT_STATUS_OK(evoke_segment_query_contract_deserialize(
             bytes,
             size,
             &descendant,
@@ -4362,19 +4362,19 @@ test_segment_query_contract_roundtrip(void)
     ASSERT_TRUE(mutated != NULL);
     memcpy(mutated, bytes, size);
     mutated[size - 1] ^= 0x1U;
-    ASSERT_TRUE(ii42_segment_query_contract_deserialize(
+    ASSERT_TRUE(evoke_segment_query_contract_deserialize(
         mutated,
         size,
         &manifest,
         &restored
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_segment_query_contract_deserialize(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_query_contract_deserialize(
         bytes,
         size - 1,
         &manifest,
         &restored
-    ) == II42_ERR_FORMAT);
-    ASSERT_STATUS_OK(ii42_segment_query_contract_deserialize(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_STATUS_OK(evoke_segment_query_contract_deserialize(
         bytes,
         size,
         &manifest,
@@ -4408,13 +4408,13 @@ test_segment_query_contract_roundtrip(void)
     ASSERT_TRUE(manifest.doc_frequencies != NULL);
     initialize_test_object_ref(
         &manifest.query_contract,
-        II42_SEGMENT_OBJECT_QUERY_CONTRACT,
+        EVOKE_SEGMENT_OBJECT_QUERY_CONTRACT,
         1,
         1,
         manifest.manifest_id,
         100
     );
-    ASSERT_STATUS_OK(ii42_segment_index_metadata_build(
+    ASSERT_STATUS_OK(evoke_segment_index_metadata_build(
         &restored,
         &manifest,
         manifest.doc_frequencies,
@@ -4424,7 +4424,7 @@ test_segment_query_contract_roundtrip(void)
     ));
     ASSERT_TRUE(metadata_index.vocab != restored.vocab);
     ASSERT_TRUE(strcmp(metadata_index.vocab[0], restored.vocab[0]) == 0);
-    ASSERT_STATUS_OK(ii42_query_token_ids(
+    ASSERT_STATUS_OK(evoke_query_token_ids(
         &metadata_index,
         query_tokens,
         2,
@@ -4436,11 +4436,11 @@ test_segment_query_contract_roundtrip(void)
     free(bytes);
     free(mutated);
     free(query_ids);
-    ii42_index_free(&metadata_index);
-    ii42_segment_query_contract_free(&restored);
-    ii42_segment_query_contract_free(&contract);
-    ii42_segment_manifest_free(&manifest);
-    ii42_index_free(&index);
+    evoke_index_free(&metadata_index);
+    evoke_segment_query_contract_free(&restored);
+    evoke_segment_query_contract_free(&contract);
+    evoke_segment_manifest_free(&manifest);
+    evoke_index_free(&index);
 }
 
 static void
@@ -4451,29 +4451,29 @@ test_lexical_catalog_roundtrip_and_validation(void)
         "",
         "\316\262eta"
     };
-    ii42_lexical_catalog catalog;
-    ii42_lexical_catalog restored;
+    evoke_lexical_catalog catalog;
+    evoke_lexical_catalog restored;
     uint8_t *bytes = NULL;
     uint8_t *mutated = NULL;
     size_t size = 0;
 
-    ii42_lexical_catalog_init(&catalog);
-    ii42_lexical_catalog_init(&restored);
-    ASSERT_STATUS_OK(ii42_lexical_catalog_build(
+    evoke_lexical_catalog_init(&catalog);
+    evoke_lexical_catalog_init(&restored);
+    ASSERT_STATUS_OK(evoke_lexical_catalog_build(
         11,
         20,
         3,
         terms,
         &catalog
     ));
-    ASSERT_STATUS_OK(ii42_lexical_catalog_serialize(
+    ASSERT_STATUS_OK(evoke_lexical_catalog_serialize(
         &catalog,
         &bytes,
         &size
     ));
     ASSERT_TRUE(bytes != NULL);
     ASSERT_TRUE(size > 64);
-    ASSERT_STATUS_OK(ii42_lexical_catalog_deserialize(
+    ASSERT_STATUS_OK(evoke_lexical_catalog_deserialize(
         bytes,
         size,
         11,
@@ -4488,148 +4488,148 @@ test_lexical_catalog_roundtrip_and_validation(void)
             strcmp(restored.terms[term_index], terms[term_index]) == 0
         );
     }
-    ASSERT_TRUE(ii42_lexical_catalog_deserialize(
+    ASSERT_TRUE(evoke_lexical_catalog_deserialize(
         bytes,
         size,
         12,
         &restored
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_lexical_catalog_deserialize(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_lexical_catalog_deserialize(
         bytes,
         size - 1,
         11,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     mutated = malloc(size);
     ASSERT_TRUE(mutated != NULL);
     memcpy(mutated, bytes, size);
     mutated[size - 1] ^= 0x1U;
-    ASSERT_TRUE(ii42_lexical_catalog_deserialize(
+    ASSERT_TRUE(evoke_lexical_catalog_deserialize(
         mutated,
         size,
         11,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     memcpy(mutated, bytes, size);
     write_u64_le(mutated + 64, 1);
     memset(mutated + 56, 0, sizeof(uint64_t));
     write_u64_le(
         mutated + 56,
-        ii42_segment_blob_checksum(mutated, size)
+        evoke_segment_blob_checksum(mutated, size)
     );
-    ASSERT_TRUE(ii42_lexical_catalog_deserialize(
+    ASSERT_TRUE(evoke_lexical_catalog_deserialize(
         mutated,
         size,
         11,
         &restored
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_lexical_catalog_build(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_lexical_catalog_build(
         0,
         20,
         3,
         terms,
         &restored
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_lexical_catalog_build(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_lexical_catalog_build(
         11,
         UINT32_MAX,
         1,
         terms,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     free(mutated);
     free(bytes);
-    ii42_lexical_catalog_free(&restored);
-    ii42_lexical_catalog_free(&catalog);
+    evoke_lexical_catalog_free(&restored);
+    evoke_lexical_catalog_free(&catalog);
 }
 
 static void
 test_term_directory_roundtrip_and_validation(void)
 {
-    ii42_segment_manifest manifest;
-    ii42_term_directory directory;
-    ii42_term_directory restored;
+    evoke_segment_manifest manifest;
+    evoke_term_directory directory;
+    evoke_term_directory restored;
     uint64_t term_offsets[] = {0, 2, 3, 4, 6};
-    ii42_term_extent_descriptor extents[] = {
+    evoke_term_extent_descriptor extents[] = {
         {
             .segment_index = 0,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 0,
             .posting_count = 2
         },
         {
             .segment_index = 1,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 0,
             .posting_count = 1
         },
         {
             .segment_index = 0,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 2,
             .posting_count = 2
         },
         {
             .segment_index = 0,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 4,
             .posting_count = 2
         },
         {
             .segment_index = 0,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 6,
             .posting_count = 1
         },
         {
             .segment_index = 1,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 1,
             .posting_count = 1
         }
     };
     uint64_t excessive_offsets[] = {0, 9, 9, 9, 9};
-    ii42_term_extent_descriptor excessive_extents[9] = {0};
-    ii42_segment_object_ref published_directory_ref;
+    evoke_term_extent_descriptor excessive_extents[9] = {0};
+    evoke_segment_object_ref published_directory_ref;
     uint8_t *bytes = NULL;
     uint8_t *mutated = NULL;
     size_t size = 0;
     size_t unpublished_size = 0;
 
     initialize_test_segment_manifest(&manifest);
-    ii42_term_directory_init(&directory);
-    ii42_term_directory_init(&restored);
+    evoke_term_directory_init(&directory);
+    evoke_term_directory_init(&restored);
     directory.vocab_size = 4;
     directory.extent_count = 6;
     directory.term_offsets = term_offsets;
     directory.extents = extents;
 
-    ASSERT_STATUS_OK(ii42_term_directory_validate(&directory, &manifest));
+    ASSERT_STATUS_OK(evoke_term_directory_validate(&directory, &manifest));
     published_directory_ref = manifest.term_directory;
-    manifest.flags &= ~II42_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
+    manifest.flags &= ~EVOKE_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
     memset(&manifest.term_directory, 0, sizeof(manifest.term_directory));
-    ASSERT_STATUS_OK(ii42_term_directory_serialized_size(
+    ASSERT_STATUS_OK(evoke_term_directory_serialized_size(
         &directory,
         &manifest,
         &unpublished_size
     ));
     ASSERT_TRUE(unpublished_size > 0);
-    ASSERT_TRUE(ii42_term_directory_validate(
+    ASSERT_TRUE(evoke_term_directory_validate(
         &directory,
         &manifest
-    ) == II42_ERR_FORMAT);
-    manifest.flags |= II42_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
+    ) == EVOKE_ERR_FORMAT);
+    manifest.flags |= EVOKE_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
     manifest.term_directory = published_directory_ref;
-    ASSERT_STATUS_OK(ii42_term_directory_serialize(
+    ASSERT_STATUS_OK(evoke_term_directory_serialize(
         &directory,
         &manifest,
         &bytes,
         &size
     ));
     ASSERT_TRUE(bytes != NULL);
-    ASSERT_STATUS_OK(ii42_term_directory_deserialize(
+    ASSERT_STATUS_OK(evoke_term_directory_deserialize(
         bytes,
         size,
         &manifest,
@@ -4645,141 +4645,141 @@ test_term_directory_roundtrip_and_validation(void)
     ASSERT_TRUE(restored.extents[5].segment_index == 1);
     ASSERT_TRUE(
         restored.extents[5].kind ==
-        II42_POSTING_EXTENT_LEXICAL_NEUTRAL
+        EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL
     );
     ASSERT_TRUE(restored.extents[5].posting_offset == 1);
 
-    ii42_term_directory_free(&restored);
+    evoke_term_directory_free(&restored);
     mutated = malloc(size);
     ASSERT_TRUE(mutated != NULL);
     memcpy(mutated, bytes, size);
     test_write_u32_le(
         mutated + 20,
-        II42_TERM_DIRECTORY_LEGACY_MAX_EXTENTS_PER_TERM
+        EVOKE_TERM_DIRECTORY_LEGACY_MAX_EXTENTS_PER_TERM
     );
     test_write_u64_le(mutated + 48, 0);
     test_write_u64_le(
         mutated + 48,
         test_term_directory_checksum(mutated, size)
     );
-    ASSERT_STATUS_OK(ii42_term_directory_deserialize(
+    ASSERT_STATUS_OK(evoke_term_directory_deserialize(
         mutated,
         size,
         &manifest,
         &restored
     ));
-    ii42_term_directory_free(&restored);
+    evoke_term_directory_free(&restored);
 
     memcpy(mutated, bytes, size);
     test_write_u32_le(
         mutated + 20,
-        II42_TERM_DIRECTORY_MAX_EXTENTS_PER_TERM + 1
+        EVOKE_TERM_DIRECTORY_MAX_EXTENTS_PER_TERM + 1
     );
     test_write_u64_le(mutated + 48, 0);
     test_write_u64_le(
         mutated + 48,
         test_term_directory_checksum(mutated, size)
     );
-    ASSERT_TRUE(ii42_term_directory_deserialize(
+    ASSERT_TRUE(evoke_term_directory_deserialize(
         mutated,
         size,
         &manifest,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     memcpy(mutated, bytes, size);
     mutated[size - 1] ^= 0x1U;
-    ASSERT_TRUE(ii42_term_directory_deserialize(
+    ASSERT_TRUE(evoke_term_directory_deserialize(
         mutated,
         size,
         &manifest,
         &restored
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_term_directory_deserialize(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_term_directory_deserialize(
         bytes,
         size - 1,
         &manifest,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     extents[1].segment_index = 0;
-    ASSERT_TRUE(ii42_term_directory_validate(
+    ASSERT_TRUE(evoke_term_directory_validate(
         &directory,
         &manifest
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     extents[1].segment_index = 1;
-    extents[1].kind = II42_POSTING_EXTENT_SEMANTIC_IMPACT;
-    ASSERT_TRUE(ii42_term_directory_validate(
+    extents[1].kind = EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT;
+    ASSERT_TRUE(evoke_term_directory_validate(
         &directory,
         &manifest
-    ) == II42_ERR_FORMAT);
-    extents[1].kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL;
-    extents[1].kind = (ii42_posting_extent_kind) 99;
-    ASSERT_TRUE(ii42_term_directory_validate(
+    ) == EVOKE_ERR_FORMAT);
+    extents[1].kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL;
+    extents[1].kind = (evoke_posting_extent_kind) 99;
+    ASSERT_TRUE(evoke_term_directory_validate(
         &directory,
         &manifest
-    ) == II42_ERR_FORMAT);
-    extents[1].kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL;
+    ) == EVOKE_ERR_FORMAT);
+    extents[1].kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL;
     extents[5].posting_offset = 2;
-    ASSERT_TRUE(ii42_term_directory_validate(
+    ASSERT_TRUE(evoke_term_directory_validate(
         &directory,
         &manifest
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     extents[1].segment_index = 2;
-    ASSERT_TRUE(ii42_term_directory_validate(
+    ASSERT_TRUE(evoke_term_directory_validate(
         &directory,
         &manifest
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     extents[1].segment_index = 1;
 
     directory.extent_count = 9;
     directory.term_offsets = excessive_offsets;
     directory.extents = excessive_extents;
-    ASSERT_TRUE(ii42_term_directory_validate(
+    ASSERT_TRUE(evoke_term_directory_validate(
         &directory,
         &manifest
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     free(bytes);
     free(mutated);
-    ii42_term_directory_free(&restored);
-    ii42_segment_manifest_free(&manifest);
+    evoke_term_directory_free(&restored);
+    evoke_segment_manifest_free(&manifest);
 }
 
 static void
 test_term_fold_bundle_roundtrip_and_validation(void)
 {
-    ii42_term_fold_run runs[] = {
+    evoke_term_fold_run runs[] = {
         {
             .term_id = 2,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .coverage_sequence = 41,
             .posting_offset = 0,
             .posting_count = 2
         },
         {
             .term_id = 2,
-            .kind = II42_POSTING_EXTENT_SEMANTIC_IMPACT,
+            .kind = EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT,
             .coverage_sequence = 41,
             .posting_offset = 2,
             .posting_count = 1
         },
         {
             .term_id = 9,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .coverage_sequence = 44,
             .posting_offset = 3,
             .posting_count = 2
         }
     };
     uint32_t document_slots[] = {1, 7, 3, 4, 8};
-    ii42_posting_value values[5] = {0};
-    ii42_term_fold_bundle bundle;
-    ii42_term_fold_bundle decoded;
-    ii42_semantic_bmp_packed_index semantic_bmp;
-    ii42_term_fold_disk_header disk_header;
-    ii42_term_fold_run disk_run;
-    ii42_posting_block_record disk_block;
+    evoke_posting_value values[5] = {0};
+    evoke_term_fold_bundle bundle;
+    evoke_term_fold_bundle decoded;
+    evoke_semantic_bmp_packed_index semantic_bmp;
+    evoke_term_fold_disk_header disk_header;
+    evoke_term_fold_run disk_run;
+    evoke_posting_block_record disk_block;
     uint8_t *bytes = NULL;
     size_t size = 0;
     uint64_t checksum = 0;
@@ -4789,10 +4789,10 @@ test_term_fold_bundle_roundtrip_and_validation(void)
     values[2].impact = -0.5f;
     values[3].term_frequency = 3;
     values[4].term_frequency = 1;
-    ii42_term_fold_bundle_init(&bundle);
-    ii42_term_fold_bundle_init(&decoded);
-    ii42_semantic_bmp_packed_index_init(&semantic_bmp);
-    bundle.object_kind = II42_SEGMENT_OBJECT_NEUTRAL_FOLD;
+    evoke_term_fold_bundle_init(&bundle);
+    evoke_term_fold_bundle_init(&decoded);
+    evoke_semantic_bmp_packed_index_init(&semantic_bmp);
+    bundle.object_kind = EVOKE_SEGMENT_OBJECT_NEUTRAL_FOLD;
     bundle.owner_manifest_id = 50;
     bundle.run_count = 3;
     bundle.posting_count = 5;
@@ -4800,8 +4800,8 @@ test_term_fold_bundle_roundtrip_and_validation(void)
     bundle.document_slots = document_slots;
     bundle.values = values;
 
-    ASSERT_STATUS_OK(ii42_term_fold_bundle_validate(&bundle));
-    ASSERT_STATUS_OK(ii42_term_fold_bundle_serialize(
+    ASSERT_STATUS_OK(evoke_term_fold_bundle_validate(&bundle));
+    ASSERT_STATUS_OK(evoke_term_fold_bundle_serialize(
         &bundle,
         &bytes,
         &size,
@@ -4810,9 +4810,9 @@ test_term_fold_bundle_roundtrip_and_validation(void)
     ASSERT_TRUE(bytes != NULL);
     ASSERT_TRUE(size > 128);
     ASSERT_TRUE(checksum != 0);
-    ASSERT_STATUS_OK(ii42_term_fold_disk_header_decode(
+    ASSERT_STATUS_OK(evoke_term_fold_disk_header_decode(
         bytes,
-        II42_TERM_FOLD_HEADER_SIZE,
+        EVOKE_TERM_FOLD_HEADER_SIZE,
         &disk_header
     ));
     ASSERT_TRUE(disk_header.run_count == 3);
@@ -4823,7 +4823,7 @@ test_term_fold_bundle_roundtrip_and_validation(void)
     ASSERT_TRUE(disk_header.total_size == size);
     ASSERT_TRUE(
         disk_header.semantic_bmp_version ==
-        II42_SEMANTIC_BMP_PACKED_FORMAT_VERSION
+        EVOKE_SEMANTIC_BMP_PACKED_FORMAT_VERSION
     );
     ASSERT_TRUE(disk_header.semantic_bmp_size > 0);
     ASSERT_TRUE(
@@ -4831,13 +4831,13 @@ test_term_fold_bundle_roundtrip_and_validation(void)
         disk_header.semantic_bmp_size == size
     );
     test_write_u16_le(bytes + 4, 3);
-    ASSERT_TRUE(ii42_term_fold_disk_header_decode(
+    ASSERT_TRUE(evoke_term_fold_disk_header_decode(
         bytes,
-        II42_TERM_FOLD_HEADER_SIZE,
+        EVOKE_TERM_FOLD_HEADER_SIZE,
         &disk_header
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     test_write_u16_le(bytes + 4, 4);
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_deserialize(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_deserialize(
         bytes + disk_header.semantic_bmp_offset,
         (size_t) disk_header.semantic_bmp_size,
         &semantic_bmp
@@ -4846,50 +4846,50 @@ test_term_fold_bundle_roundtrip_and_validation(void)
     ASSERT_TRUE(semantic_bmp.terms[0].term_id == 2);
     ASSERT_TRUE(semantic_bmp.posting_count == 1);
     ASSERT_TRUE(semantic_bmp.impacts[0] == -0.5f);
-    ASSERT_STATUS_OK(ii42_term_fold_run_decode(
+    ASSERT_STATUS_OK(evoke_term_fold_run_decode(
         bytes + disk_header.runs_offset,
-        II42_TERM_FOLD_RUN_SIZE,
+        EVOKE_TERM_FOLD_RUN_SIZE,
         &disk_run
     ));
     ASSERT_TRUE(disk_run.term_id == 2);
     ASSERT_TRUE(disk_run.posting_count == 2);
-    ASSERT_STATUS_OK(ii42_term_fold_run_decode(
-        bytes + disk_header.runs_offset + II42_TERM_FOLD_RUN_SIZE,
-        II42_TERM_FOLD_RUN_SIZE,
+    ASSERT_STATUS_OK(evoke_term_fold_run_decode(
+        bytes + disk_header.runs_offset + EVOKE_TERM_FOLD_RUN_SIZE,
+        EVOKE_TERM_FOLD_RUN_SIZE,
         &disk_run
     ));
     ASSERT_TRUE(
-        disk_run.kind == II42_POSTING_EXTENT_SEMANTIC_IMPACT
+        disk_run.kind == EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT
     );
     ASSERT_TRUE(disk_run.posting_offset == 0);
     ASSERT_TRUE(disk_run.block_count == 0);
-    ASSERT_STATUS_OK(ii42_posting_block_record_decode(
+    ASSERT_STATUS_OK(evoke_posting_block_record_decode(
         bytes + disk_header.blocks_offset,
-        II42_POSTING_BLOCK_RECORD_SIZE,
+        EVOKE_POSTING_BLOCK_RECORD_SIZE,
         &disk_block
     ));
     ASSERT_TRUE(disk_block.posting_count == 2);
     ASSERT_TRUE(disk_block.first_document_id == 1);
-    ASSERT_STATUS_OK(ii42_term_fold_bundle_deserialize(
+    ASSERT_STATUS_OK(evoke_term_fold_bundle_deserialize(
         bytes,
         size,
         &decoded
     ));
     ASSERT_TRUE(
-        decoded.object_kind == II42_SEGMENT_OBJECT_NEUTRAL_FOLD
+        decoded.object_kind == EVOKE_SEGMENT_OBJECT_NEUTRAL_FOLD
     );
     ASSERT_TRUE(decoded.owner_manifest_id == 50);
     ASSERT_TRUE(decoded.statistics_epoch == 0);
     ASSERT_TRUE(decoded.run_count == 3);
     ASSERT_TRUE(
-        decoded.block_shift == II42_DEFAULT_POSTING_BLOCK_SHIFT
+        decoded.block_shift == EVOKE_DEFAULT_POSTING_BLOCK_SHIFT
     );
     ASSERT_TRUE(decoded.block_count == 3);
     ASSERT_TRUE(decoded.posting_count == 5);
     ASSERT_TRUE(decoded.runs[1].term_id == 2);
     ASSERT_TRUE(
         decoded.runs[1].kind ==
-        II42_POSTING_EXTENT_SEMANTIC_IMPACT
+        EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT
     );
     ASSERT_TRUE(decoded.runs[2].coverage_sequence == 44);
     ASSERT_TRUE(decoded.runs[0].block_offset == 0);
@@ -4897,51 +4897,51 @@ test_term_fold_bundle_roundtrip_and_validation(void)
     ASSERT_TRUE(decoded.runs[2].block_offset == 2);
     ASSERT_TRUE(decoded.blocks[0].posting_count == 2);
     ASSERT_TRUE(decoded.blocks[1].kind ==
-        II42_POSTING_EXTENT_SEMANTIC_IMPACT);
+        EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT);
     assert_float_close(decoded.blocks[1].min_impact, -0.5f);
     ASSERT_TRUE(decoded.document_slots[4] == 8);
     ASSERT_TRUE(decoded.values[0].term_frequency == 2);
     assert_float_close(decoded.values[2].impact, -0.5f);
     decoded.blocks[0].max_term_frequency++;
     ASSERT_TRUE(
-        ii42_term_fold_bundle_validate(&decoded) == II42_ERR_FORMAT
+        evoke_term_fold_bundle_validate(&decoded) == EVOKE_ERR_FORMAT
     );
     decoded.blocks[0].max_term_frequency--;
-    ASSERT_STATUS_OK(ii42_term_fold_bundle_validate(&decoded));
+    ASSERT_STATUS_OK(evoke_term_fold_bundle_validate(&decoded));
 
     runs[1].coverage_sequence = 42;
     ASSERT_TRUE(
-        ii42_term_fold_bundle_validate(&bundle) == II42_ERR_FORMAT
+        evoke_term_fold_bundle_validate(&bundle) == EVOKE_ERR_FORMAT
     );
     runs[1].coverage_sequence = 41;
-    bundle.object_kind = II42_SEGMENT_OBJECT_IMPACT_FOLD;
+    bundle.object_kind = EVOKE_SEGMENT_OBJECT_IMPACT_FOLD;
     bundle.statistics_epoch = 7;
     ASSERT_TRUE(
-        ii42_term_fold_bundle_validate(&bundle) == II42_ERR_FORMAT
+        evoke_term_fold_bundle_validate(&bundle) == EVOKE_ERR_FORMAT
     );
-    bundle.object_kind = II42_SEGMENT_OBJECT_NEUTRAL_FOLD;
+    bundle.object_kind = EVOKE_SEGMENT_OBJECT_NEUTRAL_FOLD;
     bundle.statistics_epoch = 0;
 
     bytes[size - 1] ^= UINT8_C(0x01);
     ASSERT_TRUE(
-        ii42_term_fold_bundle_deserialize(
+        evoke_term_fold_bundle_deserialize(
             bytes,
             size,
             &decoded
-        ) == II42_ERR_FORMAT
+        ) == EVOKE_ERR_FORMAT
     );
     ASSERT_TRUE(decoded.owner_manifest_id == 50);
 
     free(bytes);
-    ii42_semantic_bmp_packed_index_free(&semantic_bmp);
-    ii42_term_fold_bundle_free(&decoded);
+    evoke_semantic_bmp_packed_index_free(&semantic_bmp);
+    evoke_term_fold_bundle_free(&decoded);
 }
 
 static void
 test_document_version_records_validation(void)
 {
-    ii42_segment_manifest manifest;
-    ii42_document_version_record versions[] = {
+    evoke_segment_manifest manifest;
+    evoke_document_version_record versions[] = {
         {
             .document_slot = 0,
             .born_sequence = 1,
@@ -4949,8 +4949,8 @@ test_document_version_records_validation(void)
             .heap_block = 10,
             .document_length = 3,
             .heap_offset = 1,
-            .flags = II42_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE |
-                II42_DOCUMENT_VERSION_FLAG_FROZEN_XID
+            .flags = EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE |
+                EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID
         },
         {
             .document_slot = 1,
@@ -4959,7 +4959,7 @@ test_document_version_records_validation(void)
             .heap_block = 10,
             .document_length = 2,
             .heap_offset = 2,
-            .flags = II42_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING
+            .flags = EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING
         },
         {
             .document_slot = 2,
@@ -4968,8 +4968,8 @@ test_document_version_records_validation(void)
             .heap_block = 0,
             .document_length = 0,
             .heap_offset = 0,
-            .flags = II42_DOCUMENT_VERSION_FLAG_ABORTED_HOLE |
-                II42_DOCUMENT_VERSION_FLAG_FROZEN_XID
+            .flags = EVOKE_DOCUMENT_VERSION_FLAG_ABORTED_HOLE |
+                EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID
         },
         {
             .document_slot = 3,
@@ -4978,10 +4978,10 @@ test_document_version_records_validation(void)
             .heap_block = 12,
             .document_length = 1,
             .heap_offset = 1,
-            .flags = II42_DOCUMENT_VERSION_FLAG_SEMANTIC_QUARANTINED
+            .flags = EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_QUARANTINED
         }
     };
-    ii42_document_retirement_record retirement = {
+    evoke_document_retirement_record retirement = {
         .document_slot = 0,
         .retirement_sequence = 100,
         .record_xid = 30,
@@ -4990,7 +4990,7 @@ test_document_version_records_validation(void)
 
     initialize_test_segment_manifest(&manifest);
     manifest.segments[0].retirement_count = 1;
-    ASSERT_STATUS_OK(ii42_document_version_records_validate(
+    ASSERT_STATUS_OK(evoke_document_version_records_validate(
         &manifest,
         &manifest.segments[0],
         versions,
@@ -5000,124 +5000,124 @@ test_document_version_records_validation(void)
     ));
 
     versions[1].document_slot = 0;
-    ASSERT_TRUE(ii42_document_version_records_validate(
+    ASSERT_TRUE(evoke_document_version_records_validate(
         &manifest,
         &manifest.segments[0],
         versions,
         4,
         &retirement,
         1
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     versions[1].document_slot = 1;
-    versions[1].flags |= II42_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE;
-    ASSERT_TRUE(ii42_document_version_records_validate(
+    versions[1].flags |= EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE;
+    ASSERT_TRUE(evoke_document_version_records_validate(
         &manifest,
         &manifest.segments[0],
         versions,
         4,
         &retirement,
         1
-    ) == II42_ERR_FORMAT);
-    versions[1].flags = II42_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING;
+    ) == EVOKE_ERR_FORMAT);
+    versions[1].flags = EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING;
     versions[1].record_xid = 0;
-    ASSERT_TRUE(ii42_document_version_records_validate(
+    ASSERT_TRUE(evoke_document_version_records_validate(
         &manifest,
         &manifest.segments[0],
         versions,
         4,
         &retirement,
         1
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     versions[1].record_xid = 21;
     versions[2].heap_offset = 1;
-    ASSERT_TRUE(ii42_document_version_records_validate(
+    ASSERT_TRUE(evoke_document_version_records_validate(
         &manifest,
         &manifest.segments[0],
         versions,
         4,
         &retirement,
         1
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     versions[2].heap_offset = 0;
     versions[2].semantic_input_fingerprint[0] = 1;
-    ASSERT_TRUE(ii42_document_version_records_validate(
+    ASSERT_TRUE(evoke_document_version_records_validate(
         &manifest,
         &manifest.segments[0],
         versions,
         4,
         &retirement,
         1
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     versions[2].semantic_input_fingerprint[0] = 0;
-    versions[2].flags = II42_DOCUMENT_VERSION_FLAG_ABORTED_HOLE;
-    ASSERT_TRUE(ii42_document_version_records_validate(
+    versions[2].flags = EVOKE_DOCUMENT_VERSION_FLAG_ABORTED_HOLE;
+    ASSERT_TRUE(evoke_document_version_records_validate(
         &manifest,
         &manifest.segments[0],
         versions,
         4,
         &retirement,
         1
-    ) == II42_ERR_FORMAT);
-    versions[2].flags = II42_DOCUMENT_VERSION_FLAG_ABORTED_HOLE |
-        II42_DOCUMENT_VERSION_FLAG_FROZEN_XID;
+    ) == EVOKE_ERR_FORMAT);
+    versions[2].flags = EVOKE_DOCUMENT_VERSION_FLAG_ABORTED_HOLE |
+        EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID;
     retirement.document_slot = manifest.document_slot_count;
-    ASSERT_TRUE(ii42_document_version_records_validate(
+    ASSERT_TRUE(evoke_document_version_records_validate(
         &manifest,
         &manifest.segments[0],
         versions,
         4,
         &retirement,
         1
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     retirement.document_slot = 0;
     retirement.reserved2 = 1;
-    ASSERT_TRUE(ii42_document_version_records_validate(
+    ASSERT_TRUE(evoke_document_version_records_validate(
         &manifest,
         &manifest.segments[0],
         versions,
         4,
         &retirement,
         1
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     retirement.reserved2 = 0;
 
-    ii42_segment_manifest_free(&manifest);
+    evoke_segment_manifest_free(&manifest);
 }
 
 static void
 test_aborted_slot_hole_metadata(void)
 {
     uint32_t live_doc[] = {0};
-    ii42_doc_ids docs[] = {
+    evoke_doc_ids docs[] = {
         make_doc(live_doc, 1),
         make_doc(NULL, 0)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_BM25PLUS,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_BM25PLUS,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_document_version_record versions[2] = {0};
-    ii42_segment_manifest manifest;
-    ii42_segment_payload payload;
-    ii42_segment_payload restored;
-    ii42_segment_query_contract contract;
-    ii42_index index;
-    ii42_index metadata_index;
+    evoke_document_version_record versions[2] = {0};
+    evoke_segment_manifest manifest;
+    evoke_segment_payload payload;
+    evoke_segment_payload restored;
+    evoke_segment_query_contract contract;
+    evoke_index index;
+    evoke_index metadata_index;
     uint8_t *bytes = NULL;
     size_t size = 0;
     uint64_t checksum = 0;
 
-    ii42_index_init(&index);
-    ii42_index_init(&metadata_index);
-    ii42_segment_manifest_init(&manifest);
-    ii42_segment_payload_init(&payload);
-    ii42_segment_payload_init(&restored);
-    ii42_segment_query_contract_init(&contract);
+    evoke_index_init(&index);
+    evoke_index_init(&metadata_index);
+    evoke_segment_manifest_init(&manifest);
+    evoke_segment_payload_init(&payload);
+    evoke_segment_payload_init(&restored);
+    evoke_segment_query_contract_init(&contract);
 
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         docs,
         2,
         &params,
@@ -5129,12 +5129,12 @@ test_aborted_slot_hole_metadata(void)
     versions[0].heap_block = 10;
     versions[0].document_length = 1;
     versions[0].heap_offset = 1;
-    versions[0].flags = II42_DOCUMENT_VERSION_FLAG_FROZEN_XID;
+    versions[0].flags = EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID;
     versions[1].document_slot = 1;
     versions[1].born_sequence = 2;
-    versions[1].flags = II42_DOCUMENT_VERSION_FLAG_ABORTED_HOLE |
-        II42_DOCUMENT_VERSION_FLAG_FROZEN_XID;
-    ASSERT_STATUS_OK(ii42_segment_payload_build_lexical(
+    versions[1].flags = EVOKE_DOCUMENT_VERSION_FLAG_ABORTED_HOLE |
+        EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID;
+    ASSERT_STATUS_OK(evoke_segment_payload_build_lexical(
         &index,
         1,
         0,
@@ -5143,7 +5143,7 @@ test_aborted_slot_hole_metadata(void)
         &payload
     ));
 
-    manifest.flags = II42_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
+    manifest.flags = EVOKE_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
     manifest.manifest_id = 1;
     manifest.max_sequence = 2;
     manifest.statistics_epoch = 1;
@@ -5153,7 +5153,7 @@ test_aborted_slot_hole_metadata(void)
     manifest.vocab_size = index.vocab_size;
     initialize_test_object_ref(
         &manifest.query_contract,
-        II42_SEGMENT_OBJECT_QUERY_CONTRACT,
+        EVOKE_SEGMENT_OBJECT_QUERY_CONTRACT,
         3,
         1,
         manifest.manifest_id,
@@ -5161,7 +5161,7 @@ test_aborted_slot_hole_metadata(void)
     );
     initialize_test_object_ref(
         &manifest.term_directory,
-        II42_SEGMENT_OBJECT_TERM_DIRECTORY,
+        EVOKE_SEGMENT_OBJECT_TERM_DIRECTORY,
         2,
         1,
         manifest.manifest_id,
@@ -5191,11 +5191,11 @@ test_aborted_slot_hole_metadata(void)
     manifest.segments[0].start_block = 1;
     manifest.segments[0].block_count = 1;
     manifest.segments[0].flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_LEXICAL;
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_LEXICAL;
     manifest.segments[0].payload_owner_manifest_id =
         manifest.manifest_id;
-    ASSERT_STATUS_OK(ii42_segment_payload_serialize(
+    ASSERT_STATUS_OK(evoke_segment_payload_serialize(
         &payload,
         &manifest,
         &manifest.segments[0],
@@ -5205,13 +5205,13 @@ test_aborted_slot_hole_metadata(void)
     ));
     manifest.segments[0].payload_bytes = size;
     manifest.segments[0].payload_checksum = checksum;
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&manifest));
-    ASSERT_STATUS_OK(ii42_segment_query_contract_build(
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&manifest));
+    ASSERT_STATUS_OK(evoke_segment_query_contract_build(
         &index,
         &manifest,
         &contract
     ));
-    ASSERT_STATUS_OK(ii42_segment_payload_deserialize(
+    ASSERT_STATUS_OK(evoke_segment_payload_deserialize(
         bytes,
         size,
         &manifest,
@@ -5219,16 +5219,16 @@ test_aborted_slot_hole_metadata(void)
         &restored
     ));
     ASSERT_TRUE(
-        restored.block_shift == II42_DEFAULT_POSTING_BLOCK_SHIFT
+        restored.block_shift == EVOKE_DEFAULT_POSTING_BLOCK_SHIFT
     );
     ASSERT_TRUE(restored.block_count == restored.run_count);
     ASSERT_TRUE(restored.runs[0].block_count == 1);
     ASSERT_TRUE(
         restored.versions[1].flags ==
-        (II42_DOCUMENT_VERSION_FLAG_ABORTED_HOLE |
-         II42_DOCUMENT_VERSION_FLAG_FROZEN_XID)
+        (EVOKE_DOCUMENT_VERSION_FLAG_ABORTED_HOLE |
+         EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID)
     );
-    ASSERT_STATUS_OK(ii42_segment_index_metadata_build(
+    ASSERT_STATUS_OK(evoke_segment_index_metadata_build(
         &contract,
         &manifest,
         manifest.doc_frequencies,
@@ -5241,48 +5241,48 @@ test_aborted_slot_hole_metadata(void)
     ASSERT_TRUE(metadata_index.doc_lengths[1] == 0);
 
     restored.indices[0] = 1;
-    ASSERT_TRUE(ii42_segment_index_metadata_build(
+    ASSERT_TRUE(evoke_segment_index_metadata_build(
         &contract,
         &manifest,
         manifest.doc_frequencies,
         &restored,
         1,
         &metadata_index
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     free(bytes);
-    ii42_segment_query_contract_free(&contract);
-    ii42_segment_payload_free(&restored);
-    ii42_segment_payload_free(&payload);
-    ii42_segment_manifest_free(&manifest);
-    ii42_index_free(&metadata_index);
-    ii42_index_free(&index);
+    evoke_segment_query_contract_free(&contract);
+    evoke_segment_payload_free(&restored);
+    evoke_segment_payload_free(&payload);
+    evoke_segment_manifest_free(&manifest);
+    evoke_index_free(&metadata_index);
+    evoke_index_free(&index);
 }
 
 static void
 test_frozen_retirement_ids_build(void)
 {
-    ii42_segment_manifest manifest;
-    ii42_segment_payload payloads[2] = {0};
-    ii42_document_retirement_record retirements[2] = {
+    evoke_segment_manifest manifest;
+    evoke_segment_payload payloads[2] = {0};
+    evoke_document_retirement_record retirements[2] = {
         {
             .document_slot = 4,
             .retirement_sequence = 50,
             .record_xid = 0,
-            .flags = II42_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID
+            .flags = EVOKE_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID
         },
         {
             .document_slot = 0,
             .retirement_sequence = 110,
             .record_xid = 0,
-            .flags = II42_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID
+            .flags = EVOKE_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID
         }
     };
     uint32_t *document_ids = NULL;
     size_t document_id_count = 0;
 
     initialize_test_segment_manifest(&manifest);
-    manifest.segments[0].flags |= II42_SEGMENT_FLAG_RETIREMENTS;
+    manifest.segments[0].flags |= EVOKE_SEGMENT_FLAG_RETIREMENTS;
     manifest.segments[0].retirement_count = 1;
     payloads[0].segment_id = manifest.segments[0].segment_id;
     payloads[0].retirements = &retirements[0];
@@ -5291,7 +5291,7 @@ test_frozen_retirement_ids_build(void)
     payloads[1].retirements = &retirements[1];
     payloads[1].retirement_count = 1;
 
-    ASSERT_STATUS_OK(ii42_segment_frozen_retirement_ids_build(
+    ASSERT_STATUS_OK(evoke_segment_frozen_retirement_ids_build(
         &manifest,
         payloads,
         2,
@@ -5305,80 +5305,80 @@ test_frozen_retirement_ids_build(void)
     document_ids = NULL;
 
     retirements[0].document_slot = 0;
-    ASSERT_TRUE(ii42_segment_frozen_retirement_ids_build(
+    ASSERT_TRUE(evoke_segment_frozen_retirement_ids_build(
         &manifest,
         payloads,
         2,
         &document_ids,
         &document_id_count
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(document_ids == NULL);
     ASSERT_TRUE(document_id_count == 0);
 
     retirements[0].document_slot = 4;
     retirements[1].flags = 0;
     retirements[1].record_xid = 41;
-    ASSERT_TRUE(ii42_segment_frozen_retirement_ids_build(
+    ASSERT_TRUE(evoke_segment_frozen_retirement_ids_build(
         &manifest,
         payloads,
         2,
         &document_ids,
         &document_id_count
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(document_ids == NULL);
     ASSERT_TRUE(document_id_count == 0);
 
-    ii42_segment_manifest_free(&manifest);
+    evoke_segment_manifest_free(&manifest);
 }
 
 static void
 test_segment_payload_roundtrip_and_validation(void)
 {
-    ii42_segment_manifest manifest;
-    ii42_segment_payload payload;
-    ii42_segment_payload restored;
-    ii42_segment_payload quarantine_restored;
-    ii42_segment_term_run runs[] = {
+    evoke_segment_manifest manifest;
+    evoke_segment_payload payload;
+    evoke_segment_payload restored;
+    evoke_segment_payload quarantine_restored;
+    evoke_segment_term_run runs[] = {
         {
             .term_id = 0,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 0,
             .posting_count = 1
         },
         {
             .term_id = 3,
-            .kind = II42_POSTING_EXTENT_SEMANTIC_IMPACT,
+            .kind = EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT,
             .posting_offset = 1,
             .posting_count = 1
         }
     };
     uint32_t indices[] = {0, 0};
-    ii42_posting_value values[2];
+    evoke_posting_value values[2];
     uint32_t document_map[] = {4};
-    ii42_document_version_record version = {
+    evoke_document_version_record version = {
         .document_slot = 4,
         .born_sequence = 101,
         .record_xid = 21,
         .heap_block = 22,
         .document_length = 3,
         .heap_offset = 2,
-        .flags = II42_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING
+        .flags = EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING
     };
-    ii42_document_retirement_record retirement = {
+    evoke_document_retirement_record retirement = {
         .document_slot = 0,
         .retirement_sequence = 102,
         .record_xid = 21,
         .document_length = 3
     };
-    ii42_semantic_state_record semantic_state = {
+    evoke_semantic_state_record semantic_state = {
         .document_slot = 4,
         .transition_sequence = 103,
         .record_xid = 21,
-        .flags = II42_SEMANTIC_STATE_FLAG_COMPLETE
+        .flags = EVOKE_SEMANTIC_STATE_FLAG_COMPLETE
     };
-    ii42_segment_payload_disk_header disk_header;
-    ii42_segment_term_run disk_run;
-    ii42_posting_block_record disk_block;
+    evoke_segment_payload_disk_header disk_header;
+    evoke_segment_term_run disk_run;
+    evoke_posting_block_record disk_block;
     uint8_t *bytes = NULL;
     uint8_t *mutated = NULL;
     uint8_t *quarantine_bytes = NULL;
@@ -5403,17 +5403,17 @@ test_segment_payload_roundtrip_and_validation(void)
 
     initialize_test_segment_manifest(&manifest);
     manifest.segments[1].flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_LEXICAL |
-        II42_SEGMENT_FLAG_SEMANTIC |
-        II42_SEGMENT_FLAG_RETIREMENTS;
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_LEXICAL |
+        EVOKE_SEGMENT_FLAG_SEMANTIC |
+        EVOKE_SEGMENT_FLAG_RETIREMENTS;
     manifest.segments[1].semantic_state_count = 1;
-    ii42_segment_payload_init(&payload);
-    ii42_segment_payload_init(&restored);
-    ii42_segment_payload_init(&quarantine_restored);
+    evoke_segment_payload_init(&payload);
+    evoke_segment_payload_init(&restored);
+    evoke_segment_payload_init(&quarantine_restored);
     payload.segment_id = 2;
     payload.vocab_size = 4;
-    payload.flags = II42_SEGMENT_PAYLOAD_FLAG_DOCUMENT_MAP;
+    payload.flags = EVOKE_SEGMENT_PAYLOAD_FLAG_DOCUMENT_MAP;
     payload.local_document_count = 1;
     payload.run_count = 2;
     payload.posting_count = 2;
@@ -5430,12 +5430,12 @@ test_segment_payload_roundtrip_and_validation(void)
 
     manifest.segments[1].payload_bytes = 0;
     manifest.segments[1].payload_checksum = 0;
-    ASSERT_STATUS_OK(ii42_segment_payload_validate(
+    ASSERT_STATUS_OK(evoke_segment_payload_validate(
         &payload,
         &manifest,
         &manifest.segments[1]
     ));
-    ASSERT_STATUS_OK(ii42_segment_payload_serialize(
+    ASSERT_STATUS_OK(evoke_segment_payload_serialize(
         &payload,
         &manifest,
         &manifest.segments[1],
@@ -5448,9 +5448,9 @@ test_segment_payload_roundtrip_and_validation(void)
     ASSERT_TRUE(checksum != 0);
     manifest.segments[1].payload_bytes = size;
     manifest.segments[1].payload_checksum = checksum;
-    ASSERT_STATUS_OK(ii42_segment_payload_disk_header_decode(
+    ASSERT_STATUS_OK(evoke_segment_payload_disk_header_decode(
         bytes,
-        II42_SEGMENT_PAYLOAD_HEADER_SIZE,
+        EVOKE_SEGMENT_PAYLOAD_HEADER_SIZE,
         &manifest,
         &manifest.segments[1],
         &disk_header
@@ -5463,29 +5463,29 @@ test_segment_payload_roundtrip_and_validation(void)
     ASSERT_TRUE(disk_header.block_count == 1);
     ASSERT_TRUE(
         disk_header.semantic_bmp_version ==
-        II42_SEMANTIC_BMP_PACKED_FORMAT_VERSION
+        EVOKE_SEMANTIC_BMP_PACKED_FORMAT_VERSION
     );
     ASSERT_TRUE(disk_header.semantic_bmp_size > 0);
     ASSERT_TRUE(disk_header.total_size == size);
-    ASSERT_STATUS_OK(ii42_segment_term_run_decode(
-        bytes + disk_header.runs_offset + II42_SEGMENT_TERM_RUN_SIZE,
-        II42_SEGMENT_TERM_RUN_SIZE,
+    ASSERT_STATUS_OK(evoke_segment_term_run_decode(
+        bytes + disk_header.runs_offset + EVOKE_SEGMENT_TERM_RUN_SIZE,
+        EVOKE_SEGMENT_TERM_RUN_SIZE,
         &disk_run
     ));
     ASSERT_TRUE(disk_run.term_id == 3);
     ASSERT_TRUE(
-        disk_run.kind == II42_POSTING_EXTENT_SEMANTIC_IMPACT
+        disk_run.kind == EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT
     );
     ASSERT_TRUE(disk_run.posting_offset == 0);
     ASSERT_TRUE(disk_run.block_count == 0);
-    ASSERT_STATUS_OK(ii42_posting_block_record_decode(
+    ASSERT_STATUS_OK(evoke_posting_block_record_decode(
         bytes + disk_header.blocks_offset,
-        II42_POSTING_BLOCK_RECORD_SIZE,
+        EVOKE_POSTING_BLOCK_RECORD_SIZE,
         &disk_block
     ));
     ASSERT_TRUE(disk_block.kind ==
-        II42_POSTING_EXTENT_LEXICAL_NEUTRAL);
-    ASSERT_STATUS_OK(ii42_segment_payload_deserialize(
+        EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL);
+    ASSERT_STATUS_OK(evoke_segment_payload_deserialize(
         bytes,
         size,
         &manifest,
@@ -5493,7 +5493,7 @@ test_segment_payload_roundtrip_and_validation(void)
         &restored
     ));
     ASSERT_TRUE(
-        restored.block_shift == II42_DEFAULT_POSTING_BLOCK_SHIFT
+        restored.block_shift == EVOKE_DEFAULT_POSTING_BLOCK_SHIFT
     );
     ASSERT_TRUE(restored.block_count == restored.run_count);
     ASSERT_TRUE(restored.runs[1].block_offset == 1);
@@ -5514,14 +5514,14 @@ test_segment_payload_roundtrip_and_validation(void)
     );
     ASSERT_TRUE(
         restored.semantic_states[0].flags ==
-        II42_SEMANTIC_STATE_FLAG_COMPLETE
+        EVOKE_SEMANTIC_STATE_FLAG_COMPLETE
     );
 
     /* Historical packed segments keep their publication high-watermark. */
     manifest.document_slot_count++;
     manifest.visible_document_count++;
     manifest.total_document_length++;
-    ASSERT_STATUS_OK(ii42_segment_payload_deserialize(
+    ASSERT_STATUS_OK(evoke_segment_payload_deserialize(
         bytes,
         size,
         &manifest,
@@ -5532,7 +5532,7 @@ test_segment_payload_roundtrip_and_validation(void)
     manifest.visible_document_count--;
     manifest.total_document_length--;
 
-    semantic_state.flags = II42_SEMANTIC_STATE_FLAG_QUARANTINED;
+    semantic_state.flags = EVOKE_SEMANTIC_STATE_FLAG_QUARANTINED;
     semantic_state.failure_count = 2;
     semantic_state.error_code = 7;
     semantic_state.pending_since = 100;
@@ -5542,10 +5542,10 @@ test_segment_payload_roundtrip_and_validation(void)
     payload.posting_count = 1;
     manifest.segments[1].posting_count = 1;
     manifest.segments[1].flags |=
-        II42_SEGMENT_FLAG_PENDING | II42_SEGMENT_FLAG_QUARANTINE;
+        EVOKE_SEGMENT_FLAG_PENDING | EVOKE_SEGMENT_FLAG_QUARANTINE;
     manifest.segments[1].payload_bytes = 0;
     manifest.segments[1].payload_checksum = 0;
-    ASSERT_STATUS_OK(ii42_segment_payload_serialize(
+    ASSERT_STATUS_OK(evoke_segment_payload_serialize(
         &payload,
         &manifest,
         &manifest.segments[1],
@@ -5555,7 +5555,7 @@ test_segment_payload_roundtrip_and_validation(void)
     ));
     manifest.segments[1].payload_bytes = quarantine_size;
     manifest.segments[1].payload_checksum = quarantine_checksum;
-    ASSERT_STATUS_OK(ii42_segment_payload_deserialize(
+    ASSERT_STATUS_OK(evoke_segment_payload_deserialize(
         quarantine_bytes,
         quarantine_size,
         &manifest,
@@ -5573,15 +5573,15 @@ test_segment_payload_roundtrip_and_validation(void)
         UINT64_C(0x123456789abcdef0)
     );
     quarantine_bytes[quarantine_size - 1] ^= 0x1U;
-    ASSERT_TRUE(ii42_segment_payload_deserialize(
+    ASSERT_TRUE(evoke_segment_payload_deserialize(
         quarantine_bytes,
         quarantine_size,
         &manifest,
         &manifest.segments[1],
         &quarantine_restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     quarantine_bytes[quarantine_size - 1] ^= 0x1U;
-    semantic_state.flags = II42_SEMANTIC_STATE_FLAG_COMPLETE;
+    semantic_state.flags = EVOKE_SEMANTIC_STATE_FLAG_COMPLETE;
     semantic_state.failure_count = 0;
     semantic_state.error_code = 0;
     semantic_state.pending_since = 0;
@@ -5591,7 +5591,7 @@ test_segment_payload_roundtrip_and_validation(void)
     payload.posting_count = 2;
     manifest.segments[1].posting_count = 2;
     manifest.segments[1].flags &=
-        ~(II42_SEGMENT_FLAG_PENDING | II42_SEGMENT_FLAG_QUARANTINE);
+        ~(EVOKE_SEGMENT_FLAG_PENDING | EVOKE_SEGMENT_FLAG_QUARANTINE);
     manifest.segments[1].payload_bytes = size;
     manifest.segments[1].payload_checksum = checksum;
 
@@ -5602,14 +5602,14 @@ test_segment_payload_roundtrip_and_validation(void)
     ASSERT_TRUE(manifest.doc_frequencies != NULL);
     manifest.doc_frequencies[4] = 0;
     manifest.vocab_size = 5;
-    ASSERT_STATUS_OK(ii42_segment_payload_disk_header_decode(
+    ASSERT_STATUS_OK(evoke_segment_payload_disk_header_decode(
         bytes,
-        II42_SEGMENT_PAYLOAD_HEADER_SIZE,
+        EVOKE_SEGMENT_PAYLOAD_HEADER_SIZE,
         &manifest,
         &manifest.segments[1],
         &disk_header
     ));
-    ASSERT_STATUS_OK(ii42_segment_payload_deserialize(
+    ASSERT_STATUS_OK(evoke_segment_payload_deserialize(
         bytes,
         size,
         &manifest,
@@ -5617,113 +5617,113 @@ test_segment_payload_roundtrip_and_validation(void)
         &restored
     ));
     runs[1].term_id = 4;
-    ASSERT_TRUE(ii42_segment_payload_validate(
+    ASSERT_TRUE(evoke_segment_payload_validate(
         &payload,
         &manifest,
         &manifest.segments[1]
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     runs[1].term_id = 3;
 
     mutated = malloc(size);
     ASSERT_TRUE(mutated != NULL);
     memcpy(mutated, bytes, size);
     test_write_u16_le(mutated + 4, 6);
-    ASSERT_TRUE(ii42_segment_payload_disk_header_decode(
+    ASSERT_TRUE(evoke_segment_payload_disk_header_decode(
         mutated,
-        II42_SEGMENT_PAYLOAD_HEADER_SIZE,
+        EVOKE_SEGMENT_PAYLOAD_HEADER_SIZE,
         &manifest,
         &manifest.segments[1],
         &disk_header
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     test_write_u16_le(mutated + 4, 7);
     mutated[size - 1] ^= 0x1U;
-    ASSERT_TRUE(ii42_segment_payload_deserialize(
+    ASSERT_TRUE(evoke_segment_payload_deserialize(
         mutated,
         size,
         &manifest,
         &manifest.segments[1],
         &restored
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_segment_payload_deserialize(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_payload_deserialize(
         bytes,
         size - 1,
         &manifest,
         &manifest.segments[1],
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(restored.segment_id == 2);
 
     values[0].term_frequency = 0;
-    ASSERT_TRUE(ii42_segment_payload_validate(
+    ASSERT_TRUE(evoke_segment_payload_validate(
         &payload,
         &manifest,
         &manifest.segments[1]
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     values[0].term_frequency = 2;
     values[1].impact = NAN;
-    ASSERT_TRUE(ii42_segment_payload_validate(
+    ASSERT_TRUE(evoke_segment_payload_validate(
         &payload,
         &manifest,
         &manifest.segments[1]
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     values[1].impact = 0.375f;
     semantic_state.flags =
-        II42_SEMANTIC_STATE_FLAG_QUARANTINED;
+        EVOKE_SEMANTIC_STATE_FLAG_QUARANTINED;
     semantic_state.failure_count = 1;
     semantic_state.error_code = 1;
     semantic_state.retry_after = 1;
     semantic_state.pending_since = 1;
-    ASSERT_TRUE(ii42_segment_payload_validate(
+    ASSERT_TRUE(evoke_segment_payload_validate(
         &payload,
         &manifest,
         &manifest.segments[1]
-    ) == II42_ERR_FORMAT);
-    semantic_state.flags = II42_SEMANTIC_STATE_FLAG_COMPLETE;
+    ) == EVOKE_ERR_FORMAT);
+    semantic_state.flags = EVOKE_SEMANTIC_STATE_FLAG_COMPLETE;
     semantic_state.failure_count = 0;
     semantic_state.error_code = 0;
     semantic_state.retry_after = 0;
     semantic_state.pending_since = 0;
     semantic_state.error_hash = 0;
     semantic_state.semantic_input_fingerprint[0] ^= 0x1U;
-    ASSERT_TRUE(ii42_segment_payload_validate(
+    ASSERT_TRUE(evoke_segment_payload_validate(
         &payload,
         &manifest,
         &manifest.segments[1]
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     semantic_state.semantic_input_fingerprint[0] ^= 0x1U;
     version.document_slot = 3;
-    ASSERT_TRUE(ii42_segment_payload_validate(
+    ASSERT_TRUE(evoke_segment_payload_validate(
         &payload,
         &manifest,
         &manifest.segments[1]
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     free(bytes);
     free(mutated);
     free(quarantine_bytes);
-    ii42_segment_payload_free(&restored);
-    ii42_segment_payload_free(&quarantine_restored);
-    ii42_segment_manifest_free(&manifest);
+    evoke_segment_payload_free(&restored);
+    evoke_segment_payload_free(&quarantine_restored);
+    evoke_segment_manifest_free(&manifest);
 }
 
 static void
 test_semantic_state_segment_and_merge(void)
 {
-    ii42_segment_manifest manifest;
-    ii42_segment_descriptor merged_descriptor = {0};
-    ii42_segment_payload payloads[2];
-    ii42_segment_payload merged;
-    ii42_segment_payload filtered;
-    ii42_segment_payload restored;
-    ii42_segment_term_run lexical_run = {
+    evoke_segment_manifest manifest;
+    evoke_segment_descriptor merged_descriptor = {0};
+    evoke_segment_payload payloads[2];
+    evoke_segment_payload merged;
+    evoke_segment_payload filtered;
+    evoke_segment_payload restored;
+    evoke_segment_term_run lexical_run = {
         .term_id = 0,
-        .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+        .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
         .posting_offset = 0,
         .posting_count = 1
     };
-    ii42_segment_term_run semantic_run = {
+    evoke_segment_term_run semantic_run = {
         .term_id = 1,
-        .kind = II42_POSTING_EXTENT_SEMANTIC_IMPACT,
+        .kind = EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT,
         .posting_offset = 0,
         .posting_count = 1
     };
@@ -5731,24 +5731,24 @@ test_semantic_state_segment_and_merge(void)
     uint32_t semantic_index = 0;
     uint32_t semantic_document_map = 0;
     uint32_t excluded_document_id = 0;
-    ii42_posting_value lexical_value = {.term_frequency = 1};
-    ii42_posting_value semantic_value = {.impact = 0.5f};
-    ii42_document_version_record version = {
+    evoke_posting_value lexical_value = {.term_frequency = 1};
+    evoke_posting_value semantic_value = {.impact = 0.5f};
+    evoke_document_version_record version = {
         .document_slot = 0,
         .born_sequence = 1,
         .heap_block = 10,
         .document_length = 2,
         .heap_offset = 1,
         .flags =
-            II42_DOCUMENT_VERSION_FLAG_FROZEN_XID |
-            II42_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING
+            EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID |
+            EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING
     };
-    ii42_semantic_state_record semantic_state = {
+    evoke_semantic_state_record semantic_state = {
         .document_slot = 0,
         .transition_sequence = 2,
         .flags =
-            II42_SEMANTIC_STATE_FLAG_COMPLETE |
-            II42_SEMANTIC_STATE_FLAG_FROZEN_XID
+            EVOKE_SEMANTIC_STATE_FLAG_COMPLETE |
+            EVOKE_SEMANTIC_STATE_FLAG_FROZEN_XID
     };
     uint8_t *bytes = NULL;
     size_t size = 0;
@@ -5764,16 +5764,16 @@ test_semantic_state_segment_and_merge(void)
         version.semantic_input_fingerprint,
         sizeof(semantic_state.semantic_input_fingerprint)
     );
-    ii42_segment_manifest_init(&manifest);
-    ii42_segment_payload_init(&payloads[0]);
-    ii42_segment_payload_init(&payloads[1]);
-    ii42_segment_payload_init(&merged);
-    ii42_segment_payload_init(&filtered);
-    ii42_segment_payload_init(&restored);
+    evoke_segment_manifest_init(&manifest);
+    evoke_segment_payload_init(&payloads[0]);
+    evoke_segment_payload_init(&payloads[1]);
+    evoke_segment_payload_init(&merged);
+    evoke_segment_payload_init(&filtered);
+    evoke_segment_payload_init(&restored);
 
     manifest.flags =
-        II42_SEGMENT_MANIFEST_FLAG_SAE |
-        II42_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
+        EVOKE_SEGMENT_MANIFEST_FLAG_SAE |
+        EVOKE_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
     manifest.manifest_id = 5;
     manifest.max_sequence = 2;
     manifest.statistics_epoch = 1;
@@ -5783,7 +5783,7 @@ test_semantic_state_segment_and_merge(void)
     manifest.vocab_size = 2;
     initialize_test_object_ref(
         &manifest.query_contract,
-        II42_SEGMENT_OBJECT_QUERY_CONTRACT,
+        EVOKE_SEGMENT_OBJECT_QUERY_CONTRACT,
         10,
         1,
         manifest.manifest_id,
@@ -5791,7 +5791,7 @@ test_semantic_state_segment_and_merge(void)
     );
     initialize_test_object_ref(
         &manifest.term_directory,
-        II42_SEGMENT_OBJECT_TERM_DIRECTORY,
+        EVOKE_SEGMENT_OBJECT_TERM_DIRECTORY,
         11,
         1,
         manifest.manifest_id,
@@ -5822,8 +5822,8 @@ test_semantic_state_segment_and_merge(void)
     manifest.segments[0].start_block = 1;
     manifest.segments[0].block_count = 1;
     manifest.segments[0].flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_LEXICAL;
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_LEXICAL;
     manifest.segments[0].payload_bytes = 100;
     manifest.segments[0].payload_owner_manifest_id =
         manifest.manifest_id;
@@ -5838,12 +5838,12 @@ test_semantic_state_segment_and_merge(void)
     manifest.segments[1].start_block = 2;
     manifest.segments[1].block_count = 1;
     manifest.segments[1].flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_SEMANTIC;
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_SEMANTIC;
     manifest.segments[1].payload_bytes = 100;
     manifest.segments[1].payload_owner_manifest_id =
         manifest.manifest_id;
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&manifest));
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&manifest));
 
     payloads[0].segment_id = 1;
     payloads[0].vocab_size = 2;
@@ -5858,7 +5858,7 @@ test_semantic_state_segment_and_merge(void)
 
     payloads[1].segment_id = 2;
     payloads[1].vocab_size = 2;
-    payloads[1].flags = II42_SEGMENT_PAYLOAD_FLAG_DOCUMENT_MAP;
+    payloads[1].flags = EVOKE_SEGMENT_PAYLOAD_FLAG_DOCUMENT_MAP;
     payloads[1].local_document_count = 1;
     payloads[1].run_count = 1;
     payloads[1].posting_count = 1;
@@ -5869,17 +5869,17 @@ test_semantic_state_segment_and_merge(void)
     payloads[1].semantic_states = &semantic_state;
     payloads[1].semantic_state_count = 1;
 
-    ASSERT_STATUS_OK(ii42_segment_payload_validate(
+    ASSERT_STATUS_OK(evoke_segment_payload_validate(
         &payloads[0],
         &manifest,
         &manifest.segments[0]
     ));
-    ASSERT_STATUS_OK(ii42_segment_payload_validate(
+    ASSERT_STATUS_OK(evoke_segment_payload_validate(
         &payloads[1],
         &manifest,
         &manifest.segments[1]
     ));
-    ASSERT_STATUS_OK(ii42_segment_payload_serialize(
+    ASSERT_STATUS_OK(evoke_segment_payload_serialize(
         &payloads[1],
         &manifest,
         &manifest.segments[1],
@@ -5889,7 +5889,7 @@ test_semantic_state_segment_and_merge(void)
     ));
     manifest.segments[1].payload_bytes = size;
     manifest.segments[1].payload_checksum = checksum;
-    ASSERT_STATUS_OK(ii42_segment_payload_deserialize(
+    ASSERT_STATUS_OK(evoke_segment_payload_deserialize(
         bytes,
         size,
         &manifest,
@@ -5901,7 +5901,7 @@ test_semantic_state_segment_and_merge(void)
     ASSERT_TRUE(restored.semantic_state_count == 1);
     ASSERT_TRUE(restored.document_id_map[0] == 0);
 
-    ASSERT_STATUS_OK(ii42_segment_payload_merge(
+    ASSERT_STATUS_OK(evoke_segment_payload_merge(
         &manifest,
         0,
         payloads,
@@ -5918,7 +5918,7 @@ test_semantic_state_segment_and_merge(void)
     ASSERT_TRUE(
         merged.semantic_states[0].transition_sequence == 2
     );
-    ASSERT_STATUS_OK(ii42_segment_payload_merge_excluding(
+    ASSERT_STATUS_OK(evoke_segment_payload_merge_excluding(
         &manifest,
         0,
         payloads,
@@ -5938,9 +5938,9 @@ test_semantic_state_segment_and_merge(void)
     merged_descriptor.min_sequence = 1;
     merged_descriptor.max_sequence = 2;
     merged_descriptor.flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_HISTORY_BARRIER;
-    ASSERT_STATUS_OK(ii42_segment_payload_validate(
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_HISTORY_BARRIER;
+    ASSERT_STATUS_OK(evoke_segment_payload_validate(
         &filtered,
         &manifest,
         &merged_descriptor
@@ -5955,53 +5955,53 @@ test_semantic_state_segment_and_merge(void)
     merged_descriptor.document_slot_count = 1;
     merged_descriptor.semantic_state_count = 1;
     merged_descriptor.flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_LEXICAL |
-        II42_SEGMENT_FLAG_SEMANTIC;
-    ASSERT_STATUS_OK(ii42_segment_payload_validate(
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_LEXICAL |
+        EVOKE_SEGMENT_FLAG_SEMANTIC;
+    ASSERT_STATUS_OK(evoke_segment_payload_validate(
         &merged,
         &manifest,
         &merged_descriptor
     ));
     merged.semantic_states[0].semantic_input_fingerprint[0] ^= 0x1U;
-    ASSERT_TRUE(ii42_segment_payload_validate(
+    ASSERT_TRUE(evoke_segment_payload_validate(
         &merged,
         &manifest,
         &merged_descriptor
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     free(bytes);
-    ii42_segment_payload_free(&restored);
-    ii42_segment_payload_free(&filtered);
-    ii42_segment_payload_free(&merged);
-    ii42_segment_manifest_free(&manifest);
+    evoke_segment_payload_free(&restored);
+    evoke_segment_payload_free(&filtered);
+    evoke_segment_payload_free(&merged);
+    evoke_segment_manifest_free(&manifest);
 }
 
 static void
 test_contiguous_rebuild_payload_partition(void)
 {
-    ii42_segment_manifest manifest;
-    ii42_segment_payload source;
-    ii42_segment_payload *parts = NULL;
+    evoke_segment_manifest manifest;
+    evoke_segment_payload source;
+    evoke_segment_payload *parts = NULL;
     uint32_t part_count = 0;
     uint32_t indices[] = {0, 1, 2, 3, 0, 2};
-    ii42_segment_term_run runs[] = {
+    evoke_segment_term_run runs[] = {
         {
             .term_id = 0,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 0,
             .posting_count = 4
         },
         {
             .term_id = 3,
-            .kind = II42_POSTING_EXTENT_SEMANTIC_IMPACT,
+            .kind = EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT,
             .posting_offset = 4,
             .posting_count = 2
         }
     };
 
-    ii42_segment_manifest_init(&manifest);
-    ii42_segment_payload_init(&source);
+    evoke_segment_manifest_init(&manifest);
+    evoke_segment_payload_init(&source);
     source.segment_id = 5;
     source.vocab_size = 4;
     source.document_id_base = 10;
@@ -6026,8 +6026,8 @@ test_contiguous_rebuild_payload_partition(void)
         source.versions[document_index].document_length = 2;
         source.versions[document_index].heap_offset = 1;
         source.versions[document_index].flags =
-            II42_DOCUMENT_VERSION_FLAG_FROZEN_XID |
-            II42_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE;
+            EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID |
+            EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE;
     }
     for (uint32_t posting_index = 0; posting_index < 4; posting_index++)
     {
@@ -6036,7 +6036,7 @@ test_contiguous_rebuild_payload_partition(void)
     source.values[4].impact = 0.5f;
     source.values[5].impact = 0.75f;
 
-    ASSERT_STATUS_OK(ii42_segment_payload_partition_contiguous(
+    ASSERT_STATUS_OK(evoke_segment_payload_partition_contiguous(
         &source,
         20,
         700,
@@ -6066,7 +6066,7 @@ test_contiguous_rebuild_payload_partition(void)
     ASSERT_TRUE(manifest.segments != NULL);
     for (uint32_t part_index = 0; part_index < part_count; part_index++)
     {
-        ii42_segment_descriptor *descriptor =
+        evoke_segment_descriptor *descriptor =
             &manifest.segments[part_index];
         uint8_t *bytes = NULL;
         size_t size = 0;
@@ -6089,15 +6089,15 @@ test_contiguous_rebuild_payload_partition(void)
         descriptor->total_document_length =
             (uint64_t) parts[part_index].local_document_count * 2;
         descriptor->flags =
-            II42_SEGMENT_FLAG_SEALED |
-            II42_SEGMENT_FLAG_LEXICAL |
-            II42_SEGMENT_FLAG_SEMANTIC;
-        ASSERT_STATUS_OK(ii42_segment_payload_validate(
+            EVOKE_SEGMENT_FLAG_SEALED |
+            EVOKE_SEGMENT_FLAG_LEXICAL |
+            EVOKE_SEGMENT_FLAG_SEMANTIC;
+        ASSERT_STATUS_OK(evoke_segment_payload_validate(
             &parts[part_index],
             &manifest,
             descriptor
         ));
-        ASSERT_STATUS_OK(ii42_segment_payload_serialize(
+        ASSERT_STATUS_OK(evoke_segment_payload_serialize(
             &parts[part_index],
             &manifest,
             descriptor,
@@ -6109,21 +6109,21 @@ test_contiguous_rebuild_payload_partition(void)
         ASSERT_TRUE(size <= 700);
         ASSERT_TRUE(checksum != 0);
         free(bytes);
-        ii42_segment_payload_free(&parts[part_index]);
+        evoke_segment_payload_free(&parts[part_index]);
     }
     free(parts);
-    ii42_segment_manifest_free(&manifest);
+    evoke_segment_manifest_free(&manifest);
 }
 
 static void
 test_sparse_contiguous_rebuild_payload_partition(void)
 {
-    ii42_segment_payload source;
-    ii42_segment_payload *parts = NULL;
+    evoke_segment_payload source;
+    evoke_segment_payload *parts = NULL;
     uint32_t part_count = 0;
     uint32_t sparse_documents[] = {0, 300, 599};
 
-    ii42_segment_payload_init(&source);
+    evoke_segment_payload_init(&source);
     source.segment_id = 30;
     source.vocab_size = 1;
     source.local_document_count = 600;
@@ -6139,7 +6139,7 @@ test_sparse_contiguous_rebuild_payload_partition(void)
     ASSERT_TRUE(source.values != NULL);
     ASSERT_TRUE(source.versions != NULL);
     source.runs[0].term_id = 0;
-    source.runs[0].kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL;
+    source.runs[0].kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL;
     source.runs[0].posting_count = 3;
     memcpy(source.indices, sparse_documents, sizeof(sparse_documents));
     for (uint32_t posting_index = 0; posting_index < 3; posting_index++)
@@ -6155,10 +6155,10 @@ test_sparse_contiguous_rebuild_payload_partition(void)
         source.versions[document_index].document_length = 1;
         source.versions[document_index].heap_offset = 1;
         source.versions[document_index].flags =
-            II42_DOCUMENT_VERSION_FLAG_FROZEN_XID;
+            EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID;
     }
 
-    ASSERT_STATUS_OK(ii42_segment_payload_partition_contiguous(
+    ASSERT_STATUS_OK(evoke_segment_payload_partition_contiguous(
         &source,
         31,
         29100,
@@ -6173,22 +6173,22 @@ test_sparse_contiguous_rebuild_payload_partition(void)
     );
     for (uint32_t part_index = 0; part_index < part_count; part_index++)
     {
-        ii42_segment_payload_free(&parts[part_index]);
+        evoke_segment_payload_free(&parts[part_index]);
     }
     free(parts);
 }
 
 typedef struct test_semantic_stream_reader
 {
-    const ii42_segment_semantic_posting *postings;
+    const evoke_segment_semantic_posting *postings;
     size_t posting_count;
     size_t cursor;
 } test_semantic_stream_reader;
 
-static ii42_status
+static evoke_status
 test_semantic_stream_read(
     void *context,
-    ii42_segment_semantic_posting *posting_out
+    evoke_segment_semantic_posting *posting_out
 )
 {
     test_semantic_stream_reader *reader = context;
@@ -6196,29 +6196,29 @@ test_semantic_stream_read(
     if (reader == NULL || posting_out == NULL ||
         reader->cursor >= reader->posting_count)
     {
-        return II42_ERR_FORMAT;
+        return EVOKE_ERR_FORMAT;
     }
     *posting_out = reader->postings[reader->cursor++];
-    return II42_OK;
+    return EVOKE_OK;
 }
 
-static ii42_status
+static evoke_status
 test_semantic_stream_rewind(void *context)
 {
     test_semantic_stream_reader *reader = context;
 
     if (reader == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     reader->cursor = 0;
-    return II42_OK;
+    return EVOKE_OK;
 }
 
 static void
 assert_semantic_payloads_equal(
-    const ii42_segment_payload *left,
-    const ii42_segment_payload *right
+    const evoke_segment_payload *left,
+    const evoke_segment_payload *right
 )
 {
     ASSERT_TRUE(left->flags == right->flags);
@@ -6265,43 +6265,43 @@ static void
 test_attach_sorted_semantic_stream_matches_array(void)
 {
     uint32_t terms[] = {0, 2};
-    ii42_doc_ids document = make_doc(terms, 2);
-    ii42_params params = {
+    evoke_doc_ids document = make_doc(terms, 2);
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_BM25PLUS,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_BM25PLUS,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_document_version_record version = {
+    evoke_document_version_record version = {
         .document_slot = 4,
         .born_sequence = 4,
         .heap_block = 44,
         .document_length = 2,
         .heap_offset = 1,
         .flags =
-            II42_DOCUMENT_VERSION_FLAG_FROZEN_XID |
-            II42_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING
+            EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID |
+            EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING
     };
-    ii42_segment_semantic_posting unsorted_postings[] = {
+    evoke_segment_semantic_posting unsorted_postings[] = {
         {.term_id = 2, .document_slot = 1, .impact = 0.4f},
         {.term_id = 1, .document_slot = 1, .impact = 0.8f}
     };
-    ii42_segment_semantic_posting sorted_postings[] = {
+    evoke_segment_semantic_posting sorted_postings[] = {
         {.term_id = 1, .document_slot = 1, .impact = 0.8f},
         {.term_id = 2, .document_slot = 1, .impact = 0.4f}
     };
-    ii42_segment_semantic_posting invalid_postings[] = {
+    evoke_segment_semantic_posting invalid_postings[] = {
         {.term_id = 2, .document_slot = 1, .impact = 0.4f},
         {.term_id = 1, .document_slot = 1, .impact = 0.8f}
     };
-    ii42_semantic_state_record states[] = {
+    evoke_semantic_state_record states[] = {
         {
             .document_slot = 1,
             .transition_sequence = 2,
             .flags =
-                II42_SEMANTIC_STATE_FLAG_COMPLETE |
-                II42_SEMANTIC_STATE_FLAG_FROZEN_XID
+                EVOKE_SEMANTIC_STATE_FLAG_COMPLETE |
+                EVOKE_SEMANTIC_STATE_FLAG_FROZEN_XID
         }
     };
     test_semantic_stream_reader sorted_reader = {
@@ -6316,25 +6316,25 @@ test_attach_sorted_semantic_stream_matches_array(void)
         .postings = sorted_postings,
         .posting_count = 1
     };
-    ii42_index index;
-    ii42_segment_payload array_payload;
-    ii42_segment_payload stream_payload;
-    ii42_segment_payload invalid_payload;
-    ii42_segment_payload short_payload;
+    evoke_index index;
+    evoke_segment_payload array_payload;
+    evoke_segment_payload stream_payload;
+    evoke_segment_payload invalid_payload;
+    evoke_segment_payload short_payload;
 
-    ii42_index_init(&index);
-    ii42_segment_payload_init(&array_payload);
-    ii42_segment_payload_init(&stream_payload);
-    ii42_segment_payload_init(&invalid_payload);
-    ii42_segment_payload_init(&short_payload);
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    evoke_index_init(&index);
+    evoke_segment_payload_init(&array_payload);
+    evoke_segment_payload_init(&stream_payload);
+    evoke_segment_payload_init(&invalid_payload);
+    evoke_segment_payload_init(&short_payload);
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         &document,
         1,
         &params,
         false,
         &index
     ));
-    ASSERT_STATUS_OK(ii42_segment_payload_build_lexical(
+    ASSERT_STATUS_OK(evoke_segment_payload_build_lexical(
         &index,
         10,
         4,
@@ -6342,7 +6342,7 @@ test_attach_sorted_semantic_stream_matches_array(void)
         1,
         &array_payload
     ));
-    ASSERT_STATUS_OK(ii42_segment_payload_build_lexical(
+    ASSERT_STATUS_OK(evoke_segment_payload_build_lexical(
         &index,
         10,
         4,
@@ -6355,14 +6355,14 @@ test_attach_sorted_semantic_stream_matches_array(void)
     short_payload.segment_id = 12;
     short_payload.vocab_size = index.vocab_size;
 
-    ASSERT_STATUS_OK(ii42_segment_payload_attach_semantic(
+    ASSERT_STATUS_OK(evoke_segment_payload_attach_semantic(
         &array_payload,
         unsorted_postings,
         2,
         states,
         1
     ));
-    ASSERT_STATUS_OK(ii42_segment_payload_attach_semantic_sorted_reader(
+    ASSERT_STATUS_OK(evoke_segment_payload_attach_semantic_sorted_reader(
         &stream_payload,
         2,
         test_semantic_stream_read,
@@ -6373,7 +6373,7 @@ test_attach_sorted_semantic_stream_matches_array(void)
     ));
     assert_semantic_payloads_equal(&array_payload, &stream_payload);
 
-    ASSERT_TRUE(ii42_segment_payload_attach_semantic_sorted_reader(
+    ASSERT_TRUE(evoke_segment_payload_attach_semantic_sorted_reader(
         &invalid_payload,
         2,
         test_semantic_stream_read,
@@ -6381,8 +6381,8 @@ test_attach_sorted_semantic_stream_matches_array(void)
         &invalid_reader,
         states,
         1
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_segment_payload_attach_semantic_sorted_reader(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_segment_payload_attach_semantic_sorted_reader(
         &short_payload,
         2,
         test_semantic_stream_read,
@@ -6390,13 +6390,13 @@ test_attach_sorted_semantic_stream_matches_array(void)
         &short_reader,
         states,
         1
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
-    ii42_segment_payload_free(&short_payload);
-    ii42_segment_payload_free(&invalid_payload);
-    ii42_segment_payload_free(&stream_payload);
-    ii42_segment_payload_free(&array_payload);
-    ii42_index_free(&index);
+    evoke_segment_payload_free(&short_payload);
+    evoke_segment_payload_free(&invalid_payload);
+    evoke_segment_payload_free(&stream_payload);
+    evoke_segment_payload_free(&array_payload);
+    evoke_index_free(&index);
 }
 
 static void
@@ -6405,26 +6405,26 @@ test_initial_fold_stream_matches_combined_payload(void)
     uint32_t terms0[] = {0, 3};
     uint32_t terms1[] = {1, 3};
     uint32_t terms2[] = {0, 2};
-    ii42_doc_ids documents[] = {
+    evoke_doc_ids documents[] = {
         make_doc(terms0, 2),
         make_doc(terms1, 2),
         make_doc(terms2, 2)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_BM25PLUS,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_BM25PLUS,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_document_version_record versions[3] = {0};
-    ii42_segment_semantic_posting semantic_postings[] = {
+    evoke_document_version_record versions[3] = {0};
+    evoke_segment_semantic_posting semantic_postings[] = {
         {.term_id = 0, .document_slot = 1, .impact = 0.2f},
         {.term_id = 1, .document_slot = 0, .impact = 0.7f},
         {.term_id = 1, .document_slot = 2, .impact = 0.4f},
         {.term_id = 3, .document_slot = 2, .impact = 0.9f}
     };
-    ii42_segment_semantic_posting duplicate_postings[] = {
+    evoke_segment_semantic_posting duplicate_postings[] = {
         {.term_id = 1, .document_slot = 0, .impact = 0.7f},
         {.term_id = 1, .document_slot = 0, .impact = 0.4f}
     };
@@ -6444,13 +6444,13 @@ test_initial_fold_stream_matches_combined_payload(void)
         .postings = duplicate_postings,
         .posting_count = 2
     };
-    ii42_index index;
-    ii42_segment_payload payload;
-    ii42_initial_fold_stream *stream = NULL;
-    ii42_initial_fold_stream *split_stream = NULL;
-    ii42_initial_fold_stream *duplicate_stream = NULL;
-    ii42_term_fold_bundle expected;
-    ii42_term_fold_bundle actual;
+    evoke_index index;
+    evoke_segment_payload payload;
+    evoke_initial_fold_stream *stream = NULL;
+    evoke_initial_fold_stream *split_stream = NULL;
+    evoke_initial_fold_stream *duplicate_stream = NULL;
+    evoke_term_fold_bundle expected;
+    evoke_term_fold_bundle actual;
     uint8_t *expected_bytes = NULL;
     uint8_t *actual_bytes = NULL;
     size_t expected_size = 0;
@@ -6461,10 +6461,10 @@ test_initial_fold_stream_matches_combined_payload(void)
     uint32_t split_group_count = 0;
     uint32_t split_run_count = 0;
 
-    ii42_index_init(&index);
-    ii42_segment_payload_init(&payload);
-    ii42_term_fold_bundle_init(&expected);
-    ii42_term_fold_bundle_init(&actual);
+    evoke_index_init(&index);
+    evoke_segment_payload_init(&payload);
+    evoke_term_fold_bundle_init(&expected);
+    evoke_term_fold_bundle_init(&actual);
     for (uint32_t document_slot = 0;
          document_slot < 3;
          document_slot++)
@@ -6475,17 +6475,17 @@ test_initial_fold_stream_matches_combined_payload(void)
         versions[document_slot].heap_offset = 1;
         versions[document_slot].document_length = 2;
         versions[document_slot].flags =
-            II42_DOCUMENT_VERSION_FLAG_FROZEN_XID |
-            II42_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE;
+            EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID |
+            EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE;
     }
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         documents,
         3,
         &params,
         false,
         &index
     ));
-    ASSERT_STATUS_OK(ii42_segment_payload_build_lexical(
+    ASSERT_STATUS_OK(evoke_segment_payload_build_lexical(
         &index,
         8,
         0,
@@ -6493,7 +6493,7 @@ test_initial_fold_stream_matches_combined_payload(void)
         3,
         &payload
     ));
-    ASSERT_STATUS_OK(ii42_segment_payload_attach_semantic_sorted_reader(
+    ASSERT_STATUS_OK(evoke_segment_payload_attach_semantic_sorted_reader(
         &payload,
         4,
         test_semantic_stream_read,
@@ -6502,7 +6502,7 @@ test_initial_fold_stream_matches_combined_payload(void)
         NULL,
         0
     ));
-    ASSERT_STATUS_OK(ii42_initial_fold_stream_create(
+    ASSERT_STATUS_OK(evoke_initial_fold_stream_create(
         &index,
         4,
         test_semantic_stream_read,
@@ -6513,7 +6513,7 @@ test_initial_fold_stream_matches_combined_payload(void)
         SIZE_MAX,
         &stream
     ));
-    ASSERT_STATUS_OK(ii42_initial_fold_stream_next(
+    ASSERT_STATUS_OK(evoke_initial_fold_stream_next(
         stream,
         &actual,
         &done
@@ -6522,7 +6522,7 @@ test_initial_fold_stream_matches_combined_payload(void)
     ASSERT_TRUE(actual.run_count == payload.run_count);
     ASSERT_TRUE(actual.posting_count == payload.posting_count);
 
-    expected.object_kind = II42_SEGMENT_OBJECT_NEUTRAL_FOLD;
+    expected.object_kind = EVOKE_SEGMENT_OBJECT_NEUTRAL_FOLD;
     expected.owner_manifest_id = 99;
     expected.run_count = payload.run_count;
     expected.posting_count = payload.posting_count;
@@ -6558,13 +6558,13 @@ test_initial_fold_stream_matches_combined_payload(void)
         actual.values,
         (size_t) expected.posting_count * sizeof(*expected.values)
     ) == 0);
-    ASSERT_STATUS_OK(ii42_term_fold_bundle_serialize(
+    ASSERT_STATUS_OK(evoke_term_fold_bundle_serialize(
         &expected,
         &expected_bytes,
         &expected_size,
         &expected_checksum
     ));
-    ASSERT_STATUS_OK(ii42_term_fold_bundle_serialize(
+    ASSERT_STATUS_OK(evoke_term_fold_bundle_serialize(
         &actual,
         &actual_bytes,
         &actual_size,
@@ -6573,15 +6573,15 @@ test_initial_fold_stream_matches_combined_payload(void)
     ASSERT_TRUE(expected_size == actual_size);
     ASSERT_TRUE(expected_checksum == actual_checksum);
     ASSERT_TRUE(memcmp(expected_bytes, actual_bytes, actual_size) == 0);
-    ii42_term_fold_bundle_free(&actual);
-    ASSERT_STATUS_OK(ii42_initial_fold_stream_next(
+    evoke_term_fold_bundle_free(&actual);
+    ASSERT_STATUS_OK(evoke_initial_fold_stream_next(
         stream,
         &actual,
         &done
     ));
     ASSERT_TRUE(done);
 
-    ASSERT_STATUS_OK(ii42_initial_fold_stream_create(
+    ASSERT_STATUS_OK(evoke_initial_fold_stream_create(
         &index,
         4,
         test_semantic_stream_read,
@@ -6589,15 +6589,15 @@ test_initial_fold_stream_matches_combined_payload(void)
         &split_reader,
         99,
         3,
-        II42_TERM_FOLD_HEADER_SIZE + 1,
+        EVOKE_TERM_FOLD_HEADER_SIZE + 1,
         &split_stream
     ));
     do
     {
-        ii42_term_fold_bundle group;
+        evoke_term_fold_bundle group;
 
-        ii42_term_fold_bundle_init(&group);
-        ASSERT_STATUS_OK(ii42_initial_fold_stream_next(
+        evoke_term_fold_bundle_init(&group);
+        ASSERT_STATUS_OK(evoke_initial_fold_stream_next(
             split_stream,
             &group,
             &done
@@ -6616,12 +6616,12 @@ test_initial_fold_stream_matches_combined_payload(void)
                 );
             }
         }
-        ii42_term_fold_bundle_free(&group);
+        evoke_term_fold_bundle_free(&group);
     } while (!done);
     ASSERT_TRUE(split_group_count == index.vocab_size);
     ASSERT_TRUE(split_run_count == payload.run_count);
 
-    ASSERT_STATUS_OK(ii42_initial_fold_stream_create(
+    ASSERT_STATUS_OK(evoke_initial_fold_stream_create(
         &index,
         2,
         test_semantic_stream_read,
@@ -6632,57 +6632,57 @@ test_initial_fold_stream_matches_combined_payload(void)
         SIZE_MAX,
         &duplicate_stream
     ));
-    ASSERT_TRUE(ii42_initial_fold_stream_next(
+    ASSERT_TRUE(evoke_initial_fold_stream_next(
         duplicate_stream,
         &actual,
         &done
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
-    ii42_initial_fold_stream_free(duplicate_stream);
-    ii42_initial_fold_stream_free(split_stream);
-    ii42_initial_fold_stream_free(stream);
+    evoke_initial_fold_stream_free(duplicate_stream);
+    evoke_initial_fold_stream_free(split_stream);
+    evoke_initial_fold_stream_free(stream);
     free(actual_bytes);
     free(expected_bytes);
     free(expected.runs);
     expected.runs = NULL;
     expected.document_slots = NULL;
     expected.values = NULL;
-    ii42_segment_payload_free(&payload);
-    ii42_index_free(&index);
+    evoke_segment_payload_free(&payload);
+    evoke_index_free(&index);
 }
 
 static void
 test_attach_semantic_postings_to_lexical_payload(void)
 {
     uint32_t terms[] = {0, 2};
-    ii42_doc_ids document = make_doc(terms, 2);
-    ii42_params params = {
+    evoke_doc_ids document = make_doc(terms, 2);
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_BM25PLUS,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_BM25PLUS,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_document_version_record version = {
+    evoke_document_version_record version = {
         .document_slot = 4,
         .born_sequence = 4,
         .heap_block = 44,
         .document_length = 2,
         .heap_offset = 1,
         .flags =
-            II42_DOCUMENT_VERSION_FLAG_FROZEN_XID |
-            II42_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING
+            EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID |
+            EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING
     };
-    ii42_segment_semantic_posting postings[] = {
+    evoke_segment_semantic_posting postings[] = {
         {.term_id = 2, .document_slot = 1, .impact = 0.4f},
         {.term_id = 1, .document_slot = 1, .impact = 0.8f}
     };
-    ii42_segment_semantic_posting initial_posting = {
+    evoke_segment_semantic_posting initial_posting = {
         .term_id = 1,
         .document_slot = 4,
         .impact = 0.6f
     };
-    ii42_semantic_state_record states[2] = {
+    evoke_semantic_state_record states[2] = {
         {
             .document_slot = 3,
             .transition_sequence = 3,
@@ -6690,39 +6690,39 @@ test_attach_semantic_postings_to_lexical_payload(void)
             .retry_after = 100,
             .pending_since = 90,
             .flags =
-                II42_SEMANTIC_STATE_FLAG_QUARANTINED |
-                II42_SEMANTIC_STATE_FLAG_FROZEN_XID,
+                EVOKE_SEMANTIC_STATE_FLAG_QUARANTINED |
+                EVOKE_SEMANTIC_STATE_FLAG_FROZEN_XID,
             .failure_count = 1
         },
         {
             .document_slot = 1,
             .transition_sequence = 2,
             .flags =
-                II42_SEMANTIC_STATE_FLAG_COMPLETE |
-                II42_SEMANTIC_STATE_FLAG_FROZEN_XID
+                EVOKE_SEMANTIC_STATE_FLAG_COMPLETE |
+                EVOKE_SEMANTIC_STATE_FLAG_FROZEN_XID
         }
     };
-    ii42_semantic_state_record quarantine = {
+    evoke_semantic_state_record quarantine = {
         .document_slot = 7,
         .transition_sequence = 5,
         .error_code = 11,
         .retry_after = 200,
         .pending_since = 190,
         .flags =
-            II42_SEMANTIC_STATE_FLAG_QUARANTINED |
-            II42_SEMANTIC_STATE_FLAG_FROZEN_XID,
+            EVOKE_SEMANTIC_STATE_FLAG_QUARANTINED |
+            EVOKE_SEMANTIC_STATE_FLAG_FROZEN_XID,
         .failure_count = 2
     };
-    ii42_index index;
-    ii42_segment_manifest manifest;
-    ii42_segment_descriptor descriptor = {0};
-    ii42_segment_descriptor retirement_descriptor = {0};
-    ii42_segment_descriptor semantic_descriptor = {0};
-    ii42_segment_payload payload;
-    ii42_segment_payload quarantine_payload;
-    ii42_segment_payload initial_payload;
-    ii42_segment_payload retirement_payload;
-    ii42_segment_payload semantic_only_payload;
+    evoke_index index;
+    evoke_segment_manifest manifest;
+    evoke_segment_descriptor descriptor = {0};
+    evoke_segment_descriptor retirement_descriptor = {0};
+    evoke_segment_descriptor semantic_descriptor = {0};
+    evoke_segment_payload payload;
+    evoke_segment_payload quarantine_payload;
+    evoke_segment_payload initial_payload;
+    evoke_segment_payload retirement_payload;
+    evoke_segment_payload semantic_only_payload;
 
     memset(
         version.semantic_input_fingerprint,
@@ -6744,21 +6744,21 @@ test_attach_semantic_postings_to_lexical_payload(void)
         0x44,
         sizeof(quarantine.semantic_input_fingerprint)
     );
-    ii42_index_init(&index);
-    ii42_segment_manifest_init(&manifest);
-    ii42_segment_payload_init(&payload);
-    ii42_segment_payload_init(&quarantine_payload);
-    ii42_segment_payload_init(&initial_payload);
-    ii42_segment_payload_init(&retirement_payload);
-    ii42_segment_payload_init(&semantic_only_payload);
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    evoke_index_init(&index);
+    evoke_segment_manifest_init(&manifest);
+    evoke_segment_payload_init(&payload);
+    evoke_segment_payload_init(&quarantine_payload);
+    evoke_segment_payload_init(&initial_payload);
+    evoke_segment_payload_init(&retirement_payload);
+    evoke_segment_payload_init(&semantic_only_payload);
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         &document,
         1,
         &params,
         false,
         &index
     ));
-    ASSERT_STATUS_OK(ii42_segment_payload_build_lexical(
+    ASSERT_STATUS_OK(evoke_segment_payload_build_lexical(
         &index,
         10,
         4,
@@ -6767,9 +6767,9 @@ test_attach_semantic_postings_to_lexical_payload(void)
         &payload
     ));
     version.flags =
-        II42_DOCUMENT_VERSION_FLAG_FROZEN_XID |
-        II42_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE;
-    ASSERT_STATUS_OK(ii42_segment_payload_build_lexical(
+        EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID |
+        EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE;
+    ASSERT_STATUS_OK(evoke_segment_payload_build_lexical(
         &index,
         12,
         4,
@@ -6777,7 +6777,7 @@ test_attach_semantic_postings_to_lexical_payload(void)
         1,
         &initial_payload
     ));
-    ASSERT_STATUS_OK(ii42_segment_payload_attach_semantic(
+    ASSERT_STATUS_OK(evoke_segment_payload_attach_semantic(
         &initial_payload,
         &initial_posting,
         1,
@@ -6788,9 +6788,9 @@ test_attach_semantic_postings_to_lexical_payload(void)
     ASSERT_TRUE(initial_payload.run_count == 3);
     ASSERT_TRUE(initial_payload.posting_count == 3);
     version.flags =
-        II42_DOCUMENT_VERSION_FLAG_FROZEN_XID |
-        II42_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING;
-    ASSERT_STATUS_OK(ii42_segment_payload_attach_semantic(
+        EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID |
+        EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING;
+    ASSERT_STATUS_OK(evoke_segment_payload_attach_semantic(
         &payload,
         postings,
         2,
@@ -6799,7 +6799,7 @@ test_attach_semantic_postings_to_lexical_payload(void)
     ));
 
     ASSERT_TRUE(
-        (payload.flags & II42_SEGMENT_PAYLOAD_FLAG_DOCUMENT_MAP) != 0
+        (payload.flags & EVOKE_SEGMENT_PAYLOAD_FLAG_DOCUMENT_MAP) != 0
     );
     ASSERT_TRUE(payload.document_id_base == 0);
     ASSERT_TRUE(payload.local_document_count == 3);
@@ -6815,7 +6815,7 @@ test_attach_semantic_postings_to_lexical_payload(void)
     ASSERT_TRUE(payload.runs[0].term_id == 0);
     ASSERT_TRUE(
         payload.runs[0].kind ==
-        II42_POSTING_EXTENT_LEXICAL_NEUTRAL
+        EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL
     );
     ASSERT_TRUE(payload.indices[payload.runs[0].posting_offset] == 2);
     ASSERT_TRUE(
@@ -6825,22 +6825,22 @@ test_attach_semantic_postings_to_lexical_payload(void)
     ASSERT_TRUE(payload.runs[1].term_id == 1);
     ASSERT_TRUE(
         payload.runs[1].kind ==
-        II42_POSTING_EXTENT_SEMANTIC_IMPACT
+        EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT
     );
     ASSERT_TRUE(payload.indices[payload.runs[1].posting_offset] == 0);
     ASSERT_TRUE(payload.runs[2].term_id == 2);
     ASSERT_TRUE(
         payload.runs[2].kind ==
-        II42_POSTING_EXTENT_LEXICAL_NEUTRAL
+        EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL
     );
     ASSERT_TRUE(payload.indices[payload.runs[2].posting_offset] == 2);
     ASSERT_TRUE(payload.runs[3].term_id == 2);
     ASSERT_TRUE(
         payload.runs[3].kind ==
-        II42_POSTING_EXTENT_SEMANTIC_IMPACT
+        EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT
     );
     ASSERT_TRUE(payload.indices[payload.runs[3].posting_offset] == 0);
-    manifest.flags = II42_SEGMENT_MANIFEST_FLAG_SAE;
+    manifest.flags = EVOKE_SEGMENT_MANIFEST_FLAG_SAE;
     manifest.manifest_id = 2;
     manifest.max_sequence = 4;
     manifest.statistics_epoch = 1;
@@ -6857,12 +6857,12 @@ test_attach_semantic_postings_to_lexical_payload(void)
     descriptor.document_slot_count = payload.local_document_count;
     descriptor.semantic_state_count = 2;
     descriptor.flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_LEXICAL |
-        II42_SEGMENT_FLAG_SEMANTIC |
-        II42_SEGMENT_FLAG_PENDING |
-        II42_SEGMENT_FLAG_QUARANTINE;
-    ASSERT_STATUS_OK(ii42_segment_payload_validate(
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_LEXICAL |
+        EVOKE_SEGMENT_FLAG_SEMANTIC |
+        EVOKE_SEGMENT_FLAG_PENDING |
+        EVOKE_SEGMENT_FLAG_QUARANTINE;
+    ASSERT_STATUS_OK(evoke_segment_payload_validate(
         &payload,
         &manifest,
         &descriptor
@@ -6870,7 +6870,7 @@ test_attach_semantic_postings_to_lexical_payload(void)
 
     quarantine_payload.segment_id = 11;
     quarantine_payload.vocab_size = index.vocab_size;
-    ASSERT_STATUS_OK(ii42_segment_payload_attach_semantic(
+    ASSERT_STATUS_OK(evoke_segment_payload_attach_semantic(
         &quarantine_payload,
         NULL,
         0,
@@ -6885,7 +6885,7 @@ test_attach_semantic_postings_to_lexical_payload(void)
 
     semantic_only_payload.segment_id = 13;
     semantic_only_payload.vocab_size = index.vocab_size;
-    ASSERT_STATUS_OK(ii42_segment_payload_attach_semantic(
+    ASSERT_STATUS_OK(evoke_segment_payload_attach_semantic(
         &semantic_only_payload,
         postings,
         2,
@@ -6904,9 +6904,9 @@ test_attach_semantic_postings_to_lexical_payload(void)
     semantic_descriptor.semantic_state_count = 1;
     semantic_descriptor.document_slot_count = 1;
     semantic_descriptor.flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_SEMANTIC;
-    ASSERT_STATUS_OK(ii42_segment_payload_validate(
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_SEMANTIC;
+    ASSERT_STATUS_OK(evoke_segment_payload_validate(
         &semantic_only_payload,
         &manifest,
         &semantic_descriptor
@@ -6915,7 +6915,7 @@ test_attach_semantic_postings_to_lexical_payload(void)
     retirement_payload.segment_id = 14;
     retirement_payload.vocab_size = index.vocab_size;
     retirement_payload.document_id_base = 5;
-    ASSERT_STATUS_OK(ii42_segment_payload_attach_semantic(
+    ASSERT_STATUS_OK(evoke_segment_payload_attach_semantic(
         &retirement_payload,
         NULL,
         0,
@@ -6934,66 +6934,66 @@ test_attach_semantic_postings_to_lexical_payload(void)
     retirement_payload.retirements[0].retirement_sequence = 3;
     retirement_payload.retirements[0].document_length = 2;
     retirement_payload.retirements[0].flags =
-        II42_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
+        EVOKE_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
     retirement_descriptor.segment_id = 14;
     retirement_descriptor.min_sequence = 3;
     retirement_descriptor.max_sequence = 3;
     retirement_descriptor.retirement_count = 1;
     retirement_descriptor.first_document_slot = 5;
     retirement_descriptor.flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_RETIREMENTS;
-    ASSERT_STATUS_OK(ii42_segment_payload_validate(
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_RETIREMENTS;
+    ASSERT_STATUS_OK(evoke_segment_payload_validate(
         &retirement_payload,
         &manifest,
         &retirement_descriptor
     ));
 
-    ASSERT_TRUE(ii42_segment_payload_attach_semantic(
+    ASSERT_TRUE(evoke_segment_payload_attach_semantic(
         &quarantine_payload,
         postings,
         1,
         NULL,
         0
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
 
-    ii42_segment_payload_free(&initial_payload);
-    ii42_segment_payload_free(&semantic_only_payload);
-    ii42_segment_payload_free(&retirement_payload);
-    ii42_segment_payload_free(&quarantine_payload);
-    ii42_segment_payload_free(&payload);
-    ii42_segment_manifest_free(&manifest);
-    ii42_index_free(&index);
+    evoke_segment_payload_free(&initial_payload);
+    evoke_segment_payload_free(&semantic_only_payload);
+    evoke_segment_payload_free(&retirement_payload);
+    evoke_segment_payload_free(&quarantine_payload);
+    evoke_segment_payload_free(&payload);
+    evoke_segment_manifest_free(&manifest);
+    evoke_index_free(&index);
 }
 
 static void
 test_sparse_lexical_entries_build_canonical_segment(void)
 {
-    ii42_term_entry entries[] = {
+    evoke_term_entry entries[] = {
         {.token_id = 999999, .doc_id = 1, .tf = 2},
         {.token_id = 7, .doc_id = 0, .tf = 1},
         {.token_id = 999999, .doc_id = 0, .tf = 1}
     };
-    ii42_term_entry duplicate_entries[] = {
+    evoke_term_entry duplicate_entries[] = {
         {.token_id = 7, .doc_id = 0, .tf = 1},
         {.token_id = 7, .doc_id = 0, .tf = 1}
     };
     uint32_t document_id_map[] = {4, 101};
     uint32_t unsorted_document_id_map[] = {101, 4};
-    ii42_document_version_record versions[2] = {0};
-    ii42_segment_payload payload;
+    evoke_document_version_record versions[2] = {0};
+    evoke_segment_payload payload;
 
     versions[0].document_slot = 100;
     versions[0].born_sequence = 1;
     versions[0].document_length = 1;
-    versions[0].flags = II42_DOCUMENT_VERSION_FLAG_FROZEN_XID;
+    versions[0].flags = EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID;
     versions[1].document_slot = 101;
     versions[1].born_sequence = 2;
     versions[1].document_length = 3;
-    versions[1].flags = II42_DOCUMENT_VERSION_FLAG_FROZEN_XID;
-    ii42_segment_payload_init(&payload);
+    versions[1].flags = EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID;
+    evoke_segment_payload_init(&payload);
 
-    ASSERT_STATUS_OK(ii42_segment_payload_build_lexical_entries(
+    ASSERT_STATUS_OK(evoke_segment_payload_build_lexical_entries(
         entries,
         sizeof(entries) / sizeof(entries[0]),
         1000000,
@@ -7018,10 +7018,10 @@ test_sparse_lexical_entries_build_canonical_segment(void)
     ASSERT_TRUE(payload.values[2].term_frequency == 2);
     ASSERT_TRUE(payload.version_count == 2);
     ASSERT_TRUE(payload.versions[1].document_slot == 101);
-    ii42_segment_payload_free(&payload);
+    evoke_segment_payload_free(&payload);
 
     versions[0].document_slot = document_id_map[0];
-    ASSERT_STATUS_OK(ii42_segment_payload_build_lexical_mapped_entries(
+    ASSERT_STATUS_OK(evoke_segment_payload_build_lexical_mapped_entries(
         entries,
         sizeof(entries) / sizeof(entries[0]),
         1000000,
@@ -7032,7 +7032,7 @@ test_sparse_lexical_entries_build_canonical_segment(void)
         &payload
     ));
     ASSERT_TRUE(
-        (payload.flags & II42_SEGMENT_PAYLOAD_FLAG_DOCUMENT_MAP) != 0
+        (payload.flags & EVOKE_SEGMENT_PAYLOAD_FLAG_DOCUMENT_MAP) != 0
     );
     ASSERT_TRUE(payload.document_id_base == 0);
     ASSERT_TRUE(payload.local_document_count == 2);
@@ -7042,9 +7042,9 @@ test_sparse_lexical_entries_build_canonical_segment(void)
     ASSERT_TRUE(payload.versions[1].document_slot == 101);
     ASSERT_TRUE(payload.indices[0] == 0);
     ASSERT_TRUE(payload.indices[2] == 1);
-    ii42_segment_payload_free(&payload);
+    evoke_segment_payload_free(&payload);
 
-    ASSERT_TRUE(ii42_segment_payload_build_lexical_mapped_entries(
+    ASSERT_TRUE(evoke_segment_payload_build_lexical_mapped_entries(
         entries,
         sizeof(entries) / sizeof(entries[0]),
         1000000,
@@ -7053,10 +7053,10 @@ test_sparse_lexical_entries_build_canonical_segment(void)
         versions,
         sizeof(versions) / sizeof(versions[0]),
         &payload
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(payload.run_count == 0);
 
-    ASSERT_TRUE(ii42_segment_payload_build_lexical_entries(
+    ASSERT_TRUE(evoke_segment_payload_build_lexical_entries(
         duplicate_entries,
         sizeof(duplicate_entries) / sizeof(duplicate_entries[0]),
         8,
@@ -7065,7 +7065,7 @@ test_sparse_lexical_entries_build_canonical_segment(void)
         versions,
         sizeof(versions) / sizeof(versions[0]),
         &payload
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(payload.run_count == 0);
 }
 
@@ -7077,30 +7077,30 @@ test_lexical_index_builds_canonical_segment(void)
     uint32_t doc2[] = {0, 2, 2};
     uint32_t doc3[] = {3};
     uint32_t query[] = {0, 2, 3};
-    ii42_doc_ids docs[] = {
+    evoke_doc_ids docs[] = {
         make_doc(doc0, 3),
         make_doc(doc1, 2),
         make_doc(doc2, 3),
         make_doc(doc3, 1)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_BM25PLUS,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_BM25PLUS,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_document_version_record versions[4];
-    ii42_segment_manifest manifest;
-    ii42_segment_payload payload;
-    ii42_segment_payload restored;
-    ii42_segment_payload_view payload_view;
-    ii42_segment_query_contract contract;
-    ii42_term_directory directory;
-    ii42_segment_read_view read_view;
-    ii42_index index;
-    ii42_index metadata_index;
-    ii42_corpus_stats stats;
+    evoke_document_version_record versions[4];
+    evoke_segment_manifest manifest;
+    evoke_segment_payload payload;
+    evoke_segment_payload restored;
+    evoke_segment_payload_view payload_view;
+    evoke_segment_query_contract contract;
+    evoke_term_directory directory;
+    evoke_segment_read_view read_view;
+    evoke_index index;
+    evoke_index metadata_index;
+    evoke_corpus_stats stats;
     uint8_t *bytes = NULL;
     size_t size = 0;
     uint64_t checksum = 0;
@@ -7109,17 +7109,17 @@ test_lexical_index_builds_canonical_segment(void)
     float *segmented_scores = NULL;
     uint32_t document_id;
 
-    ii42_index_init(&index);
-    ii42_segment_manifest_init(&manifest);
-    ii42_segment_payload_init(&payload);
-    ii42_segment_payload_init(&restored);
-    ii42_segment_query_contract_init(&contract);
-    ii42_term_directory_init(&directory);
-    ii42_segment_read_view_init(&read_view);
-    ii42_index_init(&metadata_index);
+    evoke_index_init(&index);
+    evoke_segment_manifest_init(&manifest);
+    evoke_segment_payload_init(&payload);
+    evoke_segment_payload_init(&restored);
+    evoke_segment_query_contract_init(&contract);
+    evoke_term_directory_init(&directory);
+    evoke_segment_read_view_init(&read_view);
+    evoke_index_init(&metadata_index);
     memset(versions, 0, sizeof(versions));
 
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         docs,
         4,
         &params,
@@ -7135,10 +7135,10 @@ test_lexical_index_builds_canonical_segment(void)
         versions[document_id].document_length =
             index.doc_lengths[document_id];
         versions[document_id].flags =
-            II42_DOCUMENT_VERSION_FLAG_FROZEN_XID;
+            EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID;
         total_document_length += index.doc_lengths[document_id];
     }
-    ASSERT_STATUS_OK(ii42_segment_payload_build_lexical(
+    ASSERT_STATUS_OK(evoke_segment_payload_build_lexical(
         &index,
         1,
         0,
@@ -7152,14 +7152,14 @@ test_lexical_index_builds_canonical_segment(void)
     ASSERT_TRUE(payload.runs[2].term_id == 2);
     ASSERT_TRUE(
         payload.runs[2].kind ==
-        II42_POSTING_EXTENT_LEXICAL_NEUTRAL
+        EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL
     );
     ASSERT_TRUE(
         payload.values[0].term_frequency ==
         index.term_frequencies[0]
     );
 
-    manifest.flags = II42_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
+    manifest.flags = EVOKE_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
     manifest.manifest_id = 1;
     manifest.max_sequence = 4;
     manifest.statistics_epoch = 1;
@@ -7169,7 +7169,7 @@ test_lexical_index_builds_canonical_segment(void)
     manifest.vocab_size = index.vocab_size;
     initialize_test_object_ref(
         &manifest.query_contract,
-        II42_SEGMENT_OBJECT_QUERY_CONTRACT,
+        EVOKE_SEGMENT_OBJECT_QUERY_CONTRACT,
         3,
         1,
         manifest.manifest_id,
@@ -7177,7 +7177,7 @@ test_lexical_index_builds_canonical_segment(void)
     );
     initialize_test_object_ref(
         &manifest.term_directory,
-        II42_SEGMENT_OBJECT_TERM_DIRECTORY,
+        EVOKE_SEGMENT_OBJECT_TERM_DIRECTORY,
         2,
         1,
         manifest.manifest_id,
@@ -7208,12 +7208,12 @@ test_lexical_index_builds_canonical_segment(void)
     manifest.segments[0].start_block = 1;
     manifest.segments[0].block_count = 1;
     manifest.segments[0].flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_LEXICAL;
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_LEXICAL;
     manifest.segments[0].payload_owner_manifest_id =
         manifest.manifest_id;
 
-    ASSERT_STATUS_OK(ii42_segment_payload_serialize(
+    ASSERT_STATUS_OK(evoke_segment_payload_serialize(
         &payload,
         &manifest,
         &manifest.segments[0],
@@ -7223,13 +7223,13 @@ test_lexical_index_builds_canonical_segment(void)
     ));
     manifest.segments[0].payload_bytes = size;
     manifest.segments[0].payload_checksum = checksum;
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&manifest));
-    ASSERT_STATUS_OK(ii42_segment_query_contract_build(
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&manifest));
+    ASSERT_STATUS_OK(evoke_segment_query_contract_build(
         &index,
         &manifest,
         &contract
     ));
-    ASSERT_STATUS_OK(ii42_segment_payload_deserialize(
+    ASSERT_STATUS_OK(evoke_segment_payload_deserialize(
         bytes,
         size,
         &manifest,
@@ -7237,14 +7237,14 @@ test_lexical_index_builds_canonical_segment(void)
         &restored
     ));
     ASSERT_TRUE(
-        restored.block_shift == II42_DEFAULT_POSTING_BLOCK_SHIFT
+        restored.block_shift == EVOKE_DEFAULT_POSTING_BLOCK_SHIFT
     );
     ASSERT_TRUE(restored.block_count == restored.run_count);
     ASSERT_TRUE(restored.runs[2].block_offset == 2);
     ASSERT_TRUE(restored.runs[2].block_count == 1);
     ASSERT_TRUE(restored.blocks[2].kind ==
-        II42_POSTING_EXTENT_LEXICAL_NEUTRAL);
-    ASSERT_STATUS_OK(ii42_segment_index_metadata_build(
+        EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL);
+    ASSERT_STATUS_OK(evoke_segment_index_metadata_build(
         &contract,
         &manifest,
         manifest.doc_frequencies,
@@ -7268,14 +7268,14 @@ test_lexical_index_builds_canonical_segment(void)
         index.doc_frequencies,
         index.vocab_size * sizeof(*index.doc_frequencies)
     ) == 0);
-    ii42_segment_payload_as_view(&restored, &payload_view);
-    ASSERT_STATUS_OK(ii42_term_directory_build_from_payloads(
+    evoke_segment_payload_as_view(&restored, &payload_view);
+    ASSERT_STATUS_OK(evoke_term_directory_build_from_payloads(
         &manifest,
         &payload_view,
         1,
         &directory
     ));
-    ASSERT_STATUS_OK(ii42_segment_read_view_build(
+    ASSERT_STATUS_OK(evoke_segment_read_view_build(
         &metadata_index,
         &manifest,
         &directory,
@@ -7287,7 +7287,7 @@ test_lexical_index_builds_canonical_segment(void)
     ASSERT_TRUE(read_view.terms[2].extents[0].block_count == 1);
     ASSERT_TRUE(
         read_view.terms[2].extents[0].block_shift ==
-            II42_DEFAULT_POSTING_BLOCK_SHIFT
+            EVOKE_DEFAULT_POSTING_BLOCK_SHIFT
     );
 
     memset(&stats, 0, sizeof(stats));
@@ -7295,14 +7295,14 @@ test_lexical_index_builds_canonical_segment(void)
     stats.total_document_length = manifest.total_document_length;
     stats.doc_frequencies = manifest.doc_frequencies;
     stats.vocab_size = manifest.vocab_size;
-    ASSERT_STATUS_OK(ii42_scores_from_ids_exact_stats(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_exact_stats(
         &index,
         query,
         3,
         NULL,
         &expected_scores
     ));
-    ASSERT_STATUS_OK(ii42_scores_from_ids_mixed(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_mixed(
         &metadata_index,
         &stats,
         read_view.terms,
@@ -7319,37 +7319,37 @@ test_lexical_index_builds_canonical_segment(void)
     );
 
     versions[2].document_length++;
-    ASSERT_TRUE(ii42_segment_payload_build_lexical(
+    ASSERT_TRUE(evoke_segment_payload_build_lexical(
         &index,
         2,
         0,
         versions,
         4,
         &payload
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(payload.segment_id == 1);
     restored.version_count--;
-    ASSERT_TRUE(ii42_segment_index_metadata_build(
+    ASSERT_TRUE(evoke_segment_index_metadata_build(
         &contract,
         &manifest,
         manifest.doc_frequencies,
         &restored,
         1,
         &metadata_index
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(metadata_index.num_docs == index.num_docs);
 
     free(bytes);
     free(expected_scores);
     free(segmented_scores);
-    ii42_segment_read_view_free(&read_view);
-    ii42_term_directory_free(&directory);
-    ii42_segment_query_contract_free(&contract);
-    ii42_segment_payload_free(&restored);
-    ii42_segment_payload_free(&payload);
-    ii42_segment_manifest_free(&manifest);
-    ii42_index_free(&metadata_index);
-    ii42_index_free(&index);
+    evoke_segment_read_view_free(&read_view);
+    evoke_term_directory_free(&directory);
+    evoke_segment_query_contract_free(&contract);
+    evoke_segment_payload_free(&restored);
+    evoke_segment_payload_free(&payload);
+    evoke_segment_manifest_free(&manifest);
+    evoke_index_free(&metadata_index);
+    evoke_index_free(&index);
 }
 
 static void
@@ -7359,64 +7359,64 @@ test_segment_payload_merge_and_directory_replacement(void)
     uint32_t doc1[] = {1, 2};
     uint32_t doc2[] = {0, 2, 2};
     uint32_t doc3[] = {3};
-    ii42_doc_ids docs[] = {
+    evoke_doc_ids docs[] = {
         make_doc(doc0, 3),
         make_doc(doc1, 2),
         make_doc(doc2, 3),
         make_doc(doc3, 1)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_BM25PLUS,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_BM25PLUS,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_document_version_record versions[4] = {0};
-    ii42_segment_manifest old_manifest;
-    ii42_segment_manifest next_manifest;
-    ii42_segment_payload payloads[2];
-    ii42_segment_payload merged;
-    ii42_segment_payload_view payload_views[2];
-    ii42_segment_payload_view merged_view;
-    ii42_term_directory old_directory;
-    ii42_term_directory next_directory;
-    ii42_index first_index;
-    ii42_index second_index;
-    ii42_index full_index;
-    ii42_segment_term_run *resized_runs;
-    ii42_document_version_record *resized_versions;
-    ii42_posting_value *resized_values;
+    evoke_document_version_record versions[4] = {0};
+    evoke_segment_manifest old_manifest;
+    evoke_segment_manifest next_manifest;
+    evoke_segment_payload payloads[2];
+    evoke_segment_payload merged;
+    evoke_segment_payload_view payload_views[2];
+    evoke_segment_payload_view merged_view;
+    evoke_term_directory old_directory;
+    evoke_term_directory next_directory;
+    evoke_index first_index;
+    evoke_index second_index;
+    evoke_index full_index;
+    evoke_segment_term_run *resized_runs;
+    evoke_document_version_record *resized_versions;
+    evoke_posting_value *resized_values;
     uint32_t *resized_indices;
     uint64_t first_length = 0;
     uint64_t second_length = 0;
 
-    ii42_segment_manifest_init(&old_manifest);
-    ii42_segment_manifest_init(&next_manifest);
-    ii42_segment_payload_init(&payloads[0]);
-    ii42_segment_payload_init(&payloads[1]);
-    ii42_segment_payload_init(&merged);
-    ii42_term_directory_init(&old_directory);
-    ii42_term_directory_init(&next_directory);
-    ii42_index_init(&first_index);
-    ii42_index_init(&second_index);
-    ii42_index_init(&full_index);
+    evoke_segment_manifest_init(&old_manifest);
+    evoke_segment_manifest_init(&next_manifest);
+    evoke_segment_payload_init(&payloads[0]);
+    evoke_segment_payload_init(&payloads[1]);
+    evoke_segment_payload_init(&merged);
+    evoke_term_directory_init(&old_directory);
+    evoke_term_directory_init(&next_directory);
+    evoke_index_init(&first_index);
+    evoke_index_init(&second_index);
+    evoke_index_init(&full_index);
 
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         docs,
         2,
         &params,
         false,
         &first_index
     ));
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         docs + 2,
         2,
         &params,
         false,
         &second_index
     ));
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         docs,
         4,
         &params,
@@ -7425,7 +7425,7 @@ test_segment_payload_merge_and_directory_replacement(void)
     ));
     for (uint32_t document_id = 0; document_id < 4; document_id++)
     {
-        ii42_index *source_index =
+        evoke_index *source_index =
             document_id < 2 ? &first_index : &second_index;
         uint32_t local_document_id = document_id % 2;
 
@@ -7436,11 +7436,11 @@ test_segment_payload_merge_and_directory_replacement(void)
         versions[document_id].document_length =
             source_index->doc_lengths[local_document_id];
         versions[document_id].flags =
-            II42_DOCUMENT_VERSION_FLAG_FROZEN_XID;
+            EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID;
         if (document_id == 0 || document_id == 2)
         {
             versions[document_id].flags |=
-                II42_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE;
+                EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE;
         }
         if (document_id < 2)
         {
@@ -7451,7 +7451,7 @@ test_segment_payload_merge_and_directory_replacement(void)
             second_length += versions[document_id].document_length;
         }
     }
-    ASSERT_STATUS_OK(ii42_segment_payload_build_lexical(
+    ASSERT_STATUS_OK(evoke_segment_payload_build_lexical(
         &first_index,
         1,
         0,
@@ -7459,7 +7459,7 @@ test_segment_payload_merge_and_directory_replacement(void)
         2,
         &payloads[0]
     ));
-    ASSERT_STATUS_OK(ii42_segment_payload_build_lexical(
+    ASSERT_STATUS_OK(evoke_segment_payload_build_lexical(
         &second_index,
         2,
         2,
@@ -7469,7 +7469,7 @@ test_segment_payload_merge_and_directory_replacement(void)
     ));
     for (uint32_t payload_index = 0; payload_index < 2; payload_index++)
     {
-        ii42_segment_payload *payload = &payloads[payload_index];
+        evoke_segment_payload *payload = &payloads[payload_index];
         uint64_t old_posting_count = payload->posting_count;
         uint32_t old_run_count = payload->run_count;
 
@@ -7500,13 +7500,13 @@ test_segment_payload_merge_and_directory_replacement(void)
         );
         payload->runs[old_run_count].term_id = 3;
         payload->runs[old_run_count].kind =
-            II42_POSTING_EXTENT_SEMANTIC_IMPACT;
+            EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT;
         payload->runs[old_run_count].posting_offset =
             old_posting_count;
         payload->runs[old_run_count].posting_count = 1;
         payload->runs[old_run_count + 1].term_id = 3;
         payload->runs[old_run_count + 1].kind =
-            II42_POSTING_EXTENT_LEXICAL_IMPACT;
+            EVOKE_POSTING_EXTENT_LEXICAL_IMPACT;
         payload->runs[old_run_count + 1].posting_offset =
             old_posting_count + 1;
         payload->runs[old_run_count + 1].posting_count = 1;
@@ -7535,8 +7535,8 @@ test_segment_payload_merge_and_directory_replacement(void)
     payloads[1].versions[2].document_slot = 4;
     payloads[1].versions[2].born_sequence = 4;
     payloads[1].versions[2].flags =
-        II42_DOCUMENT_VERSION_FLAG_ABORTED_HOLE |
-        II42_DOCUMENT_VERSION_FLAG_FROZEN_XID;
+        EVOKE_DOCUMENT_VERSION_FLAG_ABORTED_HOLE |
+        EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID;
     payloads[1].version_count = 3;
     payloads[1].local_document_count = 3;
     payloads[1].retirements = calloc(
@@ -7549,10 +7549,10 @@ test_segment_payload_merge_and_directory_replacement(void)
     payloads[1].retirements[0].document_length =
         versions[0].document_length;
     payloads[1].retirements[0].flags =
-        II42_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
+        EVOKE_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
     payloads[1].retirement_count = 1;
 
-    old_manifest.flags = II42_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
+    old_manifest.flags = EVOKE_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
     old_manifest.manifest_id = 10;
     old_manifest.max_sequence = 4;
     old_manifest.statistics_epoch = 1;
@@ -7562,7 +7562,7 @@ test_segment_payload_merge_and_directory_replacement(void)
     old_manifest.vocab_size = full_index.vocab_size;
     initialize_test_object_ref(
         &old_manifest.query_contract,
-        II42_SEGMENT_OBJECT_QUERY_CONTRACT,
+        EVOKE_SEGMENT_OBJECT_QUERY_CONTRACT,
         10,
         1,
         old_manifest.manifest_id,
@@ -7570,7 +7570,7 @@ test_segment_payload_merge_and_directory_replacement(void)
     );
     initialize_test_object_ref(
         &old_manifest.term_directory,
-        II42_SEGMENT_OBJECT_TERM_DIRECTORY,
+        EVOKE_SEGMENT_OBJECT_TERM_DIRECTORY,
         11,
         1,
         old_manifest.manifest_id,
@@ -7607,9 +7607,9 @@ test_segment_payload_merge_and_directory_replacement(void)
     old_manifest.segments[0].start_block = 1;
     old_manifest.segments[0].block_count = 1;
     old_manifest.segments[0].flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_LEXICAL |
-        II42_SEGMENT_FLAG_SEMANTIC;
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_LEXICAL |
+        EVOKE_SEGMENT_FLAG_SEMANTIC;
     old_manifest.segments[0].payload_bytes = 1000;
     old_manifest.segments[0].payload_owner_manifest_id = 10;
     old_manifest.segments[1].segment_id = 2;
@@ -7626,23 +7626,23 @@ test_segment_payload_merge_and_directory_replacement(void)
     old_manifest.segments[1].start_block = 2;
     old_manifest.segments[1].block_count = 1;
     old_manifest.segments[1].flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_LEXICAL |
-        II42_SEGMENT_FLAG_SEMANTIC |
-        II42_SEGMENT_FLAG_RETIREMENTS;
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_LEXICAL |
+        EVOKE_SEGMENT_FLAG_SEMANTIC |
+        EVOKE_SEGMENT_FLAG_RETIREMENTS;
     old_manifest.segments[1].payload_bytes = 1000;
     old_manifest.segments[1].payload_owner_manifest_id = 10;
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&old_manifest));
-    ii42_segment_payload_as_view(&payloads[0], &payload_views[0]);
-    ii42_segment_payload_as_view(&payloads[1], &payload_views[1]);
-    ASSERT_STATUS_OK(ii42_term_directory_build_from_payloads(
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&old_manifest));
+    evoke_segment_payload_as_view(&payloads[0], &payload_views[0]);
+    evoke_segment_payload_as_view(&payloads[1], &payload_views[1]);
+    ASSERT_STATUS_OK(evoke_term_directory_build_from_payloads(
         &old_manifest,
         payload_views,
         2,
         &old_directory
     ));
 
-    ASSERT_STATUS_OK(ii42_segment_payload_merge(
+    ASSERT_STATUS_OK(evoke_segment_payload_merge(
         &old_manifest,
         0,
         payloads,
@@ -7671,8 +7671,8 @@ test_segment_payload_merge_and_directory_replacement(void)
     }
     ASSERT_TRUE(
         merged.versions[4].flags ==
-        (II42_DOCUMENT_VERSION_FLAG_ABORTED_HOLE |
-         II42_DOCUMENT_VERSION_FLAG_FROZEN_XID)
+        (EVOKE_DOCUMENT_VERSION_FLAG_ABORTED_HOLE |
+         EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID)
     );
     ASSERT_TRUE(merged.retirements[0].document_slot == 0);
     ASSERT_TRUE(
@@ -7681,7 +7681,7 @@ test_segment_payload_merge_and_directory_replacement(void)
     );
     ASSERT_TRUE(
         merged.runs[full_index.vocab_size].kind ==
-        II42_POSTING_EXTENT_SEMANTIC_IMPACT
+        EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT
     );
     ASSERT_TRUE(
         merged.runs[full_index.vocab_size].posting_offset ==
@@ -7698,7 +7698,7 @@ test_segment_payload_merge_and_directory_replacement(void)
     );
     ASSERT_TRUE(
         merged.runs[full_index.vocab_size + 1].kind ==
-        II42_POSTING_EXTENT_LEXICAL_IMPACT
+        EVOKE_POSTING_EXTENT_LEXICAL_IMPACT
     );
     ASSERT_TRUE(
         merged.runs[full_index.vocab_size + 1].posting_offset ==
@@ -7713,7 +7713,7 @@ test_segment_payload_merge_and_directory_replacement(void)
         merged.values[full_index.data_len + 3].impact == 1.0f
     );
 
-    next_manifest.flags = II42_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
+    next_manifest.flags = EVOKE_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
     next_manifest.manifest_id = 11;
     next_manifest.parent_manifest_id = 10;
     next_manifest.max_sequence = old_manifest.max_sequence;
@@ -7729,10 +7729,10 @@ test_segment_payload_merge_and_directory_replacement(void)
     next_manifest.document_directory =
         old_manifest.document_directory;
     next_manifest.flags |=
-        II42_SEGMENT_MANIFEST_FLAG_DOCUMENT_DIRECTORY;
+        EVOKE_SEGMENT_MANIFEST_FLAG_DOCUMENT_DIRECTORY;
     initialize_test_object_ref(
         &next_manifest.term_directory,
-        II42_SEGMENT_OBJECT_TERM_DIRECTORY,
+        EVOKE_SEGMENT_OBJECT_TERM_DIRECTORY,
         12,
         1,
         next_manifest.manifest_id,
@@ -7776,20 +7776,20 @@ test_segment_payload_merge_and_directory_replacement(void)
     next_manifest.segments[0].start_block = 3;
     next_manifest.segments[0].block_count = 1;
     next_manifest.segments[0].flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_LEXICAL |
-        II42_SEGMENT_FLAG_SEMANTIC |
-        II42_SEGMENT_FLAG_RETIREMENTS;
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_LEXICAL |
+        EVOKE_SEGMENT_FLAG_SEMANTIC |
+        EVOKE_SEGMENT_FLAG_RETIREMENTS;
     next_manifest.segments[0].payload_bytes = 2000;
     next_manifest.segments[0].payload_owner_manifest_id = 11;
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&next_manifest));
-    ASSERT_STATUS_OK(ii42_segment_payload_validate(
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&next_manifest));
+    ASSERT_STATUS_OK(evoke_segment_payload_validate(
         &merged,
         &next_manifest,
         &next_manifest.segments[0]
     ));
-    ii42_segment_payload_as_view(&merged, &merged_view);
-    ASSERT_STATUS_OK(ii42_term_directory_replace_payloads(
+    evoke_segment_payload_as_view(&merged, &merged_view);
+    ASSERT_STATUS_OK(evoke_term_directory_replace_payloads(
         &old_directory,
         &old_manifest,
         &next_manifest,
@@ -7813,23 +7813,23 @@ test_segment_payload_merge_and_directory_replacement(void)
             expected_extent_count
         );
     }
-    ASSERT_TRUE(ii42_segment_size_class(0) == 0);
-    ASSERT_TRUE(ii42_segment_size_class(65536) == 0);
-    ASSERT_TRUE(ii42_segment_size_class(65537) == 1);
-    ASSERT_TRUE(ii42_segment_size_class(131072) == 1);
-    ASSERT_TRUE(ii42_segment_size_class(131073) == 2);
-    ASSERT_TRUE(ii42_segment_size_class(UINT64_MAX) == 48);
+    ASSERT_TRUE(evoke_segment_size_class(0) == 0);
+    ASSERT_TRUE(evoke_segment_size_class(65536) == 0);
+    ASSERT_TRUE(evoke_segment_size_class(65537) == 1);
+    ASSERT_TRUE(evoke_segment_size_class(131072) == 1);
+    ASSERT_TRUE(evoke_segment_size_class(131073) == 2);
+    ASSERT_TRUE(evoke_segment_size_class(UINT64_MAX) == 48);
 
-    ii42_index_free(&full_index);
-    ii42_index_free(&second_index);
-    ii42_index_free(&first_index);
-    ii42_term_directory_free(&next_directory);
-    ii42_term_directory_free(&old_directory);
-    ii42_segment_payload_free(&merged);
-    ii42_segment_payload_free(&payloads[1]);
-    ii42_segment_payload_free(&payloads[0]);
-    ii42_segment_manifest_free(&next_manifest);
-    ii42_segment_manifest_free(&old_manifest);
+    evoke_index_free(&full_index);
+    evoke_index_free(&second_index);
+    evoke_index_free(&first_index);
+    evoke_term_directory_free(&next_directory);
+    evoke_term_directory_free(&old_directory);
+    evoke_segment_payload_free(&merged);
+    evoke_segment_payload_free(&payloads[1]);
+    evoke_segment_payload_free(&payloads[0]);
+    evoke_segment_manifest_free(&next_manifest);
+    evoke_segment_manifest_free(&old_manifest);
 }
 
 static void
@@ -7841,137 +7841,137 @@ test_segment_read_view_matches_expanded_index(void)
     uint32_t base_doc3[] = {3};
     uint32_t added_doc[] = {0, 3, 3};
     uint32_t query[] = {0, 2, 3};
-    ii42_doc_ids base_docs[] = {
+    evoke_doc_ids base_docs[] = {
         make_doc(base_doc0, 3),
         make_doc(base_doc1, 2),
         make_doc(base_doc2, 3),
         make_doc(base_doc3, 1)
     };
-    ii42_doc_ids delta_docs[] = {
+    evoke_doc_ids delta_docs[] = {
         make_doc(added_doc, 3)
     };
-    ii42_doc_ids expanded_docs[] = {
+    evoke_doc_ids expanded_docs[] = {
         make_doc(base_doc0, 3),
         make_doc(base_doc1, 2),
         make_doc(base_doc2, 3),
         make_doc(base_doc3, 1),
         make_doc(added_doc, 3)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_BM25PLUS,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_BM25PLUS,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_segment_term_run base_runs[] = {
+    evoke_segment_term_run base_runs[] = {
         {
             .term_id = 0,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 0,
             .posting_count = 2
         },
         {
             .term_id = 1,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 2,
             .posting_count = 2
         },
         {
             .term_id = 2,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 4,
             .posting_count = 2
         },
         {
             .term_id = 3,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 6,
             .posting_count = 1
         }
     };
-    ii42_segment_term_run delta_runs[] = {
+    evoke_segment_term_run delta_runs[] = {
         {
             .term_id = 0,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 0,
             .posting_count = 1
         },
         {
             .term_id = 3,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 1,
             .posting_count = 1
         }
     };
-    ii42_segment_manifest manifest;
-    ii42_segment_manifest compacted_manifest;
-    ii42_segment_manifest old_manifest;
-    ii42_segment_descriptor compacted_segment;
-    ii42_term_directory directory;
-    ii42_term_directory incremental_directory;
-    ii42_term_directory old_directory;
-    ii42_term_directory folded_tail_directory;
-    ii42_term_directory dual_fold_tail_directory;
-    ii42_segment_payload_view payloads[2];
-    ii42_segment_read_view view;
-    ii42_segment_read_view folded_view;
-    ii42_term_fold_bundle fold_bundle;
-    ii42_term_fold_bundle minor_fold_bundle;
-    ii42_term_fold_bundle promoted_fold_bundle;
-    ii42_term_fold_bundle advanced_fold_bundle;
-    ii42_term_fold_bundle full_fold_bundle;
-    ii42_term_fold_bundle impact_fold_bundle;
-    ii42_term_fold_bundle compacted_minor_fold_bundle;
-    ii42_term_fold_bundle selected_fold_bundles[3];
-    ii42_term_fold_read_plan *fold_plans = NULL;
-    ii42_index base;
-    ii42_index delta;
-    ii42_index expanded;
-    ii42_corpus_stats stats;
-    ii42_posting_value *base_values = NULL;
-    ii42_posting_value *delta_values = NULL;
+    evoke_segment_manifest manifest;
+    evoke_segment_manifest compacted_manifest;
+    evoke_segment_manifest old_manifest;
+    evoke_segment_descriptor compacted_segment;
+    evoke_term_directory directory;
+    evoke_term_directory incremental_directory;
+    evoke_term_directory old_directory;
+    evoke_term_directory folded_tail_directory;
+    evoke_term_directory dual_fold_tail_directory;
+    evoke_segment_payload_view payloads[2];
+    evoke_segment_read_view view;
+    evoke_segment_read_view folded_view;
+    evoke_term_fold_bundle fold_bundle;
+    evoke_term_fold_bundle minor_fold_bundle;
+    evoke_term_fold_bundle promoted_fold_bundle;
+    evoke_term_fold_bundle advanced_fold_bundle;
+    evoke_term_fold_bundle full_fold_bundle;
+    evoke_term_fold_bundle impact_fold_bundle;
+    evoke_term_fold_bundle compacted_minor_fold_bundle;
+    evoke_term_fold_bundle selected_fold_bundles[3];
+    evoke_term_fold_read_plan *fold_plans = NULL;
+    evoke_index base;
+    evoke_index delta;
+    evoke_index expanded;
+    evoke_corpus_stats stats;
+    evoke_posting_value *base_values = NULL;
+    evoke_posting_value *delta_values = NULL;
     float *expected_scores = NULL;
     float *segmented_scores = NULL;
     float *folded_scores = NULL;
-    ii42_term_extent_list *original_terms;
+    evoke_term_extent_list *original_terms;
     uint32_t tail_payload_segment_indices[] = {1};
     uint32_t doc_id;
 
-    ii42_index_init(&base);
-    ii42_index_init(&delta);
-    ii42_index_init(&expanded);
-    ii42_term_directory_init(&directory);
-    ii42_term_directory_init(&incremental_directory);
-    ii42_term_directory_init(&old_directory);
-    ii42_term_directory_init(&folded_tail_directory);
-    ii42_term_directory_init(&dual_fold_tail_directory);
-    ii42_segment_read_view_init(&view);
-    ii42_segment_read_view_init(&folded_view);
-    ii42_term_fold_bundle_init(&fold_bundle);
-    ii42_term_fold_bundle_init(&minor_fold_bundle);
-    ii42_term_fold_bundle_init(&promoted_fold_bundle);
-    ii42_term_fold_bundle_init(&advanced_fold_bundle);
-    ii42_term_fold_bundle_init(&full_fold_bundle);
-    ii42_term_fold_bundle_init(&impact_fold_bundle);
-    ii42_term_fold_bundle_init(&compacted_minor_fold_bundle);
+    evoke_index_init(&base);
+    evoke_index_init(&delta);
+    evoke_index_init(&expanded);
+    evoke_term_directory_init(&directory);
+    evoke_term_directory_init(&incremental_directory);
+    evoke_term_directory_init(&old_directory);
+    evoke_term_directory_init(&folded_tail_directory);
+    evoke_term_directory_init(&dual_fold_tail_directory);
+    evoke_segment_read_view_init(&view);
+    evoke_segment_read_view_init(&folded_view);
+    evoke_term_fold_bundle_init(&fold_bundle);
+    evoke_term_fold_bundle_init(&minor_fold_bundle);
+    evoke_term_fold_bundle_init(&promoted_fold_bundle);
+    evoke_term_fold_bundle_init(&advanced_fold_bundle);
+    evoke_term_fold_bundle_init(&full_fold_bundle);
+    evoke_term_fold_bundle_init(&impact_fold_bundle);
+    evoke_term_fold_bundle_init(&compacted_minor_fold_bundle);
     memset(payloads, 0, sizeof(payloads));
 
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         base_docs,
         4,
         &params,
         false,
         &base
     ));
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         delta_docs,
         1,
         &params,
         false,
         &delta
     ));
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         expanded_docs,
         5,
         &params,
@@ -8018,7 +8018,7 @@ test_segment_read_view_matches_expanded_index(void)
     old_manifest.visible_document_count = base.num_docs;
     old_manifest.document_slot_count = base.num_docs;
     old_manifest.total_document_length = 9;
-    ASSERT_STATUS_OK(ii42_term_directory_build_from_payloads(
+    ASSERT_STATUS_OK(evoke_term_directory_build_from_payloads(
         &old_manifest,
         payloads,
         1,
@@ -8036,14 +8036,14 @@ test_segment_read_view_matches_expanded_index(void)
     manifest.impact_fold.owner_manifest_id = manifest.manifest_id;
     manifest.segments[1].payload_owner_manifest_id =
         manifest.manifest_id;
-    ASSERT_STATUS_OK(ii42_term_directory_append_payload(
+    ASSERT_STATUS_OK(evoke_term_directory_append_payload(
         &old_directory,
         &old_manifest,
         &manifest,
         &payloads[1],
         &incremental_directory
     ));
-    ASSERT_STATUS_OK(ii42_term_directory_build_from_payloads(
+    ASSERT_STATUS_OK(evoke_term_directory_build_from_payloads(
         &manifest,
         payloads,
         2,
@@ -8068,7 +8068,7 @@ test_segment_read_view_matches_expanded_index(void)
     ASSERT_TRUE(directory.extent_count == 6);
     ASSERT_TRUE(directory.term_offsets[1] == 2);
     ASSERT_TRUE(directory.extents[1].segment_index == 1);
-    ASSERT_STATUS_OK(ii42_segment_read_view_build(
+    ASSERT_STATUS_OK(evoke_segment_read_view_build(
         &expanded,
         &manifest,
         &directory,
@@ -8090,14 +8090,14 @@ test_segment_read_view_matches_expanded_index(void)
     {
         stats.total_document_length += expanded.doc_lengths[doc_id];
     }
-    ASSERT_STATUS_OK(ii42_scores_from_ids_exact_stats(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_exact_stats(
         &expanded,
         query,
         3,
         NULL,
         &expected_scores
     ));
-    ASSERT_STATUS_OK(ii42_scores_from_ids_mixed(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_mixed(
         &expanded,
         &stats,
         view.terms,
@@ -8144,12 +8144,12 @@ test_segment_read_view_matches_expanded_index(void)
         (size_t) folded_tail_directory.extent_count *
             sizeof(*folded_tail_directory.extents)
     );
-    ASSERT_STATUS_OK(ii42_term_directory_validate(
+    ASSERT_STATUS_OK(evoke_term_directory_validate(
         &folded_tail_directory,
         &manifest
     ));
 
-    ASSERT_TRUE(ii42_term_fold_bundle_build_neutral_prefix(
+    ASSERT_TRUE(evoke_term_fold_bundle_build_neutral_prefix(
         &manifest,
         &directory,
         payloads,
@@ -8158,8 +8158,8 @@ test_segment_read_view_matches_expanded_index(void)
         0,
         manifest.segments[0].max_sequence - 1,
         &fold_bundle
-    ) == II42_ERR_FORMAT);
-    ASSERT_STATUS_OK(ii42_term_fold_bundle_build_neutral_prefix(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_STATUS_OK(evoke_term_fold_bundle_build_neutral_prefix(
         &manifest,
         &directory,
         payloads,
@@ -8176,7 +8176,7 @@ test_segment_read_view_matches_expanded_index(void)
     ASSERT_TRUE(fold_bundle.runs[0].term_id == 0);
     ASSERT_TRUE(
         fold_bundle.runs[0].kind ==
-            II42_POSTING_EXTENT_LEXICAL_NEUTRAL
+            EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL
     );
     ASSERT_TRUE(memcmp(
         fold_bundle.document_slots,
@@ -8190,7 +8190,7 @@ test_segment_read_view_matches_expanded_index(void)
         (size_t) fold_bundle.posting_count *
             sizeof(*fold_bundle.values)
     ) == 0);
-    ASSERT_STATUS_OK(ii42_term_fold_bundle_advance_neutral(
+    ASSERT_STATUS_OK(evoke_term_fold_bundle_advance_neutral(
         &manifest,
         0,
         &directory.extents[1],
@@ -8204,7 +8204,7 @@ test_segment_read_view_matches_expanded_index(void)
         manifest.segments[1].max_sequence,
         &advanced_fold_bundle
     ));
-    ASSERT_STATUS_OK(ii42_term_fold_bundle_build_neutral_prefix(
+    ASSERT_STATUS_OK(evoke_term_fold_bundle_build_neutral_prefix(
         &manifest,
         &directory,
         payloads,
@@ -8243,7 +8243,7 @@ test_segment_read_view_matches_expanded_index(void)
     fold_plans[0].neutral_coverage =
         fold_bundle.runs[0].coverage_sequence;
     fold_plans[0].neutral_run_count = 1;
-    ASSERT_STATUS_OK(ii42_segment_read_view_build_folded(
+    ASSERT_STATUS_OK(evoke_segment_read_view_build_folded(
         &expanded,
         &manifest,
         &folded_tail_directory,
@@ -8263,7 +8263,7 @@ test_segment_read_view_matches_expanded_index(void)
         folded_view.terms[0].extents[1].document_id_base ==
             base.num_docs
     );
-    ASSERT_STATUS_OK(ii42_scores_from_ids_mixed(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_mixed(
         &expanded,
         &stats,
         folded_view.terms,
@@ -8311,11 +8311,11 @@ test_segment_read_view_matches_expanded_index(void)
         (size_t) dual_fold_tail_directory.extent_count *
             sizeof(*dual_fold_tail_directory.extents)
     );
-    ASSERT_STATUS_OK(ii42_term_directory_validate(
+    ASSERT_STATUS_OK(evoke_term_directory_validate(
         &dual_fold_tail_directory,
         &manifest
     ));
-    ASSERT_STATUS_OK(ii42_term_fold_bundle_advance_neutral(
+    ASSERT_STATUS_OK(evoke_term_fold_bundle_advance_neutral(
         &manifest,
         0,
         &directory.extents[1],
@@ -8334,9 +8334,9 @@ test_segment_read_view_matches_expanded_index(void)
     compacted_segment.max_sequence = manifest.max_sequence;
     compacted_manifest.segment_count = 1;
     compacted_manifest.segments = &compacted_segment;
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&compacted_manifest));
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&compacted_manifest));
     {
-        ii42_posting_extent compacted_tail_extent = {
+        evoke_posting_extent compacted_tail_extent = {
             .indices = payloads[1].indices,
             .values = payloads[1].values,
             .document_id_map = payloads[1].document_id_map,
@@ -8346,7 +8346,7 @@ test_segment_read_view_matches_expanded_index(void)
             .kind = directory.extents[1].kind
         };
 
-        ASSERT_TRUE(ii42_term_fold_bundle_advance_neutral_extents(
+        ASSERT_TRUE(evoke_term_fold_bundle_advance_neutral_extents(
             &compacted_manifest,
             0,
             &compacted_tail_extent,
@@ -8357,8 +8357,8 @@ test_segment_read_view_matches_expanded_index(void)
             manifest.manifest_id,
             manifest.max_sequence,
             &compacted_minor_fold_bundle
-        ) == II42_ERR_FORMAT);
-        ASSERT_STATUS_OK(ii42_term_fold_bundle_advance_neutral_extents(
+        ) == EVOKE_ERR_FORMAT);
+        ASSERT_STATUS_OK(evoke_term_fold_bundle_advance_neutral_extents(
             &compacted_manifest,
             0,
             &compacted_tail_extent,
@@ -8397,7 +8397,7 @@ test_segment_read_view_matches_expanded_index(void)
         (size_t) minor_fold_bundle.posting_count *
             sizeof(*minor_fold_bundle.values)
     ) == 0);
-    ASSERT_STATUS_OK(ii42_term_fold_bundle_merge_neutral(
+    ASSERT_STATUS_OK(evoke_term_fold_bundle_merge_neutral(
         &manifest,
         0,
         &fold_bundle,
@@ -8431,7 +8431,7 @@ test_segment_read_view_matches_expanded_index(void)
         (size_t) full_fold_bundle.posting_count *
             sizeof(*full_fold_bundle.values)
     ) == 0);
-    ASSERT_STATUS_OK(ii42_term_fold_bundle_build_impact(
+    ASSERT_STATUS_OK(evoke_term_fold_bundle_build_impact(
         &expanded,
         &stats,
         0,
@@ -8444,7 +8444,7 @@ test_segment_read_view_matches_expanded_index(void)
     ));
     ASSERT_TRUE(
         impact_fold_bundle.object_kind ==
-            II42_SEGMENT_OBJECT_IMPACT_FOLD
+            EVOKE_SEGMENT_OBJECT_IMPACT_FOLD
     );
     ASSERT_TRUE(
         impact_fold_bundle.statistics_epoch ==
@@ -8453,7 +8453,7 @@ test_segment_read_view_matches_expanded_index(void)
     ASSERT_TRUE(impact_fold_bundle.run_count == 1);
     ASSERT_TRUE(
         impact_fold_bundle.runs[0].kind ==
-            II42_POSTING_EXTENT_LEXICAL_IMPACT
+            EVOKE_POSTING_EXTENT_LEXICAL_IMPACT
     );
     ASSERT_TRUE(
         impact_fold_bundle.runs[0].coverage_sequence ==
@@ -8476,12 +8476,12 @@ test_segment_read_view_matches_expanded_index(void)
         double average_document_length =
             (double) stats.total_document_length /
             (double) stats.document_count;
-        double idf = ii42_score_idf(
+        double idf = evoke_score_idf(
             expanded.params.idf_method,
             (double) expanded.doc_frequencies[0],
             (double) stats.document_count
         );
-        double nonoccurrence = idf * ii42_score_tfc(
+        double nonoccurrence = idf * evoke_score_tfc(
             expanded.params.method,
             0.0,
             0.0,
@@ -8490,7 +8490,7 @@ test_segment_read_view_matches_expanded_index(void)
             expanded.params.b,
             expanded.params.delta
         );
-        double expected_impact = idf * ii42_score_tfc(
+        double expected_impact = idf * evoke_score_tfc(
             expanded.params.method,
             (double) term_frequency,
             (double) expanded.doc_lengths[document_slot],
@@ -8510,7 +8510,7 @@ test_segment_read_view_matches_expanded_index(void)
         );
     }
     ASSERT_TRUE(
-        ii42_term_fold_bundle_build_impact(
+        evoke_term_fold_bundle_build_impact(
             &expanded,
             &stats,
             0,
@@ -8520,7 +8520,7 @@ test_segment_read_view_matches_expanded_index(void)
             manifest.manifest_id,
             manifest.statistics_epoch,
             &impact_fold_bundle
-        ) == II42_ERR_FORMAT
+        ) == EVOKE_ERR_FORMAT
     );
     selected_fold_bundles[0] = fold_bundle;
     selected_fold_bundles[1] = minor_fold_bundle;
@@ -8528,7 +8528,7 @@ test_segment_read_view_matches_expanded_index(void)
         minor_fold_bundle.runs[0].coverage_sequence;
     fold_plans[0].neutral_minor_bundle_index = 1;
     fold_plans[0].neutral_minor_run_count = 1;
-    ASSERT_STATUS_OK(ii42_segment_read_view_build_folded(
+    ASSERT_STATUS_OK(evoke_segment_read_view_build_folded(
         &expanded,
         &manifest,
         &dual_fold_tail_directory,
@@ -8541,7 +8541,7 @@ test_segment_read_view_matches_expanded_index(void)
         &folded_view
     ));
     ASSERT_TRUE(folded_view.terms[0].len == 2);
-    ASSERT_STATUS_OK(ii42_scores_from_ids_mixed(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_mixed(
         &expanded,
         &stats,
         folded_view.terms,
@@ -8565,7 +8565,7 @@ test_segment_read_view_matches_expanded_index(void)
         impact_fold_bundle.statistics_epoch;
     fold_plans[0].impact_bundle_index = 2;
     fold_plans[0].impact_run_count = 1;
-    ASSERT_STATUS_OK(ii42_segment_read_view_build_folded(
+    ASSERT_STATUS_OK(evoke_segment_read_view_build_folded(
         &expanded,
         &manifest,
         &dual_fold_tail_directory,
@@ -8580,11 +8580,11 @@ test_segment_read_view_matches_expanded_index(void)
     ASSERT_TRUE(folded_view.terms[0].len == 1);
     ASSERT_TRUE(
         folded_view.terms[0].extents[0].kind ==
-            II42_POSTING_EXTENT_LEXICAL_IMPACT
+            EVOKE_POSTING_EXTENT_LEXICAL_IMPACT
     );
     free(folded_scores);
     folded_scores = NULL;
-    ASSERT_STATUS_OK(ii42_scores_from_ids_mixed(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_mixed(
         &expanded,
         &stats,
         folded_view.terms,
@@ -8600,7 +8600,7 @@ test_segment_read_view_matches_expanded_index(void)
         expanded.num_docs
     );
     fold_plans[0].impact_statistics_epoch++;
-    ASSERT_TRUE(ii42_segment_read_view_build_folded(
+    ASSERT_TRUE(evoke_segment_read_view_build_folded(
         &expanded,
         &manifest,
         &dual_fold_tail_directory,
@@ -8611,11 +8611,11 @@ test_segment_read_view_matches_expanded_index(void)
         fold_plans,
         expanded.vocab_size,
         &folded_view
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     fold_plans[0].impact_statistics_epoch =
         impact_fold_bundle.statistics_epoch;
     fold_plans[0].impact_coverage--;
-    ASSERT_TRUE(ii42_segment_read_view_build_folded(
+    ASSERT_TRUE(evoke_segment_read_view_build_folded(
         &expanded,
         &manifest,
         &dual_fold_tail_directory,
@@ -8626,7 +8626,7 @@ test_segment_read_view_matches_expanded_index(void)
         fold_plans,
         expanded.vocab_size,
         &folded_view
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     fold_plans[0].impact_coverage = 0;
     fold_plans[0].impact_statistics_epoch = 0;
     fold_plans[0].impact_bundle_index = 0;
@@ -8639,7 +8639,7 @@ test_segment_read_view_matches_expanded_index(void)
         manifest.segments[0].max_sequence - 1;
     fold_bundle.runs[0].coverage_sequence =
         fold_plans[0].neutral_coverage;
-    ASSERT_TRUE(ii42_segment_read_view_build_folded(
+    ASSERT_TRUE(evoke_segment_read_view_build_folded(
         &expanded,
         &manifest,
         &folded_tail_directory,
@@ -8650,7 +8650,7 @@ test_segment_read_view_matches_expanded_index(void)
         fold_plans,
         expanded.vocab_size,
         &folded_view
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(folded_view.terms != NULL);
     fold_plans[0].neutral_coverage =
         manifest.segments[0].max_sequence;
@@ -8659,38 +8659,38 @@ test_segment_read_view_matches_expanded_index(void)
 
     original_terms = view.terms;
     directory.extents[0].kind =
-        II42_POSTING_EXTENT_SEMANTIC_IMPACT;
-    ASSERT_TRUE(ii42_segment_read_view_build(
+        EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT;
+    ASSERT_TRUE(evoke_segment_read_view_build(
         &expanded,
         &manifest,
         &directory,
         payloads,
         2,
         &view
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(view.terms == original_terms);
     directory.extents[0].kind =
-        II42_POSTING_EXTENT_LEXICAL_NEUTRAL;
+        EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL;
     directory.extents[2].posting_offset = 3;
-    ASSERT_TRUE(ii42_segment_read_view_build(
+    ASSERT_TRUE(evoke_segment_read_view_build(
         &expanded,
         &manifest,
         &directory,
         payloads,
         2,
         &view
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(view.terms == original_terms);
     directory.extents[2].posting_offset = 2;
     payloads[1].segment_id = 3;
-    ASSERT_TRUE(ii42_segment_read_view_build(
+    ASSERT_TRUE(evoke_segment_read_view_build(
         &expanded,
         &manifest,
         &directory,
         payloads,
         2,
         &view
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(view.terms == original_terms);
 
     free(expected_scores);
@@ -8699,36 +8699,36 @@ test_segment_read_view_matches_expanded_index(void)
     free(fold_plans);
     free(base_values);
     free(delta_values);
-    ii42_term_fold_bundle_free(&full_fold_bundle);
-    ii42_term_fold_bundle_free(&advanced_fold_bundle);
-    ii42_term_fold_bundle_free(&impact_fold_bundle);
-    ii42_term_fold_bundle_free(&minor_fold_bundle);
-    ii42_term_fold_bundle_free(&compacted_minor_fold_bundle);
-    ii42_term_fold_bundle_free(&promoted_fold_bundle);
-    ii42_term_fold_bundle_free(&fold_bundle);
-    ii42_segment_read_view_free(&folded_view);
-    ii42_segment_read_view_free(&view);
-    ii42_term_directory_free(&folded_tail_directory);
-    ii42_term_directory_free(&dual_fold_tail_directory);
-    ii42_term_directory_free(&old_directory);
-    ii42_term_directory_free(&incremental_directory);
-    ii42_term_directory_free(&directory);
-    ii42_segment_manifest_free(&manifest);
-    ii42_index_free(&base);
-    ii42_index_free(&delta);
-    ii42_index_free(&expanded);
+    evoke_term_fold_bundle_free(&full_fold_bundle);
+    evoke_term_fold_bundle_free(&advanced_fold_bundle);
+    evoke_term_fold_bundle_free(&impact_fold_bundle);
+    evoke_term_fold_bundle_free(&minor_fold_bundle);
+    evoke_term_fold_bundle_free(&compacted_minor_fold_bundle);
+    evoke_term_fold_bundle_free(&promoted_fold_bundle);
+    evoke_term_fold_bundle_free(&fold_bundle);
+    evoke_segment_read_view_free(&folded_view);
+    evoke_segment_read_view_free(&view);
+    evoke_term_directory_free(&folded_tail_directory);
+    evoke_term_directory_free(&dual_fold_tail_directory);
+    evoke_term_directory_free(&old_directory);
+    evoke_term_directory_free(&incremental_directory);
+    evoke_term_directory_free(&directory);
+    evoke_segment_manifest_free(&manifest);
+    evoke_index_free(&base);
+    evoke_index_free(&delta);
+    evoke_index_free(&expanded);
 }
 
 static void
 initialize_term_cow_test_manifests(
-    ii42_segment_manifest *old_manifest,
-    ii42_segment_manifest *next_manifest
+    evoke_segment_manifest *old_manifest,
+    evoke_segment_manifest *next_manifest
 )
 {
-    ii42_segment_manifest_init(old_manifest);
-    ii42_segment_manifest_init(next_manifest);
+    evoke_segment_manifest_init(old_manifest);
+    evoke_segment_manifest_init(next_manifest);
 
-    old_manifest->flags = II42_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
+    old_manifest->flags = EVOKE_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
     old_manifest->manifest_id = 10;
     old_manifest->parent_manifest_id = 9;
     old_manifest->max_sequence = 10;
@@ -8739,7 +8739,7 @@ initialize_term_cow_test_manifests(
     old_manifest->vocab_size = 80;
     initialize_test_object_ref(
         &old_manifest->query_contract,
-        II42_SEGMENT_OBJECT_QUERY_CONTRACT,
+        EVOKE_SEGMENT_OBJECT_QUERY_CONTRACT,
         100,
         1,
         old_manifest->manifest_id,
@@ -8747,7 +8747,7 @@ initialize_term_cow_test_manifests(
     );
     initialize_test_object_ref(
         &old_manifest->term_directory,
-        II42_SEGMENT_OBJECT_TERM_DIRECTORY,
+        EVOKE_SEGMENT_OBJECT_TERM_DIRECTORY,
         110,
         1,
         old_manifest->manifest_id,
@@ -8785,8 +8785,8 @@ initialize_term_cow_test_manifests(
     old_manifest->segments[0].start_block = 1;
     old_manifest->segments[0].block_count = 1;
     old_manifest->segments[0].flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_LEXICAL;
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_LEXICAL;
     old_manifest->segments[0].payload_bytes = 256;
     old_manifest->segments[0].payload_owner_manifest_id =
         old_manifest->manifest_id;
@@ -8803,7 +8803,7 @@ initialize_term_cow_test_manifests(
     next_manifest->query_contract = old_manifest->query_contract;
     initialize_test_object_ref(
         &next_manifest->term_directory,
-        II42_SEGMENT_OBJECT_TERM_DIRECTORY,
+        EVOKE_SEGMENT_OBJECT_TERM_DIRECTORY,
         120,
         1,
         next_manifest->manifest_id,
@@ -8852,19 +8852,19 @@ initialize_term_cow_test_manifests(
     next_manifest->segments[1].start_block = 2;
     next_manifest->segments[1].block_count = 1;
     next_manifest->segments[1].flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_LEXICAL;
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_LEXICAL;
     next_manifest->segments[1].payload_bytes = 256;
     next_manifest->segments[1].payload_owner_manifest_id =
         next_manifest->manifest_id;
 
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(old_manifest));
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(next_manifest));
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(old_manifest));
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(next_manifest));
 }
 
 typedef struct term_cow_fake_store
 {
-    const ii42_term_cow_tree *tree;
+    const evoke_term_cow_tree *tree;
     uint64_t corrupt_object_id;
     uint32_t load_count;
 } term_cow_fake_store;
@@ -8882,32 +8882,32 @@ typedef struct cow_visit_counts
     uint32_t leaf_count;
 } cow_visit_counts;
 
-static ii42_status
+static evoke_status
 count_term_cow_object(
     void *context,
-    const ii42_term_cow_object *object
+    const evoke_term_cow_object *object
 )
 {
     cow_visit_counts *counts = context;
 
     if (counts == NULL || object == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     counts->object_count++;
-    if (object->ref.kind == II42_TERM_COW_OBJECT_NODE)
+    if (object->ref.kind == EVOKE_TERM_COW_OBJECT_NODE)
     {
         counts->node_count++;
     }
-    else if (object->ref.kind == II42_TERM_COW_OBJECT_LEAF)
+    else if (object->ref.kind == EVOKE_TERM_COW_OBJECT_LEAF)
     {
         counts->leaf_count++;
     }
     else
     {
-        return II42_ERR_FORMAT;
+        return EVOKE_ERR_FORMAT;
     }
-    return II42_OK;
+    return EVOKE_OK;
 }
 
 #define TERM_COW_TEST_MAX_LAYERS 4
@@ -8918,32 +8918,32 @@ typedef struct term_cow_layered_store
     size_t layer_count;
 } term_cow_layered_store;
 
-static ii42_status
+static evoke_status
 load_term_cow_fake_object(
     void *context,
-    const ii42_term_cow_ref *ref,
-    ii42_term_cow_object *object_out
+    const evoke_term_cow_ref *ref,
+    evoke_term_cow_object *object_out
 )
 {
     term_cow_fake_store *store = context;
-    ii42_segment_object_ref storage_ref;
+    evoke_segment_object_ref storage_ref;
     uint8_t *bytes = NULL;
     size_t size = 0;
-    ii42_status status;
+    evoke_status status;
 
     if (store == NULL || store->tree == NULL ||
         ref == NULL || object_out == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     store->load_count++;
-    status = ii42_term_cow_tree_object_serialize(
+    status = evoke_term_cow_tree_object_serialize(
         store->tree,
         ref,
         &bytes,
         &size
     );
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
         return status;
     }
@@ -8951,42 +8951,42 @@ load_term_cow_fake_object(
     {
         bytes[size - 1] ^= UINT8_C(1);
     }
-    status = ii42_term_cow_object_deserialize(
+    status = evoke_term_cow_object_deserialize(
         bytes,
         size,
         object_out
     );
     free(bytes);
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
         return status;
     }
-    status = ii42_term_cow_ref_as_segment_object_ref(
+    status = evoke_term_cow_ref_as_segment_object_ref(
         ref,
         &storage_ref
     );
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
         return status;
     }
-    return ii42_term_cow_object_bind_storage(
+    return evoke_term_cow_object_bind_storage(
         object_out,
         &storage_ref
     );
 }
 
-static ii42_status
+static evoke_status
 load_term_cow_composite_object(
     void *context,
-    const ii42_term_cow_ref *ref,
-    ii42_term_cow_object *object_out
+    const evoke_term_cow_ref *ref,
+    evoke_term_cow_object *object_out
 )
 {
     term_cow_composite_store *store = context;
 
     if (store == NULL || ref == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     if (store->patch.tree != NULL &&
         ref->owner_manifest_id ==
@@ -9005,11 +9005,11 @@ load_term_cow_composite_object(
     );
 }
 
-static ii42_status
+static evoke_status
 load_term_cow_layered_object(
     void *context,
-    const ii42_term_cow_ref *ref,
-    ii42_term_cow_object *object_out
+    const evoke_term_cow_ref *ref,
+    evoke_term_cow_object *object_out
 )
 {
     term_cow_layered_store *store = context;
@@ -9017,7 +9017,7 @@ load_term_cow_layered_object(
     if (store == NULL || ref == NULL ||
         store->layer_count > TERM_COW_TEST_MAX_LAYERS)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     for (size_t layer_index = 0;
          layer_index < store->layer_count;
@@ -9036,25 +9036,25 @@ load_term_cow_layered_object(
             );
         }
     }
-    return II42_ERR_FORMAT;
+    return EVOKE_ERR_FORMAT;
 }
 
 static void
 clone_segment_manifest_for_test(
-    const ii42_segment_manifest *source,
-    ii42_segment_manifest *target
+    const evoke_segment_manifest *source,
+    evoke_segment_manifest *target
 )
 {
     uint8_t *bytes = NULL;
     size_t size = 0;
 
-    ii42_segment_manifest_init(target);
-    ASSERT_STATUS_OK(ii42_segment_manifest_serialize(
+    evoke_segment_manifest_init(target);
+    ASSERT_STATUS_OK(evoke_segment_manifest_serialize(
         source,
         &bytes,
         &size
     ));
-    ASSERT_STATUS_OK(ii42_segment_manifest_deserialize(
+    ASSERT_STATUS_OK(evoke_segment_manifest_deserialize(
         bytes,
         size,
         target
@@ -9064,7 +9064,7 @@ clone_segment_manifest_for_test(
 
 static void
 bind_term_cow_test_tree(
-    ii42_term_cow_tree *tree,
+    evoke_term_cow_tree *tree,
     uint64_t owner_manifest_id,
     uint32_t *next_block
 )
@@ -9073,33 +9073,33 @@ bind_term_cow_test_tree(
          object_id <= tree->object_count;
          object_id++)
     {
-        ii42_segment_object_ref storage_ref;
+        evoke_segment_object_ref storage_ref;
         uint8_t *bytes = NULL;
         size_t size = 0;
         uint32_t page_count = 0;
 
-        ASSERT_STATUS_OK(ii42_term_cow_tree_prepare_object_for_storage(
+        ASSERT_STATUS_OK(evoke_term_cow_tree_prepare_object_for_storage(
             tree,
             object_id,
             &bytes,
             &size
         ));
-        ASSERT_STATUS_OK(ii42_segment_page_count_required(
+        ASSERT_STATUS_OK(evoke_segment_page_count_required(
             size,
             8192,
             &page_count
         ));
         memset(&storage_ref, 0, sizeof(storage_ref));
         storage_ref.object_kind =
-            II42_SEGMENT_OBJECT_TERM_DIRECTORY;
+            EVOKE_SEGMENT_OBJECT_TERM_DIRECTORY;
         storage_ref.start_block = *next_block;
         storage_ref.page_count = page_count;
         storage_ref.object_id = object_id;
         storage_ref.owner_manifest_id = owner_manifest_id;
         storage_ref.object_bytes = size;
         storage_ref.object_checksum =
-            ii42_segment_blob_checksum(bytes, size);
-        ASSERT_STATUS_OK(ii42_term_cow_tree_bind_object_storage(
+            evoke_segment_blob_checksum(bytes, size);
+        ASSERT_STATUS_OK(evoke_term_cow_tree_bind_object_storage(
             tree,
             object_id,
             &storage_ref
@@ -9112,28 +9112,28 @@ bind_term_cow_test_tree(
 static void
 test_empty_term_cow_external_closure(void)
 {
-    ii42_segment_manifest manifest;
-    ii42_term_directory empty_directory;
-    ii42_term_directory materialized_directory;
-    ii42_term_cow_tree tree;
+    evoke_segment_manifest manifest;
+    evoke_term_directory empty_directory;
+    evoke_term_directory materialized_directory;
+    evoke_term_cow_tree tree;
     term_cow_fake_store store;
-    ii42_segment_object_ref storage_ref;
+    evoke_segment_object_ref storage_ref;
     uint32_t *doc_frequencies = NULL;
     uint8_t *bytes = NULL;
     size_t size = 0;
 
-    ii42_segment_manifest_init(&manifest);
-    ii42_term_directory_init(&empty_directory);
-    ii42_term_directory_init(&materialized_directory);
-    ii42_term_cow_tree_init(&tree);
+    evoke_segment_manifest_init(&manifest);
+    evoke_term_directory_init(&empty_directory);
+    evoke_term_directory_init(&materialized_directory);
+    evoke_term_cow_tree_init(&tree);
     memset(&store, 0, sizeof(store));
 
-    manifest.flags = II42_SEGMENT_MANIFEST_FLAG_COW_TERM_DIRECTORY;
+    manifest.flags = EVOKE_SEGMENT_MANIFEST_FLAG_COW_TERM_DIRECTORY;
     manifest.manifest_id = 1;
     manifest.statistics_epoch = 1;
     initialize_test_object_ref(
         &manifest.query_contract,
-        II42_SEGMENT_OBJECT_QUERY_CONTRACT,
+        EVOKE_SEGMENT_OBJECT_QUERY_CONTRACT,
         1,
         1,
         manifest.manifest_id,
@@ -9144,14 +9144,14 @@ test_empty_term_cow_external_closure(void)
         sizeof(*empty_directory.term_offsets)
     );
     ASSERT_TRUE(empty_directory.term_offsets != NULL);
-    ASSERT_STATUS_OK(ii42_term_cow_tree_build(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_build(
         &empty_directory,
         &manifest,
         NULL,
         &tree
     ));
     ASSERT_TRUE(tree.object_count == 1);
-    ASSERT_STATUS_OK(ii42_term_cow_tree_prepare_object_for_storage(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_prepare_object_for_storage(
         &tree,
         tree.root.object_id,
         &bytes,
@@ -9159,26 +9159,26 @@ test_empty_term_cow_external_closure(void)
     ));
     initialize_test_object_ref(
         &storage_ref,
-        II42_SEGMENT_OBJECT_TERM_DIRECTORY,
+        EVOKE_SEGMENT_OBJECT_TERM_DIRECTORY,
         2,
         1,
         manifest.manifest_id,
-        ii42_segment_blob_checksum(bytes, size)
+        evoke_segment_blob_checksum(bytes, size)
     );
     storage_ref.object_bytes = size;
-    ASSERT_STATUS_OK(ii42_term_cow_tree_bind_object_storage(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_bind_object_storage(
         &tree,
         tree.root.object_id,
         &storage_ref
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_ref_as_segment_object_ref(
+    ASSERT_STATUS_OK(evoke_term_cow_ref_as_segment_object_ref(
         &tree.root,
         &manifest.term_directory
     ));
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&manifest));
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&manifest));
 
     store.tree = &tree;
-    ASSERT_STATUS_OK(ii42_term_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_term_cow_validate_external(
         &tree.root,
         0,
         load_term_cow_fake_object,
@@ -9186,7 +9186,7 @@ test_empty_term_cow_external_closure(void)
     ));
     ASSERT_TRUE(store.load_count == 1);
     store.load_count = 0;
-    ASSERT_STATUS_OK(ii42_term_cow_materialize_external(
+    ASSERT_STATUS_OK(evoke_term_cow_materialize_external(
         &tree.root,
         &manifest,
         load_term_cow_fake_object,
@@ -9204,22 +9204,22 @@ test_empty_term_cow_external_closure(void)
     ASSERT_TRUE(doc_frequencies == NULL);
 
     free(bytes);
-    ii42_term_cow_tree_free(&tree);
-    ii42_term_directory_free(&materialized_directory);
-    ii42_term_directory_free(&empty_directory);
-    ii42_segment_manifest_free(&manifest);
+    evoke_term_cow_tree_free(&tree);
+    evoke_term_directory_free(&materialized_directory);
+    evoke_term_directory_free(&empty_directory);
+    evoke_segment_manifest_free(&manifest);
 }
 
 static void
 test_initial_folded_term_cow_tree(void)
 {
-    ii42_segment_manifest manifest;
-    ii42_term_cow_tree tree;
-    ii42_segment_object_ref fold_refs[3] = {{0}};
-    ii42_term_cow_record record;
+    evoke_segment_manifest manifest;
+    evoke_term_cow_tree tree;
+    evoke_segment_object_ref fold_refs[3] = {{0}};
+    evoke_term_cow_record record;
 
-    ii42_segment_manifest_init(&manifest);
-    ii42_term_cow_tree_init(&tree);
+    evoke_segment_manifest_init(&manifest);
+    evoke_term_cow_tree_init(&tree);
     manifest.manifest_id = 41;
     manifest.max_sequence = 9;
     manifest.statistics_epoch = 41;
@@ -9235,7 +9235,7 @@ test_initial_folded_term_cow_tree(void)
     manifest.doc_frequencies[2] = 1;
     initialize_test_object_ref(
         &fold_refs[1],
-        II42_SEGMENT_OBJECT_NEUTRAL_FOLD,
+        EVOKE_SEGMENT_OBJECT_NEUTRAL_FOLD,
         100,
         2,
         manifest.manifest_id,
@@ -9243,83 +9243,83 @@ test_initial_folded_term_cow_tree(void)
     );
     fold_refs[2] = fold_refs[1];
 
-    ASSERT_STATUS_OK(ii42_term_cow_tree_build_initial_folds(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_build_initial_folds(
         &manifest,
         NULL,
         fold_refs,
         &tree
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_tree_validate(&tree));
-    ASSERT_STATUS_OK(ii42_term_cow_tree_lookup(&tree, 1, &record));
+    ASSERT_STATUS_OK(evoke_term_cow_tree_validate(&tree));
+    ASSERT_STATUS_OK(evoke_term_cow_tree_lookup(&tree, 1, &record));
     ASSERT_TRUE(record.raw_document_frequency == 2);
     ASSERT_TRUE(record.extent_count == 0);
     ASSERT_TRUE(
-        (record.flags & II42_TERM_COW_RECORD_FLAG_NEUTRAL_FOLD) != 0
+        (record.flags & EVOKE_TERM_COW_RECORD_FLAG_NEUTRAL_FOLD) != 0
     );
     ASSERT_TRUE(record.neutral_fold_coverage == manifest.max_sequence);
-    ASSERT_TRUE(ii42_segment_object_ref_equal(
+    ASSERT_TRUE(evoke_segment_object_ref_equal(
         &record.neutral_fold,
         &fold_refs[1]
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_tree_lookup(&tree, 2, &record));
-    ASSERT_TRUE(ii42_segment_object_ref_equal(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_lookup(&tree, 2, &record));
+    ASSERT_TRUE(evoke_segment_object_ref_equal(
         &record.neutral_fold,
         &fold_refs[2]
     ));
 
     memset(&fold_refs[2], 0, sizeof(fold_refs[2]));
     ASSERT_TRUE(
-        ii42_term_cow_tree_build_initial_folds(
+        evoke_term_cow_tree_build_initial_folds(
             &manifest,
             NULL,
             fold_refs,
             &tree
-        ) == II42_ERR_FORMAT
+        ) == EVOKE_ERR_FORMAT
     );
 
-    ii42_term_cow_tree_free(&tree);
-    ii42_segment_manifest_free(&manifest);
+    evoke_term_cow_tree_free(&tree);
+    evoke_segment_manifest_free(&manifest);
 }
 
 static void
 test_term_cow_neutral_fold_patch(void)
 {
-    ii42_segment_manifest old_manifest;
-    ii42_segment_manifest next_manifest;
-    ii42_term_directory directory;
-    ii42_term_cow_tree ancestor;
-    ii42_term_cow_tree patch;
-    ii42_term_cow_tree impact_patch;
-    ii42_term_cow_tree rejected;
-    ii42_term_cow_update_stats stats;
-    ii42_term_directory materialized_directory;
-    ii42_segment_term_run runs[] = {
+    evoke_segment_manifest old_manifest;
+    evoke_segment_manifest next_manifest;
+    evoke_term_directory directory;
+    evoke_term_cow_tree ancestor;
+    evoke_term_cow_tree patch;
+    evoke_term_cow_tree impact_patch;
+    evoke_term_cow_tree rejected;
+    evoke_term_cow_update_stats stats;
+    evoke_term_directory materialized_directory;
+    evoke_segment_term_run runs[] = {
         {
             .term_id = 1,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 0,
             .posting_count = 1
         },
         {
             .term_id = 17,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 1,
             .posting_count = 1
         },
         {
             .term_id = 33,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 2,
             .posting_count = 1
         }
     };
     uint32_t indices[] = {0, 1, 0};
-    ii42_posting_value values[] = {
+    evoke_posting_value values[] = {
         {.term_frequency = 1},
         {.term_frequency = 1},
         {.term_frequency = 1}
     };
-    ii42_segment_payload_view payload = {
+    evoke_segment_payload_view payload = {
         .segment_id = 100,
         .posting_count = 3,
         .runs = runs,
@@ -9331,11 +9331,11 @@ test_term_cow_neutral_fold_patch(void)
     term_cow_fake_store ancestor_store;
     term_cow_composite_store composite_store;
     term_cow_layered_store layered_store;
-    ii42_segment_object_ref fold_ref;
-    ii42_segment_object_ref impact_ref;
-    ii42_term_cow_fold_state *fold_states = NULL;
+    evoke_segment_object_ref fold_ref;
+    evoke_segment_object_ref impact_ref;
+    evoke_term_cow_fold_state *fold_states = NULL;
     uint32_t *doc_frequencies = NULL;
-    ii42_term_cow_record record;
+    evoke_term_cow_record record;
     uint32_t next_block = 200;
 
     initialize_term_cow_test_manifests(
@@ -9357,23 +9357,23 @@ test_term_cow_neutral_fold_patch(void)
         (size_t) old_manifest.vocab_size *
             sizeof(*old_manifest.doc_frequencies)
     );
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&next_manifest));
-    ii42_term_directory_init(&directory);
-    ii42_term_directory_init(&materialized_directory);
-    ii42_term_cow_tree_init(&ancestor);
-    ii42_term_cow_tree_init(&patch);
-    ii42_term_cow_tree_init(&impact_patch);
-    ii42_term_cow_tree_init(&rejected);
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&next_manifest));
+    evoke_term_directory_init(&directory);
+    evoke_term_directory_init(&materialized_directory);
+    evoke_term_cow_tree_init(&ancestor);
+    evoke_term_cow_tree_init(&patch);
+    evoke_term_cow_tree_init(&impact_patch);
+    evoke_term_cow_tree_init(&rejected);
     memset(&ancestor_store, 0, sizeof(ancestor_store));
     memset(&composite_store, 0, sizeof(composite_store));
     memset(&layered_store, 0, sizeof(layered_store));
-    ASSERT_STATUS_OK(ii42_term_directory_build_from_payloads(
+    ASSERT_STATUS_OK(evoke_term_directory_build_from_payloads(
         &old_manifest,
         &payload,
         1,
         &directory
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_tree_build(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_build(
         &directory,
         &old_manifest,
         NULL,
@@ -9387,7 +9387,7 @@ test_term_cow_neutral_fold_patch(void)
     ancestor_store.tree = &ancestor;
     initialize_test_object_ref(
         &fold_ref,
-        II42_SEGMENT_OBJECT_NEUTRAL_FOLD,
+        EVOKE_SEGMENT_OBJECT_NEUTRAL_FOLD,
         500,
         1,
         next_manifest.manifest_id,
@@ -9395,43 +9395,43 @@ test_term_cow_neutral_fold_patch(void)
     );
 
     ASSERT_TRUE(
-        ii42_term_cow_build_external_neutral_fold_patch(
+        evoke_term_cow_build_external_neutral_fold_patch(
             &ancestor.root,
             &old_manifest,
             next_manifest.manifest_id,
             17,
             &fold_ref,
             5,
-            II42_TERM_COW_NEUTRAL_FOLD_MAJOR,
+            EVOKE_TERM_COW_NEUTRAL_FOLD_MAJOR,
             load_term_cow_fake_object,
             &ancestor_store,
             &rejected,
             &stats
-        ) == II42_ERR_FORMAT
+        ) == EVOKE_ERR_FORMAT
     );
     ASSERT_TRUE(
-        ii42_term_cow_build_external_neutral_fold_patch(
+        evoke_term_cow_build_external_neutral_fold_patch(
             &ancestor.root,
             &old_manifest,
             next_manifest.manifest_id,
             17,
             &fold_ref,
             10,
-            II42_TERM_COW_NEUTRAL_FOLD_MINOR,
+            EVOKE_TERM_COW_NEUTRAL_FOLD_MINOR,
             load_term_cow_fake_object,
             &ancestor_store,
             &rejected,
             &stats
-        ) == II42_ERR_FORMAT
+        ) == EVOKE_ERR_FORMAT
     );
-    ASSERT_STATUS_OK(ii42_term_cow_build_external_neutral_fold_patch(
+    ASSERT_STATUS_OK(evoke_term_cow_build_external_neutral_fold_patch(
         &ancestor.root,
         &old_manifest,
         next_manifest.manifest_id,
         17,
         &fold_ref,
         10,
-        II42_TERM_COW_NEUTRAL_FOLD_MAJOR,
+        EVOKE_TERM_COW_NEUTRAL_FOLD_MAJOR,
         load_term_cow_fake_object,
         &ancestor_store,
         &patch,
@@ -9441,7 +9441,7 @@ test_term_cow_neutral_fold_patch(void)
     ASSERT_TRUE(stats.changed_leaves == 1);
     ASSERT_TRUE(stats.written_leaves == 1);
     ASSERT_TRUE(
-        stats.written_nodes == II42_TERM_COW_RADIX_LEVELS
+        stats.written_nodes == EVOKE_TERM_COW_RADIX_LEVELS
     );
     bind_term_cow_test_tree(
         &patch,
@@ -9450,13 +9450,13 @@ test_term_cow_neutral_fold_patch(void)
     );
     composite_store.ancestor.tree = &ancestor;
     composite_store.patch.tree = &patch;
-    ASSERT_STATUS_OK(ii42_term_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_term_cow_validate_external(
         &patch.root,
         old_manifest.vocab_size,
         load_term_cow_composite_object,
         &composite_store
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_lookup_external(
+    ASSERT_STATUS_OK(evoke_term_cow_lookup_external(
         &patch.root,
         old_manifest.vocab_size,
         17,
@@ -9466,7 +9466,7 @@ test_term_cow_neutral_fold_patch(void)
     ));
     ASSERT_TRUE(
         (record.flags &
-         II42_TERM_COW_RECORD_FLAG_NEUTRAL_FOLD) != 0
+         EVOKE_TERM_COW_RECORD_FLAG_NEUTRAL_FOLD) != 0
     );
     ASSERT_TRUE(record.neutral_fold_coverage == 10);
     ASSERT_TRUE(memcmp(
@@ -9476,7 +9476,7 @@ test_term_cow_neutral_fold_patch(void)
     ) == 0);
     ASSERT_TRUE(record.extent_count == 0);
     ASSERT_TRUE(record.raw_document_frequency == 1);
-    ASSERT_STATUS_OK(ii42_term_cow_materialize_external(
+    ASSERT_STATUS_OK(evoke_term_cow_materialize_external(
         &patch.root,
         &next_manifest,
         load_term_cow_composite_object,
@@ -9500,14 +9500,14 @@ test_term_cow_neutral_fold_patch(void)
     ) == 0);
     initialize_test_object_ref(
         &impact_ref,
-        II42_SEGMENT_OBJECT_IMPACT_FOLD,
+        EVOKE_SEGMENT_OBJECT_IMPACT_FOLD,
         700,
         1,
         next_manifest.manifest_id + 1,
         902
     );
     ASSERT_TRUE(
-        ii42_term_cow_build_external_impact_fold_patch(
+        evoke_term_cow_build_external_impact_fold_patch(
             &patch.root,
             &next_manifest,
             next_manifest.manifest_id + 1,
@@ -9519,10 +9519,10 @@ test_term_cow_neutral_fold_patch(void)
             &composite_store,
             &rejected,
             &stats
-        ) == II42_ERR_FORMAT
+        ) == EVOKE_ERR_FORMAT
     );
     ASSERT_TRUE(
-        ii42_term_cow_build_external_impact_fold_patch(
+        evoke_term_cow_build_external_impact_fold_patch(
             &patch.root,
             &next_manifest,
             next_manifest.manifest_id + 1,
@@ -9534,9 +9534,9 @@ test_term_cow_neutral_fold_patch(void)
             &composite_store,
             &rejected,
             &stats
-        ) == II42_ERR_INVALID
+        ) == EVOKE_ERR_INVALID
     );
-    ASSERT_STATUS_OK(ii42_term_cow_build_external_impact_fold_patch(
+    ASSERT_STATUS_OK(evoke_term_cow_build_external_impact_fold_patch(
         &patch.root,
         &next_manifest,
         next_manifest.manifest_id + 1,
@@ -9553,7 +9553,7 @@ test_term_cow_neutral_fold_patch(void)
     ASSERT_TRUE(stats.changed_leaves == 1);
     ASSERT_TRUE(stats.written_leaves == 1);
     ASSERT_TRUE(
-        stats.written_nodes == II42_TERM_COW_RADIX_LEVELS
+        stats.written_nodes == EVOKE_TERM_COW_RADIX_LEVELS
     );
     bind_term_cow_test_tree(
         &impact_patch,
@@ -9564,13 +9564,13 @@ test_term_cow_neutral_fold_patch(void)
     layered_store.layers[0].tree = &impact_patch;
     layered_store.layers[1].tree = &patch;
     layered_store.layers[2].tree = &ancestor;
-    ASSERT_STATUS_OK(ii42_term_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_term_cow_validate_external(
         &impact_patch.root,
         old_manifest.vocab_size,
         load_term_cow_layered_object,
         &layered_store
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_lookup_external(
+    ASSERT_STATUS_OK(evoke_term_cow_lookup_external(
         &impact_patch.root,
         old_manifest.vocab_size,
         17,
@@ -9580,7 +9580,7 @@ test_term_cow_neutral_fold_patch(void)
     ));
     ASSERT_TRUE(
         (record.flags &
-         II42_TERM_COW_RECORD_FLAG_IMPACT_FOLD) != 0
+         EVOKE_TERM_COW_RECORD_FLAG_IMPACT_FOLD) != 0
     );
     ASSERT_TRUE(record.impact_fold_coverage == 10);
     ASSERT_TRUE(
@@ -9597,57 +9597,57 @@ test_term_cow_neutral_fold_patch(void)
 
     free(fold_states);
     free(doc_frequencies);
-    ii42_term_cow_tree_free(&rejected);
-    ii42_term_cow_tree_free(&impact_patch);
-    ii42_term_cow_tree_free(&patch);
-    ii42_term_cow_tree_free(&ancestor);
-    ii42_term_directory_free(&materialized_directory);
-    ii42_term_directory_free(&directory);
-    ii42_segment_manifest_free(&next_manifest);
-    ii42_segment_manifest_free(&old_manifest);
+    evoke_term_cow_tree_free(&rejected);
+    evoke_term_cow_tree_free(&impact_patch);
+    evoke_term_cow_tree_free(&patch);
+    evoke_term_cow_tree_free(&ancestor);
+    evoke_term_directory_free(&materialized_directory);
+    evoke_term_directory_free(&directory);
+    evoke_segment_manifest_free(&next_manifest);
+    evoke_segment_manifest_free(&old_manifest);
 }
 
 static void
 test_term_cow_external_append_patch(void)
 {
-    ii42_segment_manifest old_manifest;
-    ii42_segment_manifest next_manifest;
-    ii42_term_directory old_directory;
-    ii42_term_directory expected_directory;
-    ii42_term_directory materialized_directory;
-    ii42_term_cow_tree ancestor;
-    ii42_term_cow_tree patch;
-    ii42_term_cow_tree catalog_ancestor;
-    ii42_term_cow_tree rejected_patch;
-    ii42_term_cow_update_stats stats;
-    ii42_segment_object_ref catalog_ref;
-    ii42_segment_term_run new_runs[] = {
+    evoke_segment_manifest old_manifest;
+    evoke_segment_manifest next_manifest;
+    evoke_term_directory old_directory;
+    evoke_term_directory expected_directory;
+    evoke_term_directory materialized_directory;
+    evoke_term_cow_tree ancestor;
+    evoke_term_cow_tree patch;
+    evoke_term_cow_tree catalog_ancestor;
+    evoke_term_cow_tree rejected_patch;
+    evoke_term_cow_update_stats stats;
+    evoke_segment_object_ref catalog_ref;
+    evoke_segment_term_run new_runs[] = {
         {
             .term_id = 17,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 0,
             .posting_count = 1
         },
         {
             .term_id = 50,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 1,
             .posting_count = 1
         },
         {
             .term_id = 70,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 2,
             .posting_count = 1
         }
     };
     uint32_t new_indices[] = {0, 0, 0};
-    ii42_posting_value new_values[] = {
+    evoke_posting_value new_values[] = {
         {.term_frequency = 1},
         {.term_frequency = 1},
         {.term_frequency = 1}
     };
-    ii42_segment_payload_view new_payload = {
+    evoke_segment_payload_view new_payload = {
         .segment_id = 101,
         .posting_count = 3,
         .runs = new_runs,
@@ -9657,16 +9657,16 @@ test_term_cow_external_append_patch(void)
         .document_id_base = 2,
         .local_document_count = 1
     };
-    ii42_segment_term_run overflow_runs[
-        II42_TERM_DIRECTORY_MAX_EXTENTS_PER_TERM
+    evoke_segment_term_run overflow_runs[
+        EVOKE_TERM_DIRECTORY_MAX_EXTENTS_PER_TERM
     ] = {{0}};
-    ii42_segment_payload_view overflow_payload = {
+    evoke_segment_payload_view overflow_payload = {
         .runs = overflow_runs,
-        .run_count = II42_TERM_DIRECTORY_MAX_EXTENTS_PER_TERM
+        .run_count = EVOKE_TERM_DIRECTORY_MAX_EXTENTS_PER_TERM
     };
     term_cow_fake_store ancestor_store;
     term_cow_composite_store composite_store;
-    ii42_term_cow_record pressure_record;
+    evoke_term_cow_record pressure_record;
     bool found_pressure = false;
     bool has_capacity = false;
     cow_visit_counts visit_counts = {0};
@@ -9679,13 +9679,13 @@ test_term_cow_external_append_patch(void)
         &old_manifest,
         &next_manifest
     );
-    ii42_term_directory_init(&old_directory);
-    ii42_term_directory_init(&expected_directory);
-    ii42_term_directory_init(&materialized_directory);
-    ii42_term_cow_tree_init(&ancestor);
-    ii42_term_cow_tree_init(&patch);
-    ii42_term_cow_tree_init(&catalog_ancestor);
-    ii42_term_cow_tree_init(&rejected_patch);
+    evoke_term_directory_init(&old_directory);
+    evoke_term_directory_init(&expected_directory);
+    evoke_term_directory_init(&materialized_directory);
+    evoke_term_cow_tree_init(&ancestor);
+    evoke_term_cow_tree_init(&patch);
+    evoke_term_cow_tree_init(&catalog_ancestor);
+    evoke_term_cow_tree_init(&rejected_patch);
     memset(&ancestor_store, 0, sizeof(ancestor_store));
     memset(&composite_store, 0, sizeof(composite_store));
 
@@ -9713,7 +9713,7 @@ test_term_cow_external_append_patch(void)
             {
                 old_directory.extents[extent_cursor].segment_index = 0;
                 old_directory.extents[extent_cursor].kind =
-                    II42_POSTING_EXTENT_LEXICAL_NEUTRAL;
+                    EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL;
                 old_directory.extents[extent_cursor].posting_offset =
                     extent_cursor;
                 old_directory.extents[extent_cursor].posting_count = 1;
@@ -9723,17 +9723,17 @@ test_term_cow_external_append_patch(void)
         old_directory.term_offsets[old_directory.vocab_size] =
             extent_cursor;
     }
-    ASSERT_STATUS_OK(ii42_term_directory_validate(
+    ASSERT_STATUS_OK(evoke_term_directory_validate(
         &old_directory,
         &old_manifest
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_tree_build(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_build(
         &old_directory,
         &old_manifest,
         NULL,
         &ancestor
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_tree_prepare_object_for_storage(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_prepare_object_for_storage(
         &ancestor,
         1,
         &compact_leaf_bytes,
@@ -9747,7 +9747,7 @@ test_term_cow_external_append_patch(void)
         &next_block
     );
     ancestor_store.tree = &ancestor;
-    ASSERT_STATUS_OK(ii42_term_cow_append_has_capacity_external(
+    ASSERT_STATUS_OK(evoke_term_cow_append_has_capacity_external(
         &ancestor.root,
         old_manifest.vocab_size,
         &new_payload,
@@ -9762,7 +9762,7 @@ test_term_cow_external_append_patch(void)
     {
         overflow_runs[run_index].term_id = 17;
     }
-    ASSERT_STATUS_OK(ii42_term_cow_append_has_capacity_external(
+    ASSERT_STATUS_OK(evoke_term_cow_append_has_capacity_external(
         &ancestor.root,
         old_manifest.vocab_size,
         &overflow_payload,
@@ -9773,7 +9773,7 @@ test_term_cow_external_append_patch(void)
     ASSERT_TRUE(!has_capacity);
     ancestor_store.load_count = 0;
 
-    ASSERT_STATUS_OK(ii42_term_cow_build_external_append_patch(
+    ASSERT_STATUS_OK(evoke_term_cow_build_external_append_patch(
         &ancestor.root,
         &old_manifest,
         &next_manifest,
@@ -9787,13 +9787,13 @@ test_term_cow_external_append_patch(void)
     ASSERT_TRUE(stats.changed_terms == 3);
     ASSERT_TRUE(stats.changed_leaves == 3);
     ASSERT_TRUE(stats.written_leaves == 3);
-    ASSERT_TRUE(stats.written_nodes == II42_TERM_COW_RADIX_LEVELS);
+    ASSERT_TRUE(stats.written_nodes == EVOKE_TERM_COW_RADIX_LEVELS);
     ASSERT_TRUE(
         patch.object_count ==
-        3 + II42_TERM_COW_RADIX_LEVELS
+        3 + EVOKE_TERM_COW_RADIX_LEVELS
     );
     ASSERT_TRUE(ancestor_store.load_count <=
-        3 * (II42_TERM_COW_RADIX_LEVELS + 1));
+        3 * (EVOKE_TERM_COW_RADIX_LEVELS + 1));
     ASSERT_TRUE(patch.root.start_block == 0);
     ASSERT_TRUE(patch.root.page_count == 0);
     ASSERT_TRUE(patch.root.owner_manifest_id == 0);
@@ -9810,7 +9810,7 @@ test_term_cow_external_append_patch(void)
     );
     composite_store.ancestor.tree = &ancestor;
     composite_store.patch.tree = &patch;
-    ASSERT_STATUS_OK(ii42_term_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_term_cow_validate_external(
         &patch.root,
         next_manifest.vocab_size,
         load_term_cow_composite_object,
@@ -9818,7 +9818,7 @@ test_term_cow_external_append_patch(void)
     ));
     composite_store.ancestor.load_count = 0;
     composite_store.patch.load_count = 0;
-    ASSERT_STATUS_OK(ii42_term_cow_visit_external(
+    ASSERT_STATUS_OK(evoke_term_cow_visit_external(
         &patch.root,
         next_manifest.vocab_size,
         load_term_cow_composite_object,
@@ -9837,7 +9837,7 @@ test_term_cow_external_append_patch(void)
     ASSERT_TRUE(composite_store.patch.load_count > 0);
     composite_store.ancestor.load_count = 0;
     composite_store.patch.load_count = 0;
-    ASSERT_STATUS_OK(ii42_term_cow_find_extent_pressure_external(
+    ASSERT_STATUS_OK(evoke_term_cow_find_extent_pressure_external(
         &patch.root,
         next_manifest.vocab_size,
         2,
@@ -9852,11 +9852,11 @@ test_term_cow_external_append_patch(void)
     ASSERT_TRUE(
         composite_store.ancestor.load_count +
             composite_store.patch.load_count <=
-        II42_TERM_COW_RADIX_LEVELS + 1
+        EVOKE_TERM_COW_RADIX_LEVELS + 1
     );
     composite_store.ancestor.load_count = 0;
     composite_store.patch.load_count = 0;
-    ASSERT_STATUS_OK(ii42_term_cow_find_extent_pressure_external(
+    ASSERT_STATUS_OK(evoke_term_cow_find_extent_pressure_external(
         &patch.root,
         next_manifest.vocab_size,
         3,
@@ -9870,14 +9870,14 @@ test_term_cow_external_append_patch(void)
         composite_store.ancestor.load_count +
             composite_store.patch.load_count == 1
     );
-    ASSERT_STATUS_OK(ii42_term_directory_append_payload(
+    ASSERT_STATUS_OK(evoke_term_directory_append_payload(
         &old_directory,
         &old_manifest,
         &next_manifest,
         &new_payload,
         &expected_directory
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_materialize_external(
+    ASSERT_STATUS_OK(evoke_term_cow_materialize_external(
         &patch.root,
         &next_manifest,
         load_term_cow_composite_object,
@@ -9910,13 +9910,13 @@ test_term_cow_external_append_patch(void)
 
     initialize_test_object_ref(
         &catalog_ref,
-        II42_SEGMENT_OBJECT_LEXICAL_CATALOG,
+        EVOKE_SEGMENT_OBJECT_LEXICAL_CATALOG,
         450,
         1,
         old_manifest.manifest_id,
         901
     );
-    ASSERT_STATUS_OK(ii42_term_cow_tree_build(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_build(
         &old_directory,
         &old_manifest,
         &catalog_ref,
@@ -9929,7 +9929,7 @@ test_term_cow_external_append_patch(void)
     );
     ancestor_store.tree = &catalog_ancestor;
     next_manifest.vocab_size++;
-    ASSERT_TRUE(ii42_term_cow_build_external_append_patch(
+    ASSERT_TRUE(evoke_term_cow_build_external_append_patch(
         &catalog_ancestor.root,
         &old_manifest,
         &next_manifest,
@@ -9939,114 +9939,114 @@ test_term_cow_external_append_patch(void)
         &ancestor_store,
         &rejected_patch,
         &stats
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     next_manifest.vocab_size--;
 
     free(materialized_frequencies);
-    ii42_term_cow_tree_free(&rejected_patch);
-    ii42_term_cow_tree_free(&catalog_ancestor);
-    ii42_term_cow_tree_free(&patch);
-    ii42_term_cow_tree_free(&ancestor);
-    ii42_term_directory_free(&materialized_directory);
-    ii42_term_directory_free(&expected_directory);
-    ii42_term_directory_free(&old_directory);
-    ii42_segment_manifest_free(&next_manifest);
-    ii42_segment_manifest_free(&old_manifest);
+    evoke_term_cow_tree_free(&rejected_patch);
+    evoke_term_cow_tree_free(&catalog_ancestor);
+    evoke_term_cow_tree_free(&patch);
+    evoke_term_cow_tree_free(&ancestor);
+    evoke_term_directory_free(&materialized_directory);
+    evoke_term_directory_free(&expected_directory);
+    evoke_term_directory_free(&old_directory);
+    evoke_segment_manifest_free(&next_manifest);
+    evoke_segment_manifest_free(&old_manifest);
 }
 
 static void
 test_term_cow_external_replace_patch(void)
 {
-    ii42_segment_manifest first_manifest;
-    ii42_segment_manifest old_manifest;
-    ii42_segment_manifest next_manifest;
-    ii42_segment_manifest folded_manifest;
-    ii42_segment_manifest folded_next_manifest;
-    ii42_segment_manifest coverage_only_manifest;
-    ii42_segment_manifest straddling_manifest;
-    ii42_segment_manifest minor_manifest;
-    ii42_segment_manifest promoted_manifest;
-    ii42_term_directory first_directory;
-    ii42_term_directory old_directory;
-    ii42_term_directory expected_directory;
-    ii42_term_directory materialized_directory;
-    ii42_term_cow_tree ancestor;
-    ii42_term_cow_tree patch;
-    ii42_term_cow_tree fold_patch;
-    ii42_term_cow_tree prefix_fold_patch;
-    ii42_term_cow_tree minor_fold_patch;
-    ii42_term_cow_tree promoted_fold_patch;
-    ii42_term_cow_tree folded_replace_patch;
-    ii42_term_cow_tree rejected_patch;
-    ii42_term_cow_update_stats stats;
-    ii42_segment_term_run first_runs[] = {
+    evoke_segment_manifest first_manifest;
+    evoke_segment_manifest old_manifest;
+    evoke_segment_manifest next_manifest;
+    evoke_segment_manifest folded_manifest;
+    evoke_segment_manifest folded_next_manifest;
+    evoke_segment_manifest coverage_only_manifest;
+    evoke_segment_manifest straddling_manifest;
+    evoke_segment_manifest minor_manifest;
+    evoke_segment_manifest promoted_manifest;
+    evoke_term_directory first_directory;
+    evoke_term_directory old_directory;
+    evoke_term_directory expected_directory;
+    evoke_term_directory materialized_directory;
+    evoke_term_cow_tree ancestor;
+    evoke_term_cow_tree patch;
+    evoke_term_cow_tree fold_patch;
+    evoke_term_cow_tree prefix_fold_patch;
+    evoke_term_cow_tree minor_fold_patch;
+    evoke_term_cow_tree promoted_fold_patch;
+    evoke_term_cow_tree folded_replace_patch;
+    evoke_term_cow_tree rejected_patch;
+    evoke_term_cow_update_stats stats;
+    evoke_segment_term_run first_runs[] = {
         {
             .term_id = 1,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 0,
             .posting_count = 1
         },
         {
             .term_id = 17,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 1,
             .posting_count = 1
         },
         {
             .term_id = 33,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 2,
             .posting_count = 1
         }
     };
-    ii42_segment_term_run second_runs[] = {
+    evoke_segment_term_run second_runs[] = {
         {
             .term_id = 17,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 0,
             .posting_count = 1
         },
         {
             .term_id = 50,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 1,
             .posting_count = 1
         },
         {
             .term_id = 70,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 2,
             .posting_count = 1
         }
     };
-    ii42_segment_term_run replacement_runs[] = {
+    evoke_segment_term_run replacement_runs[] = {
         {
             .term_id = 1,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 0,
             .posting_count = 1
         },
         {
             .term_id = 17,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 1,
             .posting_count = 2
         },
         {
             .term_id = 33,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 3,
             .posting_count = 1
         },
         {
             .term_id = 50,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 4,
             .posting_count = 1
         },
         {
             .term_id = 70,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 5,
             .posting_count = 1
         }
@@ -10054,17 +10054,17 @@ test_term_cow_external_replace_patch(void)
     uint32_t first_indices[] = {0, 1, 1};
     uint32_t second_indices[] = {0, 0, 0};
     uint32_t replacement_indices[] = {0, 1, 2, 1, 2, 2};
-    ii42_posting_value first_values[3] = {
+    evoke_posting_value first_values[3] = {
         {.term_frequency = 1},
         {.term_frequency = 1},
         {.term_frequency = 1}
     };
-    ii42_posting_value second_values[3] = {
+    evoke_posting_value second_values[3] = {
         {.term_frequency = 1},
         {.term_frequency = 1},
         {.term_frequency = 1}
     };
-    ii42_posting_value replacement_values[6] = {
+    evoke_posting_value replacement_values[6] = {
         {.term_frequency = 1},
         {.term_frequency = 1},
         {.term_frequency = 1},
@@ -10072,7 +10072,7 @@ test_term_cow_external_replace_patch(void)
         {.term_frequency = 1},
         {.term_frequency = 1}
     };
-    ii42_segment_payload_view replaced_payloads[2] = {
+    evoke_segment_payload_view replaced_payloads[2] = {
         {
             .segment_id = 100,
             .posting_count = 3,
@@ -10094,7 +10094,7 @@ test_term_cow_external_replace_patch(void)
             .local_document_count = 1
         }
     };
-    ii42_segment_payload_view replacement_payload = {
+    evoke_segment_payload_view replacement_payload = {
         .segment_id = 12,
         .posting_count = 6,
         .runs = replacement_runs,
@@ -10111,35 +10111,35 @@ test_term_cow_external_replace_patch(void)
     term_cow_layered_store folded_result_store;
     term_cow_layered_store minor_result_store;
     term_cow_layered_store promoted_result_store;
-    ii42_segment_object_ref fold_ref;
-    ii42_segment_object_ref prefix_fold_ref;
-    ii42_segment_object_ref minor_fold_ref;
-    ii42_segment_object_ref promoted_fold_ref;
-    ii42_segment_payload_view folded_replacement_payload;
-    ii42_segment_payload_view coverage_only_payloads[2];
-    ii42_segment_term_run coverage_only_tail_runs[2] = {
+    evoke_segment_object_ref fold_ref;
+    evoke_segment_object_ref prefix_fold_ref;
+    evoke_segment_object_ref minor_fold_ref;
+    evoke_segment_object_ref promoted_fold_ref;
+    evoke_segment_payload_view folded_replacement_payload;
+    evoke_segment_payload_view coverage_only_payloads[2];
+    evoke_segment_term_run coverage_only_tail_runs[2] = {
         {
             .term_id = 50,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 0,
             .posting_count = 1
         },
         {
             .term_id = 70,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 1,
             .posting_count = 1
         }
     };
     uint32_t coverage_only_tail_indices[2] = {0, 0};
-    ii42_posting_value coverage_only_tail_values[2] = {
+    evoke_posting_value coverage_only_tail_values[2] = {
         {.term_frequency = 1},
         {.term_frequency = 1}
     };
-    ii42_term_cow_record folded_record;
-    ii42_term_cow_record minor_record;
-    ii42_term_cow_record promoted_record;
-    ii42_term_cow_fold_state *fold_states = NULL;
+    evoke_term_cow_record folded_record;
+    evoke_term_cow_record minor_record;
+    evoke_term_cow_record promoted_record;
+    evoke_term_cow_fold_state *fold_states = NULL;
     uint32_t *materialized_frequencies = NULL;
     uint32_t next_block = 700;
     uint32_t conflict_term_id = UINT32_MAX;
@@ -10149,25 +10149,25 @@ test_term_cow_external_replace_patch(void)
         &first_manifest,
         &old_manifest
     );
-    ii42_segment_manifest_init(&next_manifest);
-    ii42_segment_manifest_init(&folded_manifest);
-    ii42_segment_manifest_init(&folded_next_manifest);
-    ii42_segment_manifest_init(&coverage_only_manifest);
-    ii42_segment_manifest_init(&straddling_manifest);
-    ii42_segment_manifest_init(&minor_manifest);
-    ii42_segment_manifest_init(&promoted_manifest);
-    ii42_term_directory_init(&first_directory);
-    ii42_term_directory_init(&old_directory);
-    ii42_term_directory_init(&expected_directory);
-    ii42_term_directory_init(&materialized_directory);
-    ii42_term_cow_tree_init(&ancestor);
-    ii42_term_cow_tree_init(&patch);
-    ii42_term_cow_tree_init(&fold_patch);
-    ii42_term_cow_tree_init(&prefix_fold_patch);
-    ii42_term_cow_tree_init(&minor_fold_patch);
-    ii42_term_cow_tree_init(&promoted_fold_patch);
-    ii42_term_cow_tree_init(&folded_replace_patch);
-    ii42_term_cow_tree_init(&rejected_patch);
+    evoke_segment_manifest_init(&next_manifest);
+    evoke_segment_manifest_init(&folded_manifest);
+    evoke_segment_manifest_init(&folded_next_manifest);
+    evoke_segment_manifest_init(&coverage_only_manifest);
+    evoke_segment_manifest_init(&straddling_manifest);
+    evoke_segment_manifest_init(&minor_manifest);
+    evoke_segment_manifest_init(&promoted_manifest);
+    evoke_term_directory_init(&first_directory);
+    evoke_term_directory_init(&old_directory);
+    evoke_term_directory_init(&expected_directory);
+    evoke_term_directory_init(&materialized_directory);
+    evoke_term_cow_tree_init(&ancestor);
+    evoke_term_cow_tree_init(&patch);
+    evoke_term_cow_tree_init(&fold_patch);
+    evoke_term_cow_tree_init(&prefix_fold_patch);
+    evoke_term_cow_tree_init(&minor_fold_patch);
+    evoke_term_cow_tree_init(&promoted_fold_patch);
+    evoke_term_cow_tree_init(&folded_replace_patch);
+    evoke_term_cow_tree_init(&rejected_patch);
     memset(&ancestor_store, 0, sizeof(ancestor_store));
     memset(&composite_store, 0, sizeof(composite_store));
     memset(&folded_source_store, 0, sizeof(folded_source_store));
@@ -10200,7 +10200,7 @@ test_term_cow_external_replace_patch(void)
             {
                 first_directory.extents[extent_cursor].segment_index = 0;
                 first_directory.extents[extent_cursor].kind =
-                    II42_POSTING_EXTENT_LEXICAL_NEUTRAL;
+                    EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL;
                 first_directory.extents[extent_cursor].posting_offset =
                     extent_cursor;
                 first_directory.extents[extent_cursor].posting_count = 1;
@@ -10210,14 +10210,14 @@ test_term_cow_external_replace_patch(void)
         first_directory.term_offsets[first_directory.vocab_size] =
             extent_cursor;
     }
-    ASSERT_STATUS_OK(ii42_term_directory_append_payload(
+    ASSERT_STATUS_OK(evoke_term_directory_append_payload(
         &first_directory,
         &first_manifest,
         &old_manifest,
         &replaced_payloads[1],
         &old_directory
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_tree_build(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_build(
         &old_directory,
         &old_manifest,
         NULL,
@@ -10230,16 +10230,16 @@ test_term_cow_external_replace_patch(void)
     );
     ancestor_store.tree = &ancestor;
     old_manifest.flags &=
-        ~II42_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
+        ~EVOKE_SEGMENT_MANIFEST_FLAG_TERM_DIRECTORY;
     old_manifest.flags |=
-        II42_SEGMENT_MANIFEST_FLAG_COW_TERM_DIRECTORY;
+        EVOKE_SEGMENT_MANIFEST_FLAG_COW_TERM_DIRECTORY;
     free(old_manifest.doc_frequencies);
     old_manifest.doc_frequencies = NULL;
-    ASSERT_STATUS_OK(ii42_term_cow_ref_as_segment_object_ref(
+    ASSERT_STATUS_OK(evoke_term_cow_ref_as_segment_object_ref(
         &ancestor.root,
         &old_manifest.term_directory
     ));
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&old_manifest));
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&old_manifest));
 
     next_manifest.flags = 0;
     next_manifest.manifest_id = 12;
@@ -10276,10 +10276,10 @@ test_term_cow_external_replace_patch(void)
     next_manifest.segments[0].first_document_slot = 0;
     next_manifest.segments[0].document_slot_count = 3;
     next_manifest.segments[0].flags =
-        II42_SEGMENT_FLAG_SEALED |
-        II42_SEGMENT_FLAG_LEXICAL;
+        EVOKE_SEGMENT_FLAG_SEALED |
+        EVOKE_SEGMENT_FLAG_LEXICAL;
 
-    ASSERT_STATUS_OK(ii42_term_directory_replace_payloads(
+    ASSERT_STATUS_OK(evoke_term_directory_replace_payloads(
         &old_directory,
         &old_manifest,
         &next_manifest,
@@ -10288,7 +10288,7 @@ test_term_cow_external_replace_patch(void)
         &replacement_payload,
         &expected_directory
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_build_external_replace_patch(
+    ASSERT_STATUS_OK(evoke_term_cow_build_external_replace_patch(
         &ancestor.root,
         &old_manifest,
         &next_manifest,
@@ -10304,7 +10304,7 @@ test_term_cow_external_replace_patch(void)
     ASSERT_TRUE(stats.changed_terms == 5);
     ASSERT_TRUE(stats.changed_leaves == 5);
     ASSERT_TRUE(stats.written_leaves == 5);
-    ASSERT_TRUE(stats.written_nodes == II42_TERM_COW_RADIX_LEVELS);
+    ASSERT_TRUE(stats.written_nodes == EVOKE_TERM_COW_RADIX_LEVELS);
     assert_retired_ranges(
         patch.retired_ranges,
         patch.retired_range_count,
@@ -10324,20 +10324,20 @@ test_term_cow_external_replace_patch(void)
     next_manifest.segments[0].payload_owner_manifest_id =
         next_manifest.manifest_id;
     next_manifest.flags =
-        II42_SEGMENT_MANIFEST_FLAG_COW_TERM_DIRECTORY |
-        II42_SEGMENT_MANIFEST_FLAG_DOCUMENT_DIRECTORY;
-    ASSERT_STATUS_OK(ii42_term_cow_ref_as_segment_object_ref(
+        EVOKE_SEGMENT_MANIFEST_FLAG_COW_TERM_DIRECTORY |
+        EVOKE_SEGMENT_MANIFEST_FLAG_DOCUMENT_DIRECTORY;
+    ASSERT_STATUS_OK(evoke_term_cow_ref_as_segment_object_ref(
         &patch.root,
         &next_manifest.term_directory
     ));
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&next_manifest));
-    ASSERT_STATUS_OK(ii42_term_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&next_manifest));
+    ASSERT_STATUS_OK(evoke_term_cow_validate_external(
         &patch.root,
         next_manifest.vocab_size,
         load_term_cow_composite_object,
         &composite_store
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_materialize_external(
+    ASSERT_STATUS_OK(evoke_term_cow_materialize_external(
         &patch.root,
         &next_manifest,
         load_term_cow_composite_object,
@@ -10370,20 +10370,20 @@ test_term_cow_external_replace_patch(void)
 
     initialize_test_object_ref(
         &fold_ref,
-        II42_SEGMENT_OBJECT_NEUTRAL_FOLD,
+        EVOKE_SEGMENT_OBJECT_NEUTRAL_FOLD,
         800,
         1,
         next_manifest.manifest_id,
         801
     );
-    ASSERT_STATUS_OK(ii42_term_cow_build_external_neutral_fold_patch(
+    ASSERT_STATUS_OK(evoke_term_cow_build_external_neutral_fold_patch(
         &ancestor.root,
         &old_manifest,
         next_manifest.manifest_id,
         17,
         &fold_ref,
         old_manifest.max_sequence,
-        II42_TERM_COW_NEUTRAL_FOLD_MAJOR,
+        EVOKE_TERM_COW_NEUTRAL_FOLD_MAJOR,
         load_term_cow_fake_object,
         &ancestor_store,
         &fold_patch,
@@ -10400,11 +10400,11 @@ test_term_cow_external_replace_patch(void)
     );
     folded_manifest.manifest_id = next_manifest.manifest_id;
     folded_manifest.parent_manifest_id = old_manifest.manifest_id;
-    ASSERT_STATUS_OK(ii42_term_cow_ref_as_segment_object_ref(
+    ASSERT_STATUS_OK(evoke_term_cow_ref_as_segment_object_ref(
         &fold_patch.root,
         &folded_manifest.term_directory
     ));
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(
         &folded_manifest
     ));
 
@@ -10426,7 +10426,7 @@ test_term_cow_external_replace_patch(void)
     folded_source_store.ancestor.tree = &ancestor;
     folded_source_store.patch.tree = &fold_patch;
     ASSERT_STATUS_OK(
-        ii42_term_cow_replace_fold_preflight_external(
+        evoke_term_cow_replace_fold_preflight_external(
             &fold_patch.root,
             &folded_manifest,
             0,
@@ -10441,7 +10441,7 @@ test_term_cow_external_replace_patch(void)
     ASSERT_TRUE(fold_safe);
     ASSERT_TRUE(conflict_term_id == UINT32_MAX);
 
-    ASSERT_STATUS_OK(ii42_term_cow_build_external_replace_patch(
+    ASSERT_STATUS_OK(evoke_term_cow_build_external_replace_patch(
         &fold_patch.root,
         &folded_manifest,
         &folded_next_manifest,
@@ -10459,24 +10459,24 @@ test_term_cow_external_replace_patch(void)
         folded_next_manifest.manifest_id,
         &next_block
     );
-    ASSERT_STATUS_OK(ii42_term_cow_ref_as_segment_object_ref(
+    ASSERT_STATUS_OK(evoke_term_cow_ref_as_segment_object_ref(
         &folded_replace_patch.root,
         &folded_next_manifest.term_directory
     ));
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(
         &folded_next_manifest
     ));
     folded_result_store.layer_count = 3;
     folded_result_store.layers[0].tree = &folded_replace_patch;
     folded_result_store.layers[1].tree = &fold_patch;
     folded_result_store.layers[2].tree = &ancestor;
-    ASSERT_STATUS_OK(ii42_term_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_term_cow_validate_external(
         &folded_replace_patch.root,
         folded_next_manifest.vocab_size,
         load_term_cow_layered_object,
         &folded_result_store
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_lookup_external(
+    ASSERT_STATUS_OK(evoke_term_cow_lookup_external(
         &folded_replace_patch.root,
         folded_next_manifest.vocab_size,
         17,
@@ -10495,9 +10495,9 @@ test_term_cow_external_replace_patch(void)
 
     free(materialized_frequencies);
     materialized_frequencies = NULL;
-    ii42_term_directory_free(&materialized_directory);
-    ii42_term_directory_init(&materialized_directory);
-    ASSERT_STATUS_OK(ii42_term_cow_materialize_external(
+    evoke_term_directory_free(&materialized_directory);
+    evoke_term_directory_init(&materialized_directory);
+    ASSERT_STATUS_OK(evoke_term_cow_materialize_external(
         &folded_replace_patch.root,
         &folded_next_manifest,
         load_term_cow_layered_object,
@@ -10521,20 +10521,20 @@ test_term_cow_external_replace_patch(void)
 
     initialize_test_object_ref(
         &prefix_fold_ref,
-        II42_SEGMENT_OBJECT_NEUTRAL_FOLD,
+        EVOKE_SEGMENT_OBJECT_NEUTRAL_FOLD,
         810,
         1,
         next_manifest.manifest_id,
         811
     );
-    ASSERT_STATUS_OK(ii42_term_cow_build_external_neutral_fold_patch(
+    ASSERT_STATUS_OK(evoke_term_cow_build_external_neutral_fold_patch(
         &ancestor.root,
         &old_manifest,
         next_manifest.manifest_id,
         17,
         &prefix_fold_ref,
         old_manifest.segments[0].max_sequence,
-        II42_TERM_COW_NEUTRAL_FOLD_MAJOR,
+        EVOKE_TERM_COW_NEUTRAL_FOLD_MAJOR,
         load_term_cow_fake_object,
         &ancestor_store,
         &prefix_fold_patch,
@@ -10545,11 +10545,11 @@ test_term_cow_external_replace_patch(void)
         next_manifest.manifest_id,
         &next_block
     );
-    ASSERT_STATUS_OK(ii42_term_cow_ref_as_segment_object_ref(
+    ASSERT_STATUS_OK(evoke_term_cow_ref_as_segment_object_ref(
         &prefix_fold_patch.root,
         &folded_manifest.term_directory
     ));
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(
         &folded_manifest
     ));
     prefix_source_store.ancestor.tree = &ancestor;
@@ -10563,20 +10563,20 @@ test_term_cow_external_replace_patch(void)
     minor_manifest.parent_manifest_id = folded_manifest.manifest_id;
     initialize_test_object_ref(
         &minor_fold_ref,
-        II42_SEGMENT_OBJECT_NEUTRAL_FOLD,
+        EVOKE_SEGMENT_OBJECT_NEUTRAL_FOLD,
         820,
         1,
         minor_manifest.manifest_id,
         821
     );
-    ASSERT_STATUS_OK(ii42_term_cow_build_external_neutral_fold_patch(
+    ASSERT_STATUS_OK(evoke_term_cow_build_external_neutral_fold_patch(
         &prefix_fold_patch.root,
         &folded_manifest,
         minor_manifest.manifest_id,
         17,
         &minor_fold_ref,
         old_manifest.segments[1].max_sequence,
-        II42_TERM_COW_NEUTRAL_FOLD_MINOR,
+        EVOKE_TERM_COW_NEUTRAL_FOLD_MINOR,
         load_term_cow_composite_object,
         &prefix_source_store,
         &minor_fold_patch,
@@ -10587,24 +10587,24 @@ test_term_cow_external_replace_patch(void)
         minor_manifest.manifest_id,
         &next_block
     );
-    ASSERT_STATUS_OK(ii42_term_cow_ref_as_segment_object_ref(
+    ASSERT_STATUS_OK(evoke_term_cow_ref_as_segment_object_ref(
         &minor_fold_patch.root,
         &minor_manifest.term_directory
     ));
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(
         &minor_manifest
     ));
     minor_result_store.layer_count = 3;
     minor_result_store.layers[0].tree = &minor_fold_patch;
     minor_result_store.layers[1].tree = &prefix_fold_patch;
     minor_result_store.layers[2].tree = &ancestor;
-    ASSERT_STATUS_OK(ii42_term_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_term_cow_validate_external(
         &minor_fold_patch.root,
         minor_manifest.vocab_size,
         load_term_cow_layered_object,
         &minor_result_store
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_lookup_external(
+    ASSERT_STATUS_OK(evoke_term_cow_lookup_external(
         &minor_fold_patch.root,
         minor_manifest.vocab_size,
         17,
@@ -10615,7 +10615,7 @@ test_term_cow_external_replace_patch(void)
     ASSERT_TRUE(minor_record.extent_count == 0);
     ASSERT_TRUE(
         (minor_record.flags &
-         II42_TERM_COW_RECORD_FLAG_NEUTRAL_MINOR_FOLD) != 0
+         EVOKE_TERM_COW_RECORD_FLAG_NEUTRAL_MINOR_FOLD) != 0
     );
     ASSERT_TRUE(
         minor_record.neutral_fold_coverage ==
@@ -10645,14 +10645,14 @@ test_term_cow_external_replace_patch(void)
         minor_manifest.segments[1].max_sequence !=
             minor_record.neutral_minor_fold_coverage
     );
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(&minor_manifest));
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(&minor_manifest));
     free(fold_states);
     fold_states = NULL;
     free(materialized_frequencies);
     materialized_frequencies = NULL;
-    ii42_term_directory_free(&materialized_directory);
-    ii42_term_directory_init(&materialized_directory);
-    ASSERT_STATUS_OK(ii42_term_cow_materialize_external(
+    evoke_term_directory_free(&materialized_directory);
+    evoke_term_directory_init(&materialized_directory);
+    ASSERT_STATUS_OK(evoke_term_cow_materialize_external(
         &minor_fold_patch.root,
         &minor_manifest,
         load_term_cow_layered_object,
@@ -10688,20 +10688,20 @@ test_term_cow_external_replace_patch(void)
     promoted_manifest.parent_manifest_id = minor_manifest.manifest_id;
     initialize_test_object_ref(
         &promoted_fold_ref,
-        II42_SEGMENT_OBJECT_NEUTRAL_FOLD,
+        EVOKE_SEGMENT_OBJECT_NEUTRAL_FOLD,
         830,
         1,
         promoted_manifest.manifest_id,
         831
     );
-    ASSERT_STATUS_OK(ii42_term_cow_build_external_neutral_fold_patch(
+    ASSERT_STATUS_OK(evoke_term_cow_build_external_neutral_fold_patch(
         &minor_fold_patch.root,
         &minor_manifest,
         promoted_manifest.manifest_id,
         17,
         &promoted_fold_ref,
         minor_record.neutral_minor_fold_coverage,
-        II42_TERM_COW_NEUTRAL_FOLD_MAJOR,
+        EVOKE_TERM_COW_NEUTRAL_FOLD_MAJOR,
         load_term_cow_layered_object,
         &minor_result_store,
         &promoted_fold_patch,
@@ -10712,11 +10712,11 @@ test_term_cow_external_replace_patch(void)
         promoted_manifest.manifest_id,
         &next_block
     );
-    ASSERT_STATUS_OK(ii42_term_cow_ref_as_segment_object_ref(
+    ASSERT_STATUS_OK(evoke_term_cow_ref_as_segment_object_ref(
         &promoted_fold_patch.root,
         &promoted_manifest.term_directory
     ));
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(
         &promoted_manifest
     ));
     promoted_result_store.layer_count = 4;
@@ -10724,13 +10724,13 @@ test_term_cow_external_replace_patch(void)
     promoted_result_store.layers[1].tree = &minor_fold_patch;
     promoted_result_store.layers[2].tree = &prefix_fold_patch;
     promoted_result_store.layers[3].tree = &ancestor;
-    ASSERT_STATUS_OK(ii42_term_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_term_cow_validate_external(
         &promoted_fold_patch.root,
         promoted_manifest.vocab_size,
         load_term_cow_layered_object,
         &promoted_result_store
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_lookup_external(
+    ASSERT_STATUS_OK(evoke_term_cow_lookup_external(
         &promoted_fold_patch.root,
         promoted_manifest.vocab_size,
         17,
@@ -10741,7 +10741,7 @@ test_term_cow_external_replace_patch(void)
     ASSERT_TRUE(promoted_record.extent_count == 0);
     ASSERT_TRUE(
         (promoted_record.flags &
-         II42_TERM_COW_RECORD_FLAG_NEUTRAL_MINOR_FOLD) == 0
+         EVOKE_TERM_COW_RECORD_FLAG_NEUTRAL_MINOR_FOLD) == 0
     );
     ASSERT_TRUE(
         promoted_record.neutral_fold_coverage ==
@@ -10759,7 +10759,7 @@ test_term_cow_external_replace_patch(void)
     fold_safe = true;
     conflict_term_id = UINT32_MAX;
     ASSERT_STATUS_OK(
-        ii42_term_cow_replace_fold_preflight_external(
+        evoke_term_cow_replace_fold_preflight_external(
             &prefix_fold_patch.root,
             &folded_manifest,
             0,
@@ -10783,13 +10783,13 @@ test_term_cow_external_replace_patch(void)
     straddling_manifest.segments[1].min_sequence++;
     straddling_manifest.segments[1].max_sequence++;
     straddling_manifest.max_sequence++;
-    ASSERT_STATUS_OK(ii42_segment_manifest_validate(
+    ASSERT_STATUS_OK(evoke_segment_manifest_validate(
         &straddling_manifest
     ));
     fold_safe = true;
     conflict_term_id = UINT32_MAX;
     ASSERT_STATUS_OK(
-        ii42_term_cow_replace_fold_preflight_external(
+        evoke_term_cow_replace_fold_preflight_external(
             &prefix_fold_patch.root,
             &straddling_manifest,
             0,
@@ -10824,7 +10824,7 @@ test_term_cow_external_replace_patch(void)
     fold_safe = true;
     conflict_term_id = UINT32_MAX;
     ASSERT_STATUS_OK(
-        ii42_term_cow_replace_fold_preflight_external(
+        evoke_term_cow_replace_fold_preflight_external(
             &prefix_fold_patch.root,
             &coverage_only_manifest,
             0,
@@ -10838,7 +10838,7 @@ test_term_cow_external_replace_patch(void)
     );
     ASSERT_TRUE(fold_safe);
     ASSERT_TRUE(conflict_term_id == UINT32_MAX);
-    ASSERT_TRUE(ii42_term_cow_build_external_replace_patch(
+    ASSERT_TRUE(evoke_term_cow_build_external_replace_patch(
         &prefix_fold_patch.root,
         &folded_manifest,
         &folded_next_manifest,
@@ -10850,74 +10850,74 @@ test_term_cow_external_replace_patch(void)
         &prefix_source_store,
         &rejected_patch,
         &stats
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     free(fold_states);
     free(materialized_frequencies);
-    ii42_term_cow_tree_free(&rejected_patch);
-    ii42_term_cow_tree_free(&folded_replace_patch);
-    ii42_term_cow_tree_free(&promoted_fold_patch);
-    ii42_term_cow_tree_free(&minor_fold_patch);
-    ii42_term_cow_tree_free(&prefix_fold_patch);
-    ii42_term_cow_tree_free(&fold_patch);
-    ii42_term_cow_tree_free(&patch);
-    ii42_term_cow_tree_free(&ancestor);
-    ii42_term_directory_free(&materialized_directory);
-    ii42_term_directory_free(&expected_directory);
-    ii42_term_directory_free(&old_directory);
-    ii42_term_directory_free(&first_directory);
-    ii42_segment_manifest_free(&folded_next_manifest);
-    ii42_segment_manifest_free(&folded_manifest);
-    ii42_segment_manifest_free(&coverage_only_manifest);
-    ii42_segment_manifest_free(&straddling_manifest);
-    ii42_segment_manifest_free(&promoted_manifest);
-    ii42_segment_manifest_free(&minor_manifest);
-    ii42_segment_manifest_free(&next_manifest);
-    ii42_segment_manifest_free(&old_manifest);
-    ii42_segment_manifest_free(&first_manifest);
+    evoke_term_cow_tree_free(&rejected_patch);
+    evoke_term_cow_tree_free(&folded_replace_patch);
+    evoke_term_cow_tree_free(&promoted_fold_patch);
+    evoke_term_cow_tree_free(&minor_fold_patch);
+    evoke_term_cow_tree_free(&prefix_fold_patch);
+    evoke_term_cow_tree_free(&fold_patch);
+    evoke_term_cow_tree_free(&patch);
+    evoke_term_cow_tree_free(&ancestor);
+    evoke_term_directory_free(&materialized_directory);
+    evoke_term_directory_free(&expected_directory);
+    evoke_term_directory_free(&old_directory);
+    evoke_term_directory_free(&first_directory);
+    evoke_segment_manifest_free(&folded_next_manifest);
+    evoke_segment_manifest_free(&folded_manifest);
+    evoke_segment_manifest_free(&coverage_only_manifest);
+    evoke_segment_manifest_free(&straddling_manifest);
+    evoke_segment_manifest_free(&promoted_manifest);
+    evoke_segment_manifest_free(&minor_manifest);
+    evoke_segment_manifest_free(&next_manifest);
+    evoke_segment_manifest_free(&old_manifest);
+    evoke_segment_manifest_free(&first_manifest);
 }
 
 static void
 test_term_cow_tree_incremental_append(void)
 {
-    ii42_segment_manifest old_manifest;
-    ii42_segment_manifest next_manifest;
-    ii42_term_directory old_directory;
-    ii42_term_directory expected_directory;
-    ii42_term_directory materialized_directory;
-    ii42_term_directory external_directory;
-    ii42_term_cow_tree tree;
-    ii42_term_cow_update_stats stats;
-    ii42_term_cow_ref old_root;
-    ii42_term_cow_record old_record;
-    ii42_term_cow_record next_record;
-    ii42_segment_term_run new_runs[] = {
+    evoke_segment_manifest old_manifest;
+    evoke_segment_manifest next_manifest;
+    evoke_term_directory old_directory;
+    evoke_term_directory expected_directory;
+    evoke_term_directory materialized_directory;
+    evoke_term_directory external_directory;
+    evoke_term_cow_tree tree;
+    evoke_term_cow_update_stats stats;
+    evoke_term_cow_ref old_root;
+    evoke_term_cow_record old_record;
+    evoke_term_cow_record next_record;
+    evoke_segment_term_run new_runs[] = {
         {
             .term_id = 17,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 0,
             .posting_count = 1
         },
         {
             .term_id = 50,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 1,
             .posting_count = 1
         },
         {
             .term_id = 70,
-            .kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL,
+            .kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL,
             .posting_offset = 2,
             .posting_count = 1
         }
     };
     uint32_t new_indices[] = {0, 0, 0};
-    ii42_posting_value new_values[] = {
+    evoke_posting_value new_values[] = {
         {.term_frequency = 1},
         {.term_frequency = 1},
         {.term_frequency = 1}
     };
-    ii42_segment_payload_view new_payload = {
+    evoke_segment_payload_view new_payload = {
         .segment_id = 101,
         .posting_count = 3,
         .runs = new_runs,
@@ -10934,18 +10934,18 @@ test_term_cow_tree_incremental_append(void)
     size_t size = 0;
     size_t old_object_count;
     uint32_t next_block = 200;
-    ii42_term_cow_object restored;
-    const ii42_term_cow_ref *leaf_ref = NULL;
+    evoke_term_cow_object restored;
+    const evoke_term_cow_ref *leaf_ref = NULL;
 
     initialize_term_cow_test_manifests(
         &old_manifest,
         &next_manifest
     );
-    ii42_term_directory_init(&old_directory);
-    ii42_term_directory_init(&expected_directory);
-    ii42_term_directory_init(&materialized_directory);
-    ii42_term_directory_init(&external_directory);
-    ii42_term_cow_tree_init(&tree);
+    evoke_term_directory_init(&old_directory);
+    evoke_term_directory_init(&expected_directory);
+    evoke_term_directory_init(&materialized_directory);
+    evoke_term_directory_init(&external_directory);
+    evoke_term_cow_tree_init(&tree);
     old_directory.vocab_size = old_manifest.vocab_size;
     old_directory.extent_count = 3;
     old_directory.term_offsets = calloc(
@@ -10970,7 +10970,7 @@ test_term_cow_tree_incremental_append(void)
             {
                 old_directory.extents[extent_cursor].segment_index = 0;
                 old_directory.extents[extent_cursor].kind =
-                    II42_POSTING_EXTENT_LEXICAL_NEUTRAL;
+                    EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL;
                 old_directory.extents[extent_cursor].posting_offset =
                     extent_cursor;
                 old_directory.extents[extent_cursor].posting_count = 1;
@@ -10981,20 +10981,20 @@ test_term_cow_tree_incremental_append(void)
             extent_cursor;
         ASSERT_TRUE(extent_cursor == old_directory.extent_count);
     }
-    ASSERT_STATUS_OK(ii42_term_directory_validate(
+    ASSERT_STATUS_OK(evoke_term_directory_validate(
         &old_directory,
         &old_manifest
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_tree_build(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_build(
         &old_directory,
         &old_manifest,
         NULL,
         &tree
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_tree_validate(&tree));
+    ASSERT_STATUS_OK(evoke_term_cow_tree_validate(&tree));
     old_root = tree.root;
     old_object_count = tree.object_count;
-    ASSERT_STATUS_OK(ii42_term_cow_tree_lookup(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_lookup(
         &tree,
         17,
         &old_record
@@ -11002,7 +11002,7 @@ test_term_cow_tree_incremental_append(void)
     ASSERT_TRUE(old_record.raw_document_frequency == 1);
     ASSERT_TRUE(old_record.extent_count == 1);
     ASSERT_TRUE(old_record.extents[0].segment_id == 100);
-    ASSERT_STATUS_OK(ii42_term_cow_tree_lookup(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_lookup(
         &tree,
         50,
         &old_record
@@ -11010,7 +11010,7 @@ test_term_cow_tree_incremental_append(void)
     ASSERT_TRUE(old_record.raw_document_frequency == 0);
     ASSERT_TRUE(old_record.extent_count == 0);
 
-    ASSERT_STATUS_OK(ii42_term_cow_tree_append_payload(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_append_payload(
         &tree,
         &old_manifest,
         &next_manifest,
@@ -11022,14 +11022,14 @@ test_term_cow_tree_incremental_append(void)
     ASSERT_TRUE(stats.written_leaves == 3);
     ASSERT_TRUE(
         stats.written_nodes ==
-        3 * II42_TERM_COW_RADIX_LEVELS
+        3 * EVOKE_TERM_COW_RADIX_LEVELS
     );
     ASSERT_TRUE(tree.object_count == old_object_count + 18);
     ASSERT_TRUE(stats.written_bytes > 0);
     ASSERT_TRUE(tree.root.object_id != old_root.object_id);
-    ASSERT_STATUS_OK(ii42_term_cow_tree_validate(&tree));
+    ASSERT_STATUS_OK(evoke_term_cow_tree_validate(&tree));
 
-    ASSERT_STATUS_OK(ii42_term_cow_tree_lookup_at(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_lookup_at(
         &tree,
         &old_root,
         old_manifest.vocab_size,
@@ -11038,7 +11038,7 @@ test_term_cow_tree_incremental_append(void)
     ));
     ASSERT_TRUE(old_record.raw_document_frequency == 1);
     ASSERT_TRUE(old_record.extent_count == 1);
-    ASSERT_STATUS_OK(ii42_term_cow_tree_lookup_at(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_lookup_at(
         &tree,
         &old_root,
         old_manifest.vocab_size,
@@ -11048,7 +11048,7 @@ test_term_cow_tree_incremental_append(void)
     ASSERT_TRUE(old_record.raw_document_frequency == 0);
     ASSERT_TRUE(old_record.extent_count == 0);
 
-    ASSERT_STATUS_OK(ii42_term_cow_tree_lookup(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_lookup(
         &tree,
         17,
         &next_record
@@ -11057,7 +11057,7 @@ test_term_cow_tree_incremental_append(void)
     ASSERT_TRUE(next_record.extent_count == 2);
     ASSERT_TRUE(next_record.extents[0].segment_id == 100);
     ASSERT_TRUE(next_record.extents[1].segment_id == 101);
-    ASSERT_STATUS_OK(ii42_term_cow_tree_lookup(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_lookup(
         &tree,
         50,
         &next_record
@@ -11066,14 +11066,14 @@ test_term_cow_tree_incremental_append(void)
     ASSERT_TRUE(next_record.extent_count == 1);
     ASSERT_TRUE(next_record.extents[0].segment_id == 101);
 
-    ASSERT_STATUS_OK(ii42_term_directory_append_payload(
+    ASSERT_STATUS_OK(evoke_term_directory_append_payload(
         &old_directory,
         &old_manifest,
         &next_manifest,
         &new_payload,
         &expected_directory
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_tree_materialize_flat(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_materialize_flat(
         &tree,
         &next_manifest,
         &materialized_directory,
@@ -11104,20 +11104,20 @@ test_term_cow_tree_incremental_append(void)
         next_manifest.vocab_size
     );
 
-    ASSERT_STATUS_OK(ii42_term_cow_tree_object_serialize(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_object_serialize(
         &tree,
         &tree.root,
         &bytes,
         &size
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_object_deserialize(
+    ASSERT_STATUS_OK(evoke_term_cow_object_deserialize(
         bytes,
         size,
         &restored
     ));
     ASSERT_TRUE(restored.ref.object_id == tree.root.object_id);
     ASSERT_TRUE(
-        restored.ref.kind == II42_TERM_COW_OBJECT_NODE
+        restored.ref.kind == EVOKE_TERM_COW_OBJECT_NODE
     );
     free(bytes);
     bytes = NULL;
@@ -11126,26 +11126,26 @@ test_term_cow_tree_incremental_append(void)
          object_index--)
     {
         if (tree.objects[object_index - 1].ref.kind ==
-            II42_TERM_COW_OBJECT_LEAF)
+            EVOKE_TERM_COW_OBJECT_LEAF)
         {
             leaf_ref = &tree.objects[object_index - 1].ref;
             break;
         }
     }
     ASSERT_TRUE(leaf_ref != NULL);
-    ASSERT_STATUS_OK(ii42_term_cow_tree_object_serialize(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_object_serialize(
         &tree,
         leaf_ref,
         &bytes,
         &size
     ));
-    ASSERT_STATUS_OK(ii42_term_cow_object_deserialize(
+    ASSERT_STATUS_OK(evoke_term_cow_object_deserialize(
         bytes,
         size,
         &restored
     ));
     ASSERT_TRUE(
-        restored.ref.kind == II42_TERM_COW_OBJECT_LEAF
+        restored.ref.kind == EVOKE_TERM_COW_OBJECT_LEAF
     );
     {
         const size_t header_size = 64;
@@ -11158,12 +11158,12 @@ test_term_cow_tree_incremental_append(void)
             (size - fixed_size) /
             ((size_t) record_count * extent_size);
         size_t copied_extent_count = stored_extent_count <
-            II42_TERM_DIRECTORY_LEGACY_MAX_EXTENTS_PER_TERM
+            EVOKE_TERM_DIRECTORY_LEGACY_MAX_EXTENTS_PER_TERM
             ? stored_extent_count
-            : II42_TERM_DIRECTORY_LEGACY_MAX_EXTENTS_PER_TERM;
+            : EVOKE_TERM_DIRECTORY_LEGACY_MAX_EXTENTS_PER_TERM;
         size_t legacy_size = fixed_size +
             (size_t) record_count *
-                II42_TERM_DIRECTORY_LEGACY_MAX_EXTENTS_PER_TERM *
+                EVOKE_TERM_DIRECTORY_LEGACY_MAX_EXTENTS_PER_TERM *
                 extent_size;
         uint8_t *legacy = calloc(1, legacy_size);
 
@@ -11176,7 +11176,7 @@ test_term_cow_tree_incremental_append(void)
             memcpy(
                 legacy + fixed_size +
                     (size_t) record_index *
-                        II42_TERM_DIRECTORY_LEGACY_MAX_EXTENTS_PER_TERM *
+                        EVOKE_TERM_DIRECTORY_LEGACY_MAX_EXTENTS_PER_TERM *
                         extent_size,
                 bytes + fixed_size +
                     (size_t) record_index *
@@ -11191,13 +11191,13 @@ test_term_cow_tree_incremental_append(void)
             legacy + 56,
             test_term_cow_checksum(legacy, legacy_size)
         );
-        ASSERT_STATUS_OK(ii42_term_cow_object_deserialize(
+        ASSERT_STATUS_OK(evoke_term_cow_object_deserialize(
             legacy,
             legacy_size,
             &restored
         ));
         ASSERT_TRUE(
-            restored.ref.kind == II42_TERM_COW_OBJECT_LEAF
+            restored.ref.kind == EVOKE_TERM_COW_OBJECT_LEAF
         );
         free(legacy);
     }
@@ -11210,18 +11210,18 @@ test_term_cow_tree_incremental_append(void)
         mutated + 56,
         test_term_cow_checksum(mutated, size)
     );
-    ASSERT_TRUE(ii42_term_cow_object_deserialize(
+    ASSERT_TRUE(evoke_term_cow_object_deserialize(
         mutated,
         size,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     memcpy(mutated, bytes, size);
     mutated[size - 1] ^= 0x1U;
-    ASSERT_TRUE(ii42_term_cow_object_deserialize(
+    ASSERT_TRUE(evoke_term_cow_object_deserialize(
         mutated,
         size,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     free(bytes);
     bytes = NULL;
@@ -11232,25 +11232,25 @@ test_term_cow_tree_incremental_append(void)
          object_id <= tree.object_count;
          object_id++)
     {
-        ii42_segment_object_ref storage_ref;
+        evoke_segment_object_ref storage_ref;
         uint32_t page_count = 0;
 
         ASSERT_STATUS_OK(
-            ii42_term_cow_tree_prepare_object_for_storage(
+            evoke_term_cow_tree_prepare_object_for_storage(
                 &tree,
                 object_id,
                 &bytes,
                 &size
             )
         );
-        ASSERT_STATUS_OK(ii42_segment_page_count_required(
+        ASSERT_STATUS_OK(evoke_segment_page_count_required(
             size,
             8192,
             &page_count
         ));
         memset(&storage_ref, 0, sizeof(storage_ref));
         storage_ref.object_kind =
-            II42_SEGMENT_OBJECT_TERM_DIRECTORY;
+            EVOKE_SEGMENT_OBJECT_TERM_DIRECTORY;
         storage_ref.start_block = next_block;
         storage_ref.page_count = page_count;
         storage_ref.object_id = object_id;
@@ -11258,8 +11258,8 @@ test_term_cow_tree_incremental_append(void)
             next_manifest.manifest_id;
         storage_ref.object_bytes = size;
         storage_ref.object_checksum =
-            ii42_segment_blob_checksum(bytes, size);
-        ASSERT_STATUS_OK(ii42_term_cow_tree_bind_object_storage(
+            evoke_segment_blob_checksum(bytes, size);
+        ASSERT_STATUS_OK(evoke_term_cow_tree_bind_object_storage(
             &tree,
             object_id,
             &storage_ref
@@ -11268,8 +11268,8 @@ test_term_cow_tree_incremental_append(void)
         free(bytes);
         bytes = NULL;
     }
-    ASSERT_STATUS_OK(ii42_term_cow_tree_validate(&tree));
-    ASSERT_STATUS_OK(ii42_term_cow_tree_lookup(
+    ASSERT_STATUS_OK(evoke_term_cow_tree_validate(&tree));
+    ASSERT_STATUS_OK(evoke_term_cow_tree_lookup(
         &tree,
         17,
         &next_record
@@ -11281,7 +11281,7 @@ test_term_cow_tree_incremental_append(void)
         };
         uint32_t reachable_object_count;
 
-        ASSERT_STATUS_OK(ii42_term_cow_lookup_external(
+        ASSERT_STATUS_OK(evoke_term_cow_lookup_external(
             &tree.root,
             tree.vocab_size,
             17,
@@ -11291,11 +11291,11 @@ test_term_cow_tree_incremental_append(void)
         ));
         ASSERT_TRUE(
             store.load_count ==
-            II42_TERM_COW_RADIX_LEVELS + 1
+            EVOKE_TERM_COW_RADIX_LEVELS + 1
         );
         ASSERT_TRUE(next_record.raw_document_frequency == 2);
         store.load_count = 0;
-        ASSERT_STATUS_OK(ii42_term_cow_validate_external(
+        ASSERT_STATUS_OK(evoke_term_cow_validate_external(
             &tree.root,
             tree.vocab_size,
             load_term_cow_fake_object,
@@ -11305,7 +11305,7 @@ test_term_cow_tree_incremental_append(void)
         ASSERT_TRUE(reachable_object_count > 0);
         ASSERT_TRUE(reachable_object_count <= tree.object_count);
         store.load_count = 0;
-        ASSERT_STATUS_OK(ii42_term_cow_materialize_external(
+        ASSERT_STATUS_OK(evoke_term_cow_materialize_external(
             &tree.root,
             &next_manifest,
             load_term_cow_fake_object,
@@ -11338,24 +11338,24 @@ test_term_cow_tree_incremental_append(void)
         );
         store.load_count = 0;
         store.corrupt_object_id = tree.root.object_id;
-        ASSERT_TRUE(ii42_term_cow_lookup_external(
+        ASSERT_TRUE(evoke_term_cow_lookup_external(
             &tree.root,
             tree.vocab_size,
             17,
             load_term_cow_fake_object,
             &store,
             &next_record
-        ) == II42_ERR_FORMAT);
+        ) == EVOKE_ERR_FORMAT);
         ASSERT_TRUE(store.load_count == 1);
     }
     {
-        ii42_segment_object_ref storage_ref;
+        evoke_segment_object_ref storage_ref;
 
-        ASSERT_STATUS_OK(ii42_term_cow_ref_as_segment_object_ref(
+        ASSERT_STATUS_OK(evoke_term_cow_ref_as_segment_object_ref(
             &tree.root,
             &storage_ref
         ));
-        ASSERT_STATUS_OK(ii42_term_cow_tree_object_serialize(
+        ASSERT_STATUS_OK(evoke_term_cow_tree_object_serialize(
             &tree,
             &tree.root,
             &bytes,
@@ -11363,14 +11363,14 @@ test_term_cow_tree_incremental_append(void)
         ));
         ASSERT_TRUE(
             storage_ref.object_checksum ==
-            ii42_segment_blob_checksum(bytes, size)
+            evoke_segment_blob_checksum(bytes, size)
         );
-        ASSERT_STATUS_OK(ii42_term_cow_object_deserialize(
+        ASSERT_STATUS_OK(evoke_term_cow_object_deserialize(
             bytes,
             size,
             &restored
         ));
-        ASSERT_STATUS_OK(ii42_term_cow_object_bind_storage(
+        ASSERT_STATUS_OK(evoke_term_cow_object_bind_storage(
             &restored,
             &storage_ref
         ));
@@ -11384,18 +11384,18 @@ test_term_cow_tree_incremental_append(void)
 
     free(materialized_frequencies);
     free(external_frequencies);
-    ii42_term_cow_tree_free(&tree);
-    ii42_term_directory_free(&external_directory);
-    ii42_term_directory_free(&materialized_directory);
-    ii42_term_directory_free(&expected_directory);
-    ii42_term_directory_free(&old_directory);
-    ii42_segment_manifest_free(&next_manifest);
-    ii42_segment_manifest_free(&old_manifest);
+    evoke_term_cow_tree_free(&tree);
+    evoke_term_directory_free(&external_directory);
+    evoke_term_directory_free(&materialized_directory);
+    evoke_term_directory_free(&expected_directory);
+    evoke_term_directory_free(&old_directory);
+    evoke_segment_manifest_free(&next_manifest);
+    evoke_segment_manifest_free(&old_manifest);
 }
 
 typedef struct document_cow_fake_store
 {
-    const ii42_document_cow_tree *tree;
+    const evoke_document_cow_tree *tree;
     uint64_t corrupt_object_id;
     uint32_t load_count;
 } document_cow_fake_store;
@@ -11406,60 +11406,60 @@ typedef struct document_cow_composite_store
     document_cow_fake_store patch;
 } document_cow_composite_store;
 
-static ii42_status
+static evoke_status
 count_document_cow_object(
     void *context,
-    const ii42_document_cow_object *object
+    const evoke_document_cow_object *object
 )
 {
     cow_visit_counts *counts = context;
 
     if (counts == NULL || object == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     counts->object_count++;
-    if (object->ref.kind == II42_DOCUMENT_COW_OBJECT_NODE)
+    if (object->ref.kind == EVOKE_DOCUMENT_COW_OBJECT_NODE)
     {
         counts->node_count++;
     }
-    else if (object->ref.kind == II42_DOCUMENT_COW_OBJECT_LEAF)
+    else if (object->ref.kind == EVOKE_DOCUMENT_COW_OBJECT_LEAF)
     {
         counts->leaf_count++;
     }
     else
     {
-        return II42_ERR_FORMAT;
+        return EVOKE_ERR_FORMAT;
     }
-    return II42_OK;
+    return EVOKE_OK;
 }
 
-static ii42_status
+static evoke_status
 load_document_cow_fake_object(
     void *context,
-    const ii42_document_cow_ref *ref,
-    ii42_document_cow_object *object_out
+    const evoke_document_cow_ref *ref,
+    evoke_document_cow_object *object_out
 )
 {
     document_cow_fake_store *store = context;
-    ii42_segment_object_ref storage_ref;
+    evoke_segment_object_ref storage_ref;
     uint8_t *bytes = NULL;
     size_t size = 0;
-    ii42_status status;
+    evoke_status status;
 
     if (store == NULL || store->tree == NULL ||
         ref == NULL || object_out == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     store->load_count++;
-    status = ii42_document_cow_tree_object_serialize(
+    status = evoke_document_cow_tree_object_serialize(
         store->tree,
         ref,
         &bytes,
         &size
     );
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
         return status;
     }
@@ -11467,42 +11467,42 @@ load_document_cow_fake_object(
     {
         bytes[size - 1] ^= UINT8_C(1);
     }
-    status = ii42_document_cow_object_deserialize(
+    status = evoke_document_cow_object_deserialize(
         bytes,
         size,
         object_out
     );
     free(bytes);
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
         return status;
     }
-    status = ii42_document_cow_ref_as_segment_object_ref(
+    status = evoke_document_cow_ref_as_segment_object_ref(
         ref,
         &storage_ref
     );
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
         return status;
     }
-    return ii42_document_cow_object_bind_storage(
+    return evoke_document_cow_object_bind_storage(
         object_out,
         &storage_ref
     );
 }
 
-static ii42_status
+static evoke_status
 load_document_cow_composite_object(
     void *context,
-    const ii42_document_cow_ref *ref,
-    ii42_document_cow_object *object_out
+    const evoke_document_cow_ref *ref,
+    evoke_document_cow_object *object_out
 )
 {
     document_cow_composite_store *store = context;
 
     if (store == NULL || ref == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     if (ref->owner_manifest_id ==
         store->patch.tree->root.owner_manifest_id)
@@ -11522,7 +11522,7 @@ load_document_cow_composite_object(
 
 static void
 bind_document_cow_test_tree(
-    ii42_document_cow_tree *tree,
+    evoke_document_cow_tree *tree,
     uint64_t owner_manifest_id,
     uint32_t *next_block
 )
@@ -11531,36 +11531,36 @@ bind_document_cow_test_tree(
          object_id < tree->next_object_id;
          object_id++)
     {
-        ii42_segment_object_ref storage_ref;
+        evoke_segment_object_ref storage_ref;
         uint8_t *bytes = NULL;
         size_t size = 0;
         uint32_t page_count = 0;
 
         ASSERT_STATUS_OK(
-            ii42_document_cow_tree_prepare_object_for_storage(
+            evoke_document_cow_tree_prepare_object_for_storage(
                 tree,
                 object_id,
                 &bytes,
                 &size
             )
         );
-        ASSERT_STATUS_OK(ii42_segment_page_count_required(
+        ASSERT_STATUS_OK(evoke_segment_page_count_required(
             size,
             8192,
             &page_count
         ));
         memset(&storage_ref, 0, sizeof(storage_ref));
         storage_ref.object_kind =
-            II42_SEGMENT_OBJECT_DOCUMENT_DIRECTORY;
+            EVOKE_SEGMENT_OBJECT_DOCUMENT_DIRECTORY;
         storage_ref.start_block = *next_block;
         storage_ref.page_count = page_count;
         storage_ref.object_id = object_id;
         storage_ref.owner_manifest_id = owner_manifest_id;
         storage_ref.object_bytes = size;
         storage_ref.object_checksum =
-            ii42_segment_blob_checksum(bytes, size);
+            evoke_segment_blob_checksum(bytes, size);
         ASSERT_STATUS_OK(
-            ii42_document_cow_tree_bind_object_storage(
+            evoke_document_cow_tree_bind_object_storage(
                 tree,
                 object_id,
                 &storage_ref
@@ -11573,7 +11573,7 @@ bind_document_cow_test_tree(
 
 static void
 initialize_document_cow_record(
-    ii42_document_cow_record *record,
+    evoke_document_cow_record *record,
     uint64_t document_slot,
     bool semantic_pending
 )
@@ -11585,15 +11585,15 @@ initialize_document_cow_record(
     record->version.heap_offset = 1;
     record->version.document_length = (uint32_t) document_slot + 3;
     record->version.flags =
-        II42_DOCUMENT_VERSION_FLAG_FROZEN_XID;
+        EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID;
     if (semantic_pending)
     {
         record->version.flags |=
-            II42_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING;
+            EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_PENDING;
         memset(
             record->version.semantic_input_fingerprint,
             (int) document_slot + 1,
-            II42_DOCUMENT_FINGERPRINT_BYTES
+            EVOKE_DOCUMENT_FINGERPRINT_BYTES
         );
     }
 }
@@ -11601,7 +11601,7 @@ initialize_document_cow_record(
 static bool
 document_cow_even_slot_predicate(
     void *context,
-    const ii42_document_cow_record *record
+    const evoke_document_cow_record *record
 )
 {
     (void) context;
@@ -11610,23 +11610,23 @@ document_cow_even_slot_predicate(
 
 static void
 initialize_complete_document_cow_record(
-    ii42_document_cow_record *record,
+    evoke_document_cow_record *record,
     uint64_t document_slot
 )
 {
     initialize_document_cow_record(record, document_slot, false);
     record->version.flags |=
-        II42_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE;
+        EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE;
     memset(
         record->version.semantic_input_fingerprint,
         (int) document_slot + 1,
-        II42_DOCUMENT_FINGERPRINT_BYTES
+        EVOKE_DOCUMENT_FINGERPRINT_BYTES
     );
 }
 
 static void
 complete_document_cow_record(
-    ii42_document_cow_record *record,
+    evoke_document_cow_record *record,
     uint64_t transition_sequence
 )
 {
@@ -11640,18 +11640,18 @@ complete_document_cow_record(
     record->semantic_state.transition_sequence =
         transition_sequence;
     record->semantic_state.flags =
-        II42_SEMANTIC_STATE_FLAG_COMPLETE |
-        II42_SEMANTIC_STATE_FLAG_FROZEN_XID;
+        EVOKE_SEMANTIC_STATE_FLAG_COMPLETE |
+        EVOKE_SEMANTIC_STATE_FLAG_FROZEN_XID;
     memcpy(
         record->semantic_state.semantic_input_fingerprint,
         record->version.semantic_input_fingerprint,
-        II42_DOCUMENT_FINGERPRINT_BYTES
+        EVOKE_DOCUMENT_FINGERPRINT_BYTES
     );
 }
 
 static void
 quarantine_document_cow_record(
-    ii42_document_cow_record *record,
+    evoke_document_cow_record *record,
     uint64_t transition_sequence,
     int64_t retry_after
 )
@@ -11671,57 +11671,57 @@ quarantine_document_cow_record(
     record->semantic_state.error_hash = UINT64_C(0x123456789abcdef0);
     record->semantic_state.failure_count = 1;
     record->semantic_state.flags =
-        II42_SEMANTIC_STATE_FLAG_QUARANTINED |
-        II42_SEMANTIC_STATE_FLAG_FROZEN_XID;
+        EVOKE_SEMANTIC_STATE_FLAG_QUARANTINED |
+        EVOKE_SEMANTIC_STATE_FLAG_FROZEN_XID;
     memcpy(
         record->semantic_state.semantic_input_fingerprint,
         record->version.semantic_input_fingerprint,
-        II42_DOCUMENT_FINGERPRINT_BYTES
+        EVOKE_DOCUMENT_FINGERPRINT_BYTES
     );
 }
 
 static void
 test_document_cow_record_identity_equality(void)
 {
-    ii42_document_cow_record source;
-    ii42_document_cow_record candidate;
+    evoke_document_cow_record source;
+    evoke_document_cow_record candidate;
 
     initialize_document_cow_record(&source, 7, true);
     source.lexical_residency = 3;
     source.semantic_residency = 2;
     source.event_residency = 1;
     candidate = source;
-    ASSERT_TRUE(ii42_document_cow_records_equal(&source, &candidate));
+    ASSERT_TRUE(evoke_document_cow_records_equal(&source, &candidate));
 
     candidate.version.born_sequence++;
-    ASSERT_TRUE(!ii42_document_cow_records_equal(&source, &candidate));
+    ASSERT_TRUE(!evoke_document_cow_records_equal(&source, &candidate));
     candidate = source;
     candidate.retirement.retirement_sequence = 99;
-    ASSERT_TRUE(!ii42_document_cow_records_equal(&source, &candidate));
+    ASSERT_TRUE(!evoke_document_cow_records_equal(&source, &candidate));
     candidate = source;
     candidate.semantic_state.transition_sequence = 100;
-    ASSERT_TRUE(!ii42_document_cow_records_equal(&source, &candidate));
+    ASSERT_TRUE(!evoke_document_cow_records_equal(&source, &candidate));
     candidate = source;
     candidate.event_residency++;
-    ASSERT_TRUE(!ii42_document_cow_records_equal(&source, &candidate));
-    ASSERT_TRUE(!ii42_document_cow_records_equal(NULL, &candidate));
+    ASSERT_TRUE(!evoke_document_cow_records_equal(&source, &candidate));
+    ASSERT_TRUE(!evoke_document_cow_records_equal(NULL, &candidate));
 }
 
 static void
 test_document_cow_tree_duplicate_object_guard(void)
 {
-    ii42_document_cow_record records[40];
-    ii42_document_cow_record found;
-    ii42_document_cow_tree tree;
-    ii42_document_cow_object saved_object;
+    evoke_document_cow_record records[40];
+    evoke_document_cow_record found;
+    evoke_document_cow_tree tree;
+    evoke_document_cow_object saved_object;
     uint64_t saved_object_id;
 
-    ii42_document_cow_tree_init(&tree);
+    evoke_document_cow_tree_init(&tree);
     for (uint64_t slot = 0; slot < 40; slot++)
     {
         initialize_document_cow_record(&records[slot], slot, false);
     }
-    ASSERT_STATUS_OK(ii42_document_cow_tree_build(
+    ASSERT_STATUS_OK(evoke_document_cow_tree_build(
         records,
         40,
         1,
@@ -11732,40 +11732,40 @@ test_document_cow_tree_duplicate_object_guard(void)
     saved_object = tree.objects[0];
     tree.objects[0] = tree.objects[tree.object_count - 1];
     tree.objects[tree.object_count - 1] = saved_object;
-    ASSERT_STATUS_OK(ii42_document_cow_tree_validate(&tree));
-    ASSERT_STATUS_OK(ii42_document_cow_tree_lookup(&tree, 0, &found));
+    ASSERT_STATUS_OK(evoke_document_cow_tree_validate(&tree));
+    ASSERT_STATUS_OK(evoke_document_cow_tree_lookup(&tree, 0, &found));
     ASSERT_TRUE(found.version.document_slot == 0);
 
     saved_object_id = tree.objects[2].ref.object_id;
     tree.objects[2].ref.object_id = tree.objects[0].ref.object_id;
     ASSERT_TRUE(
-        ii42_document_cow_tree_validate(&tree) == II42_ERR_FORMAT
+        evoke_document_cow_tree_validate(&tree) == EVOKE_ERR_FORMAT
     );
     tree.objects[2].ref.object_id = saved_object_id;
-    ASSERT_STATUS_OK(ii42_document_cow_tree_validate(&tree));
+    ASSERT_STATUS_OK(evoke_document_cow_tree_validate(&tree));
 
-    ii42_document_cow_tree_free(&tree);
+    evoke_document_cow_tree_free(&tree);
 }
 
 static void
 test_document_cow_pending_frontier_and_patch(void)
 {
-    ii42_document_cow_record records[40];
-    ii42_document_cow_record updates[6];
-    ii42_document_cow_record found;
-    ii42_document_cow_record old_record;
-    ii42_document_cow_record next_record;
-    ii42_document_cow_record range_records[32];
-    ii42_document_cow_record born_prefix[5];
-    ii42_document_cow_length_extrema length_extrema;
-    ii42_document_cow_born_prefix_stats born_stats;
-    ii42_document_cow_length_extrema *block_extrema = NULL;
+    evoke_document_cow_record records[40];
+    evoke_document_cow_record updates[6];
+    evoke_document_cow_record found;
+    evoke_document_cow_record old_record;
+    evoke_document_cow_record next_record;
+    evoke_document_cow_record range_records[32];
+    evoke_document_cow_record born_prefix[5];
+    evoke_document_cow_length_extrema length_extrema;
+    evoke_document_cow_born_prefix_stats born_stats;
+    evoke_document_cow_length_extrema *block_extrema = NULL;
     size_t block_extrema_count = 0;
     size_t born_prefix_count = 0;
-    ii42_document_cow_ref corrupt_root;
-    ii42_document_cow_tree ancestor;
-    ii42_document_cow_tree patch;
-    ii42_document_cow_update_stats stats;
+    evoke_document_cow_ref corrupt_root;
+    evoke_document_cow_tree ancestor;
+    evoke_document_cow_tree patch;
+    evoke_document_cow_update_stats stats;
     document_cow_fake_store ancestor_store;
     document_cow_composite_store composite;
     uint8_t *bytes = NULL;
@@ -11775,8 +11775,8 @@ test_document_cow_pending_frontier_and_patch(void)
     bool reusable = false;
     cow_visit_counts visit_counts = {0};
 
-    ii42_document_cow_tree_init(&ancestor);
-    ii42_document_cow_tree_init(&patch);
+    evoke_document_cow_tree_init(&ancestor);
+    evoke_document_cow_tree_init(&patch);
     memset(&ancestor_store, 0, sizeof(ancestor_store));
     memset(&composite, 0, sizeof(composite));
     for (uint64_t slot = 0; slot < 40; slot++)
@@ -11792,8 +11792,8 @@ test_document_cow_pending_frontier_and_patch(void)
     records[7].version.heap_offset = 0;
     records[7].version.document_length = 0;
     records[7].version.flags =
-        II42_DOCUMENT_VERSION_FLAG_FROZEN_XID |
-        II42_DOCUMENT_VERSION_FLAG_ABORTED_HOLE;
+        EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID |
+        EVOKE_DOCUMENT_VERSION_FLAG_ABORTED_HOLE;
     records[7].event_residency = 1;
     quarantine_document_cow_record(&records[18], 80, 100);
     quarantine_document_cow_record(&records[33], 81, 20);
@@ -11803,10 +11803,10 @@ test_document_cow_pending_frontier_and_patch(void)
     records[5].retirement.document_length =
         records[5].version.document_length;
     records[5].retirement.flags =
-        II42_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
+        EVOKE_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
     records[5].lexical_residency = 1;
 
-    ASSERT_STATUS_OK(ii42_document_cow_tree_build(
+    ASSERT_STATUS_OK(evoke_document_cow_tree_build(
         records,
         40,
         1,
@@ -11823,7 +11823,7 @@ test_document_cow_pending_frontier_and_patch(void)
         ancestor.root.first_reusable_document_slot == UINT64_MAX
     );
     ASSERT_TRUE(ancestor.root.min_live_born_sequence == 1);
-    ASSERT_STATUS_OK(ii42_document_cow_tree_length_extrema(
+    ASSERT_STATUS_OK(evoke_document_cow_tree_length_extrema(
         &ancestor,
         4,
         12,
@@ -11836,7 +11836,7 @@ test_document_cow_pending_frontier_and_patch(void)
     ancestor_store.tree = &ancestor;
     ancestor_store.load_count = 0;
     ASSERT_STATUS_OK(
-        ii42_document_cow_collect_live_born_prefix_external(
+        evoke_document_cow_collect_live_born_prefix_external(
             &ancestor.root,
             ancestor.document_slot_count,
             5,
@@ -11851,13 +11851,13 @@ test_document_cow_pending_frontier_and_patch(void)
     ASSERT_TRUE(born_prefix_count == 5);
     ASSERT_TRUE(born_stats.objects_loaded == ancestor_store.load_count);
     ASSERT_TRUE(born_stats.objects_loaded <=
-        II42_DOCUMENT_COW_RADIX_LEVELS + 2);
+        EVOKE_DOCUMENT_COW_RADIX_LEVELS + 2);
     ASSERT_TRUE(born_stats.records_examined <=
-        II42_DOCUMENT_COW_LEAF_RECORDS);
+        EVOKE_DOCUMENT_COW_LEAF_RECORDS);
     ASSERT_TRUE(born_stats.heap_peak <=
-        II42_DOCUMENT_COW_RADIX_FANOUT *
-            II42_DOCUMENT_COW_RADIX_LEVELS +
-        II42_DOCUMENT_COW_LEAF_RECORDS);
+        EVOKE_DOCUMENT_COW_RADIX_FANOUT *
+            EVOKE_DOCUMENT_COW_RADIX_LEVELS +
+        EVOKE_DOCUMENT_COW_LEAF_RECORDS);
     for (uint32_t index = 0; index < 5; index++)
     {
         ASSERT_TRUE(born_prefix[index].version.document_slot == index);
@@ -11868,7 +11868,7 @@ test_document_cow_pending_frontier_and_patch(void)
     ancestor_store.load_count = 0;
     born_prefix_count = 0;
     ASSERT_STATUS_OK(
-        ii42_document_cow_collect_live_born_prefix_matching_external(
+        evoke_document_cow_collect_live_born_prefix_matching_external(
             &ancestor.root,
             ancestor.document_slot_count,
             5,
@@ -11890,19 +11890,19 @@ test_document_cow_pending_frontier_and_patch(void)
         );
     }
     ASSERT_TRUE(born_stats.records_examined <=
-        II42_DOCUMENT_COW_LEAF_RECORDS);
+        EVOKE_DOCUMENT_COW_LEAF_RECORDS);
     ASSERT_TRUE(born_stats.heap_peak <=
-        II42_DOCUMENT_COW_RADIX_FANOUT *
-            II42_DOCUMENT_COW_RADIX_LEVELS +
-        II42_DOCUMENT_COW_LEAF_RECORDS);
-    ASSERT_STATUS_OK(ii42_document_cow_validate_external(
+        EVOKE_DOCUMENT_COW_RADIX_FANOUT *
+            EVOKE_DOCUMENT_COW_RADIX_LEVELS +
+        EVOKE_DOCUMENT_COW_LEAF_RECORDS);
+    ASSERT_STATUS_OK(evoke_document_cow_validate_external(
         &ancestor.root,
         ancestor.document_slot_count,
         load_document_cow_fake_object,
         &ancestor_store
     ));
     ancestor_store.load_count = 0;
-    ASSERT_STATUS_OK(ii42_document_cow_read_range_external(
+    ASSERT_STATUS_OK(evoke_document_cow_read_range_external(
         &ancestor.root,
         ancestor.document_slot_count,
         4,
@@ -11913,16 +11913,16 @@ test_document_cow_pending_frontier_and_patch(void)
     ));
     ASSERT_TRUE(
         ancestor_store.load_count <=
-        II42_DOCUMENT_COW_RADIX_LEVELS + 3
+        EVOKE_DOCUMENT_COW_RADIX_LEVELS + 3
     );
     for (uint32_t index = 0; index < 32; index++)
     {
-        ASSERT_TRUE(ii42_document_cow_records_equal(
+        ASSERT_TRUE(evoke_document_cow_records_equal(
             &range_records[index],
             &records[index + 4]
         ));
     }
-    ASSERT_TRUE(ii42_document_cow_read_range_external(
+    ASSERT_TRUE(evoke_document_cow_read_range_external(
         &ancestor.root,
         ancestor.document_slot_count,
         39,
@@ -11930,9 +11930,9 @@ test_document_cow_pending_frontier_and_patch(void)
         load_document_cow_fake_object,
         &ancestor_store,
         range_records
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
     ancestor_store.load_count = 0;
-    ASSERT_STATUS_OK(ii42_document_cow_find_reusable_external(
+    ASSERT_STATUS_OK(evoke_document_cow_find_reusable_external(
         &ancestor.root,
         ancestor.document_slot_count,
         load_document_cow_fake_object,
@@ -11943,7 +11943,7 @@ test_document_cow_pending_frontier_and_patch(void)
     ASSERT_TRUE(!reusable);
     ASSERT_TRUE(ancestor_store.load_count == 0);
     ancestor_store.load_count = 0;
-    ASSERT_STATUS_OK(ii42_document_cow_length_extrema_external(
+    ASSERT_STATUS_OK(evoke_document_cow_length_extrema_external(
         &ancestor.root,
         ancestor.document_slot_count,
         0,
@@ -11957,7 +11957,7 @@ test_document_cow_pending_frontier_and_patch(void)
     ASSERT_TRUE(length_extrema.min_document_length == 3);
     ASSERT_TRUE(length_extrema.max_document_length == 42);
     ancestor_store.load_count = 0;
-    ASSERT_STATUS_OK(ii42_document_cow_length_extrema_external(
+    ASSERT_STATUS_OK(evoke_document_cow_length_extrema_external(
         &ancestor.root,
         ancestor.document_slot_count,
         4,
@@ -11967,12 +11967,12 @@ test_document_cow_pending_frontier_and_patch(void)
         &length_extrema
     ));
     ASSERT_TRUE(ancestor_store.load_count <=
-        2 * (II42_DOCUMENT_COW_RADIX_LEVELS + 1));
+        2 * (EVOKE_DOCUMENT_COW_RADIX_LEVELS + 1));
     ASSERT_TRUE(length_extrema.document_count == 11);
     ASSERT_TRUE(length_extrema.min_document_length == 7);
     ASSERT_TRUE(length_extrema.max_document_length == 18);
     ancestor_store.load_count = 0;
-    ASSERT_STATUS_OK(ii42_document_cow_block_extrema_external(
+    ASSERT_STATUS_OK(evoke_document_cow_block_extrema_external(
         &ancestor.root,
         ancestor.document_slot_count,
         4,
@@ -11992,13 +11992,13 @@ test_document_cow_pending_frontier_and_patch(void)
     ASSERT_TRUE(block_extrema[2].min_document_length == 35);
     ASSERT_TRUE(block_extrema[2].max_document_length == 42);
     ASSERT_TRUE(ancestor_store.load_count <=
-        2 * (II42_DOCUMENT_COW_RADIX_LEVELS + 1));
-    ii42_document_cow_block_extrema_free(block_extrema);
+        2 * (EVOKE_DOCUMENT_COW_RADIX_LEVELS + 1));
+    evoke_document_cow_block_extrema_free(block_extrema);
     block_extrema = NULL;
     block_extrema_count = 0;
     corrupt_root = ancestor.root;
     corrupt_root.min_document_length++;
-    ASSERT_TRUE(ii42_document_cow_length_extrema_external(
+    ASSERT_TRUE(evoke_document_cow_length_extrema_external(
         &corrupt_root,
         ancestor.document_slot_count,
         0,
@@ -12006,8 +12006,8 @@ test_document_cow_pending_frontier_and_patch(void)
         load_document_cow_fake_object,
         &ancestor_store,
         &length_extrema
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_document_cow_block_extrema_external(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_document_cow_block_extrema_external(
         &corrupt_root,
         ancestor.document_slot_count,
         4,
@@ -12015,11 +12015,11 @@ test_document_cow_pending_frontier_and_patch(void)
         &ancestor_store,
         &block_extrema,
         &block_extrema_count
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(block_extrema == NULL);
     ASSERT_TRUE(block_extrema_count == 0);
     ancestor_store.load_count = 0;
-    ASSERT_STATUS_OK(ii42_document_cow_find_actionable_external(
+    ASSERT_STATUS_OK(evoke_document_cow_find_actionable_external(
         &ancestor.root,
         ancestor.document_slot_count,
         0,
@@ -12030,7 +12030,7 @@ test_document_cow_pending_frontier_and_patch(void)
     ));
     ASSERT_TRUE(!actionable);
     ASSERT_TRUE(ancestor_store.load_count == 0);
-    ASSERT_STATUS_OK(ii42_document_cow_find_actionable_external(
+    ASSERT_STATUS_OK(evoke_document_cow_find_actionable_external(
         &ancestor.root,
         ancestor.document_slot_count,
         20,
@@ -12042,11 +12042,11 @@ test_document_cow_pending_frontier_and_patch(void)
     ASSERT_TRUE(actionable);
     ASSERT_TRUE(found.version.document_slot == 33);
     ASSERT_TRUE(ancestor_store.load_count <=
-        II42_DOCUMENT_COW_RADIX_LEVELS + 1);
+        EVOKE_DOCUMENT_COW_RADIX_LEVELS + 1);
     ancestor_store.load_count = 0;
     actionable = false;
     ASSERT_STATUS_OK(
-        ii42_document_cow_find_actionable_external_from(
+        evoke_document_cow_find_actionable_external_from(
             &ancestor.root,
             ancestor.document_slot_count,
             19,
@@ -12060,11 +12060,11 @@ test_document_cow_pending_frontier_and_patch(void)
     ASSERT_TRUE(actionable);
     ASSERT_TRUE(found.version.document_slot == 33);
     ASSERT_TRUE(ancestor_store.load_count <=
-        2 * (II42_DOCUMENT_COW_RADIX_LEVELS + 1));
+        2 * (EVOKE_DOCUMENT_COW_RADIX_LEVELS + 1));
     ancestor_store.load_count = 0;
     actionable = true;
     ASSERT_STATUS_OK(
-        ii42_document_cow_find_actionable_external_from(
+        evoke_document_cow_find_actionable_external_from(
             &ancestor.root,
             ancestor.document_slot_count,
             34,
@@ -12077,7 +12077,7 @@ test_document_cow_pending_frontier_and_patch(void)
     );
     ASSERT_TRUE(!actionable);
     ASSERT_TRUE(ancestor_store.load_count <=
-        2 * (II42_DOCUMENT_COW_RADIX_LEVELS + 1));
+        2 * (EVOKE_DOCUMENT_COW_RADIX_LEVELS + 1));
 
     updates[0] = records[18];
     quarantine_document_cow_record(&updates[0], 101, INT64_MAX);
@@ -12097,9 +12097,9 @@ test_document_cow_pending_frontier_and_patch(void)
     updates[5].retirement.document_length =
         updates[5].version.document_length;
     updates[5].retirement.flags =
-        II42_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
+        EVOKE_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
 
-    ASSERT_STATUS_OK(ii42_document_cow_build_external_patch(
+    ASSERT_STATUS_OK(evoke_document_cow_build_external_patch(
         &ancestor.root,
         40,
         43,
@@ -12114,7 +12114,7 @@ test_document_cow_pending_frontier_and_patch(void)
     ASSERT_TRUE(stats.changed_records == 6);
     ASSERT_TRUE(stats.written_leaves == 3);
     ASSERT_TRUE(stats.written_nodes ==
-        II42_DOCUMENT_COW_RADIX_LEVELS);
+        EVOKE_DOCUMENT_COW_RADIX_LEVELS);
     ASSERT_TRUE(patch.object_count ==
         stats.written_leaves + stats.written_nodes);
     assert_retired_ranges(
@@ -12125,7 +12125,7 @@ test_document_cow_pending_frontier_and_patch(void)
     bind_document_cow_test_tree(&patch, 2, &next_block);
     composite.ancestor.tree = &ancestor;
     composite.patch.tree = &patch;
-    ASSERT_STATUS_OK(ii42_document_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_document_cow_validate_external(
         &patch.root,
         patch.document_slot_count,
         load_document_cow_composite_object,
@@ -12133,7 +12133,7 @@ test_document_cow_pending_frontier_and_patch(void)
     ));
     composite.ancestor.load_count = 0;
     composite.patch.load_count = 0;
-    ASSERT_STATUS_OK(ii42_document_cow_visit_external(
+    ASSERT_STATUS_OK(evoke_document_cow_visit_external(
         &patch.root,
         patch.document_slot_count,
         load_document_cow_composite_object,
@@ -12151,7 +12151,7 @@ test_document_cow_pending_frontier_and_patch(void)
 
     composite.ancestor.load_count = 0;
     composite.patch.load_count = 0;
-    ASSERT_STATUS_OK(ii42_document_cow_lookup_external(
+    ASSERT_STATUS_OK(evoke_document_cow_lookup_external(
         &patch.root,
         43,
         33,
@@ -12161,14 +12161,14 @@ test_document_cow_pending_frontier_and_patch(void)
     ));
     ASSERT_TRUE(
         (next_record.semantic_state.flags &
-         II42_SEMANTIC_STATE_FLAG_COMPLETE) != 0
+         EVOKE_SEMANTIC_STATE_FLAG_COMPLETE) != 0
     );
     ASSERT_TRUE(
         composite.ancestor.load_count + composite.patch.load_count <=
-        II42_DOCUMENT_COW_RADIX_LEVELS + 1
+        EVOKE_DOCUMENT_COW_RADIX_LEVELS + 1
     );
     ancestor_store.load_count = 0;
-    ASSERT_STATUS_OK(ii42_document_cow_lookup_external(
+    ASSERT_STATUS_OK(evoke_document_cow_lookup_external(
         &ancestor.root,
         40,
         33,
@@ -12178,11 +12178,11 @@ test_document_cow_pending_frontier_and_patch(void)
     ));
     ASSERT_TRUE(
         (old_record.semantic_state.flags &
-         II42_SEMANTIC_STATE_FLAG_QUARANTINED) != 0
+         EVOKE_SEMANTIC_STATE_FLAG_QUARANTINED) != 0
     );
     ASSERT_TRUE(
         ancestor_store.load_count <=
-        II42_DOCUMENT_COW_RADIX_LEVELS + 1
+        EVOKE_DOCUMENT_COW_RADIX_LEVELS + 1
     );
     ASSERT_TRUE(patch.root.document_slot_count == 43);
     ASSERT_TRUE(patch.root.live_document_count == 40);
@@ -12194,7 +12194,7 @@ test_document_cow_pending_frontier_and_patch(void)
     ASSERT_TRUE(patch.root.first_reusable_document_slot == 10);
     composite.ancestor.load_count = 0;
     composite.patch.load_count = 0;
-    ASSERT_STATUS_OK(ii42_document_cow_find_reusable_external(
+    ASSERT_STATUS_OK(evoke_document_cow_find_reusable_external(
         &patch.root,
         patch.document_slot_count,
         load_document_cow_composite_object,
@@ -12206,10 +12206,10 @@ test_document_cow_pending_frontier_and_patch(void)
     ASSERT_TRUE(found.version.document_slot == 10);
     ASSERT_TRUE(
         composite.ancestor.load_count + composite.patch.load_count <=
-        II42_DOCUMENT_COW_RADIX_LEVELS + 1
+        EVOKE_DOCUMENT_COW_RADIX_LEVELS + 1
     );
     reusable = true;
-    ASSERT_STATUS_OK(ii42_document_cow_find_reusable_external_from(
+    ASSERT_STATUS_OK(evoke_document_cow_find_reusable_external_from(
         &patch.root,
         patch.document_slot_count,
         11,
@@ -12219,7 +12219,7 @@ test_document_cow_pending_frontier_and_patch(void)
         &reusable
     ));
     ASSERT_TRUE(!reusable);
-    ASSERT_STATUS_OK(ii42_document_cow_length_extrema_external(
+    ASSERT_STATUS_OK(evoke_document_cow_length_extrema_external(
         &patch.root,
         patch.document_slot_count,
         39,
@@ -12231,7 +12231,7 @@ test_document_cow_pending_frontier_and_patch(void)
     ASSERT_TRUE(length_extrema.document_count == 4);
     ASSERT_TRUE(length_extrema.min_document_length == 42);
     ASSERT_TRUE(length_extrema.max_document_length == 45);
-    ASSERT_STATUS_OK(ii42_document_cow_block_extrema_external(
+    ASSERT_STATUS_OK(evoke_document_cow_block_extrema_external(
         &patch.root,
         patch.document_slot_count,
         4,
@@ -12250,14 +12250,14 @@ test_document_cow_pending_frontier_and_patch(void)
     ASSERT_TRUE(block_extrema[2].document_count == 11);
     ASSERT_TRUE(block_extrema[2].min_document_length == 35);
     ASSERT_TRUE(block_extrema[2].max_document_length == 45);
-    ii42_document_cow_block_extrema_free(block_extrema);
+    evoke_document_cow_block_extrema_free(block_extrema);
     block_extrema = NULL;
     block_extrema_count = 0;
 
     composite.ancestor.load_count = 0;
     composite.patch.load_count = 0;
     actionable = false;
-    ASSERT_STATUS_OK(ii42_document_cow_find_actionable_external(
+    ASSERT_STATUS_OK(evoke_document_cow_find_actionable_external(
         &patch.root,
         43,
         1000,
@@ -12271,44 +12271,44 @@ test_document_cow_pending_frontier_and_patch(void)
     ASSERT_TRUE(
         composite.ancestor.load_count +
             composite.patch.load_count <=
-        II42_DOCUMENT_COW_RADIX_LEVELS + 1
+        EVOKE_DOCUMENT_COW_RADIX_LEVELS + 1
     );
 
-    ASSERT_STATUS_OK(ii42_document_cow_tree_object_serialize(
+    ASSERT_STATUS_OK(evoke_document_cow_tree_object_serialize(
         &patch,
         &patch.root,
         &bytes,
         &size
     ));
     bytes[size - 1] ^= UINT8_C(1);
-    ASSERT_TRUE(ii42_document_cow_object_deserialize(
+    ASSERT_TRUE(evoke_document_cow_object_deserialize(
         bytes,
         size,
-        &(ii42_document_cow_object) {0}
-    ) == II42_ERR_FORMAT);
+        &(evoke_document_cow_object) {0}
+    ) == EVOKE_ERR_FORMAT);
     free(bytes);
-    ii42_document_cow_tree_free(&patch);
-    ii42_document_cow_tree_free(&ancestor);
+    evoke_document_cow_tree_free(&patch);
+    evoke_document_cow_tree_free(&ancestor);
 }
 
 static void
 test_document_cow_partial_leaf_append_and_transition_guards(void)
 {
-    ii42_document_cow_record records[15];
-    ii42_document_cow_record appends[3];
-    ii42_document_cow_record invalid_update;
-    ii42_document_cow_record found;
-    ii42_document_cow_tree ancestor;
-    ii42_document_cow_tree patch;
-    ii42_document_cow_tree rejected;
-    ii42_document_cow_update_stats stats;
+    evoke_document_cow_record records[15];
+    evoke_document_cow_record appends[3];
+    evoke_document_cow_record invalid_update;
+    evoke_document_cow_record found;
+    evoke_document_cow_tree ancestor;
+    evoke_document_cow_tree patch;
+    evoke_document_cow_tree rejected;
+    evoke_document_cow_update_stats stats;
     document_cow_fake_store ancestor_store;
     document_cow_composite_store composite;
     uint32_t next_block = 100;
 
-    ii42_document_cow_tree_init(&ancestor);
-    ii42_document_cow_tree_init(&patch);
-    ii42_document_cow_tree_init(&rejected);
+    evoke_document_cow_tree_init(&ancestor);
+    evoke_document_cow_tree_init(&patch);
+    evoke_document_cow_tree_init(&rejected);
     memset(&ancestor_store, 0, sizeof(ancestor_store));
     memset(&composite, 0, sizeof(composite));
     for (uint64_t slot = 0; slot < 15; slot++)
@@ -12319,7 +12319,7 @@ test_document_cow_partial_leaf_append_and_transition_guards(void)
             slot == 0
         );
     }
-    ASSERT_STATUS_OK(ii42_document_cow_tree_build(
+    ASSERT_STATUS_OK(evoke_document_cow_tree_build(
         records,
         15,
         10,
@@ -12327,7 +12327,7 @@ test_document_cow_partial_leaf_append_and_transition_guards(void)
     ));
     bind_document_cow_test_tree(&ancestor, 10, &next_block);
     ancestor_store.tree = &ancestor;
-    ASSERT_STATUS_OK(ii42_document_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_document_cow_validate_external(
         &ancestor.root,
         ancestor.document_slot_count,
         load_document_cow_fake_object,
@@ -12336,7 +12336,7 @@ test_document_cow_partial_leaf_append_and_transition_guards(void)
 
     invalid_update = records[0];
     invalid_update.version.semantic_input_fingerprint[0] ^= UINT8_C(1);
-    ASSERT_TRUE(ii42_document_cow_build_external_patch(
+    ASSERT_TRUE(evoke_document_cow_build_external_patch(
         &ancestor.root,
         15,
         15,
@@ -12347,7 +12347,7 @@ test_document_cow_partial_leaf_append_and_transition_guards(void)
         &ancestor_store,
         &rejected,
         &stats
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     for (uint64_t slot = 15; slot < 18; slot++)
     {
         initialize_document_cow_record(
@@ -12356,7 +12356,7 @@ test_document_cow_partial_leaf_append_and_transition_guards(void)
             slot == 17
         );
     }
-    ASSERT_TRUE(ii42_document_cow_build_external_patch(
+    ASSERT_TRUE(evoke_document_cow_build_external_patch(
         &ancestor.root,
         15,
         18,
@@ -12367,8 +12367,8 @@ test_document_cow_partial_leaf_append_and_transition_guards(void)
         &ancestor_store,
         &rejected,
         &stats
-    ) == II42_ERR_INVALID);
-    ASSERT_STATUS_OK(ii42_document_cow_build_external_patch(
+    ) == EVOKE_ERR_INVALID);
+    ASSERT_STATUS_OK(evoke_document_cow_build_external_patch(
         &ancestor.root,
         15,
         18,
@@ -12383,19 +12383,19 @@ test_document_cow_partial_leaf_append_and_transition_guards(void)
     ASSERT_TRUE(stats.changed_records == 3);
     ASSERT_TRUE(stats.written_leaves == 2);
     ASSERT_TRUE(stats.written_nodes ==
-        II42_DOCUMENT_COW_RADIX_LEVELS);
+        EVOKE_DOCUMENT_COW_RADIX_LEVELS);
     ASSERT_TRUE(patch.object_count ==
         stats.written_leaves + stats.written_nodes);
     bind_document_cow_test_tree(&patch, 11, &next_block);
     composite.ancestor.tree = &ancestor;
     composite.patch.tree = &patch;
-    ASSERT_STATUS_OK(ii42_document_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_document_cow_validate_external(
         &patch.root,
         patch.document_slot_count,
         load_document_cow_composite_object,
         &composite
     ));
-    ASSERT_STATUS_OK(ii42_document_cow_lookup_external(
+    ASSERT_STATUS_OK(evoke_document_cow_lookup_external(
         &patch.root,
         patch.document_slot_count,
         17,
@@ -12406,26 +12406,26 @@ test_document_cow_partial_leaf_append_and_transition_guards(void)
     ASSERT_TRUE(found.version.document_slot == 17);
 
     composite.patch.corrupt_object_id = patch.root.object_id;
-    ASSERT_TRUE(ii42_document_cow_validate_external(
+    ASSERT_TRUE(evoke_document_cow_validate_external(
         &patch.root,
         patch.document_slot_count,
         load_document_cow_composite_object,
         &composite
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
-    ii42_document_cow_tree_free(&rejected);
-    ii42_document_cow_tree_free(&patch);
-    ii42_document_cow_tree_free(&ancestor);
+    evoke_document_cow_tree_free(&rejected);
+    evoke_document_cow_tree_free(&patch);
+    evoke_document_cow_tree_free(&ancestor);
 }
 
 static void
 test_document_cow_initial_semantic_completion(void)
 {
-    ii42_document_cow_record records[3];
-    ii42_document_cow_record found;
-    ii42_document_cow_tree tree;
+    evoke_document_cow_record records[3];
+    evoke_document_cow_record found;
+    evoke_document_cow_tree tree;
 
-    ii42_document_cow_tree_init(&tree);
+    evoke_document_cow_tree_init(&tree);
     for (uint64_t slot = 0; slot < 3; slot++)
     {
         initialize_complete_document_cow_record(
@@ -12435,7 +12435,7 @@ test_document_cow_initial_semantic_completion(void)
     }
     records[0].version.heap_block = 0;
 
-    ASSERT_STATUS_OK(ii42_document_cow_tree_build(
+    ASSERT_STATUS_OK(evoke_document_cow_tree_build(
         records,
         3,
         1,
@@ -12443,48 +12443,48 @@ test_document_cow_initial_semantic_completion(void)
     ));
     ASSERT_TRUE(tree.root.live_document_count == 3);
     ASSERT_TRUE(tree.root.semantic_pending_count == 0);
-    ASSERT_STATUS_OK(ii42_document_cow_tree_lookup(
+    ASSERT_STATUS_OK(evoke_document_cow_tree_lookup(
         &tree,
         0,
         &found
     ));
     ASSERT_TRUE(
         (found.version.flags &
-         II42_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE) != 0
+         EVOKE_DOCUMENT_VERSION_FLAG_SEMANTIC_COMPLETE) != 0
     );
     ASSERT_TRUE(found.semantic_state.transition_sequence == 0);
 
-    ii42_document_cow_tree_free(&tree);
+    evoke_document_cow_tree_free(&tree);
 }
 
 static void
 test_document_cow_l0_owned_transitions(void)
 {
-    ii42_document_cow_record original;
-    ii42_document_cow_record l0_retired;
-    ii42_document_cow_record sealed;
-    ii42_document_cow_record placeholder;
-    ii42_document_cow_record placeholder_retired;
-    ii42_document_cow_record live;
-    ii42_document_cow_record found;
-    ii42_document_cow_tree ancestor;
-    ii42_document_cow_tree l0_patch;
-    ii42_document_cow_tree sealed_patch;
-    ii42_document_cow_tree placeholder_tree;
-    ii42_document_cow_tree placeholder_retired_patch;
-    ii42_document_cow_tree live_patch;
-    ii42_document_cow_update_stats stats;
+    evoke_document_cow_record original;
+    evoke_document_cow_record l0_retired;
+    evoke_document_cow_record sealed;
+    evoke_document_cow_record placeholder;
+    evoke_document_cow_record placeholder_retired;
+    evoke_document_cow_record live;
+    evoke_document_cow_record found;
+    evoke_document_cow_tree ancestor;
+    evoke_document_cow_tree l0_patch;
+    evoke_document_cow_tree sealed_patch;
+    evoke_document_cow_tree placeholder_tree;
+    evoke_document_cow_tree placeholder_retired_patch;
+    evoke_document_cow_tree live_patch;
+    evoke_document_cow_update_stats stats;
     document_cow_fake_store ancestor_store;
     document_cow_fake_store placeholder_store;
     document_cow_composite_store composite;
     uint32_t next_block = 150;
 
-    ii42_document_cow_tree_init(&ancestor);
-    ii42_document_cow_tree_init(&l0_patch);
-    ii42_document_cow_tree_init(&sealed_patch);
-    ii42_document_cow_tree_init(&placeholder_tree);
-    ii42_document_cow_tree_init(&placeholder_retired_patch);
-    ii42_document_cow_tree_init(&live_patch);
+    evoke_document_cow_tree_init(&ancestor);
+    evoke_document_cow_tree_init(&l0_patch);
+    evoke_document_cow_tree_init(&sealed_patch);
+    evoke_document_cow_tree_init(&placeholder_tree);
+    evoke_document_cow_tree_init(&placeholder_retired_patch);
+    evoke_document_cow_tree_init(&live_patch);
     memset(&ancestor_store, 0, sizeof(ancestor_store));
     memset(&placeholder_store, 0, sizeof(placeholder_store));
     memset(&composite, 0, sizeof(composite));
@@ -12495,8 +12495,8 @@ test_document_cow_l0_owned_transitions(void)
     original.retirement.document_length =
         original.version.document_length;
     original.retirement.flags =
-        II42_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
-    ASSERT_STATUS_OK(ii42_document_cow_tree_build(
+        EVOKE_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
+    ASSERT_STATUS_OK(evoke_document_cow_tree_build(
         &original,
         1,
         20,
@@ -12509,15 +12509,15 @@ test_document_cow_l0_owned_transitions(void)
     l0_retired.version.born_sequence = 11;
     l0_retired.version.heap_block = 99;
     l0_retired.version.flags |=
-        II42_DOCUMENT_VERSION_FLAG_L0_OWNED;
+        EVOKE_DOCUMENT_VERSION_FLAG_L0_OWNED;
     l0_retired.event_residency = 0;
     l0_retired.retirement.document_slot = 0;
     l0_retired.retirement.retirement_sequence = 12;
     l0_retired.retirement.document_length =
         l0_retired.version.document_length;
     l0_retired.retirement.flags =
-        II42_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
-    ASSERT_STATUS_OK(ii42_document_cow_build_external_patch(
+        EVOKE_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
+    ASSERT_STATUS_OK(evoke_document_cow_build_external_patch(
         &ancestor.root,
         1,
         1,
@@ -12536,9 +12536,9 @@ test_document_cow_l0_owned_transitions(void)
     composite.patch.tree = &l0_patch;
 
     sealed = l0_retired;
-    sealed.version.flags &= ~II42_DOCUMENT_VERSION_FLAG_L0_OWNED;
+    sealed.version.flags &= ~EVOKE_DOCUMENT_VERSION_FLAG_L0_OWNED;
     sealed.event_residency = 1;
-    ASSERT_STATUS_OK(ii42_document_cow_build_external_patch(
+    ASSERT_STATUS_OK(evoke_document_cow_build_external_patch(
         &l0_patch.root,
         1,
         1,
@@ -12550,12 +12550,12 @@ test_document_cow_l0_owned_transitions(void)
         &sealed_patch,
         &stats
     ));
-    ASSERT_STATUS_OK(ii42_document_cow_tree_lookup(
+    ASSERT_STATUS_OK(evoke_document_cow_tree_lookup(
         &sealed_patch,
         0,
         &found
     ));
-    ASSERT_TRUE(!ii42_document_cow_record_is_l0_owned(&found));
+    ASSERT_TRUE(!evoke_document_cow_record_is_l0_owned(&found));
     ASSERT_TRUE(found.retirement.retirement_sequence == 12);
     ASSERT_TRUE(found.event_residency == 1);
 
@@ -12563,10 +12563,10 @@ test_document_cow_l0_owned_transitions(void)
     placeholder.version.document_slot = 0;
     placeholder.version.born_sequence = 30;
     placeholder.version.flags =
-        II42_DOCUMENT_VERSION_FLAG_FROZEN_XID |
-        II42_DOCUMENT_VERSION_FLAG_ABORTED_HOLE |
-        II42_DOCUMENT_VERSION_FLAG_L0_OWNED;
-    ASSERT_STATUS_OK(ii42_document_cow_tree_build(
+        EVOKE_DOCUMENT_VERSION_FLAG_FROZEN_XID |
+        EVOKE_DOCUMENT_VERSION_FLAG_ABORTED_HOLE |
+        EVOKE_DOCUMENT_VERSION_FLAG_L0_OWNED;
+    ASSERT_STATUS_OK(evoke_document_cow_tree_build(
         &placeholder,
         1,
         30,
@@ -12580,15 +12580,15 @@ test_document_cow_l0_owned_transitions(void)
     placeholder_retired.version.born_sequence = 30;
     placeholder_retired.version.heap_block = 102;
     placeholder_retired.version.flags |=
-        II42_DOCUMENT_VERSION_FLAG_L0_OWNED;
+        EVOKE_DOCUMENT_VERSION_FLAG_L0_OWNED;
     placeholder_retired.event_residency = 0;
     placeholder_retired.retirement.document_slot = 0;
     placeholder_retired.retirement.retirement_sequence = 31;
     placeholder_retired.retirement.document_length =
         placeholder_retired.version.document_length;
     placeholder_retired.retirement.flags =
-        II42_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
-    ASSERT_STATUS_OK(ii42_document_cow_build_external_patch(
+        EVOKE_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
+    ASSERT_STATUS_OK(evoke_document_cow_build_external_patch(
         &placeholder_tree.root,
         1,
         1,
@@ -12609,7 +12609,7 @@ test_document_cow_l0_owned_transitions(void)
     live.version.born_sequence = 30;
     live.version.heap_block = 101;
     live.event_residency = 1;
-    ASSERT_STATUS_OK(ii42_document_cow_build_external_patch(
+    ASSERT_STATUS_OK(evoke_document_cow_build_external_patch(
         &placeholder_tree.root,
         1,
         1,
@@ -12624,37 +12624,37 @@ test_document_cow_l0_owned_transitions(void)
     ASSERT_TRUE(live_patch.root.live_document_count == 1);
     ASSERT_TRUE(live_patch.root.reusable_document_count == 0);
 
-    ii42_document_cow_tree_free(&live_patch);
-    ii42_document_cow_tree_free(&placeholder_retired_patch);
-    ii42_document_cow_tree_free(&placeholder_tree);
-    ii42_document_cow_tree_free(&sealed_patch);
-    ii42_document_cow_tree_free(&l0_patch);
-    ii42_document_cow_tree_free(&ancestor);
+    evoke_document_cow_tree_free(&live_patch);
+    evoke_document_cow_tree_free(&placeholder_retired_patch);
+    evoke_document_cow_tree_free(&placeholder_tree);
+    evoke_document_cow_tree_free(&sealed_patch);
+    evoke_document_cow_tree_free(&l0_patch);
+    evoke_document_cow_tree_free(&ancestor);
 }
 
 static void
 test_document_cow_l0_semantic_transition_during_seal(void)
 {
-    ii42_document_cow_record l0_pending;
-    ii42_document_cow_record sealed_complete;
-    ii42_document_cow_record sealed_quarantined;
-    ii42_document_cow_record found;
-    ii42_document_cow_tree ancestor;
-    ii42_document_cow_tree complete_patch;
-    ii42_document_cow_tree quarantine_patch;
-    ii42_document_cow_update_stats stats;
+    evoke_document_cow_record l0_pending;
+    evoke_document_cow_record sealed_complete;
+    evoke_document_cow_record sealed_quarantined;
+    evoke_document_cow_record found;
+    evoke_document_cow_tree ancestor;
+    evoke_document_cow_tree complete_patch;
+    evoke_document_cow_tree quarantine_patch;
+    evoke_document_cow_update_stats stats;
     document_cow_fake_store ancestor_store;
     uint32_t next_block = 175;
 
-    ii42_document_cow_tree_init(&ancestor);
-    ii42_document_cow_tree_init(&complete_patch);
-    ii42_document_cow_tree_init(&quarantine_patch);
+    evoke_document_cow_tree_init(&ancestor);
+    evoke_document_cow_tree_init(&complete_patch);
+    evoke_document_cow_tree_init(&quarantine_patch);
     memset(&ancestor_store, 0, sizeof(ancestor_store));
 
     initialize_document_cow_record(&l0_pending, 0, true);
     l0_pending.version.flags |=
-        II42_DOCUMENT_VERSION_FLAG_L0_OWNED;
-    ASSERT_STATUS_OK(ii42_document_cow_tree_build(
+        EVOKE_DOCUMENT_VERSION_FLAG_L0_OWNED;
+    ASSERT_STATUS_OK(evoke_document_cow_tree_build(
         &l0_pending,
         1,
         20,
@@ -12665,11 +12665,11 @@ test_document_cow_l0_semantic_transition_during_seal(void)
 
     sealed_complete = l0_pending;
     sealed_complete.version.flags &=
-        ~II42_DOCUMENT_VERSION_FLAG_L0_OWNED;
+        ~EVOKE_DOCUMENT_VERSION_FLAG_L0_OWNED;
     sealed_complete.semantic_residency = 1;
     sealed_complete.event_residency = 1;
     complete_document_cow_record(&sealed_complete, 2);
-    ASSERT_STATUS_OK(ii42_document_cow_build_external_patch(
+    ASSERT_STATUS_OK(evoke_document_cow_build_external_patch(
         &ancestor.root,
         1,
         1,
@@ -12681,23 +12681,23 @@ test_document_cow_l0_semantic_transition_during_seal(void)
         &complete_patch,
         &stats
     ));
-    ASSERT_STATUS_OK(ii42_document_cow_tree_lookup(
+    ASSERT_STATUS_OK(evoke_document_cow_tree_lookup(
         &complete_patch,
         0,
         &found
     ));
-    ASSERT_TRUE(!ii42_document_cow_record_is_l0_owned(&found));
+    ASSERT_TRUE(!evoke_document_cow_record_is_l0_owned(&found));
     ASSERT_TRUE(
         (found.semantic_state.flags &
-         II42_SEMANTIC_STATE_FLAG_COMPLETE) != 0
+         EVOKE_SEMANTIC_STATE_FLAG_COMPLETE) != 0
     );
 
     sealed_quarantined = l0_pending;
     sealed_quarantined.version.flags &=
-        ~II42_DOCUMENT_VERSION_FLAG_L0_OWNED;
+        ~EVOKE_DOCUMENT_VERSION_FLAG_L0_OWNED;
     sealed_quarantined.event_residency = 1;
     quarantine_document_cow_record(&sealed_quarantined, 2, 10);
-    ASSERT_STATUS_OK(ii42_document_cow_build_external_patch(
+    ASSERT_STATUS_OK(evoke_document_cow_build_external_patch(
         &ancestor.root,
         1,
         1,
@@ -12709,36 +12709,36 @@ test_document_cow_l0_semantic_transition_during_seal(void)
         &quarantine_patch,
         &stats
     ));
-    ASSERT_STATUS_OK(ii42_document_cow_tree_lookup(
+    ASSERT_STATUS_OK(evoke_document_cow_tree_lookup(
         &quarantine_patch,
         0,
         &found
     ));
-    ASSERT_TRUE(!ii42_document_cow_record_is_l0_owned(&found));
+    ASSERT_TRUE(!evoke_document_cow_record_is_l0_owned(&found));
     ASSERT_TRUE(
         (found.semantic_state.flags &
-         II42_SEMANTIC_STATE_FLAG_QUARANTINED) != 0
+         EVOKE_SEMANTIC_STATE_FLAG_QUARANTINED) != 0
     );
 
-    ii42_document_cow_tree_free(&quarantine_patch);
-    ii42_document_cow_tree_free(&complete_patch);
-    ii42_document_cow_tree_free(&ancestor);
+    evoke_document_cow_tree_free(&quarantine_patch);
+    evoke_document_cow_tree_free(&complete_patch);
+    evoke_document_cow_tree_free(&ancestor);
 }
 
 static void
 test_document_cow_root_relative_reuse_guards(void)
 {
-    ii42_document_cow_record original;
-    ii42_document_cow_record drained;
-    ii42_document_cow_record replacement;
-    ii42_document_cow_record invalid;
-    ii42_document_cow_record found;
-    ii42_document_cow_tree ancestor;
-    ii42_document_cow_tree drained_tree;
-    ii42_document_cow_tree reincarnated;
-    ii42_document_cow_tree rejected;
-    ii42_document_cow_update_stats stats;
-    ii42_document_cow_born_prefix_stats born_stats;
+    evoke_document_cow_record original;
+    evoke_document_cow_record drained;
+    evoke_document_cow_record replacement;
+    evoke_document_cow_record invalid;
+    evoke_document_cow_record found;
+    evoke_document_cow_tree ancestor;
+    evoke_document_cow_tree drained_tree;
+    evoke_document_cow_tree reincarnated;
+    evoke_document_cow_tree rejected;
+    evoke_document_cow_update_stats stats;
+    evoke_document_cow_born_prefix_stats born_stats;
     document_cow_fake_store ancestor_store;
     document_cow_fake_store drained_store;
     document_cow_fake_store reincarnated_store;
@@ -12746,10 +12746,10 @@ test_document_cow_root_relative_reuse_guards(void)
     size_t born_prefix_count = 0;
     bool reusable = true;
 
-    ii42_document_cow_tree_init(&ancestor);
-    ii42_document_cow_tree_init(&drained_tree);
-    ii42_document_cow_tree_init(&reincarnated);
-    ii42_document_cow_tree_init(&rejected);
+    evoke_document_cow_tree_init(&ancestor);
+    evoke_document_cow_tree_init(&drained_tree);
+    evoke_document_cow_tree_init(&reincarnated);
+    evoke_document_cow_tree_init(&rejected);
     memset(&ancestor_store, 0, sizeof(ancestor_store));
     memset(&drained_store, 0, sizeof(drained_store));
     memset(&reincarnated_store, 0, sizeof(reincarnated_store));
@@ -12760,9 +12760,9 @@ test_document_cow_root_relative_reuse_guards(void)
     original.retirement.document_length =
         original.version.document_length;
     original.retirement.flags =
-        II42_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
+        EVOKE_DOCUMENT_RETIREMENT_FLAG_FROZEN_XID;
     original.event_residency = 1;
-    ASSERT_STATUS_OK(ii42_document_cow_tree_build(
+    ASSERT_STATUS_OK(evoke_document_cow_tree_build(
         &original,
         1,
         20,
@@ -12771,7 +12771,7 @@ test_document_cow_root_relative_reuse_guards(void)
     bind_document_cow_test_tree(&ancestor, 20, &next_block);
     ancestor_store.tree = &ancestor;
     ASSERT_TRUE(ancestor.root.reusable_document_count == 0);
-    ASSERT_STATUS_OK(ii42_document_cow_find_reusable_external(
+    ASSERT_STATUS_OK(evoke_document_cow_find_reusable_external(
         &ancestor.root,
         ancestor.document_slot_count,
         load_document_cow_fake_object,
@@ -12786,7 +12786,7 @@ test_document_cow_root_relative_reuse_guards(void)
     replacement.version.born_sequence = 11;
     replacement.version.heap_block = 99;
     replacement.event_residency = 1;
-    ASSERT_TRUE(ii42_document_cow_build_external_patch(
+    ASSERT_TRUE(evoke_document_cow_build_external_patch(
         &ancestor.root,
         1,
         1,
@@ -12797,11 +12797,11 @@ test_document_cow_root_relative_reuse_guards(void)
         &ancestor_store,
         &rejected,
         &stats
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     drained = original;
     drained.event_residency = 0;
-    ASSERT_STATUS_OK(ii42_document_cow_build_external_patch(
+    ASSERT_STATUS_OK(evoke_document_cow_build_external_patch(
         &ancestor.root,
         1,
         1,
@@ -12818,7 +12818,7 @@ test_document_cow_root_relative_reuse_guards(void)
     ASSERT_TRUE(drained_tree.root.reusable_document_count == 1);
     ASSERT_TRUE(drained_tree.root.first_reusable_document_slot == 0);
     reusable = false;
-    ASSERT_STATUS_OK(ii42_document_cow_find_reusable_external(
+    ASSERT_STATUS_OK(evoke_document_cow_find_reusable_external(
         &drained_tree.root,
         drained_tree.document_slot_count,
         load_document_cow_fake_object,
@@ -12830,7 +12830,7 @@ test_document_cow_root_relative_reuse_guards(void)
     ASSERT_TRUE(found.version.born_sequence == 1);
     drained_store.load_count = 0;
     reusable = true;
-    ASSERT_STATUS_OK(ii42_document_cow_find_reusable_external_from(
+    ASSERT_STATUS_OK(evoke_document_cow_find_reusable_external_from(
         &drained_tree.root,
         drained_tree.document_slot_count,
         drained_tree.document_slot_count,
@@ -12844,7 +12844,7 @@ test_document_cow_root_relative_reuse_guards(void)
 
     invalid = replacement;
     invalid.version.born_sequence = 10;
-    ASSERT_TRUE(ii42_document_cow_build_external_patch(
+    ASSERT_TRUE(evoke_document_cow_build_external_patch(
         &drained_tree.root,
         1,
         1,
@@ -12855,10 +12855,10 @@ test_document_cow_root_relative_reuse_guards(void)
         &drained_store,
         &rejected,
         &stats
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     invalid = replacement;
     invalid.event_residency = 0;
-    ASSERT_TRUE(ii42_document_cow_build_external_patch(
+    ASSERT_TRUE(evoke_document_cow_build_external_patch(
         &drained_tree.root,
         1,
         1,
@@ -12869,9 +12869,9 @@ test_document_cow_root_relative_reuse_guards(void)
         &drained_store,
         &rejected,
         &stats
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
-    ASSERT_STATUS_OK(ii42_document_cow_build_external_patch(
+    ASSERT_STATUS_OK(evoke_document_cow_build_external_patch(
         &drained_tree.root,
         1,
         1,
@@ -12885,7 +12885,7 @@ test_document_cow_root_relative_reuse_guards(void)
     ));
     bind_document_cow_test_tree(&reincarnated, 22, &next_block);
     reincarnated_store.tree = &reincarnated;
-    ASSERT_STATUS_OK(ii42_document_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_document_cow_validate_external(
         &reincarnated.root,
         reincarnated.document_slot_count,
         load_document_cow_fake_object,
@@ -12897,7 +12897,7 @@ test_document_cow_root_relative_reuse_guards(void)
     reincarnated_store.load_count = 0;
     born_prefix_count = 0;
     ASSERT_STATUS_OK(
-        ii42_document_cow_collect_live_born_prefix_external(
+        evoke_document_cow_collect_live_born_prefix_external(
             &reincarnated.root,
             reincarnated.document_slot_count,
             1,
@@ -12914,7 +12914,7 @@ test_document_cow_root_relative_reuse_guards(void)
     ASSERT_TRUE(found.version.born_sequence == 11);
     reusable = true;
     reincarnated_store.load_count = 0;
-    ASSERT_STATUS_OK(ii42_document_cow_find_reusable_external(
+    ASSERT_STATUS_OK(evoke_document_cow_find_reusable_external(
         &reincarnated.root,
         reincarnated.document_slot_count,
         load_document_cow_fake_object,
@@ -12924,24 +12924,24 @@ test_document_cow_root_relative_reuse_guards(void)
     ));
     ASSERT_TRUE(!reusable);
     ASSERT_TRUE(reincarnated_store.load_count == 0);
-    ASSERT_STATUS_OK(ii42_document_cow_tree_lookup(
+    ASSERT_STATUS_OK(evoke_document_cow_tree_lookup(
         &reincarnated,
         0,
         &found
     ));
     ASSERT_TRUE(found.version.born_sequence == 11);
     ASSERT_TRUE(found.version.heap_block == 99);
-    ASSERT_STATUS_OK(ii42_document_cow_tree_lookup(
+    ASSERT_STATUS_OK(evoke_document_cow_tree_lookup(
         &drained_tree,
         0,
         &found
     ));
     ASSERT_TRUE(found.retirement.retirement_sequence == 10);
 
-    ii42_document_cow_tree_free(&rejected);
-    ii42_document_cow_tree_free(&reincarnated);
-    ii42_document_cow_tree_free(&drained_tree);
-    ii42_document_cow_tree_free(&ancestor);
+    evoke_document_cow_tree_free(&rejected);
+    evoke_document_cow_tree_free(&reincarnated);
+    evoke_document_cow_tree_free(&drained_tree);
+    evoke_document_cow_tree_free(&ancestor);
 }
 
 static void
@@ -12957,23 +12957,23 @@ test_mixed_extent_scoring_combines_lexical_and_semantic(void)
     float invalid_weights[] = {NAN, 1.0f};
     uint32_t semantic_doc_ids[] = {1, 3};
     float semantic_impacts[] = {0.25f, -0.10f};
-    ii42_doc_ids docs[] = {
+    evoke_doc_ids docs[] = {
         make_doc(doc0, 3),
         make_doc(doc1, 2),
         make_doc(doc2, 3),
         make_doc(doc3, 1)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_BM25PLUS,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_BM25PLUS,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_index index;
-    ii42_corpus_stats stats;
-    ii42_posting_extent extents[2];
-    ii42_term_extent_list terms[4];
+    evoke_index index;
+    evoke_corpus_stats stats;
+    evoke_posting_extent extents[2];
+    evoke_term_extent_list terms[4];
     float *expected_scores = NULL;
     float *mixed_scores = NULL;
     float *weighted_scores = NULL;
@@ -12981,11 +12981,11 @@ test_mixed_extent_scoring_combines_lexical_and_semantic(void)
     uint64_t end;
     uint32_t doc_id;
 
-    ii42_index_init(&index);
+    evoke_index_init(&index);
     memset(&stats, 0, sizeof(stats));
     memset(extents, 0, sizeof(extents));
     memset(terms, 0, sizeof(terms));
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         docs,
         4,
         &params,
@@ -13007,16 +13007,16 @@ test_mixed_extent_scoring_combines_lexical_and_semantic(void)
     extents[0].term_frequencies = &index.term_frequencies[start];
     extents[0].len = end - start;
     extents[0].local_document_count = index.num_docs;
-    extents[0].kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL;
+    extents[0].kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL;
     extents[1].data = semantic_impacts;
     extents[1].indices = semantic_doc_ids;
     extents[1].len = 2;
     extents[1].local_document_count = index.num_docs;
-    extents[1].kind = II42_POSTING_EXTENT_SEMANTIC_IMPACT;
+    extents[1].kind = EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT;
     terms[0].extents = extents;
     terms[0].len = 2;
 
-    ASSERT_STATUS_OK(ii42_scores_from_ids_neutral(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_neutral(
         &index,
         &stats,
         NULL,
@@ -13028,7 +13028,7 @@ test_mixed_extent_scoring_combines_lexical_and_semantic(void)
     ));
     expected_scores[1] += semantic_impacts[0];
     expected_scores[3] += semantic_impacts[1];
-    ASSERT_STATUS_OK(ii42_scores_from_ids_mixed(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_mixed(
         &index,
         &stats,
         terms,
@@ -13039,7 +13039,7 @@ test_mixed_extent_scoring_combines_lexical_and_semantic(void)
         &mixed_scores
     ));
     assert_float_array(mixed_scores, expected_scores, index.num_docs);
-    ASSERT_STATUS_OK(ii42_scores_from_weighted_ids_mixed_retired(
+    ASSERT_STATUS_OK(evoke_scores_from_weighted_ids_mixed_retired(
         &index,
         &stats,
         terms,
@@ -13061,7 +13061,7 @@ test_mixed_extent_scoring_combines_lexical_and_semantic(void)
     }
     free(weighted_scores);
     weighted_scores = NULL;
-    ASSERT_TRUE(ii42_scores_from_weighted_ids_mixed_retired(
+    ASSERT_TRUE(evoke_scores_from_weighted_ids_mixed_retired(
         &index,
         &stats,
         terms,
@@ -13073,13 +13073,13 @@ test_mixed_extent_scoring_combines_lexical_and_semantic(void)
         2,
         NULL,
         &weighted_scores
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
     ASSERT_TRUE(weighted_scores == NULL);
 
     free(mixed_scores);
     mixed_scores = NULL;
     extents[1].kind = 0;
-    ASSERT_TRUE(ii42_scores_from_ids_mixed(
+    ASSERT_TRUE(evoke_scores_from_ids_mixed(
         &index,
         &stats,
         terms,
@@ -13088,24 +13088,24 @@ test_mixed_extent_scoring_combines_lexical_and_semantic(void)
         1,
         NULL,
         &mixed_scores
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(mixed_scores == NULL);
 
     free(expected_scores);
-    ii42_index_free(&index);
+    evoke_index_free(&index);
 }
 
 static void
 test_empty_mixed_extent_scoring(void)
 {
-    ii42_index index;
-    ii42_corpus_stats stats;
+    evoke_index index;
+    evoke_corpus_stats stats;
     uint32_t query[] = {0};
     float *scores = NULL;
 
-    ii42_index_init(&index);
+    evoke_index_init(&index);
     memset(&stats, 0, sizeof(stats));
-    ASSERT_STATUS_OK(ii42_scores_from_ids_mixed(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_mixed(
         &index,
         &stats,
         NULL,
@@ -13116,7 +13116,7 @@ test_empty_mixed_extent_scoring(void)
         &scores
     ));
     ASSERT_TRUE(scores == NULL);
-    ii42_index_free(&index);
+    evoke_index_free(&index);
 }
 
 static void
@@ -13130,47 +13130,47 @@ test_retired_mixed_scoring_matches_live_rebuild(void)
     uint32_t retired_ids[] = {1};
     uint32_t all_retired_ids[] = {0, 1, 2, 3};
     uint32_t duplicate_retired_ids[] = {1, 1};
-    ii42_doc_ids docs[] = {
+    evoke_doc_ids docs[] = {
         make_doc(doc0, 3),
         make_doc(doc1, 3),
         make_doc(doc2, 3),
         make_doc(doc3, 1)
     };
-    ii42_doc_ids live_docs[] = {
+    evoke_doc_ids live_docs[] = {
         make_doc(doc0, 3),
         make_doc(doc2, 3),
         make_doc(doc3, 1)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_BM25PLUS,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_BM25PLUS,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_index index;
-    ii42_index live;
-    ii42_corpus_stats stats;
-    ii42_posting_extent extents[5];
-    ii42_term_extent_list terms[5];
+    evoke_index index;
+    evoke_index live;
+    evoke_corpus_stats stats;
+    evoke_posting_extent extents[5];
+    evoke_term_extent_list terms[5];
     float *scores = NULL;
     float *expected = NULL;
     uint32_t original_term_zero_df;
     uint32_t term_id;
 
-    ii42_index_init(&index);
-    ii42_index_init(&live);
+    evoke_index_init(&index);
+    evoke_index_init(&live);
     memset(&stats, 0, sizeof(stats));
     memset(extents, 0, sizeof(extents));
     memset(terms, 0, sizeof(terms));
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         docs,
         4,
         &params,
         false,
         &index
     ));
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         live_docs,
         3,
         &params,
@@ -13197,12 +13197,12 @@ test_retired_mixed_scoring_matches_live_rebuild(void)
             index.indptr[term_id + 1] - start;
         extents[term_id].local_document_count = index.num_docs;
         extents[term_id].kind =
-            II42_POSTING_EXTENT_LEXICAL_NEUTRAL;
+            EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL;
         terms[term_id].extents = &extents[term_id];
         terms[term_id].len = 1;
     }
 
-    ASSERT_STATUS_OK(ii42_scores_from_ids_mixed_retired(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_mixed_retired(
         &index,
         &stats,
         terms,
@@ -13214,7 +13214,7 @@ test_retired_mixed_scoring_matches_live_rebuild(void)
         NULL,
         &scores
     ));
-    ASSERT_STATUS_OK(ii42_scores_from_ids_exact_stats(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_exact_stats(
         &live,
         query,
         5,
@@ -13230,7 +13230,7 @@ test_retired_mixed_scoring_matches_live_rebuild(void)
     scores = NULL;
     original_term_zero_df = index.doc_frequencies[0];
     index.doc_frequencies[0] = 4;
-    ASSERT_TRUE(ii42_scores_from_ids_mixed_retired(
+    ASSERT_TRUE(evoke_scores_from_ids_mixed_retired(
         &index,
         &stats,
         terms,
@@ -13241,10 +13241,10 @@ test_retired_mixed_scoring_matches_live_rebuild(void)
         5,
         NULL,
         &scores
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(scores == NULL);
     index.doc_frequencies[0] = original_term_zero_df;
-    ASSERT_TRUE(ii42_scores_from_ids_mixed_retired(
+    ASSERT_TRUE(evoke_scores_from_ids_mixed_retired(
         &index,
         &stats,
         terms,
@@ -13255,12 +13255,12 @@ test_retired_mixed_scoring_matches_live_rebuild(void)
         5,
         NULL,
         &scores
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(scores == NULL);
 
     stats.document_count = 0;
     stats.total_document_length = 0;
-    ASSERT_STATUS_OK(ii42_scores_from_ids_mixed_retired(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_mixed_retired(
         &index,
         &stats,
         terms,
@@ -13279,8 +13279,8 @@ test_retired_mixed_scoring_matches_live_rebuild(void)
 
     free(scores);
     free(expected);
-    ii42_index_free(&live);
-    ii42_index_free(&index);
+    evoke_index_free(&live);
+    evoke_index_free(&index);
 }
 
 static void
@@ -13290,20 +13290,20 @@ test_lucene_index_layout(void)
     uint32_t doc1[] = {1, 2};
     uint32_t doc2[] = {0, 2, 2};
     uint32_t doc3[] = {3};
-    ii42_doc_ids docs[] = {
+    evoke_doc_ids docs[] = {
         make_doc(doc0, 3),
         make_doc(doc1, 2),
         make_doc(doc2, 3),
         make_doc(doc3, 1)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_LUCENE,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_LUCENE,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_index index;
+    evoke_index index;
     float expected_data[] = {
         0.35775340f,
         0.24109468f,
@@ -13319,8 +13319,8 @@ test_lucene_index_layout(void)
     uint32_t expected_doc_frequencies[] = {2, 2, 2, 1, 0};
     uint32_t expected_term_frequencies[] = {2, 1, 1, 1, 1, 2, 1};
 
-    ii42_index_init(&index);
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    evoke_index_init(&index);
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         docs,
         4,
         &params,
@@ -13348,7 +13348,7 @@ test_lucene_index_layout(void)
     );
     ASSERT_TRUE(index.nonoccurrence == NULL);
 
-    ii42_index_free(&index);
+    evoke_index_free(&index);
 }
 
 static void
@@ -13358,33 +13358,33 @@ test_compact_id_builder_matches_standard(void)
     uint32_t doc1[] = {1, 2};
     uint32_t doc2[] = {0, 2, 2};
     uint32_t doc3[] = {3};
-    ii42_doc_ids docs[] = {
+    evoke_doc_ids docs[] = {
         make_doc(doc0, 3),
         make_doc(doc1, 2),
         make_doc(doc2, 3),
         make_doc(doc3, 1)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_BM25PLUS,
-        .idf_method = II42_METHOD_BM25PLUS
+        .method = EVOKE_METHOD_BM25PLUS,
+        .idf_method = EVOKE_METHOD_BM25PLUS
     };
-    ii42_index standard;
-    ii42_index compact;
+    evoke_index standard;
+    evoke_index compact;
 
-    ii42_index_init(&standard);
-    ii42_index_init(&compact);
+    evoke_index_init(&standard);
+    evoke_index_init(&compact);
 
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         docs,
         4,
         &params,
         true,
         &standard
     ));
-    ASSERT_STATUS_OK(ii42_build_index_from_ids_compact(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids_compact(
         docs,
         4,
         &params,
@@ -13393,8 +13393,8 @@ test_compact_id_builder_matches_standard(void)
     ));
     assert_index_layout_equal(&compact, &standard);
 
-    ii42_index_free(&standard);
-    ii42_index_free(&compact);
+    evoke_index_free(&standard);
+    evoke_index_free(&compact);
 }
 
 static void
@@ -13403,31 +13403,31 @@ test_compact_token_builder_matches_standard(void)
     const char *doc0[] = {"alpha", "alpha", "beta"};
     const char *doc1[] = {"beta", "gamma"};
     const char *doc2[] = {"alpha", "gamma", "gamma"};
-    ii42_doc_tokens docs[] = {
+    evoke_doc_tokens docs[] = {
         {doc0, 3},
         {doc1, 2},
         {doc2, 3}
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_LUCENE,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_LUCENE,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_index standard;
-    ii42_index compact;
+    evoke_index standard;
+    evoke_index compact;
 
-    ii42_index_init(&standard);
-    ii42_index_init(&compact);
+    evoke_index_init(&standard);
+    evoke_index_init(&compact);
 
-    ASSERT_STATUS_OK(ii42_build_index_from_tokens(
+    ASSERT_STATUS_OK(evoke_build_index_from_tokens(
         docs,
         3,
         &params,
         &standard
     ));
-    ASSERT_STATUS_OK(ii42_build_index_from_tokens_compact(
+    ASSERT_STATUS_OK(evoke_build_index_from_tokens_compact(
         docs,
         3,
         &params,
@@ -13435,80 +13435,80 @@ test_compact_token_builder_matches_standard(void)
     ));
     assert_index_layout_equal(&compact, &standard);
 
-    ii42_index_free(&standard);
-    ii42_index_free(&compact);
+    evoke_index_free(&standard);
+    evoke_index_free(&compact);
 }
 
 typedef struct limited_term_entry_reader
 {
-    const ii42_term_entry *entries;
+    const evoke_term_entry *entries;
     uint64_t len;
     uint64_t pos;
 } limited_term_entry_reader;
 
 typedef struct changing_term_entry_reader
 {
-    ii42_term_entry entries[3][2];
+    evoke_term_entry entries[3][2];
     uint64_t pos;
     uint32_t pass;
 } changing_term_entry_reader;
 
-static ii42_status
-limited_term_entry_read(void *ctx, ii42_term_entry *entry_out)
+static evoke_status
+limited_term_entry_read(void *ctx, evoke_term_entry *entry_out)
 {
     limited_term_entry_reader *reader = ctx;
 
     if (reader == NULL || entry_out == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     if (reader->pos >= reader->len)
     {
-        return II42_ERR_RANGE;
+        return EVOKE_ERR_RANGE;
     }
     *entry_out = reader->entries[reader->pos++];
-    return II42_OK;
+    return EVOKE_OK;
 }
 
-static ii42_status
+static evoke_status
 limited_term_entry_rewind(void *ctx)
 {
     limited_term_entry_reader *reader = ctx;
 
     if (reader == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     reader->pos = 0;
-    return II42_OK;
+    return EVOKE_OK;
 }
 
-static ii42_status
-changing_term_entry_read(void *ctx, ii42_term_entry *entry_out)
+static evoke_status
+changing_term_entry_read(void *ctx, evoke_term_entry *entry_out)
 {
     changing_term_entry_reader *reader = ctx;
 
     if (reader == NULL || entry_out == NULL || reader->pass >= 3 ||
         reader->pos >= 2)
     {
-        return II42_ERR_RANGE;
+        return EVOKE_ERR_RANGE;
     }
     *entry_out = reader->entries[reader->pass][reader->pos++];
-    return II42_OK;
+    return EVOKE_OK;
 }
 
-static ii42_status
+static evoke_status
 changing_term_entry_rewind(void *ctx)
 {
     changing_term_entry_reader *reader = ctx;
 
     if (reader == NULL || reader->pass >= 2)
     {
-        return II42_ERR_RANGE;
+        return EVOKE_ERR_RANGE;
     }
     reader->pass++;
     reader->pos = 0;
-    return II42_OK;
+    return EVOKE_OK;
 }
 
 static void
@@ -13518,26 +13518,26 @@ test_builders_reject_invalid_inputs(void)
     const char *nonempty_tokens[] = {"term"};
     uint32_t zero_token_id[] = {0};
     uint32_t max_token_id[] = {UINT32_MAX};
-    ii42_doc_tokens empty_docs[] = {
+    evoke_doc_tokens empty_docs[] = {
         {empty_tokens, 0}
     };
-    ii42_doc_tokens missing_token_array[] = {
+    evoke_doc_tokens missing_token_array[] = {
         {NULL, 1}
     };
-    ii42_doc_tokens valid_token_docs[] = {
+    evoke_doc_tokens valid_token_docs[] = {
         {nonempty_tokens, 1}
     };
-    ii42_doc_ids missing_id_array[] = {
+    evoke_doc_ids missing_id_array[] = {
         {NULL, 1}
     };
-    ii42_doc_ids valid_id_docs[] = {
+    evoke_doc_ids valid_id_docs[] = {
         {zero_token_id, 1}
     };
-    ii42_doc_ids unrepresentable_vocab[] = {
+    evoke_doc_ids unrepresentable_vocab[] = {
         {max_token_id, 1}
     };
     uint32_t doc_lengths[] = {1};
-    ii42_term_entry entry = {
+    evoke_term_entry entry = {
         .token_id = 0,
         .doc_id = 0,
         .tf = 1
@@ -13584,82 +13584,82 @@ test_builders_reject_invalid_inputs(void)
         .pass = 0
     };
     uint32_t changing_doc_lengths[] = {1, 1};
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_LUCENE,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_LUCENE,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_index index;
+    evoke_index index;
 
-    ii42_index_init(&index);
-    ASSERT_TRUE(ii42_build_index_from_tokens_compact(
+    evoke_index_init(&index);
+    ASSERT_TRUE(evoke_build_index_from_tokens_compact(
         NULL,
         1,
         &params,
         &index
-    ) == II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_build_index_from_tokens_compact(
+    ) == EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_build_index_from_tokens_compact(
         empty_docs,
         1,
         &params,
         &index
-    ) == II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_build_index_from_tokens(
+    ) == EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_build_index_from_tokens(
         empty_docs,
         1,
         &params,
         &index
-    ) == II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_build_index_from_tokens(
+    ) == EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_build_index_from_tokens(
         missing_token_array,
         1,
         &params,
         &index
-    ) == II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_build_index_from_tokens_compact(
+    ) == EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_build_index_from_tokens_compact(
         missing_token_array,
         1,
         &params,
         &index
-    ) == II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_build_index_from_ids(
+    ) == EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_build_index_from_ids(
         missing_id_array,
         1,
         &params,
         false,
         &index
-    ) == II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_build_index_from_ids_compact(
+    ) == EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_build_index_from_ids_compact(
         missing_id_array,
         1,
         &params,
         false,
         &index
-    ) == II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_build_index_from_ids(
+    ) == EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_build_index_from_ids(
         unrepresentable_vocab,
         1,
         &params,
         false,
         &index
-    ) == II42_ERR_RANGE);
-    ASSERT_TRUE(ii42_build_index_from_ids_compact(
+    ) == EVOKE_ERR_RANGE);
+    ASSERT_TRUE(evoke_build_index_from_ids_compact(
         unrepresentable_vocab,
         1,
         &params,
         false,
         &index
-    ) == II42_ERR_RANGE);
-    ASSERT_STATUS_OK(ii42_build_index_from_tokens(
+    ) == EVOKE_ERR_RANGE);
+    ASSERT_STATUS_OK(evoke_build_index_from_tokens(
         valid_token_docs,
         1,
         &params,
         &index
     ));
-    ii42_index_free(&index);
-    ASSERT_TRUE(ii42_build_index_from_term_entries(
+    evoke_index_free(&index);
+    ASSERT_TRUE(evoke_build_index_from_term_entries(
         NULL,
         1,
         doc_lengths,
@@ -13671,8 +13671,8 @@ test_builders_reject_invalid_inputs(void)
         0,
         NULL,
         &index
-    ) == II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_build_index_from_term_entries(
+    ) == EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_build_index_from_term_entries(
         NULL,
         0,
         NULL,
@@ -13684,8 +13684,8 @@ test_builders_reject_invalid_inputs(void)
         0,
         NULL,
         &index
-    ) == II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_build_index_from_term_entry_reader(
+    ) == EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_build_index_from_term_entry_reader(
         1,
         limited_term_entry_read,
         limited_term_entry_rewind,
@@ -13699,8 +13699,8 @@ test_builders_reject_invalid_inputs(void)
         0,
         NULL,
         &index
-    ) == II42_ERR_RANGE);
-    ASSERT_TRUE(ii42_build_index_from_term_entries(
+    ) == EVOKE_ERR_RANGE);
+    ASSERT_TRUE(evoke_build_index_from_term_entries(
         &entry,
         1,
         NULL,
@@ -13712,8 +13712,8 @@ test_builders_reject_invalid_inputs(void)
         0,
         NULL,
         &index
-    ) == II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_build_index_from_term_entry_reader(
+    ) == EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_build_index_from_term_entry_reader(
         1,
         limited_term_entry_read,
         limited_term_entry_rewind,
@@ -13727,8 +13727,8 @@ test_builders_reject_invalid_inputs(void)
         0,
         NULL,
         &index
-    ) == II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_build_index_from_term_entry_reader(
+    ) == EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_build_index_from_term_entry_reader(
         2,
         changing_term_entry_read,
         changing_term_entry_rewind,
@@ -13742,8 +13742,8 @@ test_builders_reject_invalid_inputs(void)
         0,
         NULL,
         &index
-    ) == II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_build_index_from_term_entry_reader(
+    ) == EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_build_index_from_term_entry_reader(
         2,
         changing_term_entry_read,
         changing_term_entry_rewind,
@@ -13757,10 +13757,10 @@ test_builders_reject_invalid_inputs(void)
         0,
         NULL,
         &index
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
 
     params.k1 = NAN;
-    ASSERT_TRUE(ii42_build_index_from_term_entries(
+    ASSERT_TRUE(evoke_build_index_from_term_entries(
         &entry,
         1,
         doc_lengths,
@@ -13772,104 +13772,104 @@ test_builders_reject_invalid_inputs(void)
         0,
         NULL,
         &index
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
     params.k1 = 1.5f;
     params.b = 1.1f;
-    ASSERT_TRUE(ii42_build_index_from_ids(
+    ASSERT_TRUE(evoke_build_index_from_ids(
         valid_id_docs,
         1,
         &params,
         false,
         &index
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
 }
 
 static void
 test_empty_index_builders_and_roundtrip(void)
 {
-    ii42_doc_ids empty_docs[] = {
+    evoke_doc_ids empty_docs[] = {
         {NULL, 0},
         {NULL, 0}
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_LUCENE,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_LUCENE,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_index index;
-    ii42_index restored;
-    ii42_topk_result topk;
+    evoke_index index;
+    evoke_index restored;
+    evoke_topk_result topk;
     uint8_t *serialized = NULL;
     size_t serialized_len = 0;
     float *scores = (float *) 1;
 
-    ii42_index_init(&index);
-    ii42_index_init(&restored);
+    evoke_index_init(&index);
+    evoke_index_init(&restored);
     memset(&topk, 0, sizeof(topk));
 
-    ASSERT_TRUE(ii42_build_index_from_tokens(
+    ASSERT_TRUE(evoke_build_index_from_tokens(
         NULL,
         0,
         &params,
         &index
-    ) == II42_OK);
+    ) == EVOKE_OK);
     ASSERT_TRUE(index.num_docs == 0);
     ASSERT_TRUE(index.vocab_size == 0);
     ASSERT_TRUE(index.data_len == 0);
     ASSERT_TRUE(index.indptr != NULL);
     ASSERT_TRUE(index.indptr[0] == 0);
-    ASSERT_TRUE(ii42_scores_from_ids(
+    ASSERT_TRUE(evoke_scores_from_ids(
         &index,
         NULL,
         0,
         NULL,
         &scores
-    ) == II42_OK);
+    ) == EVOKE_OK);
     ASSERT_TRUE(scores == NULL);
-    ASSERT_TRUE(ii42_scores_from_ids_exact_stats(
+    ASSERT_TRUE(evoke_scores_from_ids_exact_stats(
         &index,
         NULL,
         0,
         NULL,
         &scores
-    ) == II42_OK);
+    ) == EVOKE_OK);
     ASSERT_TRUE(scores == NULL);
-    ASSERT_TRUE(ii42_topk(NULL, 0, 0, true, &topk) == II42_OK);
+    ASSERT_TRUE(evoke_topk(NULL, 0, 0, true, &topk) == EVOKE_OK);
     ASSERT_TRUE(topk.len == 0);
 
-    ASSERT_TRUE(ii42_serialize_index(
+    ASSERT_TRUE(evoke_serialize_index(
         &index,
         &serialized,
         &serialized_len
-    ) == II42_OK);
+    ) == EVOKE_OK);
     ASSERT_TRUE(serialized != NULL);
-    ASSERT_TRUE(ii42_deserialize_index(
+    ASSERT_TRUE(evoke_deserialize_index(
         serialized,
         serialized_len,
         &restored
-    ) == II42_OK);
+    ) == EVOKE_OK);
     ASSERT_TRUE(restored.num_docs == 0);
     ASSERT_TRUE(restored.vocab_size == 0);
     ASSERT_TRUE(restored.data_len == 0);
     ASSERT_TRUE(restored.indptr != NULL);
     ASSERT_TRUE(restored.indptr[0] == 0);
 
-    ii42_index_free(&restored);
-    ii42_index_free(&index);
+    evoke_index_free(&restored);
+    evoke_index_free(&index);
     free(serialized);
     serialized = NULL;
 
-    ii42_index_init(&index);
-    ii42_index_init(&restored);
-    ASSERT_TRUE(ii42_build_index_from_ids(
+    evoke_index_init(&index);
+    evoke_index_init(&restored);
+    ASSERT_TRUE(evoke_build_index_from_ids(
         empty_docs,
         2,
         &params,
         true,
         &index
-    ) == II42_OK);
+    ) == EVOKE_OK);
     ASSERT_TRUE(index.num_docs == 2);
     ASSERT_TRUE(index.vocab_size == 1);
     ASSERT_TRUE(index.data_len == 0);
@@ -13877,16 +13877,16 @@ test_empty_index_builders_and_roundtrip(void)
     ASSERT_TRUE(index.term_frequencies == NULL);
     ASSERT_TRUE(index.doc_lengths != NULL);
     ASSERT_TRUE(index.doc_frequencies != NULL);
-    ASSERT_TRUE(ii42_serialize_index(
+    ASSERT_TRUE(evoke_serialize_index(
         &index,
         &serialized,
         &serialized_len
-    ) == II42_OK);
-    ASSERT_TRUE(ii42_deserialize_index(
+    ) == EVOKE_OK);
+    ASSERT_TRUE(evoke_deserialize_index(
         serialized,
         serialized_len,
         &restored
-    ) == II42_OK);
+    ) == EVOKE_OK);
     ASSERT_TRUE(restored.num_docs == 2);
     ASSERT_TRUE(restored.vocab_size == 1);
     ASSERT_TRUE(restored.data_len == 0);
@@ -13897,45 +13897,45 @@ test_empty_index_builders_and_roundtrip(void)
     ASSERT_TRUE(restored.doc_lengths[1] == 0);
     ASSERT_TRUE(restored.doc_frequencies[0] == 0);
 
-    ii42_index_free(&restored);
-    ii42_index_free(&index);
+    evoke_index_free(&restored);
+    evoke_index_free(&index);
     free(serialized);
     serialized = NULL;
 
-    ii42_index_init(&index);
-    ASSERT_TRUE(ii42_build_index_from_tokens_compact(
+    evoke_index_init(&index);
+    ASSERT_TRUE(evoke_build_index_from_tokens_compact(
         NULL,
         0,
         &params,
         &index
-    ) == II42_OK);
+    ) == EVOKE_OK);
     ASSERT_TRUE(index.indptr != NULL);
-    ii42_index_free(&index);
+    evoke_index_free(&index);
 
-    ii42_index_init(&index);
-    ASSERT_TRUE(ii42_build_index_from_ids(
+    evoke_index_init(&index);
+    ASSERT_TRUE(evoke_build_index_from_ids(
         NULL,
         0,
         &params,
         false,
         &index
-    ) == II42_OK);
+    ) == EVOKE_OK);
     ASSERT_TRUE(index.indptr != NULL);
-    ii42_index_free(&index);
+    evoke_index_free(&index);
 
-    ii42_index_init(&index);
-    ASSERT_TRUE(ii42_build_index_from_ids_compact(
+    evoke_index_init(&index);
+    ASSERT_TRUE(evoke_build_index_from_ids_compact(
         NULL,
         0,
         &params,
         false,
         &index
-    ) == II42_OK);
+    ) == EVOKE_OK);
     ASSERT_TRUE(index.indptr != NULL);
-    ii42_index_free(&index);
+    evoke_index_free(&index);
 
-    ii42_index_init(&index);
-    ASSERT_TRUE(ii42_build_index_from_term_entries(
+    evoke_index_init(&index);
+    ASSERT_TRUE(evoke_build_index_from_term_entries(
         NULL,
         0,
         NULL,
@@ -13947,9 +13947,9 @@ test_empty_index_builders_and_roundtrip(void)
         0,
         NULL,
         &index
-    ) == II42_OK);
+    ) == EVOKE_OK);
     ASSERT_TRUE(index.indptr != NULL);
-    ii42_index_free(&index);
+    evoke_index_free(&index);
 }
 
 static void
@@ -13961,22 +13961,22 @@ test_bm25plus_scores_and_weight_mask(void)
     uint32_t doc3[] = {3};
     uint32_t query[] = {0, 2};
     float weight_mask[] = {1.0f, 0.0f, 1.0f, 0.0f};
-    ii42_doc_ids docs[] = {
+    evoke_doc_ids docs[] = {
         make_doc(doc0, 3),
         make_doc(doc1, 2),
         make_doc(doc2, 3),
         make_doc(doc3, 1)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_BM25PLUS,
-        .idf_method = II42_METHOD_BM25PLUS
+        .method = EVOKE_METHOD_BM25PLUS,
+        .idf_method = EVOKE_METHOD_BM25PLUS
     };
-    ii42_index index;
+    evoke_index index;
     float *scores = NULL;
-    ii42_topk_result topk;
+    evoke_topk_result topk;
     float expected_nonocc[] = {
         0.45814538f,
         0.45814538f,
@@ -13987,9 +13987,9 @@ test_bm25plus_scores_and_weight_mask(void)
     uint32_t expected_doc_ids[] = {2, 0};
     float expected_scores[] = {2.89537597f, 2.09860134f};
 
-    ii42_index_init(&index);
+    evoke_index_init(&index);
     memset(&topk, 0, sizeof(topk));
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         docs,
         4,
         &params,
@@ -13998,20 +13998,20 @@ test_bm25plus_scores_and_weight_mask(void)
     ));
     assert_float_array(index.nonoccurrence, expected_nonocc, 5);
 
-    ASSERT_STATUS_OK(ii42_scores_from_ids(
+    ASSERT_STATUS_OK(evoke_scores_from_ids(
         &index,
         query,
         2,
         weight_mask,
         &scores
     ));
-    ASSERT_STATUS_OK(ii42_topk(scores, index.num_docs, 2, true, &topk));
+    ASSERT_STATUS_OK(evoke_topk(scores, index.num_docs, 2, true, &topk));
     assert_uint32_array(topk.doc_ids, expected_doc_ids, 2);
     assert_float_array(topk.scores, expected_scores, 2);
 
     free(scores);
-    ii42_topk_result_free(&topk);
-    ii42_index_free(&index);
+    evoke_topk_result_free(&topk);
+    evoke_index_free(&index);
 }
 
 static void
@@ -14020,28 +14020,28 @@ test_token_index_and_query_mapping(void)
     const char *doc0[] = {"cat", "cat", "feline"};
     const char *doc1[] = {"dog", "friend"};
     const char *doc2[] = {"cat", "bird", "bird"};
-    ii42_doc_tokens docs[] = {
+    evoke_doc_tokens docs[] = {
         {.tokens = doc0, .len = 3},
         {.tokens = doc1, .len = 2},
         {.tokens = doc2, .len = 3}
     };
     const char *query_tokens[] = {"bird", "cat", "missing"};
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_LUCENE,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_LUCENE,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_index index;
+    evoke_index index;
     uint32_t *query_ids = NULL;
     size_t query_len = 0;
     float *scores = NULL;
-    ii42_topk_result topk;
+    evoke_topk_result topk;
 
-    ii42_index_init(&index);
+    evoke_index_init(&index);
     memset(&topk, 0, sizeof(topk));
-    ASSERT_STATUS_OK(ii42_build_index_from_tokens(
+    ASSERT_STATUS_OK(evoke_build_index_from_tokens(
         docs,
         3,
         &params,
@@ -14050,7 +14050,7 @@ test_token_index_and_query_mapping(void)
     ASSERT_TRUE(index.vocab != NULL);
     ASSERT_TRUE(index.has_empty_token == false);
 
-    ASSERT_STATUS_OK(ii42_query_token_ids(
+    ASSERT_STATUS_OK(evoke_query_token_ids(
         &index,
         query_tokens,
         3,
@@ -14058,21 +14058,21 @@ test_token_index_and_query_mapping(void)
         &query_len
     ));
     ASSERT_TRUE(query_len == 2);
-    ASSERT_STATUS_OK(ii42_scores_from_ids(
+    ASSERT_STATUS_OK(evoke_scores_from_ids(
         &index,
         query_ids,
         query_len,
         NULL,
         &scores
     ));
-    ASSERT_STATUS_OK(ii42_topk(scores, index.num_docs, 2, true, &topk));
+    ASSERT_STATUS_OK(evoke_topk(scores, index.num_docs, 2, true, &topk));
     ASSERT_TRUE(topk.doc_ids[0] == 2);
     ASSERT_TRUE(topk.doc_ids[1] == 0);
 
     free(query_ids);
     free(scores);
-    ii42_topk_result_free(&topk);
-    ii42_index_free(&index);
+    evoke_topk_result_free(&topk);
+    evoke_index_free(&index);
 }
 
 static void
@@ -14084,39 +14084,39 @@ test_exact_stats_scoring_matches_dense_ids(void)
     uint32_t doc3[] = {3};
     uint32_t query[] = {0, 2};
     float weight_mask[] = {1.0f, 0.5f, 1.0f, 1.0f};
-    ii42_doc_ids docs[] = {
+    evoke_doc_ids docs[] = {
         make_doc(doc0, 3),
         make_doc(doc1, 2),
         make_doc(doc2, 3),
         make_doc(doc3, 1)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_BM25L,
-        .idf_method = II42_METHOD_BM25L
+        .method = EVOKE_METHOD_BM25L,
+        .idf_method = EVOKE_METHOD_BM25L
     };
-    ii42_index index;
+    evoke_index index;
     float *dense_scores = NULL;
     float *exact_scores = NULL;
 
-    ii42_index_init(&index);
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    evoke_index_init(&index);
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         docs,
         4,
         &params,
         true,
         &index
     ));
-    ASSERT_STATUS_OK(ii42_scores_from_ids(
+    ASSERT_STATUS_OK(evoke_scores_from_ids(
         &index,
         query,
         2,
         weight_mask,
         &dense_scores
     ));
-    ASSERT_STATUS_OK(ii42_scores_from_ids_exact_stats(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_exact_stats(
         &index,
         query,
         2,
@@ -14127,7 +14127,7 @@ test_exact_stats_scoring_matches_dense_ids(void)
 
     free(dense_scores);
     free(exact_scores);
-    ii42_index_free(&index);
+    evoke_index_free(&index);
 }
 
 static void
@@ -14137,46 +14137,46 @@ test_exact_stats_scoring_matches_dense_tokens(void)
     const char *doc1[] = {"dog", "friend"};
     const char *doc2[] = {"cat", "bird", "bird"};
     const char *query_tokens[] = {"bird", "cat", "missing"};
-    ii42_doc_tokens docs[] = {
+    evoke_doc_tokens docs[] = {
         {.tokens = doc0, .len = 3},
         {.tokens = doc1, .len = 2},
         {.tokens = doc2, .len = 3}
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_LUCENE,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_LUCENE,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_index index;
+    evoke_index index;
     uint32_t *query_ids = NULL;
     size_t query_len = 0;
     float *dense_scores = NULL;
     float *exact_scores = NULL;
 
-    ii42_index_init(&index);
-    ASSERT_STATUS_OK(ii42_build_index_from_tokens(
+    evoke_index_init(&index);
+    ASSERT_STATUS_OK(evoke_build_index_from_tokens(
         docs,
         3,
         &params,
         &index
     ));
-    ASSERT_STATUS_OK(ii42_query_token_ids(
+    ASSERT_STATUS_OK(evoke_query_token_ids(
         &index,
         query_tokens,
         3,
         &query_ids,
         &query_len
     ));
-    ASSERT_STATUS_OK(ii42_scores_from_ids(
+    ASSERT_STATUS_OK(evoke_scores_from_ids(
         &index,
         query_ids,
         query_len,
         NULL,
         &dense_scores
     ));
-    ASSERT_STATUS_OK(ii42_scores_from_ids_exact_stats(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_exact_stats(
         &index,
         query_ids,
         query_len,
@@ -14188,7 +14188,7 @@ test_exact_stats_scoring_matches_dense_tokens(void)
     free(query_ids);
     free(dense_scores);
     free(exact_scores);
-    ii42_index_free(&index);
+    evoke_index_free(&index);
 }
 
 static void
@@ -14200,38 +14200,38 @@ test_fragmented_extent_scoring_matches_contiguous(void)
     uint32_t doc3[] = {3};
     uint32_t query[] = {0, 2, 0};
     float weight_mask[] = {1.0f, 0.5f, 1.0f, 0.75f};
-    ii42_doc_ids docs[] = {
+    evoke_doc_ids docs[] = {
         make_doc(doc0, 3),
         make_doc(doc1, 2),
         make_doc(doc2, 3),
         make_doc(doc3, 1)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_BM25PLUS,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_BM25PLUS,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_index index;
-    ii42_posting_extent extents[7];
-    ii42_term_extent_list terms[5];
+    evoke_index index;
+    evoke_posting_extent extents[7];
+    evoke_term_extent_list terms[5];
     float *contiguous_scores = NULL;
     float *fragmented_scores = NULL;
-    ii42_topk_result contiguous_topk;
-    ii42_topk_result fragmented_topk;
+    evoke_topk_result contiguous_topk;
+    evoke_topk_result fragmented_topk;
     uint32_t mapped_ids[] = {3, 1};
     uint32_t mapped_postings[] = {0, 1};
-    ii42_posting_extent mapped_extent;
+    evoke_posting_extent mapped_extent;
     size_t i;
 
-    ii42_index_init(&index);
+    evoke_index_init(&index);
     memset(extents, 0, sizeof(extents));
     memset(terms, 0, sizeof(terms));
     memset(&contiguous_topk, 0, sizeof(contiguous_topk));
     memset(&fragmented_topk, 0, sizeof(fragmented_topk));
 
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         docs,
         4,
         &params,
@@ -14247,7 +14247,7 @@ test_fragmented_extent_scoring_matches_contiguous(void)
         extents[i].term_frequencies = &index.term_frequencies[i];
         extents[i].len = 1;
         extents[i].local_document_count = index.num_docs;
-        ASSERT_STATUS_OK(ii42_posting_extent_validate_layout(
+        ASSERT_STATUS_OK(evoke_posting_extent_validate_layout(
             &index,
             &extents[i]
         ));
@@ -14261,14 +14261,14 @@ test_fragmented_extent_scoring_matches_contiguous(void)
     terms[3].extents = &extents[6];
     terms[3].len = 1;
 
-    ASSERT_STATUS_OK(ii42_scores_from_ids(
+    ASSERT_STATUS_OK(evoke_scores_from_ids(
         &index,
         query,
         3,
         weight_mask,
         &contiguous_scores
     ));
-    ASSERT_STATUS_OK(ii42_scores_from_ids_extents(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_extents(
         &index,
         terms,
         5,
@@ -14283,14 +14283,14 @@ test_fragmented_extent_scoring_matches_contiguous(void)
         index.num_docs * sizeof(*contiguous_scores)
     ) == 0);
 
-    ASSERT_STATUS_OK(ii42_topk(
+    ASSERT_STATUS_OK(evoke_topk(
         contiguous_scores,
         index.num_docs,
         index.num_docs,
         true,
         &contiguous_topk
     ));
-    ASSERT_STATUS_OK(ii42_topk(
+    ASSERT_STATUS_OK(evoke_topk(
         fragmented_scores,
         index.num_docs,
         index.num_docs,
@@ -14312,7 +14312,7 @@ test_fragmented_extent_scoring_matches_contiguous(void)
     free(fragmented_scores);
     fragmented_scores = NULL;
     terms[0].extents = NULL;
-    ASSERT_TRUE(ii42_scores_from_ids_extents(
+    ASSERT_TRUE(evoke_scores_from_ids_extents(
         &index,
         terms,
         5,
@@ -14320,9 +14320,9 @@ test_fragmented_extent_scoring_matches_contiguous(void)
         3,
         weight_mask,
         &fragmented_scores
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
     ASSERT_TRUE(fragmented_scores == NULL);
-    ASSERT_TRUE(ii42_scores_from_ids_extents(
+    ASSERT_TRUE(evoke_scores_from_ids_extents(
         &index,
         terms,
         4,
@@ -14330,7 +14330,7 @@ test_fragmented_extent_scoring_matches_contiguous(void)
         3,
         weight_mask,
         &fragmented_scores
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
     ASSERT_TRUE(fragmented_scores == NULL);
 
     memset(&mapped_extent, 0, sizeof(mapped_extent));
@@ -14338,20 +14338,20 @@ test_fragmented_extent_scoring_matches_contiguous(void)
     mapped_extent.document_id_map = mapped_ids;
     mapped_extent.len = 2;
     mapped_extent.local_document_count = 2;
-    ASSERT_STATUS_OK(ii42_posting_extent_validate_layout(
+    ASSERT_STATUS_OK(evoke_posting_extent_validate_layout(
         &index,
         &mapped_extent
     ));
     mapped_ids[1] = index.num_docs;
-    ASSERT_TRUE(ii42_posting_extent_validate_layout(
+    ASSERT_TRUE(evoke_posting_extent_validate_layout(
         &index,
         &mapped_extent
-    ) == II42_ERR_RANGE);
+    ) == EVOKE_ERR_RANGE);
 
     free(contiguous_scores);
-    ii42_topk_result_free(&contiguous_topk);
-    ii42_topk_result_free(&fragmented_topk);
-    ii42_index_free(&index);
+    evoke_topk_result_free(&contiguous_topk);
+    evoke_topk_result_free(&fragmented_topk);
+    evoke_index_free(&index);
 }
 
 static void
@@ -14374,18 +14374,18 @@ test_document_block_bounds_are_conservative(void)
         -2.0f, 0.5f, 3.0f, 1.25f, -0.25f, 4.0f, 2.0f, -1.0f
     };
     float query_weights[] = {2.5f, -1.25f};
-    ii42_method methods[] = {
-        II42_METHOD_ROBERTSON,
-        II42_METHOD_LUCENE,
-        II42_METHOD_ATIRE,
-        II42_METHOD_BM25L,
-        II42_METHOD_BM25PLUS
+    evoke_method methods[] = {
+        EVOKE_METHOD_ROBERTSON,
+        EVOKE_METHOD_LUCENE,
+        EVOKE_METHOD_ATIRE,
+        EVOKE_METHOD_BM25L,
+        EVOKE_METHOD_BM25PLUS
     };
-    ii42_index index;
-    ii42_corpus_stats stats;
-    ii42_posting_extent extent;
-    ii42_posting_block_record *records = NULL;
-    ii42_posting_block_bound *bounds = NULL;
+    evoke_index index;
+    evoke_corpus_stats stats;
+    evoke_posting_extent extent;
+    evoke_posting_block_record *records = NULL;
+    evoke_posting_block_bound *bounds = NULL;
     float lexical_impact_bound = 0.0f;
     size_t bound_count = 0;
     size_t record_count = 0;
@@ -14393,7 +14393,7 @@ test_document_block_bounds_are_conservative(void)
     size_t weight_index;
     size_t bound_index;
 
-    ii42_index_init(&index);
+    evoke_index_init(&index);
     index.num_docs = 12;
     index.doc_lengths = document_lengths;
     index.params.k1 = 1.5f;
@@ -14409,8 +14409,8 @@ test_document_block_bounds_are_conservative(void)
     extent.term_frequencies = term_frequencies;
     extent.len = 8;
     extent.local_document_count = 12;
-    extent.kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL;
-    ASSERT_STATUS_OK(ii42_posting_extent_build_block_records(
+    extent.kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL;
+    ASSERT_STATUS_OK(evoke_posting_extent_build_block_records(
         &extent,
         2,
         &records,
@@ -14421,23 +14421,23 @@ test_document_block_bounds_are_conservative(void)
     ASSERT_TRUE(records[0].posting_count == 3);
     ASSERT_TRUE(records[0].min_term_frequency == 1);
     ASSERT_TRUE(records[0].max_term_frequency == 3);
-    ASSERT_STATUS_OK(ii42_posting_extent_validate_block_records(
+    ASSERT_STATUS_OK(evoke_posting_extent_validate_block_records(
         &extent,
         2,
         records,
         record_count
     ));
     records[1].block_id++;
-    ASSERT_TRUE(ii42_posting_extent_validate_block_records(
+    ASSERT_TRUE(evoke_posting_extent_validate_block_records(
         &extent,
         2,
         records,
         record_count
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     records[1].block_id--;
-    ii42_posting_block_records_free(records);
+    evoke_posting_block_records_free(records);
     records = NULL;
-    ASSERT_STATUS_OK(ii42_posting_extent_build_block_bounds(
+    ASSERT_STATUS_OK(evoke_posting_extent_build_block_bounds(
         &index,
         &extent,
         2,
@@ -14470,16 +14470,16 @@ test_document_block_bounds_are_conservative(void)
             double average_document_length =
                 (double) stats.total_document_length /
                 (double) stats.document_count;
-            double idf = ii42_score_idf(
+            double idf = evoke_score_idf(
                 index.params.idf_method,
                 8.0,
                 (double) stats.document_count
             );
             double nonoccurrence = 0.0;
 
-            if (ii42_method_requires_nonoccurrence(index.params.method))
+            if (evoke_method_requires_nonoccurrence(index.params.method))
             {
-                nonoccurrence = idf * ii42_score_tfc(
+                nonoccurrence = idf * evoke_score_tfc(
                     index.params.method,
                     0.0,
                     0.0,
@@ -14499,7 +14499,7 @@ test_document_block_bounds_are_conservative(void)
                     first + bounds[bound_index].posting_count;
                 uint64_t posting_index;
 
-                ASSERT_STATUS_OK(ii42_posting_block_score_upper_bound(
+                ASSERT_STATUS_OK(evoke_posting_block_score_upper_bound(
                     &index,
                     &stats,
                     8,
@@ -14512,7 +14512,7 @@ test_document_block_bounds_are_conservative(void)
                      posting_index++)
                 {
                     uint32_t document_id = document_ids[posting_index];
-                    double tfc = ii42_score_tfc(
+                    double tfc = evoke_score_tfc(
                         index.params.method,
                         term_frequencies[posting_index],
                         document_lengths[document_id],
@@ -14531,13 +14531,13 @@ test_document_block_bounds_are_conservative(void)
             }
         }
     }
-    ii42_posting_block_bounds_free(bounds);
+    evoke_posting_block_bounds_free(bounds);
     bounds = NULL;
 
     extent.term_frequencies = NULL;
     extent.data = impacts;
-    extent.kind = II42_POSTING_EXTENT_SEMANTIC_IMPACT;
-    ASSERT_STATUS_OK(ii42_posting_extent_build_block_bounds(
+    extent.kind = EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT;
+    ASSERT_STATUS_OK(evoke_posting_extent_build_block_bounds(
         &index,
         &extent,
         2,
@@ -14560,7 +14560,7 @@ test_document_block_bounds_are_conservative(void)
             uint64_t end = first + bounds[bound_index].posting_count;
             uint64_t posting_index;
 
-            ASSERT_STATUS_OK(ii42_posting_block_score_upper_bound(
+            ASSERT_STATUS_OK(evoke_posting_block_score_upper_bound(
                 &index,
                 &stats,
                 0,
@@ -14578,18 +14578,18 @@ test_document_block_bounds_are_conservative(void)
             }
         }
     }
-    ii42_posting_block_bounds_free(bounds);
+    evoke_posting_block_bounds_free(bounds);
     bounds = NULL;
 
-    extent.kind = II42_POSTING_EXTENT_LEXICAL_IMPACT;
-    ASSERT_STATUS_OK(ii42_posting_extent_build_block_bounds(
+    extent.kind = EVOKE_POSTING_EXTENT_LEXICAL_IMPACT;
+    ASSERT_STATUS_OK(evoke_posting_extent_build_block_bounds(
         &index,
         &extent,
         2,
         &bounds,
         &bound_count
     ));
-    ASSERT_STATUS_OK(ii42_posting_block_score_upper_bound(
+    ASSERT_STATUS_OK(evoke_posting_block_score_upper_bound(
         &index,
         &stats,
         8,
@@ -14598,7 +14598,7 @@ test_document_block_bounds_are_conservative(void)
         &lexical_impact_bound
     ));
     ASSERT_TRUE(lexical_impact_bound >= 4.0f);
-    ii42_posting_block_bounds_free(bounds);
+    evoke_posting_block_bounds_free(bounds);
     bounds = NULL;
 
     {
@@ -14612,22 +14612,22 @@ test_document_block_bounds_are_conservative(void)
         extent.document_id_map = unsorted_map;
         extent.len = 2;
         extent.local_document_count = 2;
-        extent.kind = II42_POSTING_EXTENT_SEMANTIC_IMPACT;
-        ASSERT_TRUE(ii42_posting_extent_build_block_bounds(
+        extent.kind = EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT;
+        ASSERT_TRUE(evoke_posting_extent_build_block_bounds(
             &index,
             &extent,
             2,
             &bounds,
             &bound_count
-        ) == II42_ERR_FORMAT);
+        ) == EVOKE_ERR_FORMAT);
         ASSERT_TRUE(bounds == NULL);
-        ASSERT_TRUE(ii42_posting_extent_build_block_bounds(
+        ASSERT_TRUE(evoke_posting_extent_build_block_bounds(
             &index,
             &extent,
             32,
             &bounds,
             &bound_count
-        ) == II42_ERR_INVALID);
+        ) == EVOKE_ERR_INVALID);
     }
 }
 
@@ -14652,21 +14652,21 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
     uint32_t retired_ids[] = {9, 25};
     uint32_t query_ids[] = {0, 1, 2};
     float query_weights[] = {1.0f, -0.75f, 1.25f};
-    ii42_posting_extent extents[4];
-    ii42_term_extent_list terms[3];
-    ii42_posting_block_record *block_records[4] = {0};
+    evoke_posting_extent extents[4];
+    evoke_term_extent_list terms[3];
+    evoke_posting_block_record *block_records[4] = {0};
     size_t block_record_counts[4] = {0};
-    ii42_document_block_extrema document_blocks[4];
-    ii42_index index;
-    ii42_corpus_stats stats;
-    ii42_topk_result expected = {0};
-    ii42_topk_result actual = {0};
-    ii42_blockmax_stats blockmax_stats;
+    evoke_document_block_extrema document_blocks[4];
+    evoke_index index;
+    evoke_corpus_stats stats;
+    evoke_topk_result expected = {0};
+    evoke_topk_result actual = {0};
+    evoke_blockmax_stats blockmax_stats;
     float *scores = NULL;
     uint32_t live_document_frequency = 0;
     uint64_t total_document_length = 0;
 
-    ii42_index_init(&index);
+    evoke_index_init(&index);
     index.num_docs = 32;
     index.vocab_size = 3;
     index.doc_lengths = document_lengths;
@@ -14674,8 +14674,8 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
     index.params.k1 = 1.5f;
     index.params.b = 0.75f;
     index.params.delta = 0.5f;
-    index.params.method = II42_METHOD_BM25PLUS;
-    index.params.idf_method = II42_METHOD_LUCENE;
+    index.params.method = EVOKE_METHOD_BM25PLUS;
+    index.params.idf_method = EVOKE_METHOD_LUCENE;
     memset(extents, 0, sizeof(extents));
     memset(terms, 0, sizeof(terms));
     memset(document_blocks, 0, sizeof(document_blocks));
@@ -14684,7 +14684,7 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
     {
         uint32_t block_id = document_id >> 3;
         uint32_t document_length = 3 + document_id % 11;
-        ii42_document_block_extrema *block =
+        evoke_document_block_extrema *block =
             &document_blocks[block_id];
 
         document_lengths[document_id] = document_length;
@@ -14719,28 +14719,28 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
     extents[0].len = sizeof(lexical_a_ids) /
         sizeof(lexical_a_ids[0]);
     extents[0].local_document_count = 32;
-    extents[0].kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL;
+    extents[0].kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL;
     extents[1].indices = lexical_b_ids;
     extents[1].term_frequencies = lexical_b_tfs;
     extents[1].len = sizeof(lexical_b_ids) /
         sizeof(lexical_b_ids[0]);
     extents[1].local_document_count = 32;
-    extents[1].kind = II42_POSTING_EXTENT_LEXICAL_NEUTRAL;
+    extents[1].kind = EVOKE_POSTING_EXTENT_LEXICAL_NEUTRAL;
     extents[2].indices = semantic_ids;
     extents[2].data = semantic_impacts;
     extents[2].len = sizeof(semantic_ids) / sizeof(semantic_ids[0]);
     extents[2].local_document_count = 32;
-    extents[2].kind = II42_POSTING_EXTENT_SEMANTIC_IMPACT;
+    extents[2].kind = EVOKE_POSTING_EXTENT_SEMANTIC_IMPACT;
     extents[3].indices = lexical_impact_ids;
     extents[3].data = lexical_impacts;
     extents[3].len = sizeof(lexical_impact_ids) /
         sizeof(lexical_impact_ids[0]);
     extents[3].local_document_count = 32;
-    extents[3].kind = II42_POSTING_EXTENT_LEXICAL_IMPACT;
+    extents[3].kind = EVOKE_POSTING_EXTENT_LEXICAL_IMPACT;
 
     for (size_t extent_index = 0; extent_index < 4; extent_index++)
     {
-        ASSERT_STATUS_OK(ii42_posting_extent_build_block_records(
+        ASSERT_STATUS_OK(evoke_posting_extent_build_block_records(
             &extents[extent_index],
             3,
             &block_records[extent_index],
@@ -14763,7 +14763,7 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
     stats.total_document_length = total_document_length;
     stats.doc_frequencies = document_frequencies;
     stats.vocab_size = 3;
-    ASSERT_STATUS_OK(ii42_term_live_document_frequency(
+    ASSERT_STATUS_OK(evoke_term_live_document_frequency(
         &index,
         &stats,
         terms,
@@ -14773,7 +14773,7 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
         &live_document_frequency
     ));
     ASSERT_TRUE(live_document_frequency == 9);
-    ASSERT_STATUS_OK(ii42_term_live_document_frequency(
+    ASSERT_STATUS_OK(evoke_term_live_document_frequency(
         &index,
         &stats,
         terms,
@@ -14783,7 +14783,7 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
         &live_document_frequency
     ));
     ASSERT_TRUE(live_document_frequency == 0);
-    ASSERT_STATUS_OK(ii42_term_live_document_frequency(
+    ASSERT_STATUS_OK(evoke_term_live_document_frequency(
         &index,
         &stats,
         terms,
@@ -14793,7 +14793,7 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
         &live_document_frequency
     ));
     ASSERT_TRUE(live_document_frequency == 5);
-    ASSERT_STATUS_OK(ii42_scores_from_weighted_ids_mixed_retired(
+    ASSERT_STATUS_OK(evoke_scores_from_weighted_ids_mixed_retired(
         &index,
         &stats,
         terms,
@@ -14806,9 +14806,9 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
         NULL,
         &scores
     ));
-    ASSERT_STATUS_OK(ii42_topk(scores, 32, 7, true, &expected));
+    ASSERT_STATUS_OK(evoke_topk(scores, 32, 7, true, &expected));
     ASSERT_STATUS_OK(
-        ii42_topk_from_weighted_ids_mixed_retired_blockmax(
+        evoke_topk_from_weighted_ids_mixed_retired_blockmax(
             &index,
             &stats,
             terms,
@@ -14848,9 +14848,9 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
     {
         uint8_t allowed_document_bitmap[4] = {0};
         float filtered_scores[32];
-        ii42_topk_result filtered_expected = {0};
-        ii42_topk_result filtered_actual = {0};
-        ii42_blockmax_stats filtered_stats = {0};
+        evoke_topk_result filtered_expected = {0};
+        evoke_topk_result filtered_actual = {0};
+        evoke_blockmax_stats filtered_stats = {0};
 
         allowed_document_bitmap[0] =
             (uint8_t) ((UINT8_C(1) << 0) |
@@ -14864,7 +14864,7 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
                     ? scores[document_id]
                     : -INFINITY;
         }
-        ASSERT_STATUS_OK(ii42_topk(
+        ASSERT_STATUS_OK(evoke_topk(
             filtered_scores,
             32,
             3,
@@ -14872,7 +14872,7 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
             &filtered_expected
         ));
         ASSERT_STATUS_OK(
-            ii42_topk_from_weighted_ids_mixed_retired_blockmax_filtered_with_tie_breaks(
+            evoke_topk_from_weighted_ids_mixed_retired_blockmax_filtered_with_tie_breaks(
                 &index,
                 &stats,
                 terms,
@@ -14910,20 +14910,20 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
         ASSERT_TRUE(filtered_stats.blocks_considered == 1);
         ASSERT_TRUE(filtered_stats.blocks_scored == 1);
         ASSERT_TRUE(filtered_stats.blocks_skipped == 0);
-        ii42_topk_result_free(&filtered_actual);
-        ii42_topk_result_free(&filtered_expected);
+        evoke_topk_result_free(&filtered_actual);
+        evoke_topk_result_free(&filtered_expected);
     }
 
     {
         uint32_t semantic_query_id = 1;
         float semantic_query_weight = 1.0f;
         float *pruned_scores = NULL;
-        ii42_topk_result pruned_expected = {0};
-        ii42_topk_result pruned_actual = {0};
-        ii42_blockmax_stats pruned_stats = {0};
+        evoke_topk_result pruned_expected = {0};
+        evoke_topk_result pruned_actual = {0};
+        evoke_blockmax_stats pruned_stats = {0};
 
         ASSERT_STATUS_OK(
-            ii42_scores_from_weighted_ids_mixed_retired(
+            evoke_scores_from_weighted_ids_mixed_retired(
                 &index,
                 &stats,
                 terms,
@@ -14937,7 +14937,7 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
                 &pruned_scores
             )
         );
-        ASSERT_STATUS_OK(ii42_topk(
+        ASSERT_STATUS_OK(evoke_topk(
             pruned_scores,
             32,
             1,
@@ -14945,7 +14945,7 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
             &pruned_expected
         ));
         ASSERT_STATUS_OK(
-            ii42_topk_from_weighted_ids_mixed_retired_blockmax(
+            evoke_topk_from_weighted_ids_mixed_retired_blockmax(
                 &index,
                 &stats,
                 terms,
@@ -14976,12 +14976,12 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
             pruned_stats.blocks_skipped == 4);
 
         free(pruned_scores);
-        ii42_topk_result_free(&pruned_actual);
-        ii42_topk_result_free(&pruned_expected);
+        evoke_topk_result_free(&pruned_actual);
+        evoke_topk_result_free(&pruned_expected);
     }
 
     {
-        const ii42_posting_block_record *saved_blocks =
+        const evoke_posting_block_record *saved_blocks =
             extents[0].blocks;
         uint32_t saved_block_count = extents[0].block_count;
         uint32_t saved_block_shift = extents[0].block_shift;
@@ -14989,9 +14989,9 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
         extents[0].blocks = NULL;
         extents[0].block_count = 0;
         extents[0].block_shift = 0;
-        ii42_topk_result_free(&actual);
+        evoke_topk_result_free(&actual);
         ASSERT_TRUE(
-            ii42_topk_from_weighted_ids_mixed_retired_blockmax(
+            evoke_topk_from_weighted_ids_mixed_retired_blockmax(
                 &index,
                 &stats,
                 terms,
@@ -15007,7 +15007,7 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
                 7,
                 &actual,
                 NULL
-            ) == II42_ERR_INVALID
+            ) == EVOKE_ERR_INVALID
         );
         ASSERT_TRUE(actual.len == 0);
         extents[0].blocks = saved_blocks;
@@ -15017,7 +15017,7 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
 
     document_blocks[0].min_document_length =
         document_blocks[0].max_document_length + 1;
-    ASSERT_TRUE(ii42_topk_from_weighted_ids_mixed_retired_blockmax(
+    ASSERT_TRUE(evoke_topk_from_weighted_ids_mixed_retired_blockmax(
         &index,
         &stats,
         terms,
@@ -15033,15 +15033,15 @@ test_global_blockmax_matches_exact_mixed_scoring(void)
         7,
         &actual,
         NULL
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     document_blocks[0].min_document_length = 3;
 
     free(scores);
-    ii42_topk_result_free(&actual);
-    ii42_topk_result_free(&expected);
+    evoke_topk_result_free(&actual);
+    evoke_topk_result_free(&expected);
     for (size_t extent_index = 0; extent_index < 4; extent_index++)
     {
-        ii42_posting_block_records_free(block_records[extent_index]);
+        evoke_posting_block_records_free(block_records[extent_index]);
     }
 }
 
@@ -15054,62 +15054,62 @@ test_neutral_segment_scoring_survives_statistics_change(void)
     uint32_t base_doc3[] = {3};
     uint32_t added_doc[] = {0, 3, 3};
     uint32_t query[] = {0, 2, 3};
-    ii42_doc_ids base_docs[] = {
+    evoke_doc_ids base_docs[] = {
         make_doc(base_doc0, 3),
         make_doc(base_doc1, 2),
         make_doc(base_doc2, 3),
         make_doc(base_doc3, 1)
     };
-    ii42_doc_ids delta_docs[] = {
+    evoke_doc_ids delta_docs[] = {
         make_doc(added_doc, 3)
     };
-    ii42_doc_ids expanded_docs[] = {
+    evoke_doc_ids expanded_docs[] = {
         make_doc(base_doc0, 3),
         make_doc(base_doc1, 2),
         make_doc(base_doc2, 3),
         make_doc(base_doc3, 1),
         make_doc(added_doc, 3)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_LUCENE,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_LUCENE,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_index base;
-    ii42_index delta;
-    ii42_index expanded;
-    ii42_posting_extent extents[8];
-    ii42_term_extent_list terms[4];
-    ii42_corpus_stats stats;
+    evoke_index base;
+    evoke_index delta;
+    evoke_index expanded;
+    evoke_posting_extent extents[8];
+    evoke_term_extent_list terms[4];
+    evoke_corpus_stats stats;
     float *expected_scores = NULL;
     float *segmented_scores = NULL;
     size_t extent_cursor = 0;
     uint32_t term_id;
     uint64_t total_document_length = 0;
 
-    ii42_index_init(&base);
-    ii42_index_init(&delta);
-    ii42_index_init(&expanded);
+    evoke_index_init(&base);
+    evoke_index_init(&delta);
+    evoke_index_init(&expanded);
     memset(extents, 0, sizeof(extents));
     memset(terms, 0, sizeof(terms));
 
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         base_docs,
         4,
         &params,
         false,
         &base
     ));
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         delta_docs,
         1,
         &params,
         false,
         &delta
     ));
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         expanded_docs,
         5,
         &params,
@@ -15131,7 +15131,7 @@ test_neutral_segment_scoring_survives_statistics_change(void)
         terms[term_id].extents = &extents[extent_cursor];
         if (base_end > base_start)
         {
-            ii42_posting_extent *extent = &extents[extent_cursor++];
+            evoke_posting_extent *extent = &extents[extent_cursor++];
 
             extent->indices = &base.indices[base_start];
             extent->term_frequencies = &base.term_frequencies[base_start];
@@ -15141,7 +15141,7 @@ test_neutral_segment_scoring_survives_statistics_change(void)
         }
         if (delta_end > delta_start)
         {
-            ii42_posting_extent *extent = &extents[extent_cursor++];
+            evoke_posting_extent *extent = &extents[extent_cursor++];
 
             extent->indices = &delta.indices[delta_start];
             extent->term_frequencies =
@@ -15162,14 +15162,14 @@ test_neutral_segment_scoring_survives_statistics_change(void)
     stats.doc_frequencies = expanded.doc_frequencies;
     stats.vocab_size = expanded.vocab_size;
 
-    ASSERT_STATUS_OK(ii42_scores_from_ids_exact_stats(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_exact_stats(
         &expanded,
         query,
         3,
         NULL,
         &expected_scores
     ));
-    ASSERT_STATUS_OK(ii42_scores_from_ids_neutral(
+    ASSERT_STATUS_OK(evoke_scores_from_ids_neutral(
         &expanded,
         &stats,
         terms,
@@ -15187,9 +15187,9 @@ test_neutral_segment_scoring_survives_statistics_change(void)
 
     free(expected_scores);
     free(segmented_scores);
-    ii42_index_free(&base);
-    ii42_index_free(&delta);
-    ii42_index_free(&expanded);
+    evoke_index_free(&base);
+    evoke_index_free(&delta);
+    evoke_index_free(&expanded);
 }
 
 static void
@@ -15201,18 +15201,18 @@ test_neutral_scoring_matches_all_methods(void)
     uint32_t doc3[] = {3};
     uint32_t query[] = {0, 2, 3};
     float weight_mask[] = {1.0f, 0.75f, 1.0f, 0.5f};
-    ii42_doc_ids docs[] = {
+    evoke_doc_ids docs[] = {
         make_doc(doc0, 3),
         make_doc(doc1, 2),
         make_doc(doc2, 3),
         make_doc(doc3, 1)
     };
-    ii42_method methods[] = {
-        II42_METHOD_ROBERTSON,
-        II42_METHOD_LUCENE,
-        II42_METHOD_ATIRE,
-        II42_METHOD_BM25L,
-        II42_METHOD_BM25PLUS
+    evoke_method methods[] = {
+        EVOKE_METHOD_ROBERTSON,
+        EVOKE_METHOD_LUCENE,
+        EVOKE_METHOD_ATIRE,
+        EVOKE_METHOD_BM25L,
+        EVOKE_METHOD_BM25PLUS
     };
     size_t method_index;
 
@@ -15220,21 +15220,21 @@ test_neutral_scoring_matches_all_methods(void)
          method_index < sizeof(methods) / sizeof(methods[0]);
          method_index++)
     {
-        ii42_params params = {
+        evoke_params params = {
             .k1 = 1.5f,
             .b = 0.75f,
             .delta = 0.5f,
             .method = methods[method_index],
             .idf_method = methods[method_index]
         };
-        ii42_corpus_stats stats;
-        ii42_index index;
+        evoke_corpus_stats stats;
+        evoke_index index;
         float *impact_scores = NULL;
         float *neutral_scores = NULL;
         uint32_t doc_id;
 
-        ii42_index_init(&index);
-        ASSERT_STATUS_OK(ii42_build_index_from_ids(
+        evoke_index_init(&index);
+        ASSERT_STATUS_OK(evoke_build_index_from_ids(
             docs,
             4,
             &params,
@@ -15251,14 +15251,14 @@ test_neutral_scoring_matches_all_methods(void)
             stats.total_document_length += index.doc_lengths[doc_id];
         }
 
-        ASSERT_STATUS_OK(ii42_scores_from_ids(
+        ASSERT_STATUS_OK(evoke_scores_from_ids(
             &index,
             query,
             3,
             weight_mask,
             &impact_scores
         ));
-        ASSERT_STATUS_OK(ii42_scores_from_ids_neutral(
+        ASSERT_STATUS_OK(evoke_scores_from_ids_neutral(
             &index,
             &stats,
             NULL,
@@ -15276,7 +15276,7 @@ test_neutral_scoring_matches_all_methods(void)
 
         free(impact_scores);
         free(neutral_scores);
-        ii42_index_free(&index);
+        evoke_index_free(&index);
     }
 }
 
@@ -15287,38 +15287,38 @@ test_serialization_roundtrip(void)
     uint32_t doc1[] = {1, 2};
     uint32_t doc2[] = {0, 2, 2};
     uint32_t doc3[] = {3};
-    ii42_doc_ids docs[] = {
+    evoke_doc_ids docs[] = {
         make_doc(doc0, 3),
         make_doc(doc1, 2),
         make_doc(doc2, 3),
         make_doc(doc3, 1)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_BM25L,
-        .idf_method = II42_METHOD_BM25L
+        .method = EVOKE_METHOD_BM25L,
+        .idf_method = EVOKE_METHOD_BM25L
     };
-    ii42_index original;
-    ii42_index restored;
+    evoke_index original;
+    evoke_index restored;
     uint8_t *bytes = NULL;
     size_t len = 0;
     uint32_t query[] = {0, 2};
     float *scores_a = NULL;
     float *scores_b = NULL;
 
-    ii42_index_init(&original);
-    ii42_index_init(&restored);
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    evoke_index_init(&original);
+    evoke_index_init(&restored);
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         docs,
         4,
         &params,
         true,
         &original
     ));
-    ASSERT_STATUS_OK(ii42_serialize_index(&original, &bytes, &len));
-    ASSERT_STATUS_OK(ii42_deserialize_index(bytes, len, &restored));
+    ASSERT_STATUS_OK(evoke_serialize_index(&original, &bytes, &len));
+    ASSERT_STATUS_OK(evoke_deserialize_index(bytes, len, &restored));
 
     ASSERT_TRUE(restored.num_docs == original.num_docs);
     ASSERT_TRUE(restored.vocab_size == original.vocab_size);
@@ -15347,14 +15347,14 @@ test_serialization_roundtrip(void)
         original.vocab_size
     );
 
-    ASSERT_STATUS_OK(ii42_scores_from_ids(
+    ASSERT_STATUS_OK(evoke_scores_from_ids(
         &original,
         query,
         2,
         NULL,
         &scores_a
     ));
-    ASSERT_STATUS_OK(ii42_scores_from_ids(
+    ASSERT_STATUS_OK(evoke_scores_from_ids(
         &restored,
         query,
         2,
@@ -15366,8 +15366,8 @@ test_serialization_roundtrip(void)
     free(bytes);
     free(scores_a);
     free(scores_b);
-    ii42_index_free(&original);
-    ii42_index_free(&restored);
+    evoke_index_free(&original);
+    evoke_index_free(&restored);
 }
 
 static void
@@ -15375,57 +15375,57 @@ test_storage_version_boundary(void)
 {
     uint32_t doc0[] = {0, 0, 1};
     uint32_t doc1[] = {1, 2};
-    ii42_doc_ids docs[] = {
+    evoke_doc_ids docs[] = {
         make_doc(doc0, 3),
         make_doc(doc1, 2)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_LUCENE,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_LUCENE,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_index original;
-    ii42_index restored;
+    evoke_index original;
+    evoke_index restored;
     uint8_t *current = NULL;
     size_t current_len = 0;
 
-    ii42_index_init(&original);
-    ii42_index_init(&restored);
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    evoke_index_init(&original);
+    evoke_index_init(&restored);
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         docs,
         2,
         &params,
         false,
         &original
     ));
-    ASSERT_STATUS_OK(ii42_serialize_index(
+    ASSERT_STATUS_OK(evoke_serialize_index(
         &original,
         &current,
         &current_len
     ));
-    ASSERT_TRUE(current[4] == II42_STORAGE_CURRENT_VERSION);
+    ASSERT_TRUE(current[4] == EVOKE_STORAGE_CURRENT_VERSION);
     ASSERT_TRUE(current[5] == 0);
     ASSERT_TRUE((current[6] & 0x08U) != 0);
 
     current[4] = 1;
     current[5] = 0;
-    ASSERT_TRUE(ii42_deserialize_index(
+    ASSERT_TRUE(evoke_deserialize_index(
         current,
         current_len,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     current[4] = 3;
-    ASSERT_TRUE(ii42_deserialize_index(
+    ASSERT_TRUE(evoke_deserialize_index(
         current,
         current_len,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     free(current);
-    ii42_index_free(&original);
+    evoke_index_free(&original);
 }
 
 typedef struct test_stream_buffer
@@ -15435,7 +15435,7 @@ typedef struct test_stream_buffer
     size_t capacity;
 } test_stream_buffer;
 
-static ii42_status
+static evoke_status
 test_stream_write(void *ctx, const uint8_t *bytes, size_t len)
 {
     test_stream_buffer *buffer = ctx;
@@ -15454,14 +15454,14 @@ test_stream_write(void *ctx, const uint8_t *bytes, size_t len)
         new_bytes = realloc(buffer->bytes, new_capacity);
         if (new_bytes == NULL)
         {
-            return II42_ERR_NOMEM;
+            return EVOKE_ERR_NOMEM;
         }
         buffer->bytes = new_bytes;
         buffer->capacity = new_capacity;
     }
     memcpy(buffer->bytes + buffer->len, bytes, len);
     buffer->len += len;
-    return II42_OK;
+    return EVOKE_OK;
 }
 
 static void
@@ -15470,37 +15470,37 @@ test_stream_serialization_matches_buffered(void)
     const char *doc0[] = {"alpha", "alpha", "beta"};
     const char *doc1[] = {"beta", "gamma"};
     const char *doc2[] = {"alpha", "delta", "gamma"};
-    ii42_doc_tokens docs[] = {
+    evoke_doc_tokens docs[] = {
         {doc0, 3},
         {doc1, 2},
         {doc2, 3}
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_LUCENE,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_LUCENE,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_index index;
+    evoke_index index;
     test_stream_buffer streamed = {0};
     uint8_t *buffered = NULL;
     size_t buffered_len = 0;
     size_t streamed_len = 0;
 
-    ii42_index_init(&index);
-    ASSERT_STATUS_OK(ii42_build_index_from_tokens(
+    evoke_index_init(&index);
+    ASSERT_STATUS_OK(evoke_build_index_from_tokens(
         docs,
         3,
         &params,
         &index
     ));
-    ASSERT_STATUS_OK(ii42_serialize_index(
+    ASSERT_STATUS_OK(evoke_serialize_index(
         &index,
         &buffered,
         &buffered_len
     ));
-    ASSERT_STATUS_OK(ii42_serialize_index_stream(
+    ASSERT_STATUS_OK(evoke_serialize_index_stream(
         &index,
         test_stream_write,
         &streamed,
@@ -15512,7 +15512,7 @@ test_stream_serialization_matches_buffered(void)
 
     free(streamed.bytes);
     free(buffered);
-    ii42_index_free(&index);
+    evoke_index_free(&index);
 }
 
 static void
@@ -15520,36 +15520,36 @@ test_deserialize_rejects_corrupt_postings(void)
 {
     uint32_t doc0[] = {0, 1};
     uint32_t doc1[] = {1, 2};
-    ii42_doc_ids docs[] = {
+    evoke_doc_ids docs[] = {
         make_doc(doc0, 2),
         make_doc(doc1, 2)
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_LUCENE,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_LUCENE,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_index original;
-    ii42_index restored;
+    evoke_index original;
+    evoke_index restored;
     uint8_t *bytes = NULL;
     size_t len = 0;
     size_t indices_offset;
     size_t indptr_offset;
     size_t final_indptr_offset;
-    const size_t header_size = II42_HEADER_SIZE;
+    const size_t header_size = EVOKE_HEADER_SIZE;
 
-    ii42_index_init(&original);
-    ii42_index_init(&restored);
-    ASSERT_STATUS_OK(ii42_build_index_from_ids(
+    evoke_index_init(&original);
+    evoke_index_init(&restored);
+    ASSERT_STATUS_OK(evoke_build_index_from_ids(
         docs,
         2,
         &params,
         false,
         &original
     ));
-    ASSERT_STATUS_OK(ii42_serialize_index(&original, &bytes, &len));
+    ASSERT_STATUS_OK(evoke_serialize_index(&original, &bytes, &len));
 
     indices_offset = header_size + (size_t) original.data_len * sizeof(float);
     indptr_offset = indices_offset + (size_t) original.data_len * sizeof(uint32_t);
@@ -15559,19 +15559,19 @@ test_deserialize_rejects_corrupt_postings(void)
     ASSERT_TRUE(indices_offset + sizeof(uint32_t) <= len);
 
     write_u64_le(bytes + final_indptr_offset, original.data_len + 1);
-    ASSERT_TRUE(ii42_deserialize_index(bytes, len, &restored) ==
-                II42_ERR_FORMAT);
+    ASSERT_TRUE(evoke_deserialize_index(bytes, len, &restored) ==
+                EVOKE_ERR_FORMAT);
 
     free(bytes);
     bytes = NULL;
-    ASSERT_STATUS_OK(ii42_serialize_index(&original, &bytes, &len));
+    ASSERT_STATUS_OK(evoke_serialize_index(&original, &bytes, &len));
     write_u32_le(bytes + indices_offset, original.num_docs);
-    ASSERT_TRUE(ii42_deserialize_index(bytes, len, &restored) ==
-                II42_ERR_FORMAT);
+    ASSERT_TRUE(evoke_deserialize_index(bytes, len, &restored) ==
+                EVOKE_ERR_FORMAT);
 
     free(bytes);
-    ii42_index_free(&original);
-    ii42_index_free(&restored);
+    evoke_index_free(&original);
+    evoke_index_free(&restored);
 }
 
 static void
@@ -15579,26 +15579,26 @@ test_serialization_rejects_inconsistent_index(void)
 {
     const char *doc0[] = {"alpha", "beta"};
     const char *doc1[] = {"beta", "gamma"};
-    ii42_doc_tokens docs[] = {
+    evoke_doc_tokens docs[] = {
         {doc0, 2},
         {doc1, 2}
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_LUCENE,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_LUCENE,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
-    ii42_index index;
-    ii42_index malformed;
+    evoke_index index;
+    evoke_index malformed;
     float saved_score;
     uint32_t saved_frequency;
     char *saved_vocab;
     size_t len = 0;
 
-    ii42_index_init(&index);
-    ASSERT_STATUS_OK(ii42_build_index_from_tokens(
+    evoke_index_init(&index);
+    ASSERT_STATUS_OK(evoke_build_index_from_tokens(
         docs,
         2,
         &params,
@@ -15607,64 +15607,64 @@ test_serialization_rejects_inconsistent_index(void)
 
     malformed = index;
     malformed.data = NULL;
-    ASSERT_TRUE(ii42_serialized_index_size(
+    ASSERT_TRUE(evoke_serialized_index_size(
         &malformed,
         &len
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
 
     malformed = index;
     malformed.indices = NULL;
-    ASSERT_TRUE(ii42_serialized_index_size(
+    ASSERT_TRUE(evoke_serialized_index_size(
         &malformed,
         &len
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
 
     malformed = index;
     malformed.indptr = NULL;
-    ASSERT_TRUE(ii42_serialized_index_size(
+    ASSERT_TRUE(evoke_serialized_index_size(
         &malformed,
         &len
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
 
     malformed = index;
     malformed.term_frequencies = NULL;
-    ASSERT_TRUE(ii42_serialized_index_size(
+    ASSERT_TRUE(evoke_serialized_index_size(
         &malformed,
         &len
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
 
     saved_score = index.data[0];
     index.data[0] = NAN;
-    ASSERT_TRUE(ii42_serialized_index_size(
+    ASSERT_TRUE(evoke_serialized_index_size(
         &index,
         &len
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     index.data[0] = saved_score;
 
     saved_frequency = index.doc_frequencies[0];
     index.doc_frequencies[0]++;
-    ASSERT_TRUE(ii42_serialized_index_size(
+    ASSERT_TRUE(evoke_serialized_index_size(
         &index,
         &len
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     index.doc_frequencies[0] = saved_frequency;
 
     saved_vocab = index.vocab[0];
     index.vocab[0] = NULL;
-    ASSERT_TRUE(ii42_serialized_index_size(
+    ASSERT_TRUE(evoke_serialized_index_size(
         &index,
         &len
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
     index.vocab[0] = saved_vocab;
 
     malformed = index;
     malformed.data_len = UINT32_MAX;
-    ASSERT_TRUE(ii42_serialized_index_size(
+    ASSERT_TRUE(evoke_serialized_index_size(
         &malformed,
         &len
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
-    ii42_index_free(&index);
+    evoke_index_free(&index);
 }
 
 static void
@@ -15672,104 +15672,104 @@ test_deserialize_mutation_safety(void)
 {
     const char *doc0[] = {"alpha", "beta"};
     const char *doc1[] = {"beta", "gamma"};
-    ii42_doc_tokens docs[] = {
+    evoke_doc_tokens docs[] = {
         {doc0, 2},
         {doc1, 2}
     };
-    ii42_params params = {
+    evoke_params params = {
         .k1 = 1.5f,
         .b = 0.75f,
         .delta = 0.5f,
-        .method = II42_METHOD_LUCENE,
-        .idf_method = II42_METHOD_LUCENE
+        .method = EVOKE_METHOD_LUCENE,
+        .idf_method = EVOKE_METHOD_LUCENE
     };
     const uint8_t masks[] = {0x01U, 0x80U, 0xFFU};
-    ii42_index original;
-    ii42_index restored;
+    evoke_index original;
+    evoke_index restored;
     uint8_t *bytes = NULL;
     uint8_t *mutated = NULL;
     size_t len = 0;
     size_t i;
     size_t j;
 
-    ii42_index_init(&original);
-    ASSERT_STATUS_OK(ii42_build_index_from_tokens(
+    evoke_index_init(&original);
+    ASSERT_STATUS_OK(evoke_build_index_from_tokens(
         docs,
         2,
         &params,
         &original
     ));
-    ASSERT_STATUS_OK(ii42_serialize_index(&original, &bytes, &len));
+    ASSERT_STATUS_OK(evoke_serialize_index(&original, &bytes, &len));
 
     for (i = 0; i < len; i++)
     {
-        ii42_index_init(&restored);
-        ASSERT_TRUE(ii42_deserialize_index(
+        evoke_index_init(&restored);
+        ASSERT_TRUE(evoke_deserialize_index(
             bytes,
             i,
             &restored
-        ) == II42_ERR_FORMAT);
-        ii42_index_free(&restored);
+        ) == EVOKE_ERR_FORMAT);
+        evoke_index_free(&restored);
     }
 
     mutated = malloc(len + 1);
     ASSERT_TRUE(mutated != NULL);
     memcpy(mutated, bytes, len);
     mutated[len] = 0;
-    ii42_index_init(&restored);
-    ASSERT_TRUE(ii42_deserialize_index(
+    evoke_index_init(&restored);
+    ASSERT_TRUE(evoke_deserialize_index(
         mutated,
         len + 1,
         &restored
-    ) == II42_ERR_FORMAT);
-    ii42_index_free(&restored);
+    ) == EVOKE_ERR_FORMAT);
+    evoke_index_free(&restored);
 
     for (i = 0; i < len; i++)
     {
         for (j = 0; j < sizeof(masks); j++)
         {
-            ii42_status status;
+            evoke_status status;
 
             memcpy(mutated, bytes, len);
             mutated[i] ^= masks[j];
-            ii42_index_init(&restored);
-            status = ii42_deserialize_index(mutated, len, &restored);
-            ASSERT_TRUE(status == II42_OK || status == II42_ERR_FORMAT);
-            ii42_index_free(&restored);
+            evoke_index_init(&restored);
+            status = evoke_deserialize_index(mutated, len, &restored);
+            ASSERT_TRUE(status == EVOKE_OK || status == EVOKE_ERR_FORMAT);
+            evoke_index_free(&restored);
         }
     }
 
     memcpy(mutated, bytes, len);
     write_u32_le(mutated + 16, 0x7FC00000U);
-    ii42_index_init(&restored);
-    ASSERT_TRUE(ii42_deserialize_index(
+    evoke_index_init(&restored);
+    ASSERT_TRUE(evoke_deserialize_index(
         mutated,
         len,
         &restored
-    ) == II42_ERR_FORMAT);
-    ii42_index_free(&restored);
+    ) == EVOKE_ERR_FORMAT);
+    evoke_index_free(&restored);
 
     memcpy(mutated, bytes, len);
     mutated[len - 1] = '\0';
-    ii42_index_init(&restored);
-    ASSERT_TRUE(ii42_deserialize_index(
+    evoke_index_init(&restored);
+    ASSERT_TRUE(evoke_deserialize_index(
         mutated,
         len,
         &restored
-    ) == II42_ERR_FORMAT);
-    ii42_index_free(&restored);
+    ) == EVOKE_ERR_FORMAT);
+    evoke_index_free(&restored);
 
     free(mutated);
     free(bytes);
-    ii42_index_free(&original);
+    evoke_index_free(&original);
 }
 
 static void
 test_topk_numpy_compatible_shape(void)
 {
     float scores[] = {1.0f, 5.0f, 3.0f, 2.0f, 4.0f};
-    ii42_topk_result sorted_result;
-    ii42_topk_result unsorted_result;
+    evoke_topk_result sorted_result;
+    evoke_topk_result unsorted_result;
     uint32_t expected_ids[] = {1, 4, 2};
     float expected_scores[] = {5.0f, 4.0f, 3.0f};
     size_t i;
@@ -15777,11 +15777,11 @@ test_topk_numpy_compatible_shape(void)
     memset(&sorted_result, 0, sizeof(sorted_result));
     memset(&unsorted_result, 0, sizeof(unsorted_result));
 
-    ASSERT_STATUS_OK(ii42_topk(scores, 5, 3, true, &sorted_result));
+    ASSERT_STATUS_OK(evoke_topk(scores, 5, 3, true, &sorted_result));
     assert_uint32_array(sorted_result.doc_ids, expected_ids, 3);
     assert_float_array(sorted_result.scores, expected_scores, 3);
 
-    ASSERT_STATUS_OK(ii42_topk(scores, 5, 3, false, &unsorted_result));
+    ASSERT_STATUS_OK(evoke_topk(scores, 5, 3, false, &unsorted_result));
     ASSERT_TRUE(unsorted_result.len == 3);
     for (i = 0; i < 3; i++)
     {
@@ -15798,8 +15798,8 @@ test_topk_numpy_compatible_shape(void)
         ASSERT_TRUE(seen);
     }
 
-    ii42_topk_result_free(&sorted_result);
-    ii42_topk_result_free(&unsorted_result);
+    evoke_topk_result_free(&sorted_result);
+    evoke_topk_result_free(&unsorted_result);
 }
 
 static void
@@ -15807,13 +15807,13 @@ test_topk_subset_buffered_keeps_stable_threshold(void)
 {
     float scores[] = {100.0f, 50.0f, 40.0f, 60.0f, 55.0f, 10.0f};
     uint32_t candidate_doc_ids[] = {0, 1, 2, 3, 4, 5};
-    ii42_topk_result result;
+    evoke_topk_result result;
     uint32_t expected_ids[] = {0, 3, 4};
     float expected_scores[] = {100.0f, 60.0f, 55.0f};
 
     memset(&result, 0, sizeof(result));
 
-    ASSERT_STATUS_OK(ii42_topk_subset(
+    ASSERT_STATUS_OK(evoke_topk_subset(
         scores,
         candidate_doc_ids,
         6,
@@ -15827,7 +15827,7 @@ test_topk_subset_buffered_keeps_stable_threshold(void)
     assert_uint32_array(result.doc_ids, expected_ids, 3);
     assert_float_array(result.scores, expected_scores, 3);
 
-    ii42_topk_result_free(&result);
+    evoke_topk_result_free(&result);
 }
 
 static void
@@ -15837,10 +15837,10 @@ test_topk_subset_compact_matches_identity_tie_breaks(void)
     uint32_t candidate_doc_ids[] = {0, 1, 2, 3, 4, 5, 6};
     uint64_t identity_tie_break_keys[] = {0, 1, 2, 3, 4, 5, 6};
     uint32_t expected_ids[] = {1, 2, 5, 4};
-    ii42_topk_result compact_result = {0};
-    ii42_topk_result keyed_result = {0};
+    evoke_topk_result compact_result = {0};
+    evoke_topk_result keyed_result = {0};
 
-    ASSERT_STATUS_OK(ii42_topk_subset_with_tie_breaks(
+    ASSERT_STATUS_OK(evoke_topk_subset_with_tie_breaks(
         scores,
         candidate_doc_ids,
         7,
@@ -15850,7 +15850,7 @@ test_topk_subset_compact_matches_identity_tie_breaks(void)
         NULL,
         &compact_result
     ));
-    ASSERT_STATUS_OK(ii42_topk_subset_with_tie_breaks(
+    ASSERT_STATUS_OK(evoke_topk_subset_with_tie_breaks(
         scores,
         candidate_doc_ids,
         7,
@@ -15875,8 +15875,8 @@ test_topk_subset_compact_matches_identity_tie_breaks(void)
         compact_result.len
     );
 
-    ii42_topk_result_free(&compact_result);
-    ii42_topk_result_free(&keyed_result);
+    evoke_topk_result_free(&compact_result);
+    evoke_topk_result_free(&keyed_result);
 }
 
 static void
@@ -15887,9 +15887,9 @@ test_topk_custom_tie_breaks(void)
     uint32_t candidate_doc_ids[] = {4, 2, 0, 1};
     uint32_t expected_ids[] = {1, 2, 0};
     uint32_t expected_subset_ids[] = {1, 2};
-    ii42_topk_result result = {0};
+    evoke_topk_result result = {0};
 
-    ASSERT_STATUS_OK(ii42_topk_with_tie_breaks(
+    ASSERT_STATUS_OK(evoke_topk_with_tie_breaks(
         scores,
         5,
         3,
@@ -15899,9 +15899,9 @@ test_topk_custom_tie_breaks(void)
     ));
     ASSERT_TRUE(result.len == 3);
     assert_uint32_array(result.doc_ids, expected_ids, 3);
-    ii42_topk_result_free(&result);
+    evoke_topk_result_free(&result);
 
-    ASSERT_STATUS_OK(ii42_topk_subset_with_tie_breaks(
+    ASSERT_STATUS_OK(evoke_topk_subset_with_tie_breaks(
         scores,
         candidate_doc_ids,
         4,
@@ -15913,7 +15913,7 @@ test_topk_custom_tie_breaks(void)
     ));
     ASSERT_TRUE(result.len == 2);
     assert_uint32_array(result.doc_ids, expected_subset_ids, 2);
-    ii42_topk_result_free(&result);
+    evoke_topk_result_free(&result);
 }
 
 static void
@@ -15922,34 +15922,34 @@ test_streaming_topk_matches_array_tie_breaks(void)
     float scores[] = {1.0f, 1.0f, 1.0f, 0.5f, 1.0f};
     uint64_t tie_break_keys[] = {30, 10, 20, 50, 40};
     uint32_t expected_ids[] = {1, 2, 0};
-    ii42_topk_accumulator accumulator;
-    ii42_topk_result result = {0};
+    evoke_topk_accumulator accumulator;
+    evoke_topk_result result = {0};
 
-    ASSERT_STATUS_OK(ii42_topk_accumulator_init(&accumulator, 3));
+    ASSERT_STATUS_OK(evoke_topk_accumulator_init(&accumulator, 3));
     for (uint32_t doc_id = 0; doc_id < 5; doc_id++)
     {
-        ASSERT_STATUS_OK(ii42_topk_accumulator_offer(
+        ASSERT_STATUS_OK(evoke_topk_accumulator_offer(
             &accumulator,
             scores[doc_id],
             doc_id,
             tie_break_keys[doc_id]
         ));
     }
-    ASSERT_STATUS_OK(ii42_topk_accumulator_finish(
+    ASSERT_STATUS_OK(evoke_topk_accumulator_finish(
         &accumulator,
         true,
         &result
     ));
     ASSERT_TRUE(result.len == 3);
     assert_uint32_array(result.doc_ids, expected_ids, 3);
-    ASSERT_TRUE(ii42_topk_accumulator_offer(
+    ASSERT_TRUE(evoke_topk_accumulator_offer(
         &accumulator,
         2.0f,
         5,
         0
-    ) == II42_ERR_INVALID);
-    ii42_topk_result_free(&result);
-    ii42_topk_accumulator_free(&accumulator);
+    ) == EVOKE_ERR_INVALID);
+    evoke_topk_result_free(&result);
+    evoke_topk_accumulator_free(&accumulator);
 }
 
 static void
@@ -15961,30 +15961,30 @@ test_blockmax_zero_score_uses_ordered_prefix(void)
     uint32_t tie_break_order[] = {1, 3, 5, 7, 6, 4, 2, 0};
     uint32_t expected_ids[] = {1, 3, 5};
     uint32_t unknown_query_id = 1;
-    ii42_term_extent_list terms[1] = {{0}};
-    ii42_document_block_extrema document_blocks[] = {
+    evoke_term_extent_list terms[1] = {{0}};
+    evoke_document_block_extrema document_blocks[] = {
         {
             .document_count = 8,
             .min_document_length = 1,
             .max_document_length = 1,
         },
     };
-    ii42_index index = {
+    evoke_index index = {
         .num_docs = 8,
         .vocab_size = 1,
         .doc_lengths = document_lengths,
     };
-    ii42_corpus_stats stats = {
+    evoke_corpus_stats stats = {
         .document_count = 8,
         .total_document_length = 8,
         .doc_frequencies = document_frequencies,
         .vocab_size = 1,
     };
-    ii42_topk_result result = {0};
-    ii42_blockmax_stats blockmax_stats = {0};
+    evoke_topk_result result = {0};
+    evoke_blockmax_stats blockmax_stats = {0};
 
     ASSERT_STATUS_OK(
-        ii42_topk_from_weighted_ids_mixed_retired_blockmax_with_tie_breaks(
+        evoke_topk_from_weighted_ids_mixed_retired_blockmax_with_tie_breaks(
             &index,
             &stats,
             terms,
@@ -16008,10 +16008,10 @@ test_blockmax_zero_score_uses_ordered_prefix(void)
     ASSERT_TRUE(result.len == 3);
     assert_uint32_array(result.doc_ids, expected_ids, 3);
     ASSERT_TRUE(blockmax_stats.zero_score_documents_considered == 3);
-    ii42_topk_result_free(&result);
+    evoke_topk_result_free(&result);
 
     ASSERT_STATUS_OK(
-        ii42_topk_from_weighted_ids_mixed_retired_blockmax_with_tie_breaks(
+        evoke_topk_from_weighted_ids_mixed_retired_blockmax_with_tie_breaks(
             &index,
             &stats,
             terms,
@@ -16035,7 +16035,7 @@ test_blockmax_zero_score_uses_ordered_prefix(void)
     ASSERT_TRUE(result.len == 3);
     assert_uint32_array(result.doc_ids, expected_ids, 3);
     ASSERT_TRUE(blockmax_stats.zero_score_documents_considered == 8);
-    ii42_topk_result_free(&result);
+    evoke_topk_result_free(&result);
 
     {
         uint8_t allowed_document_bitmap[] = {
@@ -16047,7 +16047,7 @@ test_blockmax_zero_score_uses_ordered_prefix(void)
         uint32_t filtered_expected_ids[] = {6, 4, 2};
 
         ASSERT_STATUS_OK(
-            ii42_topk_from_weighted_ids_mixed_retired_blockmax_filtered_with_tie_breaks(
+            evoke_topk_from_weighted_ids_mixed_retired_blockmax_filtered_with_tie_breaks(
                 &index,
                 &stats,
                 terms,
@@ -16073,142 +16073,142 @@ test_blockmax_zero_score_uses_ordered_prefix(void)
         ASSERT_TRUE(result.len == 3);
         assert_uint32_array(result.doc_ids, filtered_expected_ids, 3);
         ASSERT_TRUE(blockmax_stats.zero_score_documents_considered == 3);
-        ii42_topk_result_free(&result);
+        evoke_topk_result_free(&result);
     }
 }
 
 static void
 test_query_parser_basic_terms(void)
 {
-    ii42_query query;
+    evoke_query query;
 
-    ii42_query_init(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string("cat bird", &query));
+    evoke_query_init(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string("cat bird", &query));
 
     ASSERT_TRUE(query.len == 2);
-    ASSERT_TRUE(query.terms[0].kind == II42_QUERY_TERM);
-    ASSERT_TRUE(query.terms[0].occur == II42_QUERY_SHOULD);
+    ASSERT_TRUE(query.terms[0].kind == EVOKE_QUERY_TERM);
+    ASSERT_TRUE(query.terms[0].occur == EVOKE_QUERY_SHOULD);
     ASSERT_TRUE(query.terms[0].len == 1);
     ASSERT_TRUE(strcmp(query.terms[0].tokens[0], "cat") == 0);
-    ASSERT_TRUE(query.terms[1].kind == II42_QUERY_TERM);
-    ASSERT_TRUE(query.terms[1].occur == II42_QUERY_SHOULD);
+    ASSERT_TRUE(query.terms[1].kind == EVOKE_QUERY_TERM);
+    ASSERT_TRUE(query.terms[1].occur == EVOKE_QUERY_SHOULD);
     ASSERT_TRUE(strcmp(query.terms[1].tokens[0], "bird") == 0);
 
-    ii42_query_free(&query);
+    evoke_query_free(&query);
 }
 
 static void
 test_query_parser_occurs_prefix_and_phrase(void)
 {
-    ii42_query query;
+    evoke_query query;
 
-    ii42_query_init(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string(
+    evoke_query_init(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string(
         "+must -omit pref* \"exact phrase here\"",
         &query
     ));
 
     ASSERT_TRUE(query.len == 4);
 
-    ASSERT_TRUE(query.terms[0].occur == II42_QUERY_MUST);
-    ASSERT_TRUE(query.terms[0].kind == II42_QUERY_TERM);
+    ASSERT_TRUE(query.terms[0].occur == EVOKE_QUERY_MUST);
+    ASSERT_TRUE(query.terms[0].kind == EVOKE_QUERY_TERM);
     ASSERT_TRUE(strcmp(query.terms[0].tokens[0], "must") == 0);
 
-    ASSERT_TRUE(query.terms[1].occur == II42_QUERY_MUST_NOT);
-    ASSERT_TRUE(query.terms[1].kind == II42_QUERY_TERM);
+    ASSERT_TRUE(query.terms[1].occur == EVOKE_QUERY_MUST_NOT);
+    ASSERT_TRUE(query.terms[1].kind == EVOKE_QUERY_TERM);
     ASSERT_TRUE(strcmp(query.terms[1].tokens[0], "omit") == 0);
 
-    ASSERT_TRUE(query.terms[2].occur == II42_QUERY_SHOULD);
-    ASSERT_TRUE(query.terms[2].kind == II42_QUERY_PREFIX);
+    ASSERT_TRUE(query.terms[2].occur == EVOKE_QUERY_SHOULD);
+    ASSERT_TRUE(query.terms[2].kind == EVOKE_QUERY_PREFIX);
     ASSERT_TRUE(strcmp(query.terms[2].tokens[0], "pref") == 0);
 
-    ASSERT_TRUE(query.terms[3].occur == II42_QUERY_SHOULD);
-    ASSERT_TRUE(query.terms[3].kind == II42_QUERY_PHRASE);
+    ASSERT_TRUE(query.terms[3].occur == EVOKE_QUERY_SHOULD);
+    ASSERT_TRUE(query.terms[3].kind == EVOKE_QUERY_PHRASE);
     ASSERT_TRUE(query.terms[3].len == 3);
     ASSERT_TRUE(strcmp(query.terms[3].tokens[0], "exact") == 0);
     ASSERT_TRUE(strcmp(query.terms[3].tokens[1], "phrase") == 0);
     ASSERT_TRUE(strcmp(query.terms[3].tokens[2], "here") == 0);
 
-    ii42_query_free(&query);
+    evoke_query_free(&query);
 }
 
 static void
 test_query_parser_textual_boolean_aliases(void)
 {
-    ii42_query query;
+    evoke_query query;
 
-    ii42_query_init(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string(
+    evoke_query_init(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string(
         "cat OR bird AND fish",
         &query
     ));
 
-    ASSERT_TRUE(ii42_query_uses_boolean_ast(&query));
+    ASSERT_TRUE(evoke_query_uses_boolean_ast(&query));
     ASSERT_TRUE(query.len == 3);
     ASSERT_TRUE(query.root != NULL);
-    ASSERT_TRUE(query.root->kind == II42_QUERY_NODE_OR);
+    ASSERT_TRUE(query.root->kind == EVOKE_QUERY_NODE_OR);
     ASSERT_TRUE(query.root->left != NULL);
-    ASSERT_TRUE(query.root->left->kind == II42_QUERY_NODE_TERM);
+    ASSERT_TRUE(query.root->left->kind == EVOKE_QUERY_NODE_TERM);
     ASSERT_TRUE(query.root->right != NULL);
-    ASSERT_TRUE(query.root->right->kind == II42_QUERY_NODE_AND);
+    ASSERT_TRUE(query.root->right->kind == EVOKE_QUERY_NODE_AND);
     ASSERT_TRUE(strcmp(query.terms[0].tokens[0], "cat") == 0);
     ASSERT_TRUE(strcmp(query.terms[1].tokens[0], "bird") == 0);
     ASSERT_TRUE(strcmp(query.terms[2].tokens[0], "fish") == 0);
-    ii42_query_free(&query);
+    evoke_query_free(&query);
 
-    ii42_query_init(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string(
+    evoke_query_init(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string(
         "cat AND (bird OR NOT omit)",
         &query
     ));
-    ASSERT_TRUE(ii42_query_uses_boolean_ast(&query));
+    ASSERT_TRUE(evoke_query_uses_boolean_ast(&query));
     ASSERT_TRUE(query.len == 3);
     ASSERT_TRUE(query.root != NULL);
-    ASSERT_TRUE(query.root->kind == II42_QUERY_NODE_AND);
+    ASSERT_TRUE(query.root->kind == EVOKE_QUERY_NODE_AND);
     ASSERT_TRUE(strcmp(query.terms[0].tokens[0], "cat") == 0);
     ASSERT_TRUE(strcmp(query.terms[1].tokens[0], "bird") == 0);
     ASSERT_TRUE(strcmp(query.terms[2].tokens[0], "omit") == 0);
-    ii42_query_free(&query);
+    evoke_query_free(&query);
 
-    ii42_query_init(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string("cat and bird", &query));
-    ASSERT_TRUE(!ii42_query_uses_boolean_ast(&query));
+    evoke_query_init(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string("cat and bird", &query));
+    ASSERT_TRUE(!evoke_query_uses_boolean_ast(&query));
     ASSERT_TRUE(query.len == 3);
     ASSERT_TRUE(strcmp(query.terms[1].tokens[0], "and") == 0);
-    ii42_query_free(&query);
+    evoke_query_free(&query);
 }
 
 static void
 test_query_parser_invalid_inputs(void)
 {
-    ii42_query query;
+    evoke_query query;
 
-    ii42_query_init(&query);
-    ASSERT_TRUE(ii42_parse_query_string("+", &query) ==
-                II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_parse_query_string("\"unterminated", &query) ==
-                II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_parse_query_string("*", &query) ==
-                II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_parse_query_string("\"   \"", &query) ==
-                II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_parse_query_string("cat AND", &query) ==
-                II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_parse_query_string("OR cat", &query) ==
-                II42_ERR_INVALID);
-    ASSERT_TRUE(ii42_parse_query_string("(cat OR bird", &query) ==
-                II42_ERR_INVALID);
-    ii42_query_free(&query);
+    evoke_query_init(&query);
+    ASSERT_TRUE(evoke_parse_query_string("+", &query) ==
+                EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_parse_query_string("\"unterminated", &query) ==
+                EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_parse_query_string("*", &query) ==
+                EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_parse_query_string("\"   \"", &query) ==
+                EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_parse_query_string("cat AND", &query) ==
+                EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_parse_query_string("OR cat", &query) ==
+                EVOKE_ERR_INVALID);
+    ASSERT_TRUE(evoke_parse_query_string("(cat OR bird", &query) ==
+                EVOKE_ERR_INVALID);
+    evoke_query_free(&query);
 }
 
 static void
 test_query_parser_complexity_limits(void)
 {
-    const size_t max_nesting = (size_t) II42_QUERY_MAX_NESTING;
-    const size_t max_token_count = (size_t) II42_QUERY_MAX_TOKENS;
-    const size_t nesting = (size_t) II42_QUERY_MAX_NESTING + 1;
-    const size_t token_count = (size_t) II42_QUERY_MAX_TOKENS + 1;
-    ii42_query query;
+    const size_t max_nesting = (size_t) EVOKE_QUERY_MAX_NESTING;
+    const size_t max_token_count = (size_t) EVOKE_QUERY_MAX_TOKENS;
+    const size_t nesting = (size_t) EVOKE_QUERY_MAX_NESTING + 1;
+    const size_t token_count = (size_t) EVOKE_QUERY_MAX_TOKENS + 1;
+    evoke_query query;
     char *max_deep_query;
     char *max_wide_query;
     char *max_wide_phrase;
@@ -16272,26 +16272,26 @@ test_query_parser_complexity_limits(void)
     wide_phrase[token_count * 2 + 1] = '"';
     wide_phrase[token_count * 2 + 2] = '\0';
 
-    ii42_query_init(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string(max_deep_query, &query));
-    ii42_query_free(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string(max_wide_query, &query));
-    ii42_query_free(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string(max_wide_phrase, &query));
-    ii42_query_free(&query);
-    ASSERT_TRUE(ii42_parse_query_string(
+    evoke_query_init(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string(max_deep_query, &query));
+    evoke_query_free(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string(max_wide_query, &query));
+    evoke_query_free(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string(max_wide_phrase, &query));
+    evoke_query_free(&query);
+    ASSERT_TRUE(evoke_parse_query_string(
         deep_query,
         &query
-    ) == II42_ERR_RANGE);
-    ASSERT_TRUE(ii42_parse_query_string(
+    ) == EVOKE_ERR_RANGE);
+    ASSERT_TRUE(evoke_parse_query_string(
         wide_query,
         &query
-    ) == II42_ERR_RANGE);
-    ASSERT_TRUE(ii42_parse_query_string(
+    ) == EVOKE_ERR_RANGE);
+    ASSERT_TRUE(evoke_parse_query_string(
         wide_phrase,
         &query
-    ) == II42_ERR_RANGE);
-    ii42_query_free(&query);
+    ) == EVOKE_ERR_RANGE);
+    evoke_query_free(&query);
 
     free(max_deep_query);
     free(max_wide_query);
@@ -16304,47 +16304,47 @@ test_query_parser_complexity_limits(void)
 static void
 test_query_parser_simple_term_detection(void)
 {
-    ii42_query query;
+    evoke_query query;
 
-    ii42_query_init(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string("cat bird", &query));
-    ASSERT_TRUE(ii42_query_is_simple_term_query(&query));
-    ii42_query_free(&query);
+    evoke_query_init(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string("cat bird", &query));
+    ASSERT_TRUE(evoke_query_is_simple_term_query(&query));
+    evoke_query_free(&query);
 
-    ii42_query_init(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string("+cat", &query));
-    ASSERT_TRUE(!ii42_query_is_simple_term_query(&query));
-    ii42_query_free(&query);
+    evoke_query_init(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string("+cat", &query));
+    ASSERT_TRUE(!evoke_query_is_simple_term_query(&query));
+    evoke_query_free(&query);
 
-    ii42_query_init(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string("cat*", &query));
-    ASSERT_TRUE(!ii42_query_is_simple_term_query(&query));
-    ii42_query_free(&query);
+    evoke_query_init(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string("cat*", &query));
+    ASSERT_TRUE(!evoke_query_is_simple_term_query(&query));
+    evoke_query_free(&query);
 
-    ii42_query_init(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string("\"cat bird\"", &query));
-    ASSERT_TRUE(!ii42_query_is_simple_term_query(&query));
-    ii42_query_free(&query);
+    evoke_query_init(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string("\"cat bird\"", &query));
+    ASSERT_TRUE(!evoke_query_is_simple_term_query(&query));
+    evoke_query_free(&query);
 
-    ii42_query_init(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string("cat OR bird", &query));
-    ASSERT_TRUE(ii42_query_is_simple_term_query(&query));
-    ii42_query_free(&query);
+    evoke_query_init(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string("cat OR bird", &query));
+    ASSERT_TRUE(evoke_query_is_simple_term_query(&query));
+    evoke_query_free(&query);
 }
 
 static void
 test_text_normalize_token(void)
 {
     const char *stopwords[] = {"the", "and"};
-    ii42_text_options options;
+    evoke_text_options options;
     char *token = NULL;
     bool keep = false;
 
-    ii42_text_options_init(&options);
+    evoke_text_options_init(&options);
     options.stopwords = stopwords;
     options.num_stopwords = 2;
 
-    ASSERT_STATUS_OK(ii42_normalize_token(
+    ASSERT_STATUS_OK(evoke_normalize_token(
         "Cat",
         &options,
         &token,
@@ -16354,7 +16354,7 @@ test_text_normalize_token(void)
     ASSERT_TRUE(strcmp(token, "cat") == 0);
     free(token);
 
-    ASSERT_STATUS_OK(ii42_normalize_token(
+    ASSERT_STATUS_OK(evoke_normalize_token(
         "The",
         &options,
         &token,
@@ -16368,71 +16368,71 @@ static void
 test_text_normalize_query(void)
 {
     const char *stopwords[] = {"the"};
-    ii42_text_options options;
-    ii42_query query;
+    evoke_text_options options;
+    evoke_query query;
 
-    ii42_text_options_init(&options);
+    evoke_text_options_init(&options);
     options.stopwords = stopwords;
     options.num_stopwords = 1;
 
-    ii42_query_init(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string(
+    evoke_query_init(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string(
         "+Cat \"The Bird\" -And",
         &query
     ));
-    ASSERT_STATUS_OK(ii42_normalize_query(&query, &options));
+    ASSERT_STATUS_OK(evoke_normalize_query(&query, &options));
 
     ASSERT_TRUE(query.len == 3);
     ASSERT_TRUE(strcmp(query.terms[0].tokens[0], "cat") == 0);
-    ASSERT_TRUE(query.terms[1].kind == II42_QUERY_PHRASE);
+    ASSERT_TRUE(query.terms[1].kind == EVOKE_QUERY_PHRASE);
     ASSERT_TRUE(query.terms[1].len == 1);
     ASSERT_TRUE(strcmp(query.terms[1].tokens[0], "bird") == 0);
     ASSERT_TRUE(strcmp(query.terms[2].tokens[0], "and") == 0);
 
-    ii42_query_free(&query);
+    evoke_query_free(&query);
 }
 
 static void
 test_text_normalize_boolean_query(void)
 {
     const char *stopwords[] = {"the"};
-    ii42_text_options options;
-    ii42_query query;
+    evoke_text_options options;
+    evoke_query query;
 
-    ii42_text_options_init(&options);
+    evoke_text_options_init(&options);
     options.stopwords = stopwords;
     options.num_stopwords = 1;
 
-    ii42_query_init(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string(
+    evoke_query_init(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string(
         "Cat AND (The OR Bird)",
         &query
     ));
-    ASSERT_TRUE(ii42_query_uses_boolean_ast(&query));
-    ASSERT_STATUS_OK(ii42_normalize_query(&query, &options));
+    ASSERT_TRUE(evoke_query_uses_boolean_ast(&query));
+    ASSERT_STATUS_OK(evoke_normalize_query(&query, &options));
 
     ASSERT_TRUE(query.len == 2);
     ASSERT_TRUE(strcmp(query.terms[0].tokens[0], "cat") == 0);
     ASSERT_TRUE(strcmp(query.terms[1].tokens[0], "bird") == 0);
     ASSERT_TRUE(query.root != NULL);
-    ASSERT_TRUE(query.root->kind == II42_QUERY_NODE_AND);
+    ASSERT_TRUE(query.root->kind == EVOKE_QUERY_NODE_AND);
 
-    ii42_query_free(&query);
+    evoke_query_free(&query);
 }
 
 static void
 test_text_tokenize_text(void)
 {
     const char *stopwords[] = {"and"};
-    ii42_text_options options;
+    evoke_text_options options;
     char **tokens = NULL;
     size_t len = 0;
 
-    ii42_text_options_init(&options);
+    evoke_text_options_init(&options);
     options.stopwords = stopwords;
     options.num_stopwords = 1;
 
-    ASSERT_STATUS_OK(ii42_tokenize_text(
+    ASSERT_STATUS_OK(evoke_tokenize_text(
         "Cat, and dog! \316\262eta",
         &options,
         &tokens,
@@ -16444,21 +16444,21 @@ test_text_tokenize_text(void)
     ASSERT_TRUE(strcmp(tokens[1], "dog") == 0);
     ASSERT_TRUE(strcmp(tokens[2], "\316\262eta") == 0);
 
-    ii42_text_tokens_free(tokens, len);
+    evoke_text_tokens_free(tokens, len);
 }
 
 static void
 test_text_normalize_token_with_stemming(void)
 {
-    ii42_text_options options;
+    evoke_text_options options;
     char *token = NULL;
     bool keep = false;
 
-    ii42_text_options_init(&options);
+    evoke_text_options_init(&options);
     options.lowercase = false;
     options.stem_english = true;
 
-    ASSERT_STATUS_OK(ii42_normalize_token(
+    ASSERT_STATUS_OK(evoke_normalize_token(
         "Running",
         &options,
         &token,
@@ -16472,41 +16472,41 @@ test_text_normalize_token_with_stemming(void)
 static void
 test_text_normalize_query_with_stemming(void)
 {
-    ii42_text_options options;
-    ii42_query query;
+    evoke_text_options options;
+    evoke_query query;
 
-    ii42_text_options_init(&options);
+    evoke_text_options_init(&options);
     options.lowercase = false;
     options.stem_english = true;
 
-    ii42_query_init(&query);
-    ASSERT_STATUS_OK(ii42_parse_query_string(
+    evoke_query_init(&query);
+    ASSERT_STATUS_OK(evoke_parse_query_string(
         "Running \"Cats Running\"",
         &query
     ));
-    ASSERT_STATUS_OK(ii42_normalize_query(&query, &options));
+    ASSERT_STATUS_OK(evoke_normalize_query(&query, &options));
 
     ASSERT_TRUE(query.len == 2);
     ASSERT_TRUE(strcmp(query.terms[0].tokens[0], "run") == 0);
-    ASSERT_TRUE(query.terms[1].kind == II42_QUERY_PHRASE);
+    ASSERT_TRUE(query.terms[1].kind == EVOKE_QUERY_PHRASE);
     ASSERT_TRUE(query.terms[1].len == 2);
     ASSERT_TRUE(strcmp(query.terms[1].tokens[0], "cat") == 0);
     ASSERT_TRUE(strcmp(query.terms[1].tokens[1], "run") == 0);
 
-    ii42_query_free(&query);
+    evoke_query_free(&query);
 }
 
 static void
 test_text_tokenize_text_with_stemming(void)
 {
-    ii42_text_options options;
+    evoke_text_options options;
     char **tokens = NULL;
     size_t len = 0;
 
-    ii42_text_options_init(&options);
+    evoke_text_options_init(&options);
     options.stem_english = true;
 
-    ASSERT_STATUS_OK(ii42_tokenize_text(
+    ASSERT_STATUS_OK(evoke_tokenize_text(
         "Running runs quickly",
         &options,
         &tokens,
@@ -16518,20 +16518,20 @@ test_text_tokenize_text_with_stemming(void)
     ASSERT_TRUE(strcmp(tokens[1], "run") == 0);
     ASSERT_TRUE(strcmp(tokens[2], "quickli") == 0);
 
-    ii42_text_tokens_free(tokens, len);
+    evoke_text_tokens_free(tokens, len);
 }
 
 static void
 test_text_normalize_token_with_diacritic_folding(void)
 {
-    ii42_text_options options;
+    evoke_text_options options;
     char *token = NULL;
     bool keep = false;
 
-    ii42_text_options_init(&options);
+    evoke_text_options_init(&options);
     options.fold_diacritics = true;
 
-    ASSERT_STATUS_OK(ii42_normalize_token(
+    ASSERT_STATUS_OK(evoke_normalize_token(
         "Stra\303\237e",
         &options,
         &token,
@@ -16545,8 +16545,8 @@ test_text_normalize_token_with_diacritic_folding(void)
 static void
 test_posting_heat_bounded_decay_and_root_stability(void)
 {
-    ii42_posting_heat_entry entries[4] = {0};
-    ii42_posting_heat_observation observation = {
+    evoke_posting_heat_entry entries[4] = {0};
+    evoke_posting_heat_observation observation = {
         .database_id = 11,
         .index_id = 22,
         .term_id = 7,
@@ -16565,13 +16565,13 @@ test_posting_heat_bounded_decay_and_root_stability(void)
         .last_block_count = 5,
         .observed_at_ms = 1000
     };
-    ii42_posting_heat_merge_result merge_result;
-    ii42_posting_heat_entry candidate;
-    ii42_posting_heat_summary summary;
+    evoke_posting_heat_merge_result merge_result;
+    evoke_posting_heat_entry candidate;
+    evoke_posting_heat_summary summary;
 
-    ASSERT_TRUE(ii42_posting_heat_table_valid(4));
-    ASSERT_TRUE(!ii42_posting_heat_table_valid(6));
-    merge_result = ii42_posting_heat_merge(
+    ASSERT_TRUE(evoke_posting_heat_table_valid(4));
+    ASSERT_TRUE(!evoke_posting_heat_table_valid(6));
+    merge_result = evoke_posting_heat_merge(
         entries,
         4,
         &observation,
@@ -16582,7 +16582,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
     ASSERT_TRUE(merge_result.valid);
     ASSERT_TRUE(!merge_result.evicted);
     ASSERT_TRUE(merge_result.became_candidate);
-    ASSERT_TRUE(ii42_posting_heat_select(
+    ASSERT_TRUE(evoke_posting_heat_select(
         entries,
         4,
         11,
@@ -16600,8 +16600,8 @@ test_posting_heat_bounded_decay_and_root_stability(void)
     ASSERT_TRUE(candidate.root_heat == 64);
 
     {
-        ii42_posting_heat_entry specialization_entries[4] = {0};
-        ii42_posting_heat_observation specialization_observation =
+        evoke_posting_heat_entry specialization_entries[4] = {0};
+        evoke_posting_heat_observation specialization_observation =
             observation;
 
         specialization_observation.root_id = 200;
@@ -16609,7 +16609,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
         specialization_observation.root_query_count = 32;
         specialization_observation.last_extent_count = 1;
         specialization_observation.observed_at_ms = 1050;
-        merge_result = ii42_posting_heat_merge(
+        merge_result = evoke_posting_heat_merge(
             specialization_entries,
             4,
             &specialization_observation,
@@ -16619,7 +16619,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
         );
         ASSERT_TRUE(merge_result.valid);
         ASSERT_TRUE(!merge_result.became_candidate);
-        ASSERT_TRUE(!ii42_posting_heat_select(
+        ASSERT_TRUE(!evoke_posting_heat_select(
             specialization_entries,
             4,
             11,
@@ -16637,7 +16637,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
         specialization_observation.root_query_count = 32;
         specialization_observation.impact_specialization_ready = true;
         specialization_observation.observed_at_ms = 1100;
-        merge_result = ii42_posting_heat_merge(
+        merge_result = evoke_posting_heat_merge(
             specialization_entries,
             4,
             &specialization_observation,
@@ -16647,7 +16647,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
         );
         ASSERT_TRUE(merge_result.valid);
         ASSERT_TRUE(merge_result.became_candidate);
-        ASSERT_TRUE(ii42_posting_heat_select(
+        ASSERT_TRUE(evoke_posting_heat_select(
             specialization_entries,
             4,
             11,
@@ -16667,7 +16667,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
         specialization_observation.impact_specialization_ready = false;
         specialization_observation.hot_cache_republish_ready = true;
         specialization_observation.observed_at_ms = 1150;
-        merge_result = ii42_posting_heat_merge(
+        merge_result = evoke_posting_heat_merge(
             specialization_entries,
             4,
             &specialization_observation,
@@ -16676,7 +16676,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
             32
         );
         ASSERT_TRUE(merge_result.valid);
-        ASSERT_TRUE(ii42_posting_heat_select(
+        ASSERT_TRUE(evoke_posting_heat_select(
             specialization_entries,
             4,
             11,
@@ -16690,7 +16690,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
             &candidate
         ));
         ASSERT_TRUE(candidate.hot_cache_republish_ready);
-        ASSERT_TRUE(ii42_posting_heat_note_attempt(
+        ASSERT_TRUE(evoke_posting_heat_note_attempt(
             specialization_entries,
             4,
             11,
@@ -16699,7 +16699,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
             200,
             1150
         ));
-        ASSERT_TRUE(ii42_posting_heat_note_hot_cache_resident(
+        ASSERT_TRUE(evoke_posting_heat_note_hot_cache_resident(
             specialization_entries,
             4,
             11,
@@ -16707,7 +16707,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
             7,
             200
         ));
-        ASSERT_TRUE(!ii42_posting_heat_select(
+        ASSERT_TRUE(!evoke_posting_heat_select(
             specialization_entries,
             4,
             11,
@@ -16722,7 +16722,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
         ));
 
         specialization_observation.observed_at_ms = 1160;
-        merge_result = ii42_posting_heat_merge(
+        merge_result = evoke_posting_heat_merge(
             specialization_entries,
             4,
             &specialization_observation,
@@ -16731,7 +16731,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
             32
         );
         ASSERT_TRUE(merge_result.valid);
-        ASSERT_TRUE(ii42_posting_heat_select(
+        ASSERT_TRUE(evoke_posting_heat_select(
             specialization_entries,
             4,
             11,
@@ -16746,7 +16746,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
         ));
     }
 
-    ASSERT_TRUE(ii42_posting_heat_note_attempt(
+    ASSERT_TRUE(evoke_posting_heat_note_attempt(
         entries,
         4,
         11,
@@ -16755,7 +16755,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
         100,
         1100
     ));
-    ASSERT_TRUE(!ii42_posting_heat_select(
+    ASSERT_TRUE(!evoke_posting_heat_select(
         entries,
         4,
         11,
@@ -16768,7 +16768,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
         500,
         &candidate
     ));
-    ASSERT_TRUE(ii42_posting_heat_select(
+    ASSERT_TRUE(evoke_posting_heat_select(
         entries,
         4,
         11,
@@ -16786,7 +16786,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
     observation.query_count = 32;
     observation.root_query_count = 32;
     observation.observed_at_ms = 1700;
-    merge_result = ii42_posting_heat_merge(
+    merge_result = evoke_posting_heat_merge(
         entries,
         4,
         &observation,
@@ -16796,7 +16796,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
     );
     ASSERT_TRUE(merge_result.valid);
     ASSERT_TRUE(merge_result.root_heat == 32);
-    ASSERT_TRUE(ii42_posting_heat_select(
+    ASSERT_TRUE(evoke_posting_heat_select(
         entries,
         4,
         11,
@@ -16828,7 +16828,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
     observation.blocks_skipped = 0;
     observation.postings_scored = 999;
     observation.observed_at_ms = 1750;
-    merge_result = ii42_posting_heat_merge(
+    merge_result = evoke_posting_heat_merge(
         entries,
         4,
         &observation,
@@ -16837,7 +16837,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
         32
     );
     ASSERT_TRUE(merge_result.valid);
-    ASSERT_TRUE(ii42_posting_heat_select(
+    ASSERT_TRUE(evoke_posting_heat_select(
         entries,
         4,
         11,
@@ -16858,7 +16858,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
     ASSERT_TRUE(candidate.blocks_skipped == 64);
     ASSERT_TRUE(candidate.postings_scored == 4096);
 
-    ii42_posting_heat_summarize(
+    evoke_posting_heat_summarize(
         entries,
         4,
         11,
@@ -16882,7 +16882,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
         observation.query_count = term_id;
         observation.root_query_count = term_id;
         observation.observed_at_ms = 2800 + term_id;
-        merge_result = ii42_posting_heat_merge(
+        merge_result = evoke_posting_heat_merge(
             entries,
             4,
             &observation,
@@ -16893,7 +16893,7 @@ test_posting_heat_bounded_decay_and_root_stability(void)
     }
     ASSERT_TRUE(merge_result.evicted);
 
-    ii42_posting_heat_summarize(
+    evoke_posting_heat_summarize(
         entries,
         4,
         11,
@@ -16912,8 +16912,8 @@ test_posting_heat_bounded_decay_and_root_stability(void)
 
 static bool
 lexicon_cow_test_ref_equal(
-    const ii42_lexicon_cow_ref *left,
-    const ii42_lexicon_cow_ref *right
+    const evoke_lexicon_cow_ref *left,
+    const evoke_lexicon_cow_ref *right
 )
 {
     return left->kind == right->kind &&
@@ -16929,7 +16929,7 @@ lexicon_cow_test_ref_equal(
 
 typedef struct lexicon_cow_test_object
 {
-    ii42_lexicon_cow_ref ref;
+    evoke_lexicon_cow_ref ref;
     uint8_t *bytes;
     size_t size;
 } lexicon_cow_test_object;
@@ -16968,27 +16968,27 @@ lexicon_cow_test_store_free(lexicon_cow_test_store *store)
     memset(store, 0, sizeof(*store));
 }
 
-static ii42_status
+static evoke_status
 load_lexicon_cow_test_object(
     void *context,
-    const ii42_lexicon_cow_ref *ref,
-    ii42_lexicon_cow_object *object_out
+    const evoke_lexicon_cow_ref *ref,
+    evoke_lexicon_cow_object *object_out
 )
 {
     lexicon_cow_test_store *store = context;
 
     if (store == NULL || ref == NULL || object_out == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     store->load_count++;
     for (size_t index = 0; index < store->object_count; index++)
     {
         lexicon_cow_test_object *stored = &store->objects[index];
-        ii42_segment_object_ref storage_ref;
+        evoke_segment_object_ref storage_ref;
         const uint8_t *bytes = stored->bytes;
         uint8_t *corrupt = NULL;
-        ii42_status status;
+        evoke_status status;
 
         if (stored->ref.owner_manifest_id != ref->owner_manifest_id ||
             stored->ref.object_id != ref->object_id)
@@ -16997,7 +16997,7 @@ load_lexicon_cow_test_object(
         }
         if (!lexicon_cow_test_ref_equal(&stored->ref, ref))
         {
-            return II42_ERR_FORMAT;
+            return EVOKE_ERR_FORMAT;
         }
         if (store->corrupt_owner_manifest_id ==
                 ref->owner_manifest_id &&
@@ -17006,46 +17006,46 @@ load_lexicon_cow_test_object(
             corrupt = malloc(stored->size);
             if (corrupt == NULL)
             {
-                return II42_ERR_NOMEM;
+                return EVOKE_ERR_NOMEM;
             }
             memcpy(corrupt, stored->bytes, stored->size);
             corrupt[stored->size - 1] ^= UINT8_C(1);
             bytes = corrupt;
         }
-        status = ii42_lexicon_cow_object_deserialize(
+        status = evoke_lexicon_cow_object_deserialize(
             bytes,
             stored->size,
             object_out
         );
         free(corrupt);
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
             return status;
         }
-        status = ii42_lexicon_cow_ref_as_segment_object_ref(
+        status = evoke_lexicon_cow_ref_as_segment_object_ref(
             ref,
             &storage_ref
         );
-        if (status == II42_OK)
+        if (status == EVOKE_OK)
         {
-            status = ii42_lexicon_cow_object_bind_storage(
+            status = evoke_lexicon_cow_object_bind_storage(
                 object_out,
                 &storage_ref
             );
         }
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
-            ii42_lexicon_cow_object_free(object_out);
+            evoke_lexicon_cow_object_free(object_out);
         }
         return status;
     }
-    return II42_ERR_FORMAT;
+    return EVOKE_ERR_FORMAT;
 }
 
-static ii42_status
+static evoke_status
 load_serialized_lexicon_cow_test_object(
     void *context,
-    const ii42_lexicon_cow_ref *ref,
+    const evoke_lexicon_cow_ref *ref,
     uint8_t **bytes_out,
     size_t *size_out
 )
@@ -17055,7 +17055,7 @@ load_serialized_lexicon_cow_test_object(
     if (store == NULL || ref == NULL || bytes_out == NULL ||
         size_out == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     *bytes_out = NULL;
     *size_out = 0;
@@ -17072,12 +17072,12 @@ load_serialized_lexicon_cow_test_object(
         }
         if (!lexicon_cow_test_ref_equal(&stored->ref, ref))
         {
-            return II42_ERR_FORMAT;
+            return EVOKE_ERR_FORMAT;
         }
         bytes = malloc(stored->size);
         if (bytes == NULL)
         {
-            return II42_ERR_NOMEM;
+            return EVOKE_ERR_NOMEM;
         }
         memcpy(bytes, stored->bytes, stored->size);
         if (store->corrupt_owner_manifest_id == ref->owner_manifest_id &&
@@ -17087,9 +17087,9 @@ load_serialized_lexicon_cow_test_object(
         }
         *bytes_out = bytes;
         *size_out = stored->size;
-        return II42_OK;
+        return EVOKE_OK;
     }
-    return II42_ERR_FORMAT;
+    return EVOKE_ERR_FORMAT;
 }
 
 static void
@@ -17105,7 +17105,7 @@ release_serialized_lexicon_cow_test_object(
 static void
 store_lexicon_cow_test_tree(
     lexicon_cow_test_store *store,
-    ii42_lexicon_cow_tree *tree,
+    evoke_lexicon_cow_tree *tree,
     uint32_t *next_block
 )
 {
@@ -17114,27 +17114,27 @@ store_lexicon_cow_test_tree(
          object_id++)
     {
         lexicon_cow_test_object *stored;
-        ii42_segment_object_ref storage_ref;
+        evoke_segment_object_ref storage_ref;
         lexicon_cow_test_object *resized;
         uint8_t *bytes = NULL;
         size_t size = 0;
         uint32_t page_count = 0;
 
         ASSERT_STATUS_OK(
-            ii42_lexicon_cow_tree_prepare_object_for_storage(
+            evoke_lexicon_cow_tree_prepare_object_for_storage(
                 tree,
                 object_id,
                 &bytes,
                 &size
             )
         );
-        ASSERT_STATUS_OK(ii42_segment_page_count_required(
+        ASSERT_STATUS_OK(evoke_segment_page_count_required(
             size,
             8192,
             &page_count
         ));
         memset(&storage_ref, 0, sizeof(storage_ref));
-        storage_ref.object_kind = II42_SEGMENT_OBJECT_LEXICON_LOOKUP;
+        storage_ref.object_kind = EVOKE_SEGMENT_OBJECT_LEXICON_LOOKUP;
         storage_ref.start_block = *next_block;
         storage_ref.page_count = page_count;
         storage_ref.object_id = object_id;
@@ -17142,8 +17142,8 @@ store_lexicon_cow_test_tree(
             tree->objects[object_id - 1].ref.owner_manifest_id;
         storage_ref.object_bytes = size;
         storage_ref.object_checksum =
-            ii42_segment_blob_checksum(bytes, size);
-        ASSERT_STATUS_OK(ii42_lexicon_cow_tree_bind_object_storage(
+            evoke_segment_blob_checksum(bytes, size);
+        ASSERT_STATUS_OK(evoke_lexicon_cow_tree_bind_object_storage(
             tree,
             object_id,
             &storage_ref
@@ -17171,49 +17171,49 @@ store_lexicon_cow_test_tree(
     }
 }
 
-static ii42_status
+static evoke_status
 count_lexicon_cow_test_object(
     void *context,
-    const ii42_lexicon_cow_object *object
+    const evoke_lexicon_cow_object *object
 )
 {
     lexicon_cow_visit_counts *counts = context;
 
     if (counts == NULL || object == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     counts->objects++;
-    if (object->ref.kind == II42_LEXICON_COW_OBJECT_NODE)
+    if (object->ref.kind == EVOKE_LEXICON_COW_OBJECT_NODE)
     {
         counts->nodes++;
     }
-    else if (object->ref.kind == II42_LEXICON_COW_OBJECT_BUCKET)
+    else if (object->ref.kind == EVOKE_LEXICON_COW_OBJECT_BUCKET)
     {
         counts->buckets++;
     }
     else
     {
-        return II42_ERR_FORMAT;
+        return EVOKE_ERR_FORMAT;
     }
-    return II42_OK;
+    return EVOKE_OK;
 }
 
-static ii42_status
+static evoke_status
 count_lexicon_cow_test_entry(
     void *context,
-    const ii42_lexicon_cow_entry *entry
+    const evoke_lexicon_cow_entry *entry
 )
 {
     lexicon_cow_visit_counts *counts = context;
 
     if (counts == NULL || entry == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     counts->entries++;
     counts->term_id_sum += entry->term_id;
-    return II42_OK;
+    return EVOKE_OK;
 }
 
 static void
@@ -17227,21 +17227,21 @@ test_lexicon_cow_restart_and_external_patch(void)
     };
     char base_terms[base_count][term_width];
     char added_terms[added_count][term_width];
-    ii42_lexicon_cow_key base_keys[base_count];
-    ii42_lexicon_cow_key added_keys[added_count];
-    ii42_lexicon_cow_tree tree;
-    ii42_lexicon_cow_tree patch;
-    ii42_lexicon_cow_object serialized_root = {0};
-    ii42_lexicon_cow_ref old_root;
-    ii42_lexicon_cow_ref next_root;
-    ii42_lexicon_cow_ref bad_root;
-    ii42_lexicon_cow_update_stats stats;
+    evoke_lexicon_cow_key base_keys[base_count];
+    evoke_lexicon_cow_key added_keys[added_count];
+    evoke_lexicon_cow_tree tree;
+    evoke_lexicon_cow_tree patch;
+    evoke_lexicon_cow_object serialized_root = {0};
+    evoke_lexicon_cow_ref old_root;
+    evoke_lexicon_cow_ref next_root;
+    evoke_lexicon_cow_ref bad_root;
+    evoke_lexicon_cow_update_stats stats;
     lexicon_cow_test_store store = {0};
     lexicon_cow_visit_counts counts = {0};
     uint32_t next_block = 20;
 
-    ii42_lexicon_cow_tree_init(&tree);
-    ii42_lexicon_cow_tree_init(&patch);
+    evoke_lexicon_cow_tree_init(&tree);
+    evoke_lexicon_cow_tree_init(&patch);
     for (uint32_t index = 0; index < base_count; index++)
     {
         int length = snprintf(
@@ -17257,7 +17257,7 @@ test_lexicon_cow_restart_and_external_patch(void)
         base_keys[index].bytes_len = (uint32_t) length;
         base_keys[index].term_id = index;
     }
-    ASSERT_STATUS_OK(ii42_lexicon_cow_tree_build(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_tree_build(
         base_keys,
         base_count,
         UINT64_C(0x9182),
@@ -17266,9 +17266,9 @@ test_lexicon_cow_restart_and_external_patch(void)
     ));
     store_lexicon_cow_test_tree(&store, &tree, &next_block);
     old_root = tree.root;
-    ii42_lexicon_cow_tree_free(&tree);
+    evoke_lexicon_cow_tree_free(&tree);
 
-    ASSERT_STATUS_OK(ii42_lexicon_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_validate_external(
         &old_root,
         UINT64_C(0x9182),
         base_count,
@@ -17285,7 +17285,7 @@ test_lexicon_cow_restart_and_external_patch(void)
         uint32_t term_id = UINT32_MAX;
         bool found = false;
 
-        ASSERT_STATUS_OK(ii42_lexicon_cow_lookup_external(
+        ASSERT_STATUS_OK(evoke_lexicon_cow_lookup_external(
             &old_root,
             UINT64_C(0x9182),
             base_keys[index].bytes,
@@ -17298,7 +17298,7 @@ test_lexicon_cow_restart_and_external_patch(void)
         ASSERT_TRUE(found && term_id == index);
         term_id = UINT32_MAX;
         found = false;
-        ASSERT_STATUS_OK(ii42_lexicon_cow_lookup_serialized_external(
+        ASSERT_STATUS_OK(evoke_lexicon_cow_lookup_serialized_external(
             &serialized_root,
             UINT64_C(0x9182),
             base_keys[index].bytes,
@@ -17311,7 +17311,7 @@ test_lexicon_cow_restart_and_external_patch(void)
         ));
         ASSERT_TRUE(found && term_id == index);
     }
-    ii42_lexicon_cow_object_free(&serialized_root);
+    evoke_lexicon_cow_object_free(&serialized_root);
     for (uint32_t index = 0; index < added_count; index++)
     {
         int length = snprintf(
@@ -17328,7 +17328,7 @@ test_lexicon_cow_restart_and_external_patch(void)
         added_keys[index].term_id = base_count + index;
     }
     store.load_count = 0;
-    ASSERT_STATUS_OK(ii42_lexicon_cow_build_external_append_patch(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_build_external_append_patch(
         &old_root,
         UINT64_C(0x9182),
         base_count,
@@ -17344,12 +17344,12 @@ test_lexicon_cow_restart_and_external_patch(void)
     ASSERT_TRUE(stats.read_buckets <= added_count);
     ASSERT_TRUE(
         stats.read_nodes <=
-            added_count * II42_LEXICON_COW_RADIX_LEVELS
+            added_count * EVOKE_LEXICON_COW_RADIX_LEVELS
     );
     ASSERT_TRUE(
         store.load_count <=
             added_count * 2 *
-                (II42_LEXICON_COW_RADIX_LEVELS + 1)
+                (EVOKE_LEXICON_COW_RADIX_LEVELS + 1)
     );
     assert_retired_ranges(
         patch.retired_ranges,
@@ -17358,7 +17358,7 @@ test_lexicon_cow_restart_and_external_patch(void)
     );
     store_lexicon_cow_test_tree(&store, &patch, &next_block);
     next_root = patch.root;
-    ii42_lexicon_cow_tree_free(&patch);
+    evoke_lexicon_cow_tree_free(&patch);
 
     ASSERT_STATUS_OK(load_lexicon_cow_test_object(
         &store,
@@ -17366,14 +17366,14 @@ test_lexicon_cow_restart_and_external_patch(void)
         &serialized_root
     ));
 
-    ASSERT_STATUS_OK(ii42_lexicon_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_validate_external(
         &old_root,
         UINT64_C(0x9182),
         base_count,
         load_lexicon_cow_test_object,
         &store
     ));
-    ASSERT_STATUS_OK(ii42_lexicon_cow_visit_external(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_visit_external(
         &next_root,
         UINT64_C(0x9182),
         base_count + added_count,
@@ -17384,7 +17384,7 @@ test_lexicon_cow_restart_and_external_patch(void)
     ));
     ASSERT_TRUE(counts.objects == counts.nodes + counts.buckets);
     ASSERT_TRUE(counts.nodes > 0 && counts.buckets > 0);
-    ASSERT_STATUS_OK(ii42_lexicon_cow_scan_external(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_scan_external(
         &next_root,
         UINT64_C(0x9182),
         base_count + added_count,
@@ -17404,7 +17404,7 @@ test_lexicon_cow_restart_and_external_patch(void)
         uint32_t term_id = UINT32_MAX;
         bool found = false;
 
-        ASSERT_STATUS_OK(ii42_lexicon_cow_lookup_external(
+        ASSERT_STATUS_OK(evoke_lexicon_cow_lookup_external(
             &next_root,
             UINT64_C(0x9182),
             added_keys[index].bytes,
@@ -17417,7 +17417,7 @@ test_lexicon_cow_restart_and_external_patch(void)
         ASSERT_TRUE(found && term_id == base_count + index);
         term_id = UINT32_MAX;
         found = false;
-        ASSERT_STATUS_OK(ii42_lexicon_cow_lookup_serialized_external(
+        ASSERT_STATUS_OK(evoke_lexicon_cow_lookup_serialized_external(
             &serialized_root,
             UINT64_C(0x9182),
             added_keys[index].bytes,
@@ -17429,7 +17429,7 @@ test_lexicon_cow_restart_and_external_patch(void)
             &found
         ));
         ASSERT_TRUE(found && term_id == base_count + index);
-        ASSERT_STATUS_OK(ii42_lexicon_cow_lookup_external(
+        ASSERT_STATUS_OK(evoke_lexicon_cow_lookup_external(
             &old_root,
             UINT64_C(0x9182),
             added_keys[index].bytes,
@@ -17441,10 +17441,10 @@ test_lexicon_cow_restart_and_external_patch(void)
         ));
         ASSERT_TRUE(!found);
     }
-    ii42_lexicon_cow_object_free(&serialized_root);
+    evoke_lexicon_cow_object_free(&serialized_root);
     store.corrupt_owner_manifest_id = next_root.owner_manifest_id;
     store.corrupt_object_id = next_root.object_id;
-    ASSERT_TRUE(ii42_lexicon_cow_scan_external(
+    ASSERT_TRUE(evoke_lexicon_cow_scan_external(
         &next_root,
         UINT64_C(0x9182),
         base_count + added_count,
@@ -17452,25 +17452,25 @@ test_lexicon_cow_restart_and_external_patch(void)
         &store,
         count_lexicon_cow_test_entry,
         &counts
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_lexicon_cow_validate_external(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_lexicon_cow_validate_external(
         &next_root,
         UINT64_C(0x9182),
         base_count + added_count,
         load_lexicon_cow_test_object,
         &store
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     store.corrupt_owner_manifest_id = 0;
     store.corrupt_object_id = 0;
     bad_root = next_root;
     bad_root.object_bytes++;
-    ASSERT_TRUE(ii42_lexicon_cow_validate_external(
+    ASSERT_TRUE(evoke_lexicon_cow_validate_external(
         &bad_root,
         UINT64_C(0x9182),
         base_count + added_count,
         load_lexicon_cow_test_object,
         &store
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     lexicon_cow_test_store_free(&store);
 }
@@ -17486,21 +17486,21 @@ test_lexicon_cow_incremental_suffix(void)
     };
     char base_terms[base_count][term_capacity];
     char added_terms[added_count][term_capacity];
-    ii42_lexicon_cow_key base_keys[base_count];
-    ii42_lexicon_cow_key added_keys[added_count];
-    ii42_lexicon_cow_tree tree;
-    ii42_lexicon_cow_ref old_root;
-    ii42_lexicon_cow_update_stats stats;
-    ii42_lexicon_cow_object restored = {0};
+    evoke_lexicon_cow_key base_keys[base_count];
+    evoke_lexicon_cow_key added_keys[added_count];
+    evoke_lexicon_cow_tree tree;
+    evoke_lexicon_cow_ref old_root;
+    evoke_lexicon_cow_update_stats stats;
+    evoke_lexicon_cow_object restored = {0};
     uint8_t *serialized = NULL;
     size_t serialized_len = 0;
     size_t old_object_count;
     uint32_t collision_left = UINT32_MAX;
     uint32_t collision_right = UINT32_MAX;
-    uint32_t first_by_slot[II42_LEXICON_COW_RADIX_FANOUT];
+    uint32_t first_by_slot[EVOKE_LEXICON_COW_RADIX_FANOUT];
 
     memset(first_by_slot, 0xff, sizeof(first_by_slot));
-    ii42_lexicon_cow_tree_init(&tree);
+    evoke_lexicon_cow_tree_init(&tree);
     for (uint32_t index = 0; index < base_count; index++)
     {
         int length = snprintf(
@@ -17516,13 +17516,13 @@ test_lexicon_cow_incremental_suffix(void)
         base_keys[index].bytes = (const uint8_t *) base_terms[index];
         base_keys[index].bytes_len = (uint32_t) length;
         base_keys[index].term_id = index;
-        hash = ii42_lexicon_cow_hash(
+        hash = evoke_lexicon_cow_hash(
             base_keys[index].bytes,
             base_keys[index].bytes_len,
             UINT64_C(0x5a17)
         );
         slot = (uint32_t) hash &
-            (II42_LEXICON_COW_RADIX_FANOUT - 1);
+            (EVOKE_LEXICON_COW_RADIX_FANOUT - 1);
         if (first_by_slot[slot] == UINT32_MAX)
         {
             first_by_slot[slot] = index;
@@ -17534,26 +17534,26 @@ test_lexicon_cow_incremental_suffix(void)
         }
     }
     ASSERT_TRUE(collision_left != UINT32_MAX);
-    ASSERT_STATUS_OK(ii42_lexicon_cow_tree_build(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_tree_build(
         base_keys,
         base_count,
         UINT64_C(0x5a17),
         41,
         &tree
     ));
-    ASSERT_STATUS_OK(ii42_lexicon_cow_tree_validate_at(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_tree_validate_at(
         &tree,
         &tree.root,
         base_count
     ));
-    ASSERT_TRUE(tree.root.kind == II42_LEXICON_COW_OBJECT_NODE);
+    ASSERT_TRUE(tree.root.kind == EVOKE_LEXICON_COW_OBJECT_NODE);
 
     for (uint32_t index = 0; index < base_count; index++)
     {
         uint32_t term_id = UINT32_MAX;
         bool found = false;
 
-        ASSERT_STATUS_OK(ii42_lexicon_cow_tree_lookup(
+        ASSERT_STATUS_OK(evoke_lexicon_cow_tree_lookup(
             &tree,
             base_keys[index].bytes,
             base_keys[index].bytes_len,
@@ -17580,7 +17580,7 @@ test_lexicon_cow_incremental_suffix(void)
         added_keys[index].bytes_len = (uint32_t) length;
         added_keys[index].term_id = base_count + index;
     }
-    ASSERT_STATUS_OK(ii42_lexicon_cow_tree_append(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_tree_append(
         &tree,
         &old_root,
         base_count,
@@ -17593,7 +17593,7 @@ test_lexicon_cow_incremental_suffix(void)
     ASSERT_TRUE(stats.read_buckets <= added_count);
     ASSERT_TRUE(
         stats.read_nodes <=
-            added_count * II42_LEXICON_COW_RADIX_LEVELS
+            added_count * EVOKE_LEXICON_COW_RADIX_LEVELS
     );
     ASSERT_TRUE(
         stats.written_nodes + stats.written_buckets ==
@@ -17601,15 +17601,15 @@ test_lexicon_cow_incremental_suffix(void)
     );
     ASSERT_TRUE(
         stats.written_nodes + stats.written_buckets <
-            II42_LEXICON_COW_RADIX_FANOUT +
-                added_count * II42_LEXICON_COW_RADIX_LEVELS
+            EVOKE_LEXICON_COW_RADIX_FANOUT +
+                added_count * EVOKE_LEXICON_COW_RADIX_LEVELS
     );
-    ASSERT_STATUS_OK(ii42_lexicon_cow_tree_validate_at(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_tree_validate_at(
         &tree,
         &old_root,
         base_count
     ));
-    ASSERT_STATUS_OK(ii42_lexicon_cow_tree_validate_at(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_tree_validate_at(
         &tree,
         &tree.root,
         base_count + added_count
@@ -17619,7 +17619,7 @@ test_lexicon_cow_incremental_suffix(void)
         uint32_t term_id = UINT32_MAX;
         bool found = false;
 
-        ASSERT_STATUS_OK(ii42_lexicon_cow_tree_lookup_at(
+        ASSERT_STATUS_OK(evoke_lexicon_cow_tree_lookup_at(
             &tree,
             &old_root,
             added_keys[index].bytes,
@@ -17628,7 +17628,7 @@ test_lexicon_cow_incremental_suffix(void)
             &found
         ));
         ASSERT_TRUE(!found);
-        ASSERT_STATUS_OK(ii42_lexicon_cow_tree_lookup(
+        ASSERT_STATUS_OK(evoke_lexicon_cow_tree_lookup(
             &tree,
             added_keys[index].bytes,
             added_keys[index].bytes_len,
@@ -17638,29 +17638,29 @@ test_lexicon_cow_incremental_suffix(void)
         ASSERT_TRUE(found && term_id == base_count + index);
     }
 
-    ASSERT_STATUS_OK(ii42_lexicon_cow_tree_object_serialize(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_tree_object_serialize(
         &tree,
         &tree.root,
         &serialized,
         &serialized_len
     ));
-    ASSERT_STATUS_OK(ii42_lexicon_cow_object_deserialize(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_object_deserialize(
         serialized,
         serialized_len,
         &restored
     ));
     ASSERT_TRUE(restored.ref.object_id == tree.root.object_id);
     ASSERT_TRUE(restored.ref.owner_manifest_id == 42);
-    ii42_lexicon_cow_object_free(&restored);
+    evoke_lexicon_cow_object_free(&restored);
     serialized[serialized_len - 1] ^= UINT8_C(0x80);
-    ASSERT_TRUE(ii42_lexicon_cow_object_deserialize(
+    ASSERT_TRUE(evoke_lexicon_cow_object_deserialize(
         serialized,
         serialized_len,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
 
     free(serialized);
-    ii42_lexicon_cow_tree_free(&tree);
+    evoke_lexicon_cow_tree_free(&tree);
 }
 
 static void
@@ -17668,16 +17668,16 @@ test_lexicon_cow_large_vocabulary_update_is_bounded(void)
 {
     const uint32_t base_count = 100000;
     const size_t term_width = 48;
-    ii42_lexicon_cow_key *keys = NULL;
+    evoke_lexicon_cow_key *keys = NULL;
     char *terms = NULL;
-    ii42_lexicon_cow_key added[2] = {0};
+    evoke_lexicon_cow_key added[2] = {0};
     const char *added_terms[] = {
         "bounded-new-term-alpha",
         "bounded-new-term-omega"
     };
-    ii42_lexicon_cow_tree tree;
-    ii42_lexicon_cow_ref old_root;
-    ii42_lexicon_cow_update_stats stats;
+    evoke_lexicon_cow_tree tree;
+    evoke_lexicon_cow_ref old_root;
+    evoke_lexicon_cow_update_stats stats;
     size_t old_object_count;
 
     keys = calloc(base_count, sizeof(*keys));
@@ -17698,8 +17698,8 @@ test_lexicon_cow_large_vocabulary_update_is_bounded(void)
         keys[index].bytes_len = (uint32_t) length;
         keys[index].term_id = index;
     }
-    ii42_lexicon_cow_tree_init(&tree);
-    ASSERT_STATUS_OK(ii42_lexicon_cow_tree_build(
+    evoke_lexicon_cow_tree_init(&tree);
+    ASSERT_STATUS_OK(evoke_lexicon_cow_tree_build(
         keys,
         base_count,
         UINT64_C(0x7139),
@@ -17714,7 +17714,7 @@ test_lexicon_cow_large_vocabulary_update_is_bounded(void)
         added[index].bytes_len = (uint32_t) strlen(added_terms[index]);
         added[index].term_id = base_count + index;
     }
-    ASSERT_STATUS_OK(ii42_lexicon_cow_tree_append(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_tree_append(
         &tree,
         &old_root,
         base_count,
@@ -17725,29 +17725,29 @@ test_lexicon_cow_large_vocabulary_update_is_bounded(void)
     ));
     ASSERT_TRUE(stats.changed_terms == 2);
     ASSERT_TRUE(stats.read_buckets <= 2);
-    ASSERT_TRUE(stats.read_nodes <= 2 * II42_LEXICON_COW_RADIX_LEVELS);
+    ASSERT_TRUE(stats.read_nodes <= 2 * EVOKE_LEXICON_COW_RADIX_LEVELS);
     ASSERT_TRUE(
         stats.written_nodes + stats.written_buckets <
-            II42_LEXICON_COW_RADIX_FANOUT +
-                2 * II42_LEXICON_COW_RADIX_LEVELS
+            EVOKE_LEXICON_COW_RADIX_FANOUT +
+                2 * EVOKE_LEXICON_COW_RADIX_LEVELS
     );
     ASSERT_TRUE(
         tree.object_count - old_object_count ==
             stats.written_nodes + stats.written_buckets
     );
     ASSERT_TRUE(stats.written_bytes < UINT64_C(512) * 1024);
-    ASSERT_STATUS_OK(ii42_lexicon_cow_tree_validate_at(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_tree_validate_at(
         &tree,
         &old_root,
         base_count
     ));
-    ASSERT_STATUS_OK(ii42_lexicon_cow_tree_validate_at(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_tree_validate_at(
         &tree,
         &tree.root,
         base_count + 2
     ));
 
-    ii42_lexicon_cow_tree_free(&tree);
+    evoke_lexicon_cow_tree_free(&tree);
     free(terms);
     free(keys);
 }
@@ -17757,9 +17757,9 @@ test_lexicon_cow_compact_sealed_geometry(void)
 {
     const uint32_t term_count = 26500;
     const size_t term_width = 24;
-    ii42_lexicon_cow_key *keys = NULL;
+    evoke_lexicon_cow_key *keys = NULL;
     char *terms = NULL;
-    ii42_lexicon_cow_tree tree;
+    evoke_lexicon_cow_tree tree;
     uint64_t total_pages = 0;
 
     keys = calloc(term_count, sizeof(*keys));
@@ -17775,24 +17775,24 @@ test_lexicon_cow_compact_sealed_geometry(void)
         keys[index].bytes_len = (uint32_t) length;
         keys[index].term_id = index;
     }
-    ii42_lexicon_cow_tree_init(&tree);
-    ASSERT_STATUS_OK(ii42_lexicon_cow_tree_build(
+    evoke_lexicon_cow_tree_init(&tree);
+    ASSERT_STATUS_OK(evoke_lexicon_cow_tree_build(
         keys,
         term_count,
         UINT64_C(0x51a1),
         61,
         &tree
     ));
-    ASSERT_TRUE(tree.root.kind == II42_LEXICON_COW_OBJECT_NODE);
+    ASSERT_TRUE(tree.root.kind == EVOKE_LEXICON_COW_OBJECT_NODE);
     ASSERT_TRUE(
-        tree.object_count <= II42_LEXICON_COW_RADIX_FANOUT + 1
+        tree.object_count <= EVOKE_LEXICON_COW_RADIX_FANOUT + 1
     );
     for (size_t index = 0; index < tree.object_count; index++)
     {
-        const ii42_lexicon_cow_object *object = &tree.objects[index];
+        const evoke_lexicon_cow_object *object = &tree.objects[index];
         uint32_t page_count = 0;
 
-        ASSERT_STATUS_OK(ii42_segment_page_count_required(
+        ASSERT_STATUS_OK(evoke_segment_page_count_required(
             object->ref.object_bytes,
             8192,
             &page_count
@@ -17801,23 +17801,23 @@ test_lexicon_cow_compact_sealed_geometry(void)
         total_pages += page_count;
     }
     ASSERT_TRUE(
-        total_pages <= 1 + II42_LEXICON_COW_RADIX_FANOUT * 2
+        total_pages <= 1 + EVOKE_LEXICON_COW_RADIX_FANOUT * 2
     );
-    ASSERT_STATUS_OK(ii42_lexicon_cow_tree_validate_at(
+    ASSERT_STATUS_OK(evoke_lexicon_cow_tree_validate_at(
         &tree,
         &tree.root,
         term_count
     ));
 
-    ii42_lexicon_cow_tree_free(&tree);
+    evoke_lexicon_cow_tree_free(&tree);
     free(terms);
     free(keys);
 }
 
 static bool
 prefix_cow_test_ref_equal(
-    const ii42_prefix_cow_ref *left,
-    const ii42_prefix_cow_ref *right
+    const evoke_prefix_cow_ref *left,
+    const evoke_prefix_cow_ref *right
 )
 {
     return left->kind == right->kind &&
@@ -17835,7 +17835,7 @@ prefix_cow_test_ref_equal(
 
 typedef struct prefix_cow_test_object
 {
-    ii42_prefix_cow_ref ref;
+    evoke_prefix_cow_ref ref;
     uint8_t *bytes;
     size_t size;
 } prefix_cow_test_object;
@@ -17871,25 +17871,25 @@ prefix_cow_test_store_free(prefix_cow_test_store *store)
     memset(store, 0, sizeof(*store));
 }
 
-static ii42_status
+static evoke_status
 load_prefix_cow_test_object(
     void *context,
-    const ii42_prefix_cow_ref *ref,
-    ii42_prefix_cow_object *object_out
+    const evoke_prefix_cow_ref *ref,
+    evoke_prefix_cow_object *object_out
 )
 {
     prefix_cow_test_store *store = context;
 
     if (store == NULL || ref == NULL || object_out == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     store->load_count++;
     for (size_t index = 0; index < store->object_count; index++)
     {
         prefix_cow_test_object *stored = &store->objects[index];
-        ii42_segment_object_ref storage_ref;
-        ii42_status status;
+        evoke_segment_object_ref storage_ref;
+        evoke_status status;
 
         if (stored->ref.owner_manifest_id != ref->owner_manifest_id ||
             stored->ref.object_id != ref->object_id)
@@ -17898,40 +17898,40 @@ load_prefix_cow_test_object(
         }
         if (!prefix_cow_test_ref_equal(&stored->ref, ref))
         {
-            return II42_ERR_FORMAT;
+            return EVOKE_ERR_FORMAT;
         }
-        status = ii42_prefix_cow_object_deserialize(
+        status = evoke_prefix_cow_object_deserialize(
             stored->bytes,
             stored->size,
             object_out
         );
-        if (status == II42_OK)
+        if (status == EVOKE_OK)
         {
-            status = ii42_prefix_cow_ref_as_segment_object_ref(
+            status = evoke_prefix_cow_ref_as_segment_object_ref(
                 ref,
                 &storage_ref
             );
         }
-        if (status == II42_OK)
+        if (status == EVOKE_OK)
         {
-            status = ii42_prefix_cow_object_bind_storage(
+            status = evoke_prefix_cow_object_bind_storage(
                 object_out,
                 &storage_ref
             );
         }
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
-            ii42_prefix_cow_object_free(object_out);
+            evoke_prefix_cow_object_free(object_out);
         }
         return status;
     }
-    return II42_ERR_FORMAT;
+    return EVOKE_ERR_FORMAT;
 }
 
 static void
 store_prefix_cow_test_tree(
     prefix_cow_test_store *store,
-    ii42_prefix_cow_tree *tree,
+    evoke_prefix_cow_tree *tree,
     uint32_t *next_block
 )
 {
@@ -17941,26 +17941,26 @@ store_prefix_cow_test_tree(
     {
         prefix_cow_test_object *stored;
         prefix_cow_test_object *resized;
-        ii42_segment_object_ref storage_ref;
+        evoke_segment_object_ref storage_ref;
         uint8_t *bytes = NULL;
         size_t size = 0;
         uint32_t page_count = 0;
 
         ASSERT_STATUS_OK(
-            ii42_prefix_cow_tree_prepare_object_for_storage(
+            evoke_prefix_cow_tree_prepare_object_for_storage(
                 tree,
                 object_id,
                 &bytes,
                 &size
             )
         );
-        ASSERT_STATUS_OK(ii42_segment_page_count_required(
+        ASSERT_STATUS_OK(evoke_segment_page_count_required(
             size,
             8192,
             &page_count
         ));
         memset(&storage_ref, 0, sizeof(storage_ref));
-        storage_ref.object_kind = II42_SEGMENT_OBJECT_PREFIX_LOOKUP;
+        storage_ref.object_kind = EVOKE_SEGMENT_OBJECT_PREFIX_LOOKUP;
         storage_ref.start_block = *next_block;
         storage_ref.page_count = page_count;
         storage_ref.object_id = object_id;
@@ -17968,8 +17968,8 @@ store_prefix_cow_test_tree(
             tree->objects[object_id - 1].ref.owner_manifest_id;
         storage_ref.object_bytes = size;
         storage_ref.object_checksum =
-            ii42_segment_blob_checksum(bytes, size);
-        ASSERT_STATUS_OK(ii42_prefix_cow_tree_bind_object_storage(
+            evoke_segment_blob_checksum(bytes, size);
+        ASSERT_STATUS_OK(evoke_prefix_cow_tree_bind_object_storage(
             tree,
             object_id,
             &storage_ref
@@ -17997,10 +17997,10 @@ store_prefix_cow_test_tree(
     }
 }
 
-static ii42_status
+static evoke_status
 scan_prefix_cow_test_entry(
     void *context,
-    const ii42_prefix_cow_entry *entry
+    const evoke_prefix_cow_entry *entry
 )
 {
     prefix_cow_test_scan *scan = context;
@@ -18009,27 +18009,27 @@ scan_prefix_cow_test_entry(
         entry->bytes_len < scan->prefix_len ||
         memcmp(entry->bytes, scan->prefix, scan->prefix_len) != 0)
     {
-        return II42_ERR_FORMAT;
+        return EVOKE_ERR_FORMAT;
     }
     scan->count++;
     scan->term_id_sum += entry->term_id;
-    return II42_OK;
+    return EVOKE_OK;
 }
 
-static ii42_status
+static evoke_status
 count_prefix_cow_test_object(
     void *context,
-    const ii42_prefix_cow_object *object
+    const evoke_prefix_cow_object *object
 )
 {
     uint32_t *count = context;
 
     if (count == NULL || object == NULL)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     (*count)++;
-    return II42_OK;
+    return EVOKE_OK;
 }
 
 static void
@@ -18041,14 +18041,14 @@ test_prefix_cow_range_seek_and_external_patch(void)
         added_count = 16,
         term_width = 40
     };
-    ii42_prefix_cow_key *base_keys;
-    ii42_prefix_cow_key added_keys[added_count];
+    evoke_prefix_cow_key *base_keys;
+    evoke_prefix_cow_key added_keys[added_count];
     char *base_terms;
     char added_terms[added_count][term_width];
-    ii42_prefix_cow_tree tree;
-    ii42_prefix_cow_tree patch;
-    ii42_prefix_cow_ref old_root;
-    ii42_prefix_cow_update_stats stats;
+    evoke_prefix_cow_tree tree;
+    evoke_prefix_cow_tree patch;
+    evoke_prefix_cow_ref old_root;
+    evoke_prefix_cow_update_stats stats;
     prefix_cow_test_store store = {0};
     prefix_cow_test_scan scan = {0};
     uint32_t next_block = 1;
@@ -18115,9 +18115,9 @@ test_prefix_cow_range_seek_and_external_patch(void)
         added_keys[index].bytes_len = (uint32_t) length;
         added_keys[index].term_id = base_count + index;
     }
-    ii42_prefix_cow_tree_init(&tree);
-    ii42_prefix_cow_tree_init(&patch);
-    ASSERT_STATUS_OK(ii42_prefix_cow_tree_build(
+    evoke_prefix_cow_tree_init(&tree);
+    evoke_prefix_cow_tree_init(&patch);
+    ASSERT_STATUS_OK(evoke_prefix_cow_tree_build(
         base_keys,
         base_count,
         101,
@@ -18125,9 +18125,9 @@ test_prefix_cow_range_seek_and_external_patch(void)
     ));
     store_prefix_cow_test_tree(&store, &tree, &next_block);
     old_root = tree.root;
-    ii42_prefix_cow_tree_free(&tree);
+    evoke_prefix_cow_tree_free(&tree);
 
-    ASSERT_STATUS_OK(ii42_prefix_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_prefix_cow_validate_external(
         &old_root,
         base_count,
         load_prefix_cow_test_object,
@@ -18136,7 +18136,7 @@ test_prefix_cow_range_seek_and_external_patch(void)
     store.load_count = 0;
     scan.prefix = missing_prefix;
     scan.prefix_len = sizeof(missing_prefix) - 1;
-    ASSERT_STATUS_OK(ii42_prefix_cow_scan_prefix_external(
+    ASSERT_STATUS_OK(evoke_prefix_cow_scan_prefix_external(
         &old_root,
         base_count,
         scan.prefix,
@@ -18147,10 +18147,10 @@ test_prefix_cow_range_seek_and_external_patch(void)
         &scan
     ));
     ASSERT_TRUE(scan.count == 0);
-    ASSERT_TRUE(store.load_count <= II42_PREFIX_COW_MAX_DEPTH);
+    ASSERT_TRUE(store.load_count <= EVOKE_PREFIX_COW_MAX_DEPTH);
 
     memset(&stats, 0, sizeof(stats));
-    ASSERT_STATUS_OK(ii42_prefix_cow_build_external_append_patch(
+    ASSERT_STATUS_OK(evoke_prefix_cow_build_external_append_patch(
         &old_root,
         base_count,
         added_keys,
@@ -18164,24 +18164,24 @@ test_prefix_cow_range_seek_and_external_patch(void)
     ASSERT_TRUE(stats.changed_terms == added_count);
     ASSERT_TRUE(stats.read_leaves <= added_count);
     ASSERT_TRUE(
-        stats.read_nodes <= added_count * II42_PREFIX_COW_MAX_DEPTH
+        stats.read_nodes <= added_count * EVOKE_PREFIX_COW_MAX_DEPTH
     );
     ASSERT_TRUE(stats.written_bytes < UINT64_C(1024) * 1024);
     store_prefix_cow_test_tree(&store, &patch, &next_block);
 
-    ASSERT_STATUS_OK(ii42_prefix_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_prefix_cow_validate_external(
         &old_root,
         base_count,
         load_prefix_cow_test_object,
         &store
     ));
-    ASSERT_STATUS_OK(ii42_prefix_cow_validate_external(
+    ASSERT_STATUS_OK(evoke_prefix_cow_validate_external(
         &patch.root,
         base_count + added_count,
         load_prefix_cow_test_object,
         &store
     ));
-    ASSERT_STATUS_OK(ii42_prefix_cow_visit_external(
+    ASSERT_STATUS_OK(evoke_prefix_cow_visit_external(
         &patch.root,
         base_count + added_count,
         load_prefix_cow_test_object,
@@ -18194,7 +18194,7 @@ test_prefix_cow_range_seek_and_external_patch(void)
     memset(&scan, 0, sizeof(scan));
     scan.prefix = broad_prefix;
     scan.prefix_len = sizeof(broad_prefix) - 1;
-    ASSERT_STATUS_OK(ii42_prefix_cow_scan_prefix_external(
+    ASSERT_STATUS_OK(evoke_prefix_cow_scan_prefix_external(
         &patch.root,
         base_count + added_count,
         scan.prefix,
@@ -18209,7 +18209,7 @@ test_prefix_cow_range_seek_and_external_patch(void)
     memset(&scan, 0, sizeof(scan));
     scan.prefix = before_prefix;
     scan.prefix_len = sizeof(before_prefix) - 1;
-    ASSERT_STATUS_OK(ii42_prefix_cow_scan_prefix_external(
+    ASSERT_STATUS_OK(evoke_prefix_cow_scan_prefix_external(
         &patch.root,
         base_count + added_count,
         scan.prefix,
@@ -18224,7 +18224,7 @@ test_prefix_cow_range_seek_and_external_patch(void)
     memset(&scan, 0, sizeof(scan));
     scan.prefix = after_prefix;
     scan.prefix_len = sizeof(after_prefix) - 1;
-    ASSERT_STATUS_OK(ii42_prefix_cow_scan_prefix_external(
+    ASSERT_STATUS_OK(evoke_prefix_cow_scan_prefix_external(
         &patch.root,
         base_count + added_count,
         scan.prefix,
@@ -18236,7 +18236,7 @@ test_prefix_cow_range_seek_and_external_patch(void)
     ));
     ASSERT_TRUE(scan.count == 1);
 
-    ii42_prefix_cow_tree_free(&patch);
+    evoke_prefix_cow_tree_free(&patch);
     prefix_cow_test_store_free(&store);
     free(base_terms);
     free(base_keys);
@@ -18247,16 +18247,16 @@ test_prefix_cow_parent_split_rebalances(void)
 {
     enum
     {
-        base_count = II42_PREFIX_COW_LEAF_MAX_ENTRIES *
-            (II42_PREFIX_COW_NODE_MAX_CHILDREN - 2),
+        base_count = EVOKE_PREFIX_COW_LEAF_MAX_ENTRIES *
+            (EVOKE_PREFIX_COW_NODE_MAX_CHILDREN - 2),
         append_count = 3,
         term_width = 40
     };
-    ii42_prefix_cow_key *base_keys;
+    evoke_prefix_cow_key *base_keys;
     char *base_terms;
-    ii42_prefix_cow_tree tree;
-    ii42_prefix_cow_tree patch;
-    ii42_prefix_cow_ref root;
+    evoke_prefix_cow_tree tree;
+    evoke_prefix_cow_tree patch;
+    evoke_prefix_cow_ref root;
     prefix_cow_test_store store = {0};
     uint32_t next_block = 1;
 
@@ -18273,9 +18273,9 @@ test_prefix_cow_parent_split_rebalances(void)
         base_keys[index].bytes_len = (uint32_t) length;
         base_keys[index].term_id = index;
     }
-    ii42_prefix_cow_tree_init(&tree);
-    ii42_prefix_cow_tree_init(&patch);
-    ASSERT_STATUS_OK(ii42_prefix_cow_tree_build(
+    evoke_prefix_cow_tree_init(&tree);
+    evoke_prefix_cow_tree_init(&patch);
+    ASSERT_STATUS_OK(evoke_prefix_cow_tree_build(
         base_keys,
         base_count,
         201,
@@ -18283,20 +18283,20 @@ test_prefix_cow_parent_split_rebalances(void)
     ));
     store_prefix_cow_test_tree(&store, &tree, &next_block);
     root = tree.root;
-    ii42_prefix_cow_tree_free(&tree);
+    evoke_prefix_cow_tree_free(&tree);
 
     for (uint32_t index = 0; index < append_count; index++)
     {
         char term[term_width];
-        ii42_prefix_cow_key key;
-        ii42_prefix_cow_update_stats stats = {0};
+        evoke_prefix_cow_key key;
+        evoke_prefix_cow_update_stats stats = {0};
         int length = snprintf(term, term_width, "aaa-prefix-%08u", index);
 
         ASSERT_TRUE(length > 0 && (size_t) length < term_width);
         key.bytes = (const uint8_t *) term;
         key.bytes_len = (uint32_t) length;
         key.term_id = base_count + index;
-        ASSERT_STATUS_OK(ii42_prefix_cow_build_external_append_patch(
+        ASSERT_STATUS_OK(evoke_prefix_cow_build_external_append_patch(
             &root,
             base_count + index,
             &key,
@@ -18310,17 +18310,17 @@ test_prefix_cow_parent_split_rebalances(void)
         ASSERT_TRUE(stats.changed_terms == 1);
         store_prefix_cow_test_tree(&store, &patch, &next_block);
         root = patch.root;
-        ASSERT_STATUS_OK(ii42_prefix_cow_validate_external(
+        ASSERT_STATUS_OK(evoke_prefix_cow_validate_external(
             &root,
             base_count + index + 1,
             load_prefix_cow_test_object,
             &store
         ));
-        ii42_prefix_cow_tree_free(&patch);
-        ii42_prefix_cow_tree_init(&patch);
+        evoke_prefix_cow_tree_free(&patch);
+        evoke_prefix_cow_tree_init(&patch);
     }
 
-    ii42_prefix_cow_tree_free(&patch);
+    evoke_prefix_cow_tree_free(&patch);
     prefix_cow_test_store_free(&store);
     free(base_terms);
     free(base_keys);
@@ -18329,14 +18329,14 @@ test_prefix_cow_parent_split_rebalances(void)
 static void
 test_text_tokenize_text_with_diacritic_folding(void)
 {
-    ii42_text_options options;
+    evoke_text_options options;
     char **tokens = NULL;
     size_t len = 0;
 
-    ii42_text_options_init(&options);
+    evoke_text_options_init(&options);
     options.fold_diacritics = true;
 
-    ASSERT_STATUS_OK(ii42_tokenize_text(
+    ASSERT_STATUS_OK(evoke_tokenize_text(
         "\303\234ber caf\303\251 fa\303\247ade",
         &options,
         &tokens,
@@ -18348,40 +18348,40 @@ test_text_tokenize_text_with_diacritic_folding(void)
     ASSERT_TRUE(strcmp(tokens[1], "cafe") == 0);
     ASSERT_TRUE(strcmp(tokens[2], "facade") == 0);
 
-    ii42_text_tokens_free(tokens, len);
+    evoke_text_tokens_free(tokens, len);
 }
 
 static void
 test_u32_saturating_add(void)
 {
-    ASSERT_TRUE(ii42_u32_saturating_add(0, 0) == 0);
-    ASSERT_TRUE(ii42_u32_saturating_add(40, 2) == 42);
+    ASSERT_TRUE(evoke_u32_saturating_add(0, 0) == 0);
+    ASSERT_TRUE(evoke_u32_saturating_add(40, 2) == 42);
     ASSERT_TRUE(
-        ii42_u32_saturating_add(UINT32_MAX - 1, 1) == UINT32_MAX
+        evoke_u32_saturating_add(UINT32_MAX - 1, 1) == UINT32_MAX
     );
     ASSERT_TRUE(
-        ii42_u32_saturating_add(UINT32_MAX - 1, 2) == UINT32_MAX
+        evoke_u32_saturating_add(UINT32_MAX - 1, 2) == UINT32_MAX
     );
 }
 
 static void
 test_u64_saturating_arithmetic(void)
 {
-    ASSERT_TRUE(ii42_u64_saturating_add(40, 2) == 42);
+    ASSERT_TRUE(evoke_u64_saturating_add(40, 2) == 42);
     ASSERT_TRUE(
-        ii42_u64_saturating_add(UINT64_MAX - 1, 2) == UINT64_MAX
+        evoke_u64_saturating_add(UINT64_MAX - 1, 2) == UINT64_MAX
     );
-    ASSERT_TRUE(ii42_u64_saturating_mul(0, UINT64_MAX) == 0);
-    ASSERT_TRUE(ii42_u64_saturating_mul(6, 7) == 42);
+    ASSERT_TRUE(evoke_u64_saturating_mul(0, UINT64_MAX) == 0);
+    ASSERT_TRUE(evoke_u64_saturating_mul(6, 7) == 42);
     ASSERT_TRUE(
-        ii42_u64_saturating_mul(UINT64_MAX, 2) == UINT64_MAX
+        evoke_u64_saturating_mul(UINT64_MAX, 2) == UINT64_MAX
     );
 }
 
 static void
 test_semantic_bmp_exact_signed_topk(void)
 {
-    const ii42_semantic_bmp_posting postings[] = {
+    const evoke_semantic_bmp_posting postings[] = {
         {1, 0, 0.5f},
         {1, 17, 2.0f},
         {1, 18, -1.0f},
@@ -18402,44 +18402,44 @@ test_semantic_bmp_exact_signed_topk(void)
     const uint32_t run2_ids[] = {1, 17, 34};
     const uint32_t run3_ids[] = {0, 16, 32};
     const uint32_t run5_ids[] = {64};
-    const ii42_posting_value run1_values[] = {
+    const evoke_posting_value run1_values[] = {
         {.impact = 0.5f}, {.impact = 2.0f},
         {.impact = -1.0f}, {.impact = 1.0f}
     };
-    const ii42_posting_value run2_values[] = {
+    const evoke_posting_value run2_values[] = {
         {.impact = 3.0f}, {.impact = -0.5f}, {.impact = 2.0f}
     };
-    const ii42_posting_value run3_values[] = {
+    const evoke_posting_value run3_values[] = {
         {.impact = 1.0f}, {.impact = 2.0f}, {.impact = 4.0f}
     };
-    const ii42_posting_value run5_values[] = {{.impact = 0.01f}};
-    const ii42_semantic_bmp_run runs[] = {
+    const evoke_posting_value run5_values[] = {{.impact = 0.01f}};
+    const evoke_semantic_bmp_run runs[] = {
         {1, 4, run1_ids, run1_values, NULL, 0, 80},
         {2, 3, run2_ids, run2_values, NULL, 0, 80},
         {3, 3, run3_ids, run3_values, NULL, 0, 80},
         {5, 1, run5_ids, run5_values, NULL, 0, 80}
     };
-    ii42_semantic_bmp_index index;
-    ii42_semantic_bmp_index run_index;
-    ii42_semantic_bmp_index restored;
-    ii42_semantic_bmp_packed_index packed_index;
-    ii42_semantic_bmp_packed_index direct_packed_index;
-    ii42_semantic_bmp_packed_index packed_restored;
-    ii42_semantic_bmp_packed_disk_header packed_header;
-    ii42_semantic_bmp_packed_term packed_term;
-    ii42_semantic_bmp_packed_super_ref packed_super_ref;
-    ii42_semantic_bmp_packed_ref packed_ref;
-    ii42_semantic_bmp_stats stats;
-    ii42_semantic_bmp_stats restored_stats;
-    ii42_semantic_bmp_stats packed_stats;
-    ii42_semantic_bmp_stats packed_taat_stats;
-    ii42_topk_result result;
-    ii42_topk_result run_result;
-    ii42_topk_result restored_result;
-    ii42_topk_result packed_result;
-    ii42_topk_result direct_packed_result;
-    ii42_topk_result packed_restored_result;
-    ii42_topk_result packed_taat_result;
+    evoke_semantic_bmp_index index;
+    evoke_semantic_bmp_index run_index;
+    evoke_semantic_bmp_index restored;
+    evoke_semantic_bmp_packed_index packed_index;
+    evoke_semantic_bmp_packed_index direct_packed_index;
+    evoke_semantic_bmp_packed_index packed_restored;
+    evoke_semantic_bmp_packed_disk_header packed_header;
+    evoke_semantic_bmp_packed_term packed_term;
+    evoke_semantic_bmp_packed_super_ref packed_super_ref;
+    evoke_semantic_bmp_packed_ref packed_ref;
+    evoke_semantic_bmp_stats stats;
+    evoke_semantic_bmp_stats restored_stats;
+    evoke_semantic_bmp_stats packed_stats;
+    evoke_semantic_bmp_stats packed_taat_stats;
+    evoke_topk_result result;
+    evoke_topk_result run_result;
+    evoke_topk_result restored_result;
+    evoke_topk_result packed_result;
+    evoke_topk_result direct_packed_result;
+    evoke_topk_result packed_restored_result;
+    evoke_topk_result packed_taat_result;
     uint8_t *serialized = NULL;
     uint8_t *packed_serialized = NULL;
     uint8_t *direct_packed_serialized = NULL;
@@ -18450,14 +18450,14 @@ test_semantic_bmp_exact_signed_topk(void)
     size_t packed_serialized_size = 0;
     size_t direct_packed_serialized_size = 0;
     uint32_t materialized_ids[4] = {0};
-    ii42_posting_value materialized_values[4] = {0};
+    evoke_posting_value materialized_values[4] = {0};
 
-    ii42_semantic_bmp_index_init(&index);
-    ii42_semantic_bmp_index_init(&run_index);
-    ii42_semantic_bmp_index_init(&restored);
-    ii42_semantic_bmp_packed_index_init(&packed_index);
-    ii42_semantic_bmp_packed_index_init(&direct_packed_index);
-    ii42_semantic_bmp_packed_index_init(&packed_restored);
+    evoke_semantic_bmp_index_init(&index);
+    evoke_semantic_bmp_index_init(&run_index);
+    evoke_semantic_bmp_index_init(&restored);
+    evoke_semantic_bmp_packed_index_init(&packed_index);
+    evoke_semantic_bmp_packed_index_init(&direct_packed_index);
+    evoke_semantic_bmp_packed_index_init(&packed_restored);
     memset(&stats, 0, sizeof(stats));
     memset(&restored_stats, 0, sizeof(restored_stats));
     memset(&packed_stats, 0, sizeof(packed_stats));
@@ -18469,13 +18469,13 @@ test_semantic_bmp_exact_signed_topk(void)
     memset(&direct_packed_result, 0, sizeof(direct_packed_result));
     memset(&packed_restored_result, 0, sizeof(packed_restored_result));
     memset(&packed_taat_result, 0, sizeof(packed_taat_result));
-    ASSERT_STATUS_OK(ii42_semantic_bmp_index_build(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_index_build(
         80,
         postings,
         sizeof(postings) / sizeof(postings[0]),
         &index
     ));
-    ASSERT_STATUS_OK(ii42_semantic_bmp_topk(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_topk(
         &index,
         query_ids,
         query_weights,
@@ -18499,19 +18499,19 @@ test_semantic_bmp_exact_signed_topk(void)
     ASSERT_TRUE(stats.blocks_skipped > 0);
     ASSERT_TRUE(stats.postings_examined <
         sizeof(postings) / sizeof(postings[0]));
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_index_build(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_index_build(
         &index,
         &packed_index
     ));
     ASSERT_TRUE(packed_index.block_count == 2);
     ASSERT_TRUE(packed_index.superblock_count == 1);
     ASSERT_TRUE(packed_index.block_membership_bytes > 0);
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_serialized_size(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_serialized_size(
         &packed_index,
         &packed_size
     ));
     ASSERT_TRUE(packed_size > 0);
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_topk(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_topk(
         &packed_index,
         query_ids,
         query_weights,
@@ -18529,7 +18529,7 @@ test_semantic_bmp_exact_signed_topk(void)
         ) < 1e-6f);
     }
     ASSERT_TRUE(packed_stats.blocks_scored > 0);
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_taat_topk(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_taat_topk(
         &packed_index,
         query_ids,
         query_weights,
@@ -18548,13 +18548,13 @@ test_semantic_bmp_exact_signed_topk(void)
             packed_taat_result.scores[rank] - result.scores[rank]
         ) < 1e-6f);
     }
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_serialize(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_serialize(
         &packed_index,
         &packed_serialized,
         &packed_serialized_size
     ));
     ASSERT_TRUE(packed_serialized_size == packed_size);
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_index_build_runs(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_index_build_runs(
         80,
         runs,
         sizeof(runs) / sizeof(runs[0]),
@@ -18569,7 +18569,7 @@ test_semantic_bmp_exact_signed_topk(void)
         packed_index.block_membership,
         packed_index.block_membership_bytes
     ) == 0);
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_serialize(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_serialize(
         &direct_packed_index,
         &direct_packed_serialized,
         &direct_packed_serialized_size
@@ -18582,7 +18582,7 @@ test_semantic_bmp_exact_signed_topk(void)
     ) == 0);
     direct_packed_buffer = malloc(direct_packed_serialized_size);
     ASSERT_TRUE(direct_packed_buffer != NULL);
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_serialize_into(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_serialize_into(
         &direct_packed_index,
         direct_packed_buffer,
         direct_packed_serialized_size
@@ -18592,9 +18592,9 @@ test_semantic_bmp_exact_signed_topk(void)
         direct_packed_serialized,
         direct_packed_serialized_size
     ) == 0);
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_disk_header_decode(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_disk_header_decode(
         direct_packed_serialized,
-        II42_SEMANTIC_BMP_HEADER_SIZE,
+        EVOKE_SEMANTIC_BMP_HEADER_SIZE,
         &packed_header
     ));
     ASSERT_TRUE(packed_header.total_size == direct_packed_serialized_size);
@@ -18602,28 +18602,28 @@ test_semantic_bmp_exact_signed_topk(void)
         packed_header.block_membership_bytes ==
             direct_packed_index.block_membership_bytes
     );
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_term_decode(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_term_decode(
         direct_packed_serialized + packed_header.terms_offset,
-        II42_SEMANTIC_BMP_PACKED_TERM_SIZE,
+        EVOKE_SEMANTIC_BMP_PACKED_TERM_SIZE,
         &packed_term
     ));
     ASSERT_TRUE(packed_term.term_id == runs[0].term_id);
     ASSERT_TRUE(packed_term.block_membership_bytes > 0);
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_super_ref_decode(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_super_ref_decode(
         direct_packed_serialized + packed_header.super_refs_offset +
             (size_t) packed_term.first_super_ref *
-                II42_SEMANTIC_BMP_PACKED_SUPER_REF_SIZE,
-        II42_SEMANTIC_BMP_PACKED_SUPER_REF_SIZE,
+                EVOKE_SEMANTIC_BMP_PACKED_SUPER_REF_SIZE,
+        EVOKE_SEMANTIC_BMP_PACKED_SUPER_REF_SIZE,
         packed_term.min_impact,
         packed_term.max_impact,
         &packed_super_ref
     ));
     ASSERT_TRUE(packed_super_ref.first_ref == packed_term.first_ref);
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_ref_decode(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_ref_decode(
         direct_packed_serialized + packed_header.refs_offset +
             (size_t) packed_term.first_ref *
-                II42_SEMANTIC_BMP_PACKED_REF_SIZE,
-        II42_SEMANTIC_BMP_PACKED_REF_SIZE,
+                EVOKE_SEMANTIC_BMP_PACKED_REF_SIZE,
+        EVOKE_SEMANTIC_BMP_PACKED_REF_SIZE,
         packed_term.min_impact,
         packed_term.max_impact,
         &packed_ref
@@ -18635,7 +18635,7 @@ test_semantic_bmp_exact_signed_topk(void)
              (UINT64_C(1) << 18) |
              (UINT64_C(1) << 35))
     );
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_term_materialize(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_term_materialize(
         &direct_packed_index,
         0,
         materialized_ids,
@@ -18652,12 +18652,12 @@ test_semantic_bmp_exact_signed_topk(void)
         ASSERT_TRUE(materialized_values[posting_index].impact ==
             run1_values[posting_index].impact);
     }
-    ASSERT_TRUE(ii42_semantic_bmp_packed_serialize_into(
+    ASSERT_TRUE(evoke_semantic_bmp_packed_serialize_into(
         &direct_packed_index,
         direct_packed_buffer,
         direct_packed_serialized_size - 1U
-    ) == II42_ERR_RANGE);
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_topk(
+    ) == EVOKE_ERR_RANGE);
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_topk(
         &direct_packed_index,
         query_ids,
         query_weights,
@@ -18676,7 +18676,7 @@ test_semantic_bmp_exact_signed_topk(void)
             direct_packed_result.scores[rank] - result.scores[rank]
         ) < 1e-6f);
     }
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_deserialize(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_deserialize(
         packed_serialized,
         packed_serialized_size,
         &packed_restored
@@ -18690,7 +18690,7 @@ test_semantic_bmp_exact_signed_topk(void)
         packed_index.block_membership,
         packed_index.block_membership_bytes
     ) == 0);
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_topk(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_topk(
         &packed_restored,
         query_ids,
         query_weights,
@@ -18714,28 +18714,28 @@ test_semantic_bmp_exact_signed_topk(void)
         uint8_t membership = packed_restored.block_membership[0];
 
         packed_restored.block_membership[0] ^= UINT8_C(0x01);
-        ASSERT_TRUE(ii42_semantic_bmp_packed_index_validate(
+        ASSERT_TRUE(evoke_semantic_bmp_packed_index_validate(
             &packed_restored
-        ) == II42_ERR_FORMAT);
+        ) == EVOKE_ERR_FORMAT);
         packed_restored.block_membership[0] = membership;
-        ASSERT_STATUS_OK(ii42_semantic_bmp_packed_index_validate(
+        ASSERT_STATUS_OK(evoke_semantic_bmp_packed_index_validate(
             &packed_restored
         ));
     }
-    ASSERT_TRUE(ii42_semantic_bmp_packed_deserialize(
+    ASSERT_TRUE(evoke_semantic_bmp_packed_deserialize(
         packed_serialized,
         packed_serialized_size,
         &packed_restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     packed_serialized[packed_serialized_size - 1U] ^= UINT8_C(0x01);
 
-    ASSERT_STATUS_OK(ii42_semantic_bmp_index_build_runs(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_index_build_runs(
         80,
         runs,
         sizeof(runs) / sizeof(runs[0]),
         &run_index
     ));
-    ASSERT_STATUS_OK(ii42_semantic_bmp_topk(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_topk(
         &run_index,
         query_ids,
         query_weights,
@@ -18752,22 +18752,22 @@ test_semantic_bmp_exact_signed_topk(void)
             result.scores[rank]) < 1e-6f);
     }
 
-    ASSERT_STATUS_OK(ii42_semantic_bmp_serialized_size(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_serialized_size(
         &index,
         &expected_size
     ));
-    ASSERT_STATUS_OK(ii42_semantic_bmp_serialize(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_serialize(
         &index,
         &serialized,
         &serialized_size
     ));
     ASSERT_TRUE(serialized_size == expected_size);
-    ASSERT_STATUS_OK(ii42_semantic_bmp_deserialize(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_deserialize(
         serialized,
         serialized_size,
         &restored
     ));
-    ASSERT_STATUS_OK(ii42_semantic_bmp_topk(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_topk(
         &restored,
         query_ids,
         query_weights,
@@ -18785,54 +18785,54 @@ test_semantic_bmp_exact_signed_topk(void)
         ) < 1e-6f);
     }
     serialized[serialized_size - 1] ^= UINT8_C(0x01);
-    ASSERT_TRUE(ii42_semantic_bmp_deserialize(
+    ASSERT_TRUE(evoke_semantic_bmp_deserialize(
         serialized,
         serialized_size,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     serialized[serialized_size - 1] ^= UINT8_C(0x01);
     {
         uint32_t record_index = restored.refs[0].record_index;
 
         restored.refs[0].record_index = restored.record_count;
-        ASSERT_TRUE(ii42_semantic_bmp_index_validate(&restored) ==
-            II42_ERR_FORMAT);
+        ASSERT_TRUE(evoke_semantic_bmp_index_validate(&restored) ==
+            EVOKE_ERR_FORMAT);
         restored.refs[0].record_index = record_index;
     }
     restored.super_refs[0].ref_count = 0;
-    ASSERT_TRUE(ii42_semantic_bmp_index_validate(&restored) ==
-        II42_ERR_FORMAT);
+    ASSERT_TRUE(evoke_semantic_bmp_index_validate(&restored) ==
+        EVOKE_ERR_FORMAT);
 
     free(serialized);
     free(packed_serialized);
     free(direct_packed_serialized);
     free(direct_packed_buffer);
-    ii42_topk_result_free(&direct_packed_result);
-    ii42_topk_result_free(&packed_restored_result);
-    ii42_topk_result_free(&packed_taat_result);
-    ii42_topk_result_free(&packed_result);
-    ii42_topk_result_free(&run_result);
-    ii42_topk_result_free(&restored_result);
-    ii42_topk_result_free(&result);
-    ii42_semantic_bmp_index_free(&run_index);
-    ii42_semantic_bmp_index_free(&restored);
-    ii42_semantic_bmp_index_free(&index);
-    ii42_semantic_bmp_packed_index_free(&packed_index);
-    ii42_semantic_bmp_packed_index_free(&direct_packed_index);
-    ii42_semantic_bmp_packed_index_free(&packed_restored);
+    evoke_topk_result_free(&direct_packed_result);
+    evoke_topk_result_free(&packed_restored_result);
+    evoke_topk_result_free(&packed_taat_result);
+    evoke_topk_result_free(&packed_result);
+    evoke_topk_result_free(&run_result);
+    evoke_topk_result_free(&restored_result);
+    evoke_topk_result_free(&result);
+    evoke_semantic_bmp_index_free(&run_index);
+    evoke_semantic_bmp_index_free(&restored);
+    evoke_semantic_bmp_index_free(&index);
+    evoke_semantic_bmp_packed_index_free(&packed_index);
+    evoke_semantic_bmp_packed_index_free(&direct_packed_index);
+    evoke_semantic_bmp_packed_index_free(&packed_restored);
 
     {
         const uint32_t sparse_ids[] = {0};
-        const ii42_posting_value sparse_values[] = {
+        const evoke_posting_value sparse_values[] = {
             {.impact = 1.0f}
         };
-        const ii42_semantic_bmp_run sparse_runs[] = {
+        const evoke_semantic_bmp_run sparse_runs[] = {
             {7, 1, sparse_ids, sparse_values, NULL, 0, 257}
         };
-        ii42_semantic_bmp_packed_index sparse_index;
+        evoke_semantic_bmp_packed_index sparse_index;
 
-        ii42_semantic_bmp_packed_index_init(&sparse_index);
-        ASSERT_STATUS_OK(ii42_semantic_bmp_packed_index_build_runs(
+        evoke_semantic_bmp_packed_index_init(&sparse_index);
+        ASSERT_STATUS_OK(evoke_semantic_bmp_packed_index_build_runs(
             257,
             sparse_runs,
             sizeof(sparse_runs) / sizeof(sparse_runs[0]),
@@ -18842,10 +18842,10 @@ test_semantic_bmp_exact_signed_topk(void)
         ASSERT_TRUE(sparse_index.terms[0].ref_count == 1);
         ASSERT_TRUE(sparse_index.block_membership_bytes == 1);
         ASSERT_TRUE(sparse_index.terms[0].block_membership_bytes == 1);
-        ASSERT_STATUS_OK(ii42_semantic_bmp_packed_index_validate(
+        ASSERT_STATUS_OK(evoke_semantic_bmp_packed_index_validate(
             &sparse_index
         ));
-        ii42_semantic_bmp_packed_index_free(&sparse_index);
+        evoke_semantic_bmp_packed_index_free(&sparse_index);
     }
 }
 
@@ -18866,24 +18866,24 @@ test_semantic_bmp_impact_precision_roundtrip(void)
 {
     const uint32_t positive_ids[] = {0, 17, 35};
     const uint32_t secondary_ids[] = {1, 18, 36};
-    const ii42_posting_value positive_values[] = {
+    const evoke_posting_value positive_values[] = {
         {.impact = 0.125f},
         {.impact = 1.234f},
         {.impact = 5.0f}
     };
-    const ii42_posting_value secondary_values[] = {
+    const evoke_posting_value secondary_values[] = {
         {.impact = 0.0625f},
         {.impact = 0.75f},
         {.impact = 3.5f}
     };
-    const ii42_semantic_bmp_run runs[] = {
+    const evoke_semantic_bmp_run runs[] = {
         {11, 3, positive_ids, positive_values, NULL, 0, 64},
         {19, 3, secondary_ids, secondary_values, NULL, 0, 64}
     };
-    const ii42_semantic_impact_precision precisions[] = {
-        II42_SEMANTIC_IMPACT_PRECISION_F32,
-        II42_SEMANTIC_IMPACT_PRECISION_FP16,
-        II42_SEMANTIC_IMPACT_PRECISION_U8
+    const evoke_semantic_impact_precision precisions[] = {
+        EVOKE_SEMANTIC_IMPACT_PRECISION_F32,
+        EVOKE_SEMANTIC_IMPACT_PRECISION_FP16,
+        EVOKE_SEMANTIC_IMPACT_PRECISION_U8
     };
     size_t sizes[3] = {0};
 
@@ -18891,18 +18891,18 @@ test_semantic_bmp_impact_precision_roundtrip(void)
          precision_index < sizeof(precisions) / sizeof(precisions[0]);
          precision_index++)
     {
-        ii42_semantic_bmp_packed_index index;
-        ii42_semantic_bmp_packed_index restored;
-        ii42_semantic_bmp_packed_disk_header header;
+        evoke_semantic_bmp_packed_index index;
+        evoke_semantic_bmp_packed_index restored;
+        evoke_semantic_bmp_packed_disk_header header;
         uint8_t *serialized = NULL;
         uint8_t *reserialized = NULL;
         size_t serialized_size = 0;
         size_t reserialized_size = 0;
 
-        ii42_semantic_bmp_packed_index_init(&index);
-        ii42_semantic_bmp_packed_index_init(&restored);
+        evoke_semantic_bmp_packed_index_init(&index);
+        evoke_semantic_bmp_packed_index_init(&restored);
         ASSERT_STATUS_OK(
-            ii42_semantic_bmp_packed_index_build_runs_with_precision(
+            evoke_semantic_bmp_packed_index_build_runs_with_precision(
                 64,
                 runs,
                 sizeof(runs) / sizeof(runs[0]),
@@ -18911,19 +18911,19 @@ test_semantic_bmp_impact_precision_roundtrip(void)
             )
         );
         ASSERT_TRUE(index.impact_precision == precisions[precision_index]);
-        ASSERT_STATUS_OK(ii42_semantic_bmp_packed_serialize(
+        ASSERT_STATUS_OK(evoke_semantic_bmp_packed_serialize(
             &index,
             &serialized,
             &serialized_size
         ));
         sizes[precision_index] = serialized_size;
-        ASSERT_STATUS_OK(ii42_semantic_bmp_packed_disk_header_decode(
+        ASSERT_STATUS_OK(evoke_semantic_bmp_packed_disk_header_decode(
             serialized,
             serialized_size,
             &header
         ));
         ASSERT_TRUE(header.impact_precision == precisions[precision_index]);
-        ASSERT_STATUS_OK(ii42_semantic_bmp_packed_deserialize(
+        ASSERT_STATUS_OK(evoke_semantic_bmp_packed_deserialize(
             serialized,
             serialized_size,
             &restored
@@ -18939,7 +18939,7 @@ test_semantic_bmp_impact_precision_roundtrip(void)
                 restored.impacts[posting_index] - index.impacts[posting_index]
             ) < 1e-6f);
         }
-        ASSERT_STATUS_OK(ii42_semantic_bmp_packed_serialize(
+        ASSERT_STATUS_OK(evoke_semantic_bmp_packed_serialize(
             &restored,
             &reserialized,
             &reserialized_size
@@ -18952,8 +18952,8 @@ test_semantic_bmp_impact_precision_roundtrip(void)
         ) == 0);
         free(reserialized);
         free(serialized);
-        ii42_semantic_bmp_packed_index_free(&restored);
-        ii42_semantic_bmp_packed_index_free(&index);
+        evoke_semantic_bmp_packed_index_free(&restored);
+        evoke_semantic_bmp_packed_index_free(&index);
     }
     ASSERT_TRUE(sizes[0] > sizes[1]);
     ASSERT_TRUE(sizes[1] > sizes[2]);
@@ -18965,21 +18965,21 @@ test_semantic_bmp_impact_precision_roundtrip(void)
          precision_index++)
     {
         uint8_t encoded[
-            (II42_SEMANTIC_BMP_PACKED_BLOCK_DOCUMENTS + 1U) *
+            (EVOKE_SEMANTIC_BMP_PACKED_BLOCK_DOCUMENTS + 1U) *
             sizeof(uint32_t)
         ] = {0};
-        float decoded[II42_SEMANTIC_BMP_PACKED_BLOCK_DOCUMENTS + 1U];
-        size_t impact_width = ii42_semantic_bmp_impact_width(
+        float decoded[EVOKE_SEMANTIC_BMP_PACKED_BLOCK_DOCUMENTS + 1U];
+        size_t impact_width = evoke_semantic_bmp_impact_width(
             precisions[precision_index]
         );
 
         for (uint32_t index = 0;
-             index < II42_SEMANTIC_BMP_PACKED_BLOCK_DOCUMENTS + 1U;
+             index < EVOKE_SEMANTIC_BMP_PACKED_BLOCK_DOCUMENTS + 1U;
              index++)
         {
             float quantized;
 
-            ASSERT_STATUS_OK(ii42_semantic_impact_encode(
+            ASSERT_STATUS_OK(evoke_semantic_impact_encode(
                 encoded + (size_t) index * impact_width,
                 sizeof(encoded) - (size_t) index * impact_width,
                 precisions[precision_index],
@@ -18987,33 +18987,33 @@ test_semantic_bmp_impact_precision_roundtrip(void)
                 &quantized
             ));
         }
-        ASSERT_STATUS_OK(ii42_semantic_bmp_packed_impacts_decode(
+        ASSERT_STATUS_OK(evoke_semantic_bmp_packed_impacts_decode(
             encoded,
             sizeof(encoded),
-            II42_SEMANTIC_BMP_PACKED_BLOCK_DOCUMENTS,
+            EVOKE_SEMANTIC_BMP_PACKED_BLOCK_DOCUMENTS,
             precisions[precision_index],
             0.25f,
             0.75f,
             decoded
         ));
-        ASSERT_TRUE(ii42_semantic_bmp_packed_impacts_decode(
+        ASSERT_TRUE(evoke_semantic_bmp_packed_impacts_decode(
             encoded,
             sizeof(encoded),
-            II42_SEMANTIC_BMP_PACKED_BLOCK_DOCUMENTS + 1U,
+            EVOKE_SEMANTIC_BMP_PACKED_BLOCK_DOCUMENTS + 1U,
             precisions[precision_index],
             0.25f,
             0.75f,
             decoded
-        ) == II42_ERR_INVALID);
+        ) == EVOKE_ERR_INVALID);
     }
 
     {
         const uint32_t signed_ids[] = {0, 1};
-        const ii42_posting_value signed_values[] = {
+        const evoke_posting_value signed_values[] = {
             {.impact = -0.5f},
             {.impact = 1.0f}
         };
-        const ii42_semantic_bmp_run signed_run = {
+        const evoke_semantic_bmp_run signed_run = {
             23,
             2,
             signed_ids,
@@ -19022,19 +19022,19 @@ test_semantic_bmp_impact_precision_roundtrip(void)
             0,
             64
         };
-        ii42_semantic_bmp_packed_index index;
+        evoke_semantic_bmp_packed_index index;
 
-        ii42_semantic_bmp_packed_index_init(&index);
+        evoke_semantic_bmp_packed_index_init(&index);
         ASSERT_TRUE(
-            ii42_semantic_bmp_packed_index_build_runs_with_precision(
+            evoke_semantic_bmp_packed_index_build_runs_with_precision(
                 64,
                 &signed_run,
                 1,
-                II42_SEMANTIC_IMPACT_PRECISION_U8,
+                EVOKE_SEMANTIC_IMPACT_PRECISION_U8,
                 &index
-            ) == II42_ERR_RANGE
+            ) == EVOKE_ERR_RANGE
         );
-        ii42_semantic_bmp_packed_index_free(&index);
+        evoke_semantic_bmp_packed_index_free(&index);
     }
 }
 
@@ -19048,7 +19048,7 @@ test_semantic_bmp_randomized_exactness(void)
         MAX_POSTINGS = DOCUMENT_COUNT * TERM_COUNT,
         TOP_K = 17
     };
-    ii42_semantic_bmp_posting *postings = malloc(
+    evoke_semantic_bmp_posting *postings = malloc(
         MAX_POSTINGS * sizeof(*postings)
     );
 
@@ -19060,18 +19060,18 @@ test_semantic_bmp_randomized_exactness(void)
         float dense_scores[DOCUMENT_COUNT] = {0};
         uint32_t state = UINT32_C(0x9e3779b9) ^ trial;
         size_t posting_count = 0;
-        ii42_semantic_bmp_index index;
-        ii42_semantic_bmp_packed_index packed_index;
-        ii42_semantic_bmp_stats stats;
-        ii42_semantic_bmp_stats packed_stats;
-        ii42_semantic_bmp_stats packed_taat_stats;
-        ii42_topk_result expected;
-        ii42_topk_result actual;
-        ii42_topk_result packed_actual;
-        ii42_topk_result packed_taat_actual;
+        evoke_semantic_bmp_index index;
+        evoke_semantic_bmp_packed_index packed_index;
+        evoke_semantic_bmp_stats stats;
+        evoke_semantic_bmp_stats packed_stats;
+        evoke_semantic_bmp_stats packed_taat_stats;
+        evoke_topk_result expected;
+        evoke_topk_result actual;
+        evoke_topk_result packed_actual;
+        evoke_topk_result packed_taat_actual;
 
-        ii42_semantic_bmp_index_init(&index);
-        ii42_semantic_bmp_packed_index_init(&packed_index);
+        evoke_semantic_bmp_index_init(&index);
+        evoke_semantic_bmp_packed_index_init(&packed_index);
         memset(&stats, 0, sizeof(stats));
         memset(&packed_stats, 0, sizeof(packed_stats));
         memset(&packed_taat_stats, 0, sizeof(packed_taat_stats));
@@ -19111,20 +19111,20 @@ test_semantic_bmp_randomized_exactness(void)
                 dense_scores[document] += query_weights[term] * impact;
             }
         }
-        ASSERT_STATUS_OK(ii42_semantic_bmp_index_build(
+        ASSERT_STATUS_OK(evoke_semantic_bmp_index_build(
             DOCUMENT_COUNT,
             postings,
             posting_count,
             &index
         ));
-        ASSERT_STATUS_OK(ii42_topk(
+        ASSERT_STATUS_OK(evoke_topk(
             dense_scores,
             DOCUMENT_COUNT,
             TOP_K,
             true,
             &expected
         ));
-        ASSERT_STATUS_OK(ii42_semantic_bmp_topk(
+        ASSERT_STATUS_OK(evoke_semantic_bmp_topk(
             &index,
             query_ids,
             query_weights,
@@ -19141,11 +19141,11 @@ test_semantic_bmp_randomized_exactness(void)
                 expected.scores[rank]) < 1e-4f);
         }
         ASSERT_TRUE(stats.postings_examined <= posting_count);
-        ASSERT_STATUS_OK(ii42_semantic_bmp_packed_index_build(
+        ASSERT_STATUS_OK(evoke_semantic_bmp_packed_index_build(
             &index,
             &packed_index
         ));
-        ASSERT_STATUS_OK(ii42_semantic_bmp_packed_topk(
+        ASSERT_STATUS_OK(evoke_semantic_bmp_packed_topk(
             &packed_index,
             query_ids,
             query_weights,
@@ -19165,7 +19165,7 @@ test_semantic_bmp_randomized_exactness(void)
             ) < 1e-4f);
         }
         ASSERT_TRUE(packed_stats.postings_examined <= posting_count);
-        ASSERT_STATUS_OK(ii42_semantic_bmp_packed_taat_topk(
+        ASSERT_STATUS_OK(evoke_semantic_bmp_packed_taat_topk(
             &packed_index,
             query_ids,
             query_weights,
@@ -19187,12 +19187,12 @@ test_semantic_bmp_randomized_exactness(void)
         ASSERT_TRUE(
             packed_taat_stats.postings_examined == posting_count
         );
-        ii42_topk_result_free(&packed_taat_actual);
-        ii42_topk_result_free(&packed_actual);
-        ii42_topk_result_free(&actual);
-        ii42_topk_result_free(&expected);
-        ii42_semantic_bmp_index_free(&index);
-        ii42_semantic_bmp_packed_index_free(&packed_index);
+        evoke_topk_result_free(&packed_taat_actual);
+        evoke_topk_result_free(&packed_actual);
+        evoke_topk_result_free(&actual);
+        evoke_topk_result_free(&expected);
+        evoke_semantic_bmp_index_free(&index);
+        evoke_semantic_bmp_packed_index_free(&packed_index);
     }
     free(postings);
 }
@@ -19205,21 +19205,21 @@ test_semantic_bmp_packed_adaptive_fallback(void)
         DOCUMENT_COUNT = 65 * 1024,
         TOP_K = 100
     };
-    ii42_semantic_bmp_posting *postings = malloc(
+    evoke_semantic_bmp_posting *postings = malloc(
         DOCUMENT_COUNT * sizeof(*postings)
     );
     uint32_t query_id = 42;
     float query_weight = 1.0f;
-    ii42_semantic_bmp_index index;
-    ii42_semantic_bmp_packed_index packed_index;
-    ii42_semantic_bmp_stats adaptive_stats;
-    ii42_semantic_bmp_stats taat_stats;
-    ii42_topk_result adaptive;
-    ii42_topk_result taat;
+    evoke_semantic_bmp_index index;
+    evoke_semantic_bmp_packed_index packed_index;
+    evoke_semantic_bmp_stats adaptive_stats;
+    evoke_semantic_bmp_stats taat_stats;
+    evoke_topk_result adaptive;
+    evoke_topk_result taat;
 
     ASSERT_TRUE(postings != NULL);
-    ii42_semantic_bmp_index_init(&index);
-    ii42_semantic_bmp_packed_index_init(&packed_index);
+    evoke_semantic_bmp_index_init(&index);
+    evoke_semantic_bmp_packed_index_init(&packed_index);
     memset(&adaptive_stats, 0, sizeof(adaptive_stats));
     memset(&taat_stats, 0, sizeof(taat_stats));
     memset(&adaptive, 0, sizeof(adaptive));
@@ -19232,17 +19232,17 @@ test_semantic_bmp_packed_adaptive_fallback(void)
         postings[document_id].document_id = document_id;
         postings[document_id].impact = 1.0f;
     }
-    ASSERT_STATUS_OK(ii42_semantic_bmp_index_build(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_index_build(
         DOCUMENT_COUNT,
         postings,
         DOCUMENT_COUNT,
         &index
     ));
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_index_build(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_index_build(
         &index,
         &packed_index
     ));
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_topk(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_topk(
         &packed_index,
         &query_id,
         &query_weight,
@@ -19251,7 +19251,7 @@ test_semantic_bmp_packed_adaptive_fallback(void)
         &adaptive,
         &adaptive_stats
     ));
-    ASSERT_STATUS_OK(ii42_semantic_bmp_packed_taat_topk(
+    ASSERT_STATUS_OK(evoke_semantic_bmp_packed_taat_topk(
         &packed_index,
         &query_id,
         &query_weight,
@@ -19271,10 +19271,10 @@ test_semantic_bmp_packed_adaptive_fallback(void)
             sizeof(adaptive.scores[rank])
         ) == 0);
     }
-    ii42_topk_result_free(&taat);
-    ii42_topk_result_free(&adaptive);
-    ii42_semantic_bmp_packed_index_free(&packed_index);
-    ii42_semantic_bmp_index_free(&index);
+    evoke_topk_result_free(&taat);
+    evoke_topk_result_free(&adaptive);
+    evoke_semantic_bmp_packed_index_free(&packed_index);
+    evoke_semantic_bmp_index_free(&index);
     free(postings);
 }
 
@@ -19285,7 +19285,7 @@ typedef struct test_semantic_accelerator_scores
     bool return_nan;
 } test_semantic_accelerator_scores;
 
-static ii42_status
+static evoke_status
 test_semantic_accelerator_score(
     void *context,
     uint32_t document_id,
@@ -19300,16 +19300,16 @@ test_semantic_accelerator_score(
 
     if (scores == NULL || score_out == NULL || document_id >= 6)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     if (document_id == scores->fail_document_id)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     if (scores->return_nan)
     {
         *score_out = NAN;
-        return II42_OK;
+        return EVOKE_OK;
     }
     for (size_t query_index = 0;
          query_index < query_count;
@@ -19317,35 +19317,35 @@ test_semantic_accelerator_score(
     {
         if (query_ids[query_index] >= 3)
         {
-            return II42_ERR_INVALID;
+            return EVOKE_ERR_INVALID;
         }
         score += query_weights[query_index] *
             scores->scores[document_id][query_ids[query_index]];
     }
     *score_out = score;
-    return II42_OK;
+    return EVOKE_OK;
 }
 
 typedef struct test_semantic_accelerator_documents
 {
-    ii42_semantic_accelerator_document_view documents[6];
+    evoke_semantic_accelerator_document_view documents[6];
 } test_semantic_accelerator_documents;
 
-static ii42_status
+static evoke_status
 test_semantic_accelerator_read_document(
     void *context,
     uint32_t document_id,
-    ii42_semantic_accelerator_document_view *view_out
+    evoke_semantic_accelerator_document_view *view_out
 )
 {
     const test_semantic_accelerator_documents *documents = context;
 
     if (documents == NULL || view_out == NULL || document_id >= 6)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     *view_out = documents->documents[document_id];
-    return II42_OK;
+    return EVOKE_OK;
 }
 
 static void
@@ -19376,17 +19376,17 @@ test_semantic_accelerator_geometric_builder(void)
             {ids_5, impacts_5, 3}
         }
     };
-    ii42_semantic_accelerator_builder_options options = {
+    evoke_semantic_accelerator_builder_options options = {
         .centroid_fraction = 0.5f,
         .minimum_cluster_size = 1,
         .document_cut = 2,
         .summary_energy = 0.7f,
         .random_seed = 1142
     };
-    ii42_semantic_accelerator_owned_term first;
-    ii42_semantic_accelerator_owned_term second;
-    ii42_semantic_accelerator_index index;
-    ii42_semantic_accelerator_index term_object;
+    evoke_semantic_accelerator_owned_term first;
+    evoke_semantic_accelerator_owned_term second;
+    evoke_semantic_accelerator_index index;
+    evoke_semantic_accelerator_index term_object;
     uint8_t *term_bytes = NULL;
     size_t term_size = 0;
     uint32_t *selected_terms = NULL;
@@ -19394,11 +19394,11 @@ test_semantic_accelerator_geometric_builder(void)
     float actual_posting_mass = 0.0f;
     uint32_t seen = 0;
 
-    ii42_semantic_accelerator_owned_term_init(&first);
-    ii42_semantic_accelerator_owned_term_init(&second);
-    ii42_semantic_accelerator_index_init(&index);
-    ii42_semantic_accelerator_index_init(&term_object);
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_select_terms(
+    evoke_semantic_accelerator_owned_term_init(&first);
+    evoke_semantic_accelerator_owned_term_init(&second);
+    evoke_semantic_accelerator_index_init(&index);
+    evoke_semantic_accelerator_index_init(&term_object);
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_select_terms(
         document_frequencies,
         5,
         0.75f,
@@ -19411,7 +19411,7 @@ test_semantic_accelerator_geometric_builder(void)
     ASSERT_TRUE(selected_terms[1] == 2);
     ASSERT_TRUE(fabsf(actual_posting_mass - 0.9f) < 1e-6f);
     free(selected_terms);
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_build_term(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_build_term(
         17,
         retained_documents,
         6,
@@ -19420,7 +19420,7 @@ test_semantic_accelerator_geometric_builder(void)
         &documents,
         &first
     ));
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_build_term(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_build_term(
         17,
         retained_documents,
         6,
@@ -19437,9 +19437,9 @@ test_semantic_accelerator_geometric_builder(void)
          cluster < first.input.cluster_count;
          cluster++)
     {
-        const ii42_semantic_accelerator_cluster_input *a =
+        const evoke_semantic_accelerator_cluster_input *a =
             &first.clusters[cluster];
-        const ii42_semantic_accelerator_cluster_input *b =
+        const evoke_semantic_accelerator_cluster_input *b =
             &second.clusters[cluster];
         bool even_document_cluster;
 
@@ -19483,7 +19483,7 @@ test_semantic_accelerator_geometric_builder(void)
         }
     }
     ASSERT_TRUE(seen == UINT32_C(0x3f));
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_index_build(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_index_build(
         UINT64_C(0x89abcdef01234567),
         6,
         &first.input,
@@ -19492,23 +19492,23 @@ test_semantic_accelerator_geometric_builder(void)
     ));
     ASSERT_TRUE(index.source_root_checksum ==
         UINT64_C(0x89abcdef01234567));
-    ASSERT_TRUE(ii42_semantic_accelerator_root_matches(
+    ASSERT_TRUE(evoke_semantic_accelerator_root_matches(
         &index,
         UINT64_C(0x89abcdef01234567)
     ));
-    ASSERT_TRUE(!ii42_semantic_accelerator_root_matches(
+    ASSERT_TRUE(!evoke_semantic_accelerator_root_matches(
         &index,
         UINT64_C(0x89abcdef01234568)
     ));
     ASSERT_TRUE(index.document_ref_count == 6);
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_term_serialize(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_term_serialize(
         UINT64_C(0x89abcdef01234567),
         6,
         &first.input,
         &term_bytes,
         &term_size
     ));
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_term_deserialize(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_term_deserialize(
         term_bytes,
         term_size,
         UINT64_C(0x89abcdef01234567),
@@ -19517,23 +19517,23 @@ test_semantic_accelerator_geometric_builder(void)
     ));
     ASSERT_TRUE(term_object.term_count == 1);
     ASSERT_TRUE(term_object.document_ref_count == 6);
-    ii42_semantic_accelerator_index_free(&term_object);
-    ASSERT_TRUE(ii42_semantic_accelerator_term_deserialize(
+    evoke_semantic_accelerator_index_free(&term_object);
+    ASSERT_TRUE(evoke_semantic_accelerator_term_deserialize(
         term_bytes,
         term_size,
         UINT64_C(0x89abcdef01234568),
         17,
         &term_object
-    ) == II42_ERR_FORMAT);
-    ASSERT_TRUE(ii42_semantic_accelerator_term_deserialize(
+    ) == EVOKE_ERR_FORMAT);
+    ASSERT_TRUE(evoke_semantic_accelerator_term_deserialize(
         term_bytes,
         term_size,
         UINT64_C(0x89abcdef01234567),
         18,
         &term_object
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     free(term_bytes);
-    ASSERT_TRUE(ii42_semantic_accelerator_build_term(
+    ASSERT_TRUE(evoke_semantic_accelerator_build_term(
         17,
         duplicate_documents,
         2,
@@ -19541,11 +19541,11 @@ test_semantic_accelerator_geometric_builder(void)
         test_semantic_accelerator_read_document,
         &documents,
         &second
-    ) == II42_ERR_INVALID);
-    ii42_semantic_accelerator_index_free(&index);
-    ii42_semantic_accelerator_index_free(&term_object);
-    ii42_semantic_accelerator_owned_term_free(&second);
-    ii42_semantic_accelerator_owned_term_free(&first);
+    ) == EVOKE_ERR_INVALID);
+    evoke_semantic_accelerator_index_free(&index);
+    evoke_semantic_accelerator_index_free(&term_object);
+    evoke_semantic_accelerator_owned_term_free(&second);
+    evoke_semantic_accelerator_owned_term_free(&first);
 }
 
 static void
@@ -19555,19 +19555,19 @@ test_semantic_accelerator_roundtrip_and_search(void)
     const uint32_t term0_cluster1_documents[] = {2, 4};
     const uint32_t term1_cluster0_documents[] = {3, 1};
     const uint32_t term1_cluster1_documents[] = {4, 5};
-    const ii42_semantic_accelerator_summary_input summary_a[] = {
+    const evoke_semantic_accelerator_summary_input summary_a[] = {
         {0, 1.0f}, {1, 0.8f}
     };
-    const ii42_semantic_accelerator_summary_input summary_b[] = {
+    const evoke_semantic_accelerator_summary_input summary_b[] = {
         {0, 0.8f}, {1, 1.0f}
     };
-    const ii42_semantic_accelerator_summary_input summary_c[] = {
+    const evoke_semantic_accelerator_summary_input summary_c[] = {
         {0, 0.9f}, {1, 2.0f}
     };
-    const ii42_semantic_accelerator_summary_input summary_d[] = {
+    const evoke_semantic_accelerator_summary_input summary_d[] = {
         {0, 0.2f}, {1, 1.0f}
     };
-    const ii42_semantic_accelerator_cluster_input term0_clusters[] = {
+    const evoke_semantic_accelerator_cluster_input term0_clusters[] = {
         {
             term0_cluster0_documents,
             2,
@@ -19581,7 +19581,7 @@ test_semantic_accelerator_roundtrip_and_search(void)
             2
         }
     };
-    const ii42_semantic_accelerator_cluster_input term1_clusters[] = {
+    const evoke_semantic_accelerator_cluster_input term1_clusters[] = {
         {
             term1_cluster0_documents,
             2,
@@ -19595,7 +19595,7 @@ test_semantic_accelerator_roundtrip_and_search(void)
             2
         }
     };
-    const ii42_semantic_accelerator_term_input terms[] = {
+    const evoke_semantic_accelerator_term_input terms[] = {
         {0, term0_clusters, 2},
         {1, term1_clusters, 2}
     };
@@ -19614,31 +19614,31 @@ test_semantic_accelerator_roundtrip_and_search(void)
         },
         .fail_document_id = UINT32_MAX
     };
-    ii42_semantic_accelerator_options options = {
+    evoke_semantic_accelerator_options options = {
         .query_cut = 2,
         .candidate_multiplier = 1,
         .heap_factor = 1.0f
     };
-    ii42_semantic_accelerator_index index;
-    ii42_semantic_accelerator_index restored;
-    ii42_semantic_accelerator_index term_indexes[2];
-    const ii42_semantic_accelerator_index *term_index_refs[2];
-    ii42_semantic_accelerator_stats stats;
-    ii42_semantic_accelerator_stats restored_stats;
-    ii42_semantic_accelerator_stats split_stats;
-    ii42_semantic_accelerator_stats block_stats;
-    ii42_semantic_accelerator_query_scratch *query_scratch;
-    ii42_topk_result result;
-    ii42_topk_result restored_result;
-    ii42_topk_result split_result;
-    ii42_topk_result block_result;
+    evoke_semantic_accelerator_index index;
+    evoke_semantic_accelerator_index restored;
+    evoke_semantic_accelerator_index term_indexes[2];
+    const evoke_semantic_accelerator_index *term_index_refs[2];
+    evoke_semantic_accelerator_stats stats;
+    evoke_semantic_accelerator_stats restored_stats;
+    evoke_semantic_accelerator_stats split_stats;
+    evoke_semantic_accelerator_stats block_stats;
+    evoke_semantic_accelerator_query_scratch *query_scratch;
+    evoke_topk_result result;
+    evoke_topk_result restored_result;
+    evoke_topk_result split_result;
+    evoke_topk_result block_result;
     uint8_t *serialized = NULL;
     size_t serialized_size = 0;
 
-    ii42_semantic_accelerator_index_init(&index);
-    ii42_semantic_accelerator_index_init(&restored);
-    ii42_semantic_accelerator_index_init(&term_indexes[0]);
-    ii42_semantic_accelerator_index_init(&term_indexes[1]);
+    evoke_semantic_accelerator_index_init(&index);
+    evoke_semantic_accelerator_index_init(&restored);
+    evoke_semantic_accelerator_index_init(&term_indexes[0]);
+    evoke_semantic_accelerator_index_init(&term_indexes[1]);
     term_index_refs[0] = &term_indexes[0];
     term_index_refs[1] = &term_indexes[1];
     memset(&stats, 0, sizeof(stats));
@@ -19649,7 +19649,7 @@ test_semantic_accelerator_roundtrip_and_search(void)
     memset(&restored_result, 0, sizeof(restored_result));
     memset(&split_result, 0, sizeof(split_result));
     memset(&block_result, 0, sizeof(block_result));
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_index_build(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_index_build(
         UINT64_C(0x1020304050607080),
         6,
         terms,
@@ -19666,23 +19666,23 @@ test_semantic_accelerator_roundtrip_and_search(void)
          cluster_index < index.cluster_count;
          cluster_index++)
     {
-        const ii42_semantic_accelerator_cluster *cluster =
+        const evoke_semantic_accelerator_cluster *cluster =
             &index.clusters[cluster_index];
 
         for (uint32_t offset = 0;
              offset < cluster->summary_count;
              offset++)
         {
-            const ii42_semantic_accelerator_summary *summary =
+            const evoke_semantic_accelerator_summary *summary =
                 &index.summaries[cluster->first_summary + offset];
             float decoded = summary->quantized_impact * cluster->quantum;
-            const ii42_semantic_accelerator_summary_input *source =
+            const evoke_semantic_accelerator_summary_input *source =
                 terms[cluster_index / 2].clusters[cluster_index % 2].summary;
 
             ASSERT_TRUE(decoded + 1e-7f >= source[offset].max_impact);
         }
     }
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_topk(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_topk(
         &index,
         query_ids,
         query_weights,
@@ -19706,23 +19706,23 @@ test_semantic_accelerator_roundtrip_and_search(void)
     ASSERT_TRUE(stats.documents_scored == 5);
     ASSERT_TRUE(stats.duplicate_documents_skipped == 1);
     ASSERT_TRUE(stats.query_scratch_peak_bytes > 0);
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_index_build(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_index_build(
         index.source_root_checksum,
         index.document_count,
         &terms[0],
         1,
         &term_indexes[0]
     ));
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_index_build(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_index_build(
         index.source_root_checksum,
         index.document_count,
         &terms[1],
         1,
         &term_indexes[1]
     ));
-    query_scratch = ii42_semantic_accelerator_query_scratch_create();
+    query_scratch = evoke_semantic_accelerator_query_scratch_create();
     ASSERT_TRUE(query_scratch != NULL);
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_topk_many_owned(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_topk_many_owned(
         term_index_refs,
         2,
         query_ids,
@@ -19745,9 +19745,9 @@ test_semantic_accelerator_roundtrip_and_search(void)
         ) < 1e-6f);
     }
     ASSERT_TRUE(split_stats.documents_scored == stats.documents_scored);
-    ii42_topk_result_free(&split_result);
+    evoke_topk_result_free(&split_result);
     scores.fail_document_id = 1;
-    ASSERT_TRUE(ii42_semantic_accelerator_topk_many_owned(
+    ASSERT_TRUE(evoke_semantic_accelerator_topk_many_owned(
         term_index_refs,
         2,
         query_ids,
@@ -19760,10 +19760,10 @@ test_semantic_accelerator_roundtrip_and_search(void)
         &split_result,
         &split_stats,
         query_scratch
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
     ASSERT_TRUE(split_result.len == 0);
     scores.fail_document_id = UINT32_MAX;
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_topk_many_owned(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_topk_many_owned(
         term_index_refs,
         2,
         query_ids,
@@ -19778,25 +19778,25 @@ test_semantic_accelerator_roundtrip_and_search(void)
         query_scratch
     ));
     ASSERT_TRUE(split_result.len == result.len);
-    ii42_semantic_accelerator_query_scratch_destroy(query_scratch);
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_serialize(
+    evoke_semantic_accelerator_query_scratch_destroy(query_scratch);
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_serialize(
         &index,
         &serialized,
         &serialized_size
     ));
-    ASSERT_TRUE(serialized_size > II42_SEMANTIC_ACCELERATOR_HEADER_SIZE);
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_deserialize(
+    ASSERT_TRUE(serialized_size > EVOKE_SEMANTIC_ACCELERATOR_HEADER_SIZE);
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_deserialize(
         serialized,
         serialized_size,
         &restored
     ));
     ASSERT_TRUE(restored.source_root_checksum ==
         index.source_root_checksum);
-    ASSERT_TRUE(ii42_semantic_accelerator_root_matches(
+    ASSERT_TRUE(evoke_semantic_accelerator_root_matches(
         &restored,
         index.source_root_checksum
     ));
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_topk(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_topk(
         &restored,
         query_ids,
         query_weights,
@@ -19816,13 +19816,13 @@ test_semantic_accelerator_roundtrip_and_search(void)
             restored_result.scores[rank] - result.scores[rank]
         ) < 1e-6f);
     }
-    ii42_topk_result_free(&restored_result);
+    evoke_topk_result_free(&restored_result);
     {
-        ii42_semantic_accelerator_options block_options = options;
+        evoke_semantic_accelerator_options block_options = options;
 
         block_options.document_shift = 3;
         block_options.heap_factor = 0.0f;
-        ASSERT_STATUS_OK(ii42_semantic_accelerator_topk_many(
+        ASSERT_STATUS_OK(evoke_semantic_accelerator_topk_many(
             term_index_refs,
             2,
             query_ids,
@@ -19851,16 +19851,16 @@ test_semantic_accelerator_roundtrip_and_search(void)
         ASSERT_TRUE(block_stats.query_scratch_peak_bytes > 0);
     }
     serialized[serialized_size - 1U] ^= UINT8_C(1);
-    ASSERT_TRUE(ii42_semantic_accelerator_deserialize(
+    ASSERT_TRUE(evoke_semantic_accelerator_deserialize(
         serialized,
         serialized_size,
         &restored
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     serialized[serialized_size - 1U] ^= UINT8_C(1);
     {
         float negative_weight = -1.0f;
 
-        ASSERT_TRUE(ii42_semantic_accelerator_topk(
+        ASSERT_TRUE(evoke_semantic_accelerator_topk(
             &index,
             query_ids,
             &negative_weight,
@@ -19871,34 +19871,34 @@ test_semantic_accelerator_roundtrip_and_search(void)
             &scores,
             &restored_result,
             &restored_stats
-        ) == II42_ERR_INVALID);
+        ) == EVOKE_ERR_INVALID);
     }
     {
         uint32_t original = index.terms[1].first_cluster;
 
         index.terms[1].first_cluster = original - 1U;
-        ASSERT_TRUE(ii42_semantic_accelerator_index_validate(&index) ==
-            II42_ERR_FORMAT);
+        ASSERT_TRUE(evoke_semantic_accelerator_index_validate(&index) ==
+            EVOKE_ERR_FORMAT);
         index.terms[1].first_cluster = original;
     }
     {
         float original = index.clusters[0].quantum;
 
         index.clusters[0].quantum = 0.0f;
-        ASSERT_TRUE(ii42_semantic_accelerator_index_validate(&index) ==
-            II42_ERR_FORMAT);
+        ASSERT_TRUE(evoke_semantic_accelerator_index_validate(&index) ==
+            EVOKE_ERR_FORMAT);
         index.clusters[0].quantum = original;
     }
     {
         uint64_t original = index.source_root_checksum;
 
         index.source_root_checksum = 0;
-        ASSERT_TRUE(ii42_semantic_accelerator_index_validate(&index) ==
-            II42_ERR_INVALID);
+        ASSERT_TRUE(evoke_semantic_accelerator_index_validate(&index) ==
+            EVOKE_ERR_INVALID);
         index.source_root_checksum = original;
     }
     scores.fail_document_id = 1;
-    ASSERT_TRUE(ii42_semantic_accelerator_topk(
+    ASSERT_TRUE(evoke_semantic_accelerator_topk(
         &index,
         query_ids,
         query_weights,
@@ -19909,11 +19909,11 @@ test_semantic_accelerator_roundtrip_and_search(void)
         &scores,
         &restored_result,
         &restored_stats
-    ) == II42_ERR_INVALID);
+    ) == EVOKE_ERR_INVALID);
     ASSERT_TRUE(restored_result.len == 0);
     scores.fail_document_id = UINT32_MAX;
     scores.return_nan = true;
-    ASSERT_TRUE(ii42_semantic_accelerator_topk(
+    ASSERT_TRUE(evoke_semantic_accelerator_topk(
         &index,
         query_ids,
         query_weights,
@@ -19924,17 +19924,17 @@ test_semantic_accelerator_roundtrip_and_search(void)
         &scores,
         &restored_result,
         &restored_stats
-    ) == II42_ERR_FORMAT);
+    ) == EVOKE_ERR_FORMAT);
     ASSERT_TRUE(restored_result.len == 0);
     free(serialized);
-    ii42_topk_result_free(&block_result);
-    ii42_topk_result_free(&split_result);
-    ii42_topk_result_free(&restored_result);
-    ii42_topk_result_free(&result);
-    ii42_semantic_accelerator_index_free(&term_indexes[1]);
-    ii42_semantic_accelerator_index_free(&term_indexes[0]);
-    ii42_semantic_accelerator_index_free(&restored);
-    ii42_semantic_accelerator_index_free(&index);
+    evoke_topk_result_free(&block_result);
+    evoke_topk_result_free(&split_result);
+    evoke_topk_result_free(&restored_result);
+    evoke_topk_result_free(&result);
+    evoke_semantic_accelerator_index_free(&term_indexes[1]);
+    evoke_semantic_accelerator_index_free(&term_indexes[0]);
+    evoke_semantic_accelerator_index_free(&restored);
+    evoke_semantic_accelerator_index_free(&index);
 }
 
 static void
@@ -19942,17 +19942,17 @@ test_semantic_accelerator_candidate_oversampling(void)
 {
     const uint32_t first_documents[] = {0};
     const uint32_t second_documents[] = {1};
-    const ii42_semantic_accelerator_summary_input first_summary[] = {
+    const evoke_semantic_accelerator_summary_input first_summary[] = {
         {0, 0.9f}
     };
-    const ii42_semantic_accelerator_summary_input second_summary[] = {
+    const evoke_semantic_accelerator_summary_input second_summary[] = {
         {0, 0.1f}
     };
-    const ii42_semantic_accelerator_cluster_input clusters[] = {
+    const evoke_semantic_accelerator_cluster_input clusters[] = {
         {first_documents, 1, first_summary, 1},
         {second_documents, 1, second_summary, 1}
     };
-    const ii42_semantic_accelerator_term_input terms[] = {
+    const evoke_semantic_accelerator_term_input terms[] = {
         {0, clusters, 2}
     };
     const uint32_t query_ids[] = {0, 1};
@@ -19964,31 +19964,31 @@ test_semantic_accelerator_candidate_oversampling(void)
         },
         .fail_document_id = UINT32_MAX
     };
-    ii42_semantic_accelerator_options narrow = {
+    evoke_semantic_accelerator_options narrow = {
         .query_cut = 1,
         .candidate_multiplier = 1,
         .heap_factor = 1.0f
     };
-    ii42_semantic_accelerator_options oversampled = {
+    evoke_semantic_accelerator_options oversampled = {
         .query_cut = 1,
         .candidate_multiplier = 2,
         .heap_factor = 1.0f
     };
-    ii42_semantic_accelerator_index index;
-    ii42_semantic_accelerator_stats stats;
-    ii42_topk_result result;
+    evoke_semantic_accelerator_index index;
+    evoke_semantic_accelerator_stats stats;
+    evoke_topk_result result;
 
-    ii42_semantic_accelerator_index_init(&index);
+    evoke_semantic_accelerator_index_init(&index);
     memset(&stats, 0, sizeof(stats));
     memset(&result, 0, sizeof(result));
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_index_build(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_index_build(
         UINT64_C(0x1020304050607080),
         2,
         terms,
         1,
         &index
     ));
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_topk(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_topk(
         &index,
         query_ids,
         query_weights,
@@ -20003,8 +20003,8 @@ test_semantic_accelerator_candidate_oversampling(void)
     ASSERT_TRUE(result.len == 1);
     ASSERT_TRUE(result.doc_ids[0] == 0);
     ASSERT_TRUE(stats.clusters_opened == 1);
-    ii42_topk_result_free(&result);
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_topk(
+    evoke_topk_result_free(&result);
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_topk(
         &index,
         query_ids,
         query_weights,
@@ -20019,9 +20019,9 @@ test_semantic_accelerator_candidate_oversampling(void)
     ASSERT_TRUE(result.len == 1);
     ASSERT_TRUE(result.doc_ids[0] == 1);
     ASSERT_TRUE(stats.clusters_opened == 2);
-    ii42_topk_result_free(&result);
+    evoke_topk_result_free(&result);
     oversampled.candidate_multiplier = 0;
-    ASSERT_TRUE(ii42_semantic_accelerator_topk(
+    ASSERT_TRUE(evoke_semantic_accelerator_topk(
         &index,
         query_ids,
         query_weights,
@@ -20032,21 +20032,21 @@ test_semantic_accelerator_candidate_oversampling(void)
         &scores,
         &result,
         &stats
-    ) == II42_ERR_INVALID);
-    ii42_semantic_accelerator_index_free(&index);
+    ) == EVOKE_ERR_INVALID);
+    evoke_semantic_accelerator_index_free(&index);
 }
 
 static void
 test_semantic_accelerator_empty_and_duplicate_query(void)
 {
     const uint32_t documents[] = {0};
-    const ii42_semantic_accelerator_summary_input summary[] = {
+    const evoke_semantic_accelerator_summary_input summary[] = {
         {0, 1.0f}
     };
-    const ii42_semantic_accelerator_cluster_input clusters[] = {
+    const evoke_semantic_accelerator_cluster_input clusters[] = {
         {documents, 1, summary, 1}
     };
-    const ii42_semantic_accelerator_term_input terms[] = {
+    const evoke_semantic_accelerator_term_input terms[] = {
         {0, clusters, 1}
     };
     const uint32_t query_ids[] = {0, 0};
@@ -20055,45 +20055,45 @@ test_semantic_accelerator_empty_and_duplicate_query(void)
         .scores = {{1.0f, 0.0f, 0.0f}},
         .fail_document_id = UINT32_MAX
     };
-    ii42_semantic_accelerator_options options = {
+    evoke_semantic_accelerator_options options = {
         .query_cut = 2,
         .candidate_multiplier = 1,
         .heap_factor = 0.0f
     };
-    ii42_semantic_accelerator_index empty;
-    ii42_semantic_accelerator_index index;
-    ii42_semantic_accelerator_index restored;
-    ii42_semantic_accelerator_stats stats;
-    ii42_topk_result result;
+    evoke_semantic_accelerator_index empty;
+    evoke_semantic_accelerator_index index;
+    evoke_semantic_accelerator_index restored;
+    evoke_semantic_accelerator_stats stats;
+    evoke_topk_result result;
     uint8_t *bytes = NULL;
     size_t size = 0;
 
-    ii42_semantic_accelerator_index_init(&empty);
-    ii42_semantic_accelerator_index_init(&index);
-    ii42_semantic_accelerator_index_init(&restored);
+    evoke_semantic_accelerator_index_init(&empty);
+    evoke_semantic_accelerator_index_init(&index);
+    evoke_semantic_accelerator_index_init(&restored);
     memset(&stats, 0, sizeof(stats));
     memset(&result, 0, sizeof(result));
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_index_build(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_index_build(
         UINT64_C(0x1020304050607080),
         0,
         NULL,
         0,
         &empty
     ));
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_serialize(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_serialize(
         &empty,
         &bytes,
         &size
     ));
-    ASSERT_TRUE(size == II42_SEMANTIC_ACCELERATOR_HEADER_SIZE);
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_deserialize(
+    ASSERT_TRUE(size == EVOKE_SEMANTIC_ACCELERATOR_HEADER_SIZE);
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_deserialize(
         bytes,
         size,
         &restored
     ));
     free(bytes);
     bytes = NULL;
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_topk(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_topk(
         &restored,
         NULL,
         NULL,
@@ -20106,14 +20106,14 @@ test_semantic_accelerator_empty_and_duplicate_query(void)
         &stats
     ));
     ASSERT_TRUE(result.len == 0);
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_index_build(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_index_build(
         UINT64_C(0x1020304050607080),
         1,
         terms,
         1,
         &index
     ));
-    ASSERT_STATUS_OK(ii42_semantic_accelerator_topk(
+    ASSERT_STATUS_OK(evoke_semantic_accelerator_topk(
         &index,
         query_ids,
         query_weights,
@@ -20128,17 +20128,17 @@ test_semantic_accelerator_empty_and_duplicate_query(void)
     ASSERT_TRUE(result.len == 1);
     ASSERT_TRUE(result.doc_ids[0] == 0);
     ASSERT_TRUE(fabsf(result.scores[0] - 1.0f) < 1e-6f);
-    ii42_topk_result_free(&result);
-    ii42_semantic_accelerator_index_free(&restored);
-    ii42_semantic_accelerator_index_free(&index);
-    ii42_semantic_accelerator_index_free(&empty);
+    evoke_topk_result_free(&result);
+    evoke_semantic_accelerator_index_free(&restored);
+    evoke_semantic_accelerator_index_free(&index);
+    evoke_semantic_accelerator_index_free(&empty);
 }
 
 static void
 test_semantic_accelerator_workspace_estimate(void)
 {
     uint64_t fixed = UINT64_C(64) * 1024 * 1024;
-    uint64_t estimate = ii42_semantic_accelerator_workspace_estimate(
+    uint64_t estimate = evoke_semantic_accelerator_workspace_estimate(
         100,
         80,
         10,
@@ -20151,7 +20151,7 @@ test_semantic_accelerator_workspace_estimate(void)
             UINT64_C(1000)
     );
     ASSERT_TRUE(
-        ii42_semantic_accelerator_workspace_estimate(
+        evoke_semantic_accelerator_workspace_estimate(
             UINT64_MAX,
             UINT64_MAX,
             UINT64_MAX,
@@ -20163,12 +20163,12 @@ test_semantic_accelerator_workspace_estimate(void)
 static void
 test_weighted_space_saving_bounds(void)
 {
-    ii42_weighted_space_saving summary;
+    evoke_weighted_space_saving summary;
     double exact[256] = {0};
     uint32_t state = UINT32_C(0x12345678);
 
-    ii42_weighted_space_saving_init_empty(&summary);
-    ASSERT_STATUS_OK(ii42_weighted_space_saving_init(&summary, 16));
+    evoke_weighted_space_saving_init_empty(&summary);
+    ASSERT_STATUS_OK(evoke_weighted_space_saving_init(&summary, 16));
     for (size_t update = 0; update < 10000; update++)
     {
         uint32_t item;
@@ -20178,7 +20178,7 @@ test_weighted_space_saving_bounds(void)
         item = (state >> 16) & UINT32_C(255);
         weight = (double) ((state & UINT32_C(7)) + 1U) / 8.0;
         exact[item] += weight;
-        ASSERT_STATUS_OK(ii42_weighted_space_saving_offer(
+        ASSERT_STATUS_OK(evoke_weighted_space_saving_offer(
             &summary,
             item,
             weight
@@ -20189,7 +20189,7 @@ test_weighted_space_saving_bounds(void)
     ASSERT_TRUE(summary.maximum_error <= summary.total_weight / 16.0);
     for (size_t index = 0; index < summary.len; index++)
     {
-        const ii42_weighted_space_saving_counter *counter =
+        const evoke_weighted_space_saving_counter *counter =
             &summary.counters[index];
 
         ASSERT_TRUE(counter->estimate + 1e-9 >= exact[counter->item]);
@@ -20200,10 +20200,10 @@ test_weighted_space_saving_bounds(void)
         ASSERT_TRUE(summary.heap[counter->heap_position] == index);
     }
     ASSERT_TRUE(
-        ii42_weighted_space_saving_offer(&summary, 1, 0.0) ==
-            II42_ERR_INVALID
+        evoke_weighted_space_saving_offer(&summary, 1, 0.0) ==
+            EVOKE_ERR_INVALID
     );
-    ii42_weighted_space_saving_free(&summary);
+    evoke_weighted_space_saving_free(&summary);
 }
 
 int

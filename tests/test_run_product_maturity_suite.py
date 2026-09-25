@@ -124,7 +124,7 @@ def test_package_mismatch_stops_before_product_steps(
         'inspect_package_binding',
         lambda package_root, pg_bin: {
             'passed': False,
-            'errors': ['package binding mismatch: ii42.so'],
+            'errors': ['package binding mismatch: evoke.so'],
         },
     )
     called = False
@@ -217,9 +217,9 @@ def test_model_binding_covers_staged_and_installed_bundle(
     package = tmp_path / 'package'
     staged_model = (
         package / sharedir.relative_to(sharedir.anchor)
-        / 'ii42/models/default'
+        / 'evoke/models/default'
     )
-    installed_model = sharedir / 'ii42/models/default'
+    installed_model = sharedir / 'evoke/models/default'
     staged_model.mkdir(parents=True)
     installed_model.mkdir(parents=True)
     artifact_identity = {
@@ -323,7 +323,7 @@ def test_inspect_package_metadata_rejects_missing_or_changed_files(
 def test_extension_sql_artifacts_include_only_current_install(
     tmp_path: Path,
 ) -> None:
-    install = tmp_path / 'ii42--0.2.1.sql'
+    install = tmp_path / 'evoke--0.2.1.sql'
     install.touch()
 
     assert run_product_maturity_suite.extension_sql_artifacts(
@@ -335,10 +335,10 @@ def test_extension_sql_artifacts_include_only_current_install(
 def test_extension_sql_artifacts_reject_extra_paths(
     tmp_path: Path,
 ) -> None:
-    install = tmp_path / 'ii42--0.2.1.sql'
-    upgrade = tmp_path / 'ii42--0.2.0--0.2.1.sql'
-    extra_a = tmp_path / 'ii42--unsupported-a.sql'
-    extra_b = tmp_path / 'ii42--unsupported-b.sql'
+    install = tmp_path / 'evoke--0.2.1.sql'
+    upgrade = tmp_path / 'evoke--0.2.0--0.2.1.sql'
+    extra_a = tmp_path / 'evoke--unsupported-a.sql'
+    extra_b = tmp_path / 'evoke--unsupported-b.sql'
     unrelated = tmp_path / 'other--unsupported.sql'
     for path in (install, upgrade, extra_a, extra_b, unrelated):
         path.touch()
@@ -478,12 +478,12 @@ def test_maturity_suite_uses_only_current_catalog_stages(
     runtime_temp_pg = commands['runtime service temp pg smoke']
     assert runtime_temp_pg[-2:] == [
         '--runtime-server-binary',
-        str(run_product_maturity_suite.REPO_ROOT / 'build/ii42-runtime-server'),
+        str(run_product_maturity_suite.REPO_ROOT / 'build/evoke-runtime-server'),
     ]
     failover_smoke = commands['runtime failover backpressure smoke']
     assert failover_smoke[-5:] == [
         '--runtime-server-binary',
-        str(run_product_maturity_suite.REPO_ROOT / 'build/ii42-runtime-server'),
+        str(run_product_maturity_suite.REPO_ROOT / 'build/evoke-runtime-server'),
         '--runtime-liveness-timeout-ms',
         '3000',
         '--failover-backpressure-only',

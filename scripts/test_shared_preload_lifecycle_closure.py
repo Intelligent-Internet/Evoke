@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -57,7 +57,7 @@ def parse_args() -> argparse.Namespace:
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share directory containing extension/ii42.control, '
+            'PostgreSQL share directory containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -150,14 +150,14 @@ def init_cluster(
             )
         conf.write(f"unix_socket_directories = '{pgdata}'\n")
         conf.write(f'port = {port}\n')
-        conf.write("shared_preload_libraries = 'ii42'\n")
-        conf.write(f"ii42.shared_runtime_size = '{cache_mb}MB'\n")
+        conf.write("shared_preload_libraries = 'evoke'\n")
+        conf.write(f"evoke.shared_runtime_size = '{cache_mb}MB'\n")
         conf.write(
-            f"ii42.prewarm_max_bytes = '{prewarm_max_mb}MB'\n"
+            f"evoke.prewarm_max_bytes = '{prewarm_max_mb}MB'\n"
         )
-        conf.write('ii42.maintenance_worker_limit = 1\n')
-        conf.write("ii42.preload_timer_interval_ms = '1000ms'\n")
-        conf.write("ii42.maintenance_timer_interval_ms = '1000ms'\n")
+        conf.write('evoke.maintenance_worker_limit = 1\n')
+        conf.write("evoke.preload_timer_interval_ms = '1000ms'\n")
+        conf.write("evoke.maintenance_timer_interval_ms = '1000ms'\n")
 
     run([
         str(bindir / 'pg_ctl'),
@@ -206,7 +206,7 @@ def json_state(
         args,
         pgdata,
         port,
-        "SELECT public.ii42_index_runtime_state_json("
+        "SELECT public.evoke_index_runtime_state_json("
         f"'{index_name}'::regclass);",
     )
     return json.loads(payload)
@@ -243,7 +243,7 @@ def query_index(
         port,
         f'''
         SELECT count(*)
-        FROM public.ii42_query(
+        FROM public.evoke_query(
             '{index_name}'::regclass,
             '{term}',
             5,
@@ -263,7 +263,7 @@ def query_index(
         )
 
 
-def assert_plain_count_avoids_ii42_full_scan(
+def assert_plain_count_avoids_evoke_full_scan(
     args: argparse.Namespace,
     pgdata: Path,
     port: int,
@@ -279,7 +279,7 @@ def assert_plain_count_avoids_ii42_full_scan(
     )
     if index_name in plan:
         raise AssertionError(
-            'plain count(*) should not use ii42 as a full-index scan: '
+            'plain count(*) should not use evoke as a full-index scan: '
             f'index={index_name}, plan={plan}'
         )
 
@@ -290,7 +290,7 @@ def assert_plain_count_avoids_ii42_full_scan(
         )
 
 
-def assert_ordered_retrieval_still_uses_ii42(
+def assert_ordered_retrieval_still_uses_evoke(
     args: argparse.Namespace,
     pgdata: Path,
     port: int,
@@ -311,13 +311,13 @@ def assert_ordered_retrieval_still_uses_ii42(
     )
     if index_name not in plan:
         raise AssertionError(
-            'ordered retrieval should still use ii42 index scan: '
+            'ordered retrieval should still use evoke index scan: '
             f'index={index_name}, plan={plan}'
         )
 
 
 def require_extension(args: argparse.Namespace, pgdata: Path, port: int) -> None:
-    psql(args, pgdata, port, 'CREATE EXTENSION ii42;')
+    psql(args, pgdata, port, 'CREATE EXTENSION evoke;')
 
 
 def assert_maintenance_worker_quiesce(
@@ -330,7 +330,7 @@ def assert_maintenance_worker_quiesce(
         pgdata,
         port,
         '''
-        ALTER SYSTEM SET ii42.maintenance_worker_limit = 0;
+        ALTER SYSTEM SET evoke.maintenance_worker_limit = 0;
         SELECT pg_reload_conf();
         ''',
     )
@@ -340,7 +340,7 @@ def assert_maintenance_worker_quiesce(
             args,
             pgdata,
             port,
-            'SHOW ii42.maintenance_worker_limit;',
+            'SHOW evoke.maintenance_worker_limit;',
         ),
         lambda value: value == '0',
         'maintenance worker quiesce reload',
@@ -349,7 +349,7 @@ def assert_maintenance_worker_quiesce(
         args,
         pgdata,
         port,
-        'SELECT public.ii42_index_touch_maintenance();',
+        'SELECT public.evoke_index_touch_maintenance();',
     )
     for _ in range(10):
         active_workers = psql(
@@ -359,7 +359,7 @@ def assert_maintenance_worker_quiesce(
             '''
             SELECT count(*)
             FROM pg_stat_activity
-            WHERE backend_type = 'ii42 background';
+            WHERE backend_type = 'evoke background';
             ''',
         )
         if active_workers != '0':
@@ -374,7 +374,7 @@ def assert_maintenance_worker_quiesce(
         pgdata,
         port,
         '''
-        ALTER SYSTEM SET ii42.maintenance_worker_limit = 1;
+        ALTER SYSTEM SET evoke.maintenance_worker_limit = 1;
         SELECT pg_reload_conf();
         ''',
     )
@@ -384,7 +384,7 @@ def assert_maintenance_worker_quiesce(
             args,
             pgdata,
             port,
-            'SHOW ii42.maintenance_worker_limit;',
+            'SHOW evoke.maintenance_worker_limit;',
         ),
         lambda value: value == '1',
         'maintenance worker admission restore',
@@ -402,7 +402,7 @@ def set_maintenance_worker_limit(
         pgdata,
         port,
         f'''
-        ALTER SYSTEM SET ii42.maintenance_worker_limit = {limit};
+        ALTER SYSTEM SET evoke.maintenance_worker_limit = {limit};
         SELECT pg_reload_conf();
         ''',
     )
@@ -412,7 +412,7 @@ def set_maintenance_worker_limit(
             args,
             pgdata,
             port,
-            'SHOW ii42.maintenance_worker_limit;',
+            'SHOW evoke.maintenance_worker_limit;',
         ),
         lambda value: value == str(limit),
         f'maintenance worker limit {limit}',
@@ -432,10 +432,10 @@ def maintain_until_converged(
             args,
             pgdata,
             port,
-            "SET ii42.test_convergent_l0_rotation_records = '1';\n"
-            'SELECT public.ii42_index_maintain('
+            "SET evoke.test_convergent_l0_rotation_records = '1';\n"
+            'SELECT public.evoke_index_maintain('
             f"'{index_name}'::regclass);\n"
-            'RESET ii42.test_convergent_l0_rotation_records;',
+            'RESET evoke.test_convergent_l0_rotation_records;',
         )
         state = json_state(args, pgdata, port, index_name)
         if int(state['debt']['delta_records']) == 0:
@@ -447,7 +447,7 @@ def maintain_until_converged(
 
 def run_oversized_exact_root_case(args: argparse.Namespace) -> None:
     workdir = Path(tempfile.mkdtemp(
-        prefix='ii42_shared_lifecycle_miss_',
+        prefix='evoke_shared_lifecycle_miss_',
         dir='/tmp',
     ))
     pgdata = workdir / 'pgdata'
@@ -476,11 +476,11 @@ def run_oversized_exact_root_case(args: argparse.Namespace) -> None:
             ]
             FROM generate_series(1, 80000) gs;
             CREATE INDEX docs_oversized_bm25_idx
-                ON docs_oversized USING ii42 (tokens)
+                ON docs_oversized USING evoke (tokens)
                 WITH (auto_preload = 12);
             ''',
         )
-        assert_plain_count_avoids_ii42_full_scan(
+        assert_plain_count_avoids_evoke_full_scan(
             args,
             pgdata,
             port,
@@ -488,7 +488,7 @@ def run_oversized_exact_root_case(args: argparse.Namespace) -> None:
             'docs_oversized_bm25_idx',
             80000,
         )
-        assert_ordered_retrieval_still_uses_ii42(
+        assert_ordered_retrieval_still_uses_evoke(
             args,
             pgdata,
             port,
@@ -549,7 +549,7 @@ def run_oversized_exact_root_case(args: argparse.Namespace) -> None:
             port,
             '''
             CREATE INDEX docs_oversized_manual_idx
-                ON docs_oversized USING ii42 (tokens)
+                ON docs_oversized USING evoke (tokens)
                 WITH (auto_preload = 0);
             ''',
         )
@@ -557,7 +557,7 @@ def run_oversized_exact_root_case(args: argparse.Namespace) -> None:
             args,
             pgdata,
             port,
-            "SELECT public.ii42_index_preload("
+            "SELECT public.evoke_index_preload("
             "'docs_oversized_manual_idx'::regclass);",
         )
         pages_match = re.search(r'pages_warmed=([0-9]+)', preload_result)
@@ -581,7 +581,7 @@ def run_oversized_exact_root_case(args: argparse.Namespace) -> None:
             args,
             pgdata,
             port,
-            "SELECT public.ii42_index_preload("
+            "SELECT public.evoke_index_preload("
             "'docs_oversized_manual_idx'::regclass);",
         )
         retry_pages = re.search(r'pages_warmed=([0-9]+)', retry_result)
@@ -610,7 +610,7 @@ def run_oversized_exact_root_case(args: argparse.Namespace) -> None:
                 f'{state}'
             )
         if (
-            'ii42 auto_preload index could not be admitted to '
+            'evoke auto_preload index could not be admitted to '
             'the shared runtime arena'
         ) in read_log(pgdata):
             raise AssertionError(
@@ -629,7 +629,7 @@ def run_oversized_exact_root_case(args: argparse.Namespace) -> None:
 
 def run_registry_isolation_case(args: argparse.Namespace) -> None:
     workdir = Path(tempfile.mkdtemp(
-        prefix='ii42_shared_lifecycle_churn_',
+        prefix='evoke_shared_lifecycle_churn_',
         dir='/tmp',
     ))
     pgdata = workdir / 'pgdata'
@@ -694,17 +694,17 @@ def run_registry_isolation_case(args: argparse.Namespace) -> None:
             FROM generate_series(1, 30000) gs;
 
             CREATE INDEX hot_marked_bm25_idx
-                ON hot_marked USING ii42 (tokens)
+                ON hot_marked USING evoke (tokens)
                 WITH (auto_preload = 20);
             CREATE INDEX warm_marked_bm25_idx
-                ON warm_marked USING ii42 (tokens)
+                ON warm_marked USING evoke (tokens)
                 WITH (auto_preload = 4);
             CREATE INDEX pressure_a_bm25_idx
-                ON pressure_a USING ii42 (tokens);
+                ON pressure_a USING evoke (tokens);
             CREATE INDEX pressure_b_bm25_idx
-                ON pressure_b USING ii42 (tokens);
+                ON pressure_b USING evoke (tokens);
             CREATE INDEX pressure_c_bm25_idx
-                ON pressure_c USING ii42 (tokens);
+                ON pressure_c USING evoke (tokens);
             ''',
         )
 
@@ -801,7 +801,7 @@ def run_registry_isolation_case(args: argparse.Namespace) -> None:
 
 def run_resident_root_replacement_case(args: argparse.Namespace) -> None:
     workdir = Path(tempfile.mkdtemp(
-        prefix='ii42_shared_resident_root_',
+        prefix='evoke_shared_resident_root_',
         dir='/tmp',
     ))
     pgdata = workdir / 'pgdata'
@@ -830,7 +830,7 @@ def run_resident_root_replacement_case(args: argparse.Namespace) -> None:
             SELECT gs, ARRAY['resident', 'stable', gs::text]
             FROM generate_series(1, 1000) gs;
             CREATE INDEX resident_docs_idx
-                ON resident_docs USING ii42 (tokens)
+                ON resident_docs USING evoke (tokens)
                 WITH (auto_preload = 0);
             ''',
         )
@@ -838,7 +838,7 @@ def run_resident_root_replacement_case(args: argparse.Namespace) -> None:
             args,
             pgdata,
             port,
-            "SELECT public.ii42_index_preload("
+            "SELECT public.evoke_index_preload("
             "'resident_docs_idx'::regclass);",
         )
         initial = json_state(args, pgdata, port, 'resident_docs_idx')
@@ -906,7 +906,7 @@ def run_resident_root_replacement_case(args: argparse.Namespace) -> None:
             args,
             pgdata,
             port,
-            "SELECT public.ii42_index_preload("
+            "SELECT public.evoke_index_preload("
             "'resident_docs_idx'::regclass);",
         )
         replacement = json_state(args, pgdata, port, 'resident_docs_idx')

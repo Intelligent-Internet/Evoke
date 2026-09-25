@@ -96,7 +96,7 @@ extension version v0.2.5. The current package is bound by
 | --- | --- |
 | Bundle | `evoke-p2.2-nfcorpus-v2` |
 | Model ID | `evoke_p2_p22_nfcorpus_v2_smoke` |
-| Manifest SHA-256 | `b61060a3958ee56209de47a34ee5cbe08351bfeb3fcbbfdcbf477403210764f7` |
+| Manifest SHA-256 | `dd0993f0638a3f683fbb6475a8509c228d8f6547aab90a0b762b1ff6fd7d0041` |
 | Runtime ABI | `evoke_p2_unified_text_atoms_v2` |
 | ONNX Runtime | 1.29.0, pinned by [the dependency lock](../packaging/onnxruntime.version) |
 
@@ -668,15 +668,15 @@ in the future directions above.
 ## 13. Reproducibility Artifacts
 
 - [Current package model lock](../packaging/milestone-model.json)
-- [P2 b1.125 productization report](research-sae/reports/m1900-m1999/ii42-p2-b1125-productization-report.md)
-- [P2.1 full BEIR15 matrix](research-sae/reports/m1900-m1999/ii42-p2.1-beir15-native-full-matrix-report.md)
-- [P2.1 full MTEB10 matrix](research-sae/reports/m1900-m1999/ii42-p2.1-mteb10-native-matrix-report.md)
-- [MTEB10 VectorChord repair report](research-sae/reports/m1900-m1999/ii42-p2.1-mteb10-vectorchord-repair-report.md)
-- [M1914 fixed-support calibration report](research-sae/reports/m1900-m1999/ii42-m1914-granite-fixed-support-calibration-report.md)
-- [M1930b single-index additive closure](research-sae/reports/m1900-m1999/ii42-m1930b-one-index-additive-closure-report.md)
-- [M1931 query-local calibration](research-sae/reports/m1900-m1999/ii42-m1931-query-local-source-calibration-report.md)
-- [M1933 semantic budget frontier](research-sae/reports/m1900-m1999/ii42-m1933-semantic-budget-frontier-report.md)
-- [M1934 unseen transfer](research-sae/reports/m1900-m1999/ii42-m1934-fixed-budget-unseen-transfer-report.md)
+- [P2 b1.125 productization report](research-sae/reports/m1900-m1999/evoke-p2-b1125-productization-report.md)
+- [P2.1 full BEIR15 matrix](research-sae/reports/m1900-m1999/evoke-p2.1-beir15-native-full-matrix-report.md)
+- [P2.1 full MTEB10 matrix](research-sae/reports/m1900-m1999/evoke-p2.1-mteb10-native-matrix-report.md)
+- [MTEB10 VectorChord repair report](research-sae/reports/m1900-m1999/evoke-p2.1-mteb10-vectorchord-repair-report.md)
+- [M1914 fixed-support calibration report](research-sae/reports/m1900-m1999/evoke-m1914-granite-fixed-support-calibration-report.md)
+- [M1930b single-index additive closure](research-sae/reports/m1900-m1999/evoke-m1930b-one-index-additive-closure-report.md)
+- [M1931 query-local calibration](research-sae/reports/m1900-m1999/evoke-m1931-query-local-source-calibration-report.md)
+- [M1933 semantic budget frontier](research-sae/reports/m1900-m1999/evoke-m1933-semantic-budget-frontier-report.md)
+- [M1934 unseen transfer](research-sae/reports/m1900-m1999/evoke-m1934-fixed-budget-unseen-transfer-report.md)
 - BEIR15 JSON: `runs/evoke-p2-beir15-native-full-v1/evoke_p2_1_beir15_native_full_matrix.json`
 - MTEB10 JSON: `runs/evoke-p2-mteb10-native-v1/evoke_p2_1_mteb10_native_matrix.json`
 - ClearML M1914 task: `72d822802e104fa09a0e555c1a93533a`

@@ -126,7 +126,7 @@ def worker(args):
         cublas_workspace_config=os.environ.get('CUBLAS_WORKSPACE_CONFIG'),
         tf32=False, observer_enabled=False, computational_contract_changed=False))
     Task.set_offline(True)
-    task = Task.init(project_name='II42-NG', task_name='NG-0076/no-observer-D96-control',
+    task = Task.init(project_name='Evoke-NG', task_name='NG-0076/no-observer-D96-control',
         reuse_last_task_id=False, auto_connect_frameworks=False, auto_connect_arg_parser=False,
         auto_connect_streams=False, auto_resource_monitoring=False)
     receipt = dict(task_id=task.id, actual_start=True, offline=True, remote_synced=False, closed=False)

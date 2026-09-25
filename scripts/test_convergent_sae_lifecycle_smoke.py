@@ -17,7 +17,7 @@ from typing import Any
 
 import psycopg
 
-from ii42_test_support import (
+from evoke_test_support import (
     create_short_socket_root,
     extension_control_root,
     vacuum_with_session_maintenance_lock,
@@ -56,7 +56,7 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         required=True,
         help=(
-            'PostgreSQL share root containing extension/ii42.control, '
+            'PostgreSQL share root containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -146,13 +146,13 @@ def configure_cluster(
 ) -> None:
     config = data_dir / 'postgresql.conf'
     with config.open('a', encoding='utf-8') as handle:
-        handle.write("\nshared_preload_libraries = 'ii42'\n")
-        handle.write("ii42.shared_runtime_size = '256MB'\n")
+        handle.write("\nshared_preload_libraries = 'evoke'\n")
+        handle.write("evoke.shared_runtime_size = '256MB'\n")
         handle.write(
-            "ii42.maintenance_timer_interval_ms = '3600000ms'\n"
+            "evoke.maintenance_timer_interval_ms = '3600000ms'\n"
         )
         handle.write(
-            "ii42.maintenance_low_debt_interval_ms = '1000ms'\n"
+            "evoke.maintenance_low_debt_interval_ms = '1000ms'\n"
         )
         handle.write("listen_addresses = ''\n")
         handle.write(
@@ -235,7 +235,7 @@ def acquire_maintenance_lock(
     while True:
         with connection.cursor() as cursor:
             cursor.execute(
-                'SELECT ii42_index_try_maintenance_lock('
+                'SELECT evoke_index_try_maintenance_lock('
                 "'convergent_sae.docs_idx'::regclass)"
             )
             row = cursor.fetchone()
@@ -254,7 +254,7 @@ def release_maintenance_lock(
     try:
         with connection.cursor() as cursor:
             cursor.execute(
-                'SELECT ii42_index_maintenance_unlock('
+                'SELECT evoke_index_maintenance_unlock('
                 "'convergent_sae.docs_idx'::regclass)"
             )
         connection.commit()
@@ -268,7 +268,7 @@ def fetch_status(
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_status(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass)',
             (index_name,),
         )
         row = cursor.fetchone()
@@ -281,7 +281,7 @@ def fetch_runtime_status(
     connection: psycopg.Connection[Any],
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
-        cursor.execute('SELECT ii42_runtime_service_status()')
+        cursor.execute('SELECT evoke_runtime_service_status()')
         row = cursor.fetchone()
     if row is None or not isinstance(row[0], dict):
         raise AssertionError('invalid runtime service status')
@@ -297,7 +297,7 @@ def wait_for_accelerator_preload_state(
     while time.monotonic() < deadline:
         with connection.cursor() as cursor:
             cursor.execute(
-                'SELECT ii42_index_runtime_state_json('
+                'SELECT evoke_index_runtime_state_json('
                 "'convergent_sae.docs_idx'::regclass)"
             )
             row = cursor.fetchone()
@@ -323,7 +323,7 @@ def fetch_maintenance_status(
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT ii42_index_runtime_state_json("
+            "SELECT evoke_index_runtime_state_json("
             "'convergent_sae.docs_idx'::regclass)->'maintenance'"
         )
         row = cursor.fetchone()
@@ -339,7 +339,7 @@ def wait_for_worker_limit(
     deadline = time.monotonic() + 5.0
     while True:
         with connection.cursor() as cursor:
-            cursor.execute('SHOW ii42.maintenance_worker_limit')
+            cursor.execute('SHOW evoke.maintenance_worker_limit')
             observed = int(cursor.fetchone()[0])
         if observed == expected:
             return
@@ -359,7 +359,7 @@ def configure_maintenance_worker_limit(
         raise AssertionError(f'invalid maintenance worker limit: {value}')
     with connection.cursor() as cursor:
         cursor.execute(
-            f'ALTER SYSTEM SET ii42.maintenance_worker_limit = {value}'
+            f'ALTER SYSTEM SET evoke.maintenance_worker_limit = {value}'
         )
         cursor.execute('SELECT pg_reload_conf()')
     wait_for_worker_limit(connection, value)
@@ -373,22 +373,22 @@ def run_failed_touch_retry_audit(
     try:
         with connection.cursor() as cursor:
             cursor.execute(
-                'ALTER SYSTEM SET ii42.maintenance_worker_limit = 0'
+                'ALTER SYSTEM SET evoke.maintenance_worker_limit = 0'
             )
             cursor.execute('SELECT pg_reload_conf()')
         wait_for_worker_limit(connection, 0)
         with connection.cursor() as cursor:
-            cursor.execute('SELECT ii42_index_touch_maintenance()')
+            cursor.execute('SELECT evoke_index_touch_maintenance()')
             blocked_touch = str(cursor.fetchone()[0])
 
         with connection.cursor() as cursor:
             cursor.execute(
-                'ALTER SYSTEM SET ii42.maintenance_worker_limit = 1'
+                'ALTER SYSTEM SET evoke.maintenance_worker_limit = 1'
             )
             cursor.execute('SELECT pg_reload_conf()')
         wait_for_worker_limit(connection, 1)
         with connection.cursor() as cursor:
-            cursor.execute('SELECT ii42_index_touch_maintenance()')
+            cursor.execute('SELECT evoke_index_touch_maintenance()')
             retry_touch = str(cursor.fetchone()[0])
 
         deadline = time.monotonic() + 5.0
@@ -413,7 +413,7 @@ def run_failed_touch_retry_audit(
     finally:
         with connection.cursor() as cursor:
             cursor.execute(
-                'ALTER SYSTEM SET ii42.maintenance_worker_limit = 1'
+                'ALTER SYSTEM SET evoke.maintenance_worker_limit = 1'
             )
             cursor.execute('SELECT pg_reload_conf()')
         wait_for_worker_limit(connection, 1)
@@ -430,13 +430,13 @@ def fetch_hits(
         if exact:
             cursor.execute(
                 "SELECT pg_catalog.set_config("
-                "'ii42.test_disable_semantic_accelerator', 'on', false)"
+                "'evoke.test_disable_semantic_accelerator', 'on', false)"
             )
         try:
             cursor.execute(
                 """
                 SELECT source.id, hit.score::float8
-                FROM ii42_query(
+                FROM evoke_query(
                     'convergent_sae.docs_idx'::regclass,
                     %s,
                     %s
@@ -454,7 +454,7 @@ def fetch_hits(
         finally:
             if exact:
                 cursor.execute(
-                    'RESET ii42.test_disable_semantic_accelerator'
+                    'RESET evoke.test_disable_semantic_accelerator'
                 )
 
 
@@ -464,7 +464,7 @@ def encode_query_once(
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT ii42_encode_text_internal("
+            "SELECT evoke_encode_text_internal("
             "'convergent_sae.docs_idx'::regclass, %s)",
             (query,),
         )
@@ -496,18 +496,18 @@ def fetch_encoded_hits(
         if exact:
             cursor.execute(
                 "SELECT pg_catalog.set_config("
-                "'ii42.test_disable_semantic_accelerator', 'on', false)"
+                "'evoke.test_disable_semantic_accelerator', 'on', false)"
             )
         if require_scope:
             cursor.execute(
                 "SELECT pg_catalog.set_config("
-                "'ii42.test_require_scope_filter', 'on', false)"
+                "'evoke.test_require_scope_filter', 'on', false)"
             )
         try:
             cursor.execute(
                 """
                 SELECT source.id, hit.score::float8
-                FROM ii42_index_semantic_query_native_internal(
+                FROM evoke_index_semantic_query_native_internal(
                     'convergent_sae.docs_idx'::regclass,
                     %s::int4[], %s::real[], NULL, NULL, %s,
                     %s, NULL, NULL, %s::jsonb
@@ -531,17 +531,17 @@ def fetch_encoded_hits(
         finally:
             if exact:
                 cursor.execute(
-                    'RESET ii42.test_disable_semantic_accelerator'
+                    'RESET evoke.test_disable_semantic_accelerator'
                 )
             if require_scope:
-                cursor.execute('RESET ii42.test_require_scope_filter')
+                cursor.execute('RESET evoke.test_require_scope_filter')
 
 
 def fetch_query_trace(
     connection: psycopg.Connection[Any],
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
-        cursor.execute('SELECT ii42_query_trace_internal()')
+        cursor.execute('SELECT evoke_query_trace_internal()')
         row = cursor.fetchone()
     if row is None or not isinstance(row[0], dict):
         raise AssertionError('query trace is unavailable')
@@ -561,12 +561,12 @@ def fetch_filtered_hits(
         if exact:
             cursor.execute(
                 "SELECT pg_catalog.set_config("
-                "'ii42.test_disable_semantic_accelerator', 'on', false)"
+                "'evoke.test_disable_semantic_accelerator', 'on', false)"
             )
         if forward_route != 'auto':
             cursor.execute(
                 "SELECT pg_catalog.set_config("
-                "'ii42.test_filtered_forward_route', %s, false)",
+                "'evoke.test_filtered_forward_route', %s, false)",
                 (forward_route,),
             )
         try:
@@ -579,7 +579,7 @@ def fetch_filtered_hits(
                 )
                 SELECT source.id, hit.score::float8
                 FROM allowed
-                CROSS JOIN LATERAL ii42_query(
+                CROSS JOIN LATERAL evoke_query(
                     'convergent_sae.docs_idx'::regclass,
                     %s,
                     allowed.tids,
@@ -598,10 +598,10 @@ def fetch_filtered_hits(
         finally:
             if exact:
                 cursor.execute(
-                    'RESET ii42.test_disable_semantic_accelerator'
+                    'RESET evoke.test_disable_semantic_accelerator'
                 )
             if forward_route != 'auto':
-                cursor.execute('RESET ii42.test_filtered_forward_route')
+                cursor.execute('RESET evoke.test_filtered_forward_route')
 
 
 def fetch_tid_filtered_hits(
@@ -616,13 +616,13 @@ def fetch_tid_filtered_hits(
         if exact:
             cursor.execute(
                 "SELECT pg_catalog.set_config("
-                "'ii42.test_disable_semantic_accelerator', 'on', false)"
+                "'evoke.test_disable_semantic_accelerator', 'on', false)"
             )
         try:
             cursor.execute(
                 """
                 SELECT source.id, hit.score::float8
-                FROM ii42_query(
+                FROM evoke_query(
                     'convergent_sae.docs_idx'::regclass,
                     %s,
                     %s::tid[],
@@ -641,7 +641,7 @@ def fetch_tid_filtered_hits(
         finally:
             if exact:
                 cursor.execute(
-                    'RESET ii42.test_disable_semantic_accelerator'
+                    'RESET evoke.test_disable_semantic_accelerator'
                 )
 
 
@@ -658,18 +658,18 @@ def fetch_structured_filtered_hits(
         if exact:
             cursor.execute(
                 "SELECT pg_catalog.set_config("
-                "'ii42.test_disable_semantic_accelerator', 'on', false)"
+                "'evoke.test_disable_semantic_accelerator', 'on', false)"
             )
         if require_scope:
             cursor.execute(
                 "SELECT pg_catalog.set_config("
-                "'ii42.test_require_scope_filter', 'on', false)"
+                "'evoke.test_require_scope_filter', 'on', false)"
             )
         try:
             cursor.execute(
                 """
                 SELECT source.id, hit.score::float8
-                FROM ii42_query(
+                FROM evoke_query(
                     'convergent_sae.docs_idx'::regclass,
                     %s,
                     %s::jsonb,
@@ -688,10 +688,10 @@ def fetch_structured_filtered_hits(
         finally:
             if exact:
                 cursor.execute(
-                    'RESET ii42.test_disable_semantic_accelerator'
+                    'RESET evoke.test_disable_semantic_accelerator'
                 )
             if require_scope:
-                cursor.execute('RESET ii42.test_require_scope_filter')
+                cursor.execute('RESET evoke.test_require_scope_filter')
 
 
 def fetch_page_native_exactness_probe(
@@ -707,32 +707,32 @@ def fetch_page_native_exactness_probe(
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT pg_catalog.set_config("
-            "'ii42.test_disable_semantic_accelerator', 'on', false)"
+            "'evoke.test_disable_semantic_accelerator', 'on', false)"
         )
         cursor.execute(
             "SELECT pg_catalog.set_config("
-            "'ii42.test_force_semantic_bmp', 'on', false)"
+            "'evoke.test_force_semantic_bmp', 'on', false)"
         )
         cursor.execute(
             "SELECT pg_catalog.set_config("
-            "'ii42.test_disable_semantic_bmp', %s, false)",
+            "'evoke.test_disable_semantic_bmp', %s, false)",
             (setting,),
         )
         cursor.execute(
             "SELECT pg_catalog.set_config("
-            "'ii42.test_disable_fused_semantic_taat', %s, false)",
+            "'evoke.test_disable_fused_semantic_taat', %s, false)",
             (fused_setting,),
         )
         cursor.execute(
             "SELECT pg_catalog.set_config("
-            "'ii42.test_query_semantic_error_budget_ratio', %s, false)",
+            "'evoke.test_query_semantic_error_budget_ratio', %s, false)",
             (str(error_budget_ratio),),
         )
         try:
             cursor.execute(
                 """
                 WITH encoded AS (
-                    SELECT ii42_encode_text_internal(
+                    SELECT evoke_encode_text_internal(
                         'convergent_sae.docs_idx'::regclass,
                         %s
                     ) AS value
@@ -767,12 +767,12 @@ def fetch_page_native_exactness_probe(
             row = cursor.fetchone()
         finally:
             cursor.execute(
-                'RESET ii42.test_query_semantic_error_budget_ratio'
+                'RESET evoke.test_query_semantic_error_budget_ratio'
             )
-            cursor.execute('RESET ii42.test_disable_fused_semantic_taat')
-            cursor.execute('RESET ii42.test_disable_semantic_bmp')
-            cursor.execute('RESET ii42.test_force_semantic_bmp')
-            cursor.execute('RESET ii42.test_disable_semantic_accelerator')
+            cursor.execute('RESET evoke.test_disable_fused_semantic_taat')
+            cursor.execute('RESET evoke.test_disable_semantic_bmp')
+            cursor.execute('RESET evoke.test_force_semantic_bmp')
+            cursor.execute('RESET evoke.test_disable_semantic_accelerator')
     if row is None or not isinstance(row[0], dict):
         raise AssertionError('invalid semantic BMP exactness probe')
     return row[0]
@@ -786,17 +786,17 @@ def fetch_filtered_bmp_exactness_probe(
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT pg_catalog.set_config("
-            "'ii42.test_disable_semantic_accelerator', 'on', false)"
+            "'evoke.test_disable_semantic_accelerator', 'on', false)"
         )
         cursor.execute(
             "SELECT pg_catalog.set_config("
-            "'ii42.test_force_semantic_bmp', 'on', false)"
+            "'evoke.test_force_semantic_bmp', 'on', false)"
         )
         try:
             cursor.execute(
                 """
                 WITH encoded AS (
-                    SELECT ii42_encode_text_internal(
+                    SELECT evoke_encode_text_internal(
                         'convergent_sae.docs_idx'::regclass,
                         %s
                     ) AS value
@@ -829,8 +829,8 @@ def fetch_filtered_bmp_exactness_probe(
             )
             row = cursor.fetchone()
         finally:
-            cursor.execute('RESET ii42.test_force_semantic_bmp')
-            cursor.execute('RESET ii42.test_disable_semantic_accelerator')
+            cursor.execute('RESET evoke.test_force_semantic_bmp')
+            cursor.execute('RESET evoke.test_disable_semantic_accelerator')
     if row is None or not isinstance(row[0], dict):
         raise AssertionError('invalid filtered semantic BMP probe')
     return row[0]
@@ -850,39 +850,39 @@ def fetch_semantic_accelerator_probe(
         if not use_defaults:
             cursor.execute(
                 "SELECT pg_catalog.set_config("
-                "'ii42.test_disable_semantic_accelerator', 'off', false)"
+                "'evoke.test_disable_semantic_accelerator', 'off', false)"
             )
             cursor.execute(
                 "SELECT pg_catalog.set_config("
-                "'ii42.test_semantic_accelerator_heap_factor', %s, false)",
+                "'evoke.test_semantic_accelerator_heap_factor', %s, false)",
                 (str(heap_factor),),
             )
             cursor.execute(
                 "SELECT pg_catalog.set_config("
-                "'ii42.test_semantic_accelerator_bound_residual_candidates', "
+                "'evoke.test_semantic_accelerator_bound_residual_candidates', "
                 "%s, false)",
                 ('on' if bound_residual_candidates else 'off',),
             )
             cursor.execute(
                 "SELECT pg_catalog.set_config("
-                "'ii42.test_semantic_accelerator_seed_bmp', %s, false)",
+                "'evoke.test_semantic_accelerator_seed_bmp', %s, false)",
                 ('on' if seed_bmp else 'off',),
             )
             cursor.execute(
                 "SELECT pg_catalog.set_config("
-                "'ii42.test_force_semantic_bmp', %s, false)",
+                "'evoke.test_force_semantic_bmp', %s, false)",
                 ('on' if seed_bmp else 'off',),
             )
             cursor.execute(
                 "SELECT pg_catalog.set_config("
-                "'ii42.test_query_semantic_error_budget_ratio', %s, false)",
+                "'evoke.test_query_semantic_error_budget_ratio', %s, false)",
                 (str(error_budget_ratio),),
             )
         try:
             cursor.execute(
                 """
                 WITH encoded AS (
-                    SELECT ii42_encode_text_internal(
+                    SELECT evoke_encode_text_internal(
                         'convergent_sae.docs_idx'::regclass,
                         %s
                     ) AS value
@@ -918,21 +918,21 @@ def fetch_semantic_accelerator_probe(
         finally:
             if not use_defaults:
                 cursor.execute(
-                    'RESET ii42.test_query_semantic_error_budget_ratio'
+                    'RESET evoke.test_query_semantic_error_budget_ratio'
                 )
-                cursor.execute('RESET ii42.test_force_semantic_bmp')
+                cursor.execute('RESET evoke.test_force_semantic_bmp')
                 cursor.execute(
-                    'RESET ii42.test_semantic_accelerator_seed_bmp'
+                    'RESET evoke.test_semantic_accelerator_seed_bmp'
                 )
                 cursor.execute(
                     'RESET '
-                    'ii42.test_semantic_accelerator_bound_residual_candidates'
+                    'evoke.test_semantic_accelerator_bound_residual_candidates'
                 )
                 cursor.execute(
-                    'RESET ii42.test_semantic_accelerator_heap_factor'
+                    'RESET evoke.test_semantic_accelerator_heap_factor'
                 )
                 cursor.execute(
-                    'RESET ii42.test_disable_semantic_accelerator'
+                    'RESET evoke.test_disable_semantic_accelerator'
                 )
     if row is None or not isinstance(row[0], dict):
         raise AssertionError('invalid semantic accelerator probe')
@@ -949,22 +949,22 @@ def fetch_single_atom_exactness_probes(
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT pg_catalog.set_config("
-            "'ii42.test_disable_semantic_accelerator', 'on', false)"
+            "'evoke.test_disable_semantic_accelerator', 'on', false)"
         )
         cursor.execute(
             "SELECT pg_catalog.set_config("
-            "'ii42.test_force_semantic_bmp', 'on', false)"
+            "'evoke.test_force_semantic_bmp', 'on', false)"
         )
         cursor.execute(
             "SELECT pg_catalog.set_config("
-            "'ii42.test_disable_semantic_bmp', %s, false)",
+            "'evoke.test_disable_semantic_bmp', %s, false)",
             (setting,),
         )
         try:
             cursor.execute(
                 """
                 WITH encoded AS (
-                    SELECT ii42_encode_text_internal(
+                    SELECT evoke_encode_text_internal(
                         'convergent_sae.docs_idx'::regclass,
                         %s
                     ) AS value
@@ -1001,9 +1001,9 @@ def fetch_single_atom_exactness_probes(
             )
             rows = cursor.fetchall()
         finally:
-            cursor.execute('RESET ii42.test_disable_semantic_bmp')
-            cursor.execute('RESET ii42.test_force_semantic_bmp')
-            cursor.execute('RESET ii42.test_disable_semantic_accelerator')
+            cursor.execute('RESET evoke.test_disable_semantic_bmp')
+            cursor.execute('RESET evoke.test_force_semantic_bmp')
+            cursor.execute('RESET evoke.test_disable_semantic_accelerator')
     probes = [
         {
             'atom': int(row[0]),
@@ -1406,7 +1406,7 @@ def maintain_until_converged(
 
         with connection.cursor() as cursor:
             cursor.execute(
-                'SELECT ii42_index_maintain(%s::regclass)',
+                'SELECT evoke_index_maintain(%s::regclass)',
                 (index_name,),
             )
             row = cursor.fetchone()
@@ -1441,7 +1441,7 @@ def maintain_once(
 ) -> str:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_maintain(%s::regclass)',
+            'SELECT evoke_index_maintain(%s::regclass)',
             (index_name,),
         )
         row = cursor.fetchone()
@@ -1463,7 +1463,7 @@ def maintain_due_once(
         target_oid = int(target_row[0])
         cursor.execute(
             'SELECT index_oid::oid, result '
-            'FROM ii42_index_maintain_due(256)'
+            'FROM evoke_index_maintain_due(256)'
         )
         rows = cursor.fetchall()
     connection.commit()
@@ -1550,11 +1550,11 @@ def configure_maintenance_budget(
     with connection.cursor() as cursor:
         if value is None:
             cursor.execute(
-                'ALTER SYSTEM RESET ii42.maintenance_rebuild_memory_budget'
+                'ALTER SYSTEM RESET evoke.maintenance_rebuild_memory_budget'
             )
         else:
             cursor.execute(
-                'ALTER SYSTEM SET ii42.maintenance_rebuild_memory_budget '
+                'ALTER SYSTEM SET evoke.maintenance_rebuild_memory_budget '
                 f'= {sql_literal(value)}'
             )
         cursor.execute('SELECT pg_reload_conf()')
@@ -1565,7 +1565,7 @@ def configure_maintenance_budget(
     while time.monotonic() < deadline:
         with connection.cursor() as cursor:
             cursor.execute(
-                'SHOW ii42.maintenance_rebuild_memory_budget'
+                'SHOW evoke.maintenance_rebuild_memory_budget'
             )
             row = cursor.fetchone()
         if row is not None:
@@ -1587,12 +1587,12 @@ def configure_test_l0_rotation_records(
         if value is None:
             cursor.execute(
                 'ALTER SYSTEM RESET '
-                'ii42.test_convergent_l0_rotation_records'
+                'evoke.test_convergent_l0_rotation_records'
             )
         else:
             cursor.execute(
                 'ALTER SYSTEM SET '
-                'ii42.test_convergent_l0_rotation_records '
+                'evoke.test_convergent_l0_rotation_records '
                 f'= {sql_literal(str(value))}'
             )
         cursor.execute('SELECT pg_reload_conf()')
@@ -1600,14 +1600,14 @@ def configure_test_l0_rotation_records(
             raise AssertionError(
                 'PostgreSQL did not reload the convergent-L0 test threshold'
             )
-        cursor.execute('RESET ii42.test_convergent_l0_rotation_records')
+        cursor.execute('RESET evoke.test_convergent_l0_rotation_records')
 
     deadline = time.monotonic() + 5.0
     while time.monotonic() < deadline:
         with connection.cursor() as cursor:
             cursor.execute(
                 "SELECT current_setting("
-                "'ii42.test_convergent_l0_rotation_records', true)"
+                "'evoke.test_convergent_l0_rotation_records', true)"
             )
             row = cursor.fetchone()
         current = '' if row is None or row[0] is None else str(row[0])
@@ -1665,7 +1665,7 @@ def wait_for_extension_pause(
             if (
                 row[0] == 'active'
                 and row[1] == 'Extension'
-                and 'ii42_index_maintain' in str(row[3])
+                and 'evoke_index_maintain' in str(row[3])
             ):
                 return last
         time.sleep(0.01)
@@ -1690,7 +1690,7 @@ def maintain_during_publish_pause(
         try:
             with maintenance.cursor() as cursor:
                 cursor.execute(
-                    "SET ii42.test_semantic_publish_pause_ms = '2000'"
+                    "SET evoke.test_semantic_publish_pause_ms = '2000'"
                 )
             maintenance.commit()
             result['result'] = maintain_once(maintenance)
@@ -1740,7 +1740,7 @@ def start_maintenance_during_post_append_pause(
         try:
             with maintenance.cursor() as cursor:
                 cursor.execute(
-                    "SET ii42.test_semantic_post_append_pause_ms = '10000'"
+                    "SET evoke.test_semantic_post_append_pause_ms = '10000'"
                 )
             maintenance.commit()
             result['result'] = maintain_once(maintenance)
@@ -1767,7 +1767,7 @@ def wait_for_background_convergence(
     timeout_seconds: float = 30.0,
 ) -> tuple[str, list[dict[str, Any]], dict[str, Any]]:
     with connection.cursor() as cursor:
-        cursor.execute('SELECT ii42_index_touch_maintenance()')
+        cursor.execute('SELECT evoke_index_touch_maintenance()')
         row = cursor.fetchone()
     if row is None:
         raise AssertionError('background maintenance touch returned no result')
@@ -1825,7 +1825,7 @@ def wait_for_background_structural_convergence(
         return 'below reclamation threshold', [before_status], before_status
 
     with connection.cursor() as cursor:
-        cursor.execute('SELECT ii42_index_touch_maintenance()')
+        cursor.execute('SELECT evoke_index_touch_maintenance()')
         row = cursor.fetchone()
     if row is None:
         raise AssertionError('structural maintenance touch returned no result')
@@ -1911,7 +1911,7 @@ def setup(
     semantic_impact_precision: str,
 ) -> None:
     with connection.cursor() as cursor:
-        cursor.execute('CREATE EXTENSION ii42')
+        cursor.execute('CREATE EXTENSION evoke')
         cursor.execute('CREATE EXTENSION pg_trgm')
         cursor.execute('CREATE SCHEMA convergent_sae')
         cursor.execute(
@@ -1961,7 +1961,7 @@ def setup(
         )
         cursor.execute(
             'CREATE INDEX docs_idx ON convergent_sae.docs '
-            'USING ii42 (body) '
+            'USING evoke (body) '
             'INCLUDE (id, categories, source_name, published_on) WITH ('
             'sae = true, '
             'auto_preload = 100, '
@@ -1983,7 +1983,7 @@ def setup(
         cursor.execute(
             'CREATE FUNCTION convergent_sae.test_query_page_native_topk('
             'regclass, int4[], real[], int4) RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_query_page_native_topk' "
+            "AS '$libdir/evoke', 'evoke_test_query_page_native_topk' "
             'LANGUAGE C STRICT'
         )
         cursor.execute(
@@ -1991,7 +1991,7 @@ def setup(
             'convergent_sae.test_query_page_native_topk_filtered('
             'regclass, int4[], real[], int4, boolean, int4[]) '
             'RETURNS jsonb '
-            "AS '$libdir/ii42', 'ii42_test_query_page_native_topk' "
+            "AS '$libdir/evoke', 'evoke_test_query_page_native_topk' "
             'LANGUAGE C STRICT'
         )
 
@@ -2008,7 +2008,7 @@ def run_owner_bm25_diagnostic_contract_audit(
                 cursor.execute(
                     """
                     SELECT count(*)
-                    FROM ii42_query_tokens(
+                    FROM evoke_query_tokens(
                         'convergent_sae.docs_idx'::regclass,
                         ARRAY['database']::text[],
                         10,
@@ -2022,7 +2022,7 @@ def run_owner_bm25_diagnostic_contract_audit(
             if (
                 error.sqlstate != '0A000'
                 or 'exact BM25 access is unavailable' not in message
-                or 'Use ii42_query' not in message
+                or 'Use evoke_query' not in message
             ):
                 raise AssertionError(
                     f'unexpected {case_name} SAE diagnostic error: '
@@ -2048,18 +2048,18 @@ def run_consistency_contract_audit(
         )
         cursor.execute(
             'CREATE INDEX sae_eventual_idx '
-            'ON convergent_contract.docs USING ii42 (body) WITH ('
+            'ON convergent_contract.docs USING evoke (body) WITH ('
             'sae = true, '
             f'model_path = {sql_literal(str(model_path))}, '
             'consistency = eventual)'
         )
         cursor.execute(
             'CREATE INDEX bm25_default_idx '
-            'ON convergent_contract.docs USING ii42 (body)'
+            'ON convergent_contract.docs USING evoke (body)'
         )
         cursor.execute(
             'CREATE INDEX bm25_realtime_idx '
-            'ON convergent_contract.docs USING ii42 (body) '
+            'ON convergent_contract.docs USING evoke (body) '
             'WITH (consistency = realtime)'
         )
 
@@ -2069,7 +2069,7 @@ def run_consistency_contract_audit(
             with connection.cursor() as cursor:
                 cursor.execute(
                     f'CREATE INDEX sae_{consistency}_idx '
-                    'ON convergent_contract.docs USING ii42 (body) WITH ('
+                    'ON convergent_contract.docs USING evoke (body) WITH ('
                     'sae = true, '
                     f'model_path = {sql_literal(str(model_path))}, '
                     f'consistency = {consistency})'
@@ -2143,7 +2143,7 @@ def run_multicolumn_sae_contract_audit(
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT pg_catalog.set_config("
-            "'ii42.test_disable_semantic_accelerator', 'on', false)"
+            "'evoke.test_disable_semantic_accelerator', 'on', false)"
         )
         cursor.execute(
             'CREATE SCHEMA convergent_multicol; '
@@ -2162,7 +2162,7 @@ def run_multicolumn_sae_contract_audit(
         )
         cursor.execute(
             'CREATE INDEX docs_idx ON convergent_multicol.docs '
-            'USING ii42 (title, body) WITH ('
+            'USING evoke (title, body) WITH ('
             'sae = true, '
             'semantic_impact_precision = '
             f'{sql_literal(semantic_impact_precision)}, '
@@ -2179,7 +2179,7 @@ def run_multicolumn_sae_contract_audit(
         cursor.execute(
             """
             SELECT source.id, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 'convergent_multicol.docs_idx'::regclass,
                 'database maintenance',
                 10
@@ -2208,7 +2208,7 @@ def run_multicolumn_sae_contract_audit(
     with connection.cursor() as cursor:
         cursor.execute(
             'CREATE INDEX docs_field_idx '
-            'ON convergent_multicol.docs USING ii42 (title, body) '
+            'ON convergent_multicol.docs USING evoke (title, body) '
             'WITH ('
             'sae = true, '
             'field_aware = true, '
@@ -2226,7 +2226,7 @@ def run_multicolumn_sae_contract_audit(
         cursor.execute(
             """
             SELECT source.id, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 'convergent_multicol.docs_field_idx'::regclass,
                 'database maintenance',
                 10
@@ -2253,7 +2253,7 @@ def run_multicolumn_sae_contract_audit(
             cursor.execute(
                 """
                 SELECT source.id, hit.score::float8
-                FROM ii42_query(
+                FROM evoke_query(
                     'convergent_multicol.docs_field_idx'::regclass,
                     'database maintenance',
                     %s::text[],
@@ -2289,7 +2289,7 @@ def run_multicolumn_sae_contract_audit(
             )
             SELECT source.id, hit.score::float8
             FROM allowed
-            CROSS JOIN LATERAL ii42_query(
+            CROSS JOIN LATERAL evoke_query(
                 'convergent_multicol.docs_field_idx'::regclass,
                 'database maintenance',
                 ARRAY['title', 'body']::text[],
@@ -2321,7 +2321,7 @@ def run_multicolumn_sae_contract_audit(
         cursor.execute(
             """
             SELECT source.id, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 'convergent_multicol.docs_field_idx'::regclass,
                 'database maintenance',
                 ARRAY['title', 'body']::text[],
@@ -2372,7 +2372,7 @@ def run_multicolumn_sae_contract_audit(
                 cursor.execute(
                     """
                     SELECT *
-                    FROM ii42_query(
+                    FROM evoke_query(
                         'convergent_multicol.docs_field_idx'::regclass,
                         'database maintenance',
                         %s::text[],
@@ -2397,7 +2397,7 @@ def run_multicolumn_sae_contract_audit(
         cursor.execute(
             """
             SELECT source.id, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 'convergent_multicol.docs_field_idx'::regclass,
                 'database maintenance',
                 10
@@ -2419,7 +2419,7 @@ def run_multicolumn_sae_contract_audit(
         cursor.execute(
             """
             SELECT source.id, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 'convergent_multicol.docs_field_idx'::regclass,
                 'transaction visibility',
                 10
@@ -2442,7 +2442,7 @@ def run_multicolumn_sae_contract_audit(
         cursor.execute(
             """
             SELECT source.id, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 'convergent_multicol.docs_field_idx'::regclass,
                 'transaction visibility',
                 ARRAY['title', 'body']::text[],
@@ -2467,7 +2467,7 @@ def run_multicolumn_sae_contract_audit(
         cursor.execute(
             """
             SELECT source.id, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 'convergent_multicol.docs_field_idx'::regclass,
                 'transaction visibility',
                 ARRAY['body']::text[],
@@ -2492,7 +2492,7 @@ def run_multicolumn_sae_contract_audit(
         cursor.execute(
             """
             SELECT source.id, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 'convergent_multicol.docs_field_idx'::regclass,
                 'transaction visibility',
                 ARRAY['title', 'body']::text[],
@@ -2513,7 +2513,7 @@ def run_multicolumn_sae_contract_audit(
             cursor.execute(
                 """
                 SELECT source.id, hit.score::float8
-                FROM ii42_query(
+                FROM evoke_query(
                     'convergent_multicol.docs_field_idx'::regclass,
                     'transaction visibility',
                     ARRAY[%s]::text[],
@@ -2542,7 +2542,7 @@ def run_multicolumn_sae_contract_audit(
         cursor.execute(
             """
             SELECT source.id, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 'convergent_multicol.docs_field_idx'::regclass,
                 'transaction visibility',
                 ARRAY['title', 'body']::text[],
@@ -2563,7 +2563,7 @@ def run_multicolumn_sae_contract_audit(
             cursor.execute(
                 """
                 SELECT source.id, hit.score::float8
-                FROM ii42_query(
+                FROM evoke_query(
                     'convergent_multicol.docs_field_idx'::regclass,
                     'transaction visibility',
                     ARRAY[%s]::text[],
@@ -2584,7 +2584,7 @@ def run_multicolumn_sae_contract_audit(
         cursor.execute(
             """
             SELECT source.id, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 'convergent_multicol.docs_field_idx'::regclass,
                 'transaction visibility',
                 ARRAY['title', 'body']::text[],
@@ -2605,7 +2605,7 @@ def run_multicolumn_sae_contract_audit(
             cursor.execute(
                 """
                 SELECT source.id, hit.score::float8
-                FROM ii42_query(
+                FROM evoke_query(
                     'convergent_multicol.docs_field_idx'::regclass,
                     'transaction visibility',
                     ARRAY[%s]::text[],
@@ -2628,7 +2628,7 @@ def run_multicolumn_sae_contract_audit(
         cursor.execute(
             """
             SELECT source.id, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 'convergent_multicol.docs_field_idx'::regclass,
                 'transaction visibility',
                 10
@@ -2677,7 +2677,7 @@ def run_multicolumn_sae_contract_audit(
         )
 
     with connection.cursor() as cursor:
-        cursor.execute('RESET ii42.test_disable_semantic_accelerator')
+        cursor.execute('RESET evoke.test_disable_semantic_accelerator')
         cursor.execute('DROP SCHEMA convergent_multicol CASCADE')
 
     return {
@@ -2739,7 +2739,7 @@ def run_fold_compaction_preload_audit(
         )
         cursor.execute(
             'CREATE INDEX docs_idx '
-            'ON convergent_fold_compaction.docs USING ii42 (body) '
+            'ON convergent_fold_compaction.docs USING evoke (body) '
             'WITH ('
             'sae = true, '
             'semantic_impact_precision = '
@@ -2749,7 +2749,7 @@ def run_fold_compaction_preload_audit(
             ')'
         )
         cursor.execute(
-            'SELECT ii42_index_try_maintenance_lock(%s::regclass)',
+            'SELECT evoke_index_try_maintenance_lock(%s::regclass)',
             (index_name,),
         )
         row = cursor.fetchone()
@@ -2758,13 +2758,13 @@ def run_fold_compaction_preload_audit(
             raise AssertionError(
                 'could not lock the fold-compaction regression index'
             )
-        cursor.execute('SET ii42.test_force_structural_term_fold = true')
+        cursor.execute('SET evoke.test_force_structural_term_fold = true')
 
     try:
         for row_offset in range(9):
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SET ii42.test_convergent_l0_rotation_records = '1'"
+                    "SET evoke.test_convergent_l0_rotation_records = '1'"
                 )
                 cursor.execute(
                     'INSERT INTO convergent_fold_compaction.docs '
@@ -2776,7 +2776,7 @@ def run_fold_compaction_preload_audit(
                     ),
                 )
                 cursor.execute(
-                    'RESET ii42.test_convergent_l0_rotation_records'
+                    'RESET evoke.test_convergent_l0_rotation_records'
                 )
 
             for _ in range(20):
@@ -2810,7 +2810,7 @@ def run_fold_compaction_preload_audit(
                 'fold-compaction setup produced no structural fold'
             )
         with connection.cursor() as cursor:
-            cursor.execute('RESET ii42.test_force_structural_term_fold')
+            cursor.execute('RESET evoke.test_force_structural_term_fold')
 
         for _ in range(48):
             result = maintain_once(connection, index_name)
@@ -2819,7 +2819,7 @@ def run_fold_compaction_preload_audit(
                 compactions.append(result)
             with connection.cursor() as cursor:
                 cursor.execute(
-                    'SELECT ii42_index_preload(%s::regclass)',
+                    'SELECT evoke_index_preload(%s::regclass)',
                     (index_name,),
                 )
                 preload_row = cursor.fetchone()
@@ -2829,7 +2829,7 @@ def run_fold_compaction_preload_audit(
                     )
                 preload_results.append(str(preload_row[0]))
                 cursor.execute(
-                    'SELECT count(*) FROM ii42_query('
+                    'SELECT count(*) FROM evoke_query('
                     '%s::regclass, %s, 20)',
                     (index_name, 'database semantic fold'),
                 )
@@ -2859,13 +2859,13 @@ def run_fold_compaction_preload_audit(
         }
     finally:
         with connection.cursor() as cursor:
-            cursor.execute('RESET ii42.test_force_structural_term_fold')
+            cursor.execute('RESET evoke.test_force_structural_term_fold')
             cursor.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
             if lock_held:
                 cursor.execute(
-                    'SELECT ii42_index_maintenance_unlock('
+                    'SELECT evoke_index_maintenance_unlock('
                     '%s::regclass)',
                     (index_name,),
                 )
@@ -2886,7 +2886,7 @@ def run_semantic_alpha_contract_audit(
     with connection.cursor() as cursor:
         cursor.execute(
             'CREATE INDEX docs_alpha_contract_idx '
-            'ON convergent_sae.docs USING ii42 (body) WITH ('
+            'ON convergent_sae.docs USING evoke (body) WITH ('
             'sae = true, '
             'semantic_impact_precision = '
             f'{sql_literal(semantic_impact_precision)}, '
@@ -2921,7 +2921,7 @@ def run_semantic_alpha_contract_audit(
     try:
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT count(*) FROM ii42_query("
+                "SELECT count(*) FROM evoke_query("
                 "'convergent_sae.docs_alpha_contract_idx'::regclass, "
                 "'database search', 2)"
             )
@@ -2974,7 +2974,7 @@ def run_semantic_impact_precision_contract_audit(
     with connection.cursor() as cursor:
         cursor.execute(
             'CREATE INDEX docs_precision_contract_idx '
-            'ON convergent_sae.docs USING ii42 (body) WITH ('
+            'ON convergent_sae.docs USING evoke (body) WITH ('
             'sae = true, '
             'semantic_impact_precision = '
             f'{sql_literal(semantic_impact_precision)}, '
@@ -3015,7 +3015,7 @@ def run_semantic_impact_precision_contract_audit(
     try:
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT count(*) FROM ii42_query("
+                "SELECT count(*) FROM evoke_query("
                 "'convergent_sae.docs_precision_contract_idx'::regclass, "
                 "'database search', 2)"
             )
@@ -3080,7 +3080,7 @@ def run_same_transaction_audit(
         score_for_id(visible_filtered_hits, 900)
 
         with connection.cursor() as cursor:
-            cursor.execute('SAVEPOINT ii42_filter_scope_savepoint')
+            cursor.execute('SAVEPOINT evoke_filter_scope_savepoint')
             cursor.execute(
                 'UPDATE convergent_sae.docs '
                 'SET categories = %s WHERE id = 900',
@@ -3095,8 +3095,8 @@ def run_same_transaction_audit(
         )
         score_for_id(savepoint_hits, 900)
         with connection.cursor() as cursor:
-            cursor.execute('ROLLBACK TO SAVEPOINT ii42_filter_scope_savepoint')
-            cursor.execute('RELEASE SAVEPOINT ii42_filter_scope_savepoint')
+            cursor.execute('ROLLBACK TO SAVEPOINT evoke_filter_scope_savepoint')
+            cursor.execute('RELEASE SAVEPOINT evoke_filter_scope_savepoint')
         restored_hits = fetch_structured_filtered_hits(
             connection,
             SAME_TRANSACTION_TEXT,
@@ -3275,11 +3275,11 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     if not 0.01 <= args.semantic_alpha_mass <= 1.0:
         raise ValueError('semantic alpha mass must be between 0.01 and 1.0')
     extension_libraries = [
-        extension_libdir / name for name in ('ii42.so', 'ii42.dylib')
+        extension_libdir / name for name in ('evoke.so', 'evoke.dylib')
     ]
     if not any(path.is_file() for path in extension_libraries):
         raise FileNotFoundError(
-            f'ii42 library is missing from {extension_libdir}'
+            f'evoke library is missing from {extension_libdir}'
         )
 
     initdb = args.pg_bin / 'initdb'
@@ -3494,7 +3494,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             )
         gates['tid_filter_uses_the_default_bounded_accelerator'] = True
         with connection.cursor() as cursor:
-            cursor.execute('SELECT ii42_query_trace_internal()')
+            cursor.execute('SELECT evoke_query_trace_internal()')
             tid_filter_trace = cursor.fetchone()[0]
         if (
             tid_filter_trace is None
@@ -3532,7 +3532,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 forward_route=forward_route,
             )
             with connection.cursor() as cursor:
-                cursor.execute('SELECT ii42_query_trace_internal()')
+                cursor.execute('SELECT evoke_query_trace_internal()')
                 route_trace = cursor.fetchone()[0]
             forward_route_hits[forward_route] = route_hits
             forward_route_evidence[forward_route] = route_trace
@@ -3741,7 +3741,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             require_scope=True,
         )
         with connection.cursor() as cursor:
-            cursor.execute('SELECT ii42_query_trace_internal()')
+            cursor.execute('SELECT evoke_query_trace_internal()')
             partial_scope_trace = cursor.fetchone()[0]
         if (
             partial_scope_trace is None
@@ -3770,7 +3770,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             exact=True,
         )
         with connection.cursor() as cursor:
-            cursor.execute('SELECT ii42_query_trace_internal()')
+            cursor.execute('SELECT evoke_query_trace_internal()')
             no_scope_trace = cursor.fetchone()[0]
         if (
             no_scope_trace is None
@@ -3821,7 +3821,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 f'observed={observed}'
             )
         with connection.cursor() as cursor:
-            cursor.execute('SELECT ii42_query_trace_internal()')
+            cursor.execute('SELECT evoke_query_trace_internal()')
             structured_query_trace = cursor.fetchone()[0]
         if (
             structured_query_trace is None
@@ -3864,7 +3864,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         invalid_structured_cases = (
             ({}, 'non-empty JSON object'),
             ({'missing': {'eq': 1}}, 'does not exist'),
-            ({'id': {'contains': 1}}, 'unsupported ii42 filter operation'),
+            ({'id': {'contains': 1}}, 'unsupported evoke filter operation'),
             ({'id': {'overlap': [1]}}, 'must have an array type'),
             ({'id': {'ilike': '%1%'}}, 'must have a string type'),
             (
@@ -3903,7 +3903,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 cursor.execute(
                     """
                     SELECT *
-                    FROM ii42_query(
+                    FROM evoke_query(
                         'convergent_sae.docs_idx'::regclass,
                         %s,
                         NULL::jsonb,
@@ -5306,7 +5306,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         shutil.rmtree(root, ignore_errors=True)
 
     return {
-        'api_version': 'ii42_index_v1',
+        'api_version': 'evoke_index_v1',
         'route': 'convergent SAE lexical-first lifecycle',
         'model_path': str(model_path),
         'model_id': manifest['model_id'],

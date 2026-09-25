@@ -21,7 +21,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         '--dsn',
         default=os.environ.get(
-            'II42_BENCH_DSN',
+            'EVOKE_BENCH_DSN',
             'dbname=postgres user=leask',
         ),
         help='Connection string used to inspect pg_stat_activity.',

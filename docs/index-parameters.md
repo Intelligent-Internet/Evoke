@@ -2,7 +2,7 @@
 
 Evoke reloptions are set on `CREATE INDEX ... WITH (...)` or `ALTER INDEX`.
 Changing an option that affects physical postings requires `REINDEX` before
-`ii42_query(...)` becomes query-ready again.
+`evoke_query(...)` becomes query-ready again.
 
 ## Index Type
 
@@ -10,7 +10,7 @@ Changing an option that affects physical postings requires `REINDEX` before
 | --- | --- | --- |
 | `sae` | `false` | `false` selects exact BM25. `true` selects Sparse Semantic Retrieval (SSR) unified lexical/semantic postings. |
 | `consistency` | `realtime` for BM25; `eventual` for SSR | BM25 accepts `realtime`, `eventual`, or `manual`. SSR is eventual-only. |
-| `auto_preload` | `0` | Best-effort warmup and shared-residency priority. A positive value first prepares compact query metadata. BM25 or semantic roots without an eligible semantic accelerator may then publish an exact-root resident fold when the converged image fits the shared arena. `0` disables proactive admission; it does not disable maintenance or explicit `ii42_index_preload(...)`. |
+| `auto_preload` | `0` | Best-effort warmup and shared-residency priority. A positive value first prepares compact query metadata. BM25 or semantic roots without an eligible semantic accelerator may then publish an exact-root resident fold when the converged image fits the shared arena. `0` disables proactive admission; it does not disable maintenance or explicit `evoke_index_preload(...)`. |
 
 Semantic options require explicit `sae = true`. BM25 scoring and tokenizer
 options are rejected with `sae = true`; the model checkout owns those
@@ -109,7 +109,7 @@ Example:
 
 ```sql
 CREATE INDEX docs_semantic_idx
-ON docs USING ii42 (body)
+ON docs USING evoke (body)
 WITH (
     sae = true,
     runtime_precision = fp16,
@@ -122,7 +122,7 @@ An explicitly approximate fast profile can be created as follows:
 
 ```sql
 CREATE INDEX docs_semantic_fast_idx
-ON docs USING ii42 (body)
+ON docs USING evoke (body)
 WITH (
     sae = true,
     semantic_impact_precision = 'u8',
@@ -136,11 +136,11 @@ WITH (
 
 | GUC | Default | Context | Meaning |
 | --- | ---: | --- | --- |
-| `ii42.workspace_cache_bytes` | `32MB` | User | Retained per-backend query workspace limit and aggregate physical-size admission bound for simultaneously active no-shared-runtime BM25 fallback and explicit BM25 `weight_mask` snapshots. `0` disables retention and both snapshot paths. `-1` removes the ordinary workspace limit but also disables snapshot admission; it is not recommended for production. |
-| `ii42.workspace_idle_timeout` | `60s` | User | Lazy idle release interval. `-1` disables idle release. |
+| `evoke.workspace_cache_bytes` | `32MB` | User | Retained per-backend query workspace limit and aggregate physical-size admission bound for simultaneously active no-shared-runtime BM25 fallback and explicit BM25 `weight_mask` snapshots. `0` disables retention and both snapshot paths. `-1` removes the ordinary workspace limit but also disables snapshot admission; it is not recommended for production. |
+| `evoke.workspace_idle_timeout` | `60s` | User | Lazy idle release interval. `-1` disables idle release. |
 
 This is query-bounded scratch for page-native execution. Shared exact-root
-residency is controlled separately by `ii42.shared_runtime_size` and
+residency is controlled separately by `evoke.shared_runtime_size` and
 `auto_preload`, and is shared by BM25 and SSR indexes. The bounded backend-local
 BM25 snapshot is admitted only when postmaster shared runtime is unavailable.
 When shared runtime exists, both index types use the common resident-fold or
@@ -150,13 +150,13 @@ page-native dispatcher.
 
 | GUC | Default | Context | Meaning |
 | --- | ---: | --- | --- |
-| `ii42.maintenance_worker_limit` | `1` | SIGHUP | Extension maintenance worker cap. Set `0` to stop admitting new maintenance workers before an upgrade or clean restart; already-running bounded work drains normally. Restore a positive value afterward. |
-| `ii42.maintenance_timer_interval_ms` | `60000` | SIGHUP | Structural/completion reconciliation interval and minimum delay after a failed or concurrent semantic-accelerator attempt. Accelerator retry cooldown never delays semantic completion, L0 rotation, sealing, or foreground queries. Effective minimum is one second. |
-| `ii42.maintenance_low_debt_interval_ms` | `3600000` | SIGHUP | Minimum age before coalesced L0 or compatible-accelerator debt below its high-water mark becomes low-priority maintenance. High-water work remains immediate; serving artifacts never expire because of this timer. Effective minimum is one second. |
-| `ii42.preload_timer_interval_ms` | `1000` | SIGHUP | Independent warmup interval; effective minimum is one second. |
-| `ii42.prewarm_max_bytes` | `64MB` | SIGHUP | Per-index relation-page warming work budget. It does not cap exact-root shared residency; resident folds are admitted against the global shared arena, priority policy, and host materialization headroom. |
-| `ii42.maintenance_rebuild_memory_budget` | `32768MB` | SIGHUP | Admission budget for rebuild-like worker activity. `0` disables the guard. |
-| `ii42.sae_transaction_mutation_max_bytes` | `64MB` | User | Transaction-wide pending semantic document-copy budget; minimum `16MB`. |
+| `evoke.maintenance_worker_limit` | `1` | SIGHUP | Extension maintenance worker cap. Set `0` to stop admitting new maintenance workers before an upgrade or clean restart; already-running bounded work drains normally. Restore a positive value afterward. |
+| `evoke.maintenance_timer_interval_ms` | `60000` | SIGHUP | Structural/completion reconciliation interval and minimum delay after a failed or concurrent semantic-accelerator attempt. Accelerator retry cooldown never delays semantic completion, L0 rotation, sealing, or foreground queries. Effective minimum is one second. |
+| `evoke.maintenance_low_debt_interval_ms` | `3600000` | SIGHUP | Minimum age before coalesced L0 or compatible-accelerator debt below its high-water mark becomes low-priority maintenance. High-water work remains immediate; serving artifacts never expire because of this timer. Effective minimum is one second. |
+| `evoke.preload_timer_interval_ms` | `1000` | SIGHUP | Independent warmup interval; effective minimum is one second. |
+| `evoke.prewarm_max_bytes` | `64MB` | SIGHUP | Per-index relation-page warming work budget. It does not cap exact-root shared residency; resident folds are admitted against the global shared arena, priority policy, and host materialization headroom. |
+| `evoke.maintenance_rebuild_memory_budget` | `32768MB` | SIGHUP | Admission budget for rebuild-like worker activity. `0` disables the guard. |
+| `evoke.sae_transaction_mutation_max_bytes` | `64MB` | User | Transaction-wide pending semantic document-copy budget; minimum `16MB`. |
 
 Ordinary maintenance performs bounded semantic completion, seal, compaction,
 fold, or reclamation. The rebuild memory budget does not turn routine work into
@@ -164,25 +164,25 @@ a whole-corpus scan.
 
 ### Shared semantic runtime
 
-These settings are meaningful only when `ii42` is loaded through
+These settings are meaningful only when `evoke` is loaded through
 `shared_preload_libraries`.
 
 | GUC | Default | Context | Meaning |
 | --- | ---: | --- | --- |
-| `ii42.shared_runtime_size` | `0` | Postmaster | Global shared runtime/residency arena. A positive value is mandatory for SSR; GB-scale values may also hold exact-root folds for selected converged BM25 or SSR indexes. |
-| `ii42.control_database` | `postgres` | Postmaster | Optional override for the stable, connectable database used by cluster-level Evoke workers. |
-| `ii42.sae_model_path` | empty | SIGHUP | Optional server-wide override for the bundled milestone checkout. |
-| `ii42.runtime_worker_count` | `2` | Postmaster | Shared inference worker count. |
-| `ii42.runtime_reserve_query_lane` | `on` | Postmaster | Reserve one runtime worker/response lane for foreground queries; turn off only for controlled offline rebuilds. |
-| `ii42.runtime_max_batch_size` | `128` | SIGHUP | Maximum local runtime text batch size, from `1` through `512`. This is also the default remote batch cap for services that do not set their own `max_batch_size`; it is a deployment throughput knob, not part of the model checkout identity. |
-| `ii42.runtime_document_pipeline_depth` | `16` | SIGHUP | Maximum builder-level in-flight document runtime batches per PostgreSQL backend, from `1` through `4096`. The effective depth is capped by the sum of the local runtime window and all configured remote accelerator `weight` windows. Raise it for controlled offline rebuilds when local and remote accelerators have enough capacity. |
-| `ii42.runtime_accelerators` | `[]` | SIGHUP | JSON array of optional remote Evoke runtime services. Empty means local runtime only. Service objects accept `url`, optional positive integer `weight`, and optional positive integer `max_batch_size`. `weight` is a per-service outstanding request window hint, from `1` through `4096`; a service without `weight` starts as one schedulable slot. `max_batch_size` is that service's per-request batch cap. Without `max_batch_size`, the service uses `ii42.runtime_max_batch_size`. |
-| `ii42.onnxruntime_session_cache_size` | `1` | Postmaster | Per-worker bounded model-session LRU, from `0` through `16`. |
-| `ii42.runtime_liveness_timeout` | `5min` | Postmaster | Runtime liveness guard for one local ONNX execution or one already-submitted remote accelerator request; `0` disables the execution timer. Remote connect/send I/O still uses short transport timeouts, and an async request without a usable connection retains a separate 60-second failover bound. |
-| `ii42.onnxruntime_intra_op_threads` | `0` | Postmaster | Per-worker ONNX CPU thread cap; `0` uses the product auto policy. |
-| `ii42.onnxruntime_document_cpu_mem_arena` | `off` | Postmaster | Retain CPU provider document-mode arenas for controlled offline rebuilds on memory-rich hosts. |
+| `evoke.shared_runtime_size` | `0` | Postmaster | Global shared runtime/residency arena. A positive value is mandatory for SSR; GB-scale values may also hold exact-root folds for selected converged BM25 or SSR indexes. |
+| `evoke.control_database` | `postgres` | Postmaster | Optional override for the stable, connectable database used by cluster-level Evoke workers. |
+| `evoke.sae_model_path` | empty | SIGHUP | Optional server-wide override for the bundled milestone checkout. |
+| `evoke.runtime_worker_count` | `2` | Postmaster | Shared inference worker count. |
+| `evoke.runtime_reserve_query_lane` | `on` | Postmaster | Reserve one runtime worker/response lane for foreground queries; turn off only for controlled offline rebuilds. |
+| `evoke.runtime_max_batch_size` | `128` | SIGHUP | Maximum local runtime text batch size, from `1` through `512`. This is also the default remote batch cap for services that do not set their own `max_batch_size`; it is a deployment throughput knob, not part of the model checkout identity. |
+| `evoke.runtime_document_pipeline_depth` | `16` | SIGHUP | Maximum builder-level in-flight document runtime batches per PostgreSQL backend, from `1` through `4096`. The effective depth is capped by the sum of the local runtime window and all configured remote accelerator `weight` windows. Raise it for controlled offline rebuilds when local and remote accelerators have enough capacity. |
+| `evoke.runtime_accelerators` | `[]` | SIGHUP | JSON array of optional remote Evoke runtime services. Empty means local runtime only. Service objects accept `url`, optional positive integer `weight`, and optional positive integer `max_batch_size`. `weight` is a per-service outstanding request window hint, from `1` through `4096`; a service without `weight` starts as one schedulable slot. `max_batch_size` is that service's per-request batch cap. Without `max_batch_size`, the service uses `evoke.runtime_max_batch_size`. |
+| `evoke.onnxruntime_session_cache_size` | `1` | Postmaster | Per-worker bounded model-session LRU, from `0` through `16`. |
+| `evoke.runtime_liveness_timeout` | `5min` | Postmaster | Runtime liveness guard for one local ONNX execution or one already-submitted remote accelerator request; `0` disables the execution timer. Remote connect/send I/O still uses short transport timeouts, and an async request without a usable connection retains a separate 60-second failover bound. |
+| `evoke.onnxruntime_intra_op_threads` | `0` | Postmaster | Per-worker ONNX CPU thread cap; `0` uses the product auto policy. |
+| `evoke.onnxruntime_document_cpu_mem_arena` | `off` | Postmaster | Retain CPU provider document-mode arenas for controlled offline rebuilds on memory-rich hosts. |
 
-`ii42.shared_runtime_size` is a hard postmaster-wide budget for runtime queues,
+`evoke.shared_runtime_size` is a hard postmaster-wide budget for runtime queues,
 exact-root markers, HOT_FOLD data, and optional pointer-free resident folds.
 It supports values up to `1TB`; `64MB` is only the minimal semantic smoke-test
 example. Set `auto_preload > 0` on indexes that should compete for resident
@@ -193,7 +193,7 @@ relation pages and PostgreSQL shared buffers.
 Remote runtime services are configured as a JSON array:
 
 ```conf
-ii42.runtime_accelerators = '[{"url":"http://127.0.0.1:8042"}]'
+evoke.runtime_accelerators = '[{"url":"http://127.0.0.1:8042"}]'
 ```
 
 Use `weight` only to describe how many outstanding requests PostgreSQL may keep
@@ -221,17 +221,17 @@ outstanding requests and a 32-document request cap, while actual routing still
 shifts to whichever lane has recently finished compatible batches fastest:
 
 ```conf
-ii42.runtime_accelerators = '[{"url":"http://runtime-1.example.internal:18042","weight":4,"max_batch_size":32},{"url":"http://runtime-2.example.internal:18042","weight":4,"max_batch_size":32}]'
+evoke.runtime_accelerators = '[{"url":"http://runtime-1.example.internal:18042","weight":4,"max_batch_size":32},{"url":"http://runtime-2.example.internal:18042","weight":4,"max_batch_size":32}]'
 ```
 
-`build/ii42-runtime-server` is the direct external runtime service. It loads
+`build/evoke-runtime-server` is the direct external runtime service. It loads
 one model checkout, validates artifact hashes, selects the ONNX Runtime
 provider locally, and serves document `/v1/encode` without starting
 PostgreSQL. Pass the coordinator database checkout signature explicitly:
 
 ```sh
 make runtime-server
-build/ii42-runtime-server \
+build/evoke-runtime-server \
     --model-path /path/to/checkout \
     --checkout-signature "$CHECKOUT_SIGNATURE" \
     --runtime-precision fp16 \
@@ -270,7 +270,7 @@ candidate pool member and also covers the case where all remotes are
 unavailable or currently slower than local execution.
 
 Single large-index builds need enough in-flight document batches to keep
-multiple accelerators busy. Increase `ii42.runtime_document_pipeline_depth`
+multiple accelerators busy. Increase `evoke.runtime_document_pipeline_depth`
 for offline multi-GPU rebuilds after verifying shared memory and service
 capacity. This is a builder pipeline window, not a local response-slot count:
 remote accelerator handles can exceed local response capacity, while local
@@ -281,9 +281,9 @@ acts as a hard safety bound.
 Minimal semantic deployment:
 
 ```conf
-shared_preload_libraries = 'ii42'
-ii42.shared_runtime_size = '64MB'
-ii42.runtime_worker_count = 2
+shared_preload_libraries = 'evoke'
+evoke.shared_runtime_size = '64MB'
+evoke.runtime_worker_count = 2
 ```
 
 For a host intended to keep selected small or medium indexes shared-resident,
@@ -291,12 +291,12 @@ use a measured GB-scale arena instead, for example `1GB` or `8GB`, and leave
 safety headroom above the sum of `resident_fold_bytes` and runtime queues.
 
 The standard `postgres` database is used automatically. Override
-`ii42.control_database` only when it is unavailable or another stable database
+`evoke.control_database` only when it is unavailable or another stable database
 is preferred.
 
 Release packages install their digest-locked milestone checkout under the
 target PostgreSQL shared-data directory. Resolution order is per-index
-`model_path`, `ii42.sae_model_path` (or `II42_SAE_MODEL_PATH` at process
+`model_path`, `evoke.sae_model_path` (or `EVOKE_SAE_MODEL_PATH` at process
 startup), then the package checkout. Source builds must provide one of these
 paths before creating an SSR index.
 
@@ -306,11 +306,11 @@ runtime worker can own its own model session; application backends cannot.
 ## Validation
 
 ```sql
-SELECT ii42_index_options('docs_semantic_idx'::regclass);
-SELECT ii42_index_status('docs_semantic_idx'::regclass);
+SELECT evoke_index_options('docs_semantic_idx'::regclass);
+SELECT evoke_index_status('docs_semantic_idx'::regclass);
 DROP INDEX docs_semantic_idx;
 ```
 
-Use `ii42_index_status(...)` after reloption, checkout, binary, or runtime
+Use `evoke_index_status(...)` after reloption, checkout, binary, or runtime
 changes. A contract mismatch fails page-native search closed until corrected
 and, where required, rebuilt.

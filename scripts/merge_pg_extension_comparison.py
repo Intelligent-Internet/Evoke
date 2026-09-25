@@ -38,8 +38,8 @@ def merge_entry(
 
     for key in (
         'upstream_bm25s',
-        'ii42_ids',
-        'ii42_text',
+        'evoke_ids',
+        'evoke_text',
         'pg_bm25s',
     ):
         if key in entry:
@@ -53,7 +53,7 @@ def merge_entry(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description='Merge local upstream, ii42, and pg_bm25s results.'
+        description='Merge local upstream, evoke, and pg_bm25s results.'
     )
     parser.add_argument('--ids', type=Path, required=True)
     parser.add_argument('--text', type=Path, required=True)
@@ -96,7 +96,7 @@ def main() -> int:
             or text.get('top_k')
             or ids.get('top_k')
         ),
-        'paths': ['upstream', 'ii42_ids', 'ii42_text',
+        'paths': ['upstream', 'evoke_ids', 'evoke_text',
                   'pg_bm25s'],
         'results': {},
     }

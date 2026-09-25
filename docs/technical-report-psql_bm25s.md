@@ -21,7 +21,7 @@ single API and lifecycle contract, read
 
 ## Abstract
 
-`ii42` is a PostgreSQL extension for exact BM25-family lexical
+`evoke` is a PostgreSQL extension for exact BM25-family lexical
 retrieval. The project is inspired by the `bm25s` technical report and
 its central observation: much of BM25 retrieval cost can be moved from
 query time to index time by eagerly computing per-term document
@@ -31,7 +31,7 @@ database-native setting with native PostgreSQL index storage, SQL
 query surfaces, crash recovery, physical replication, and maintenance
 mechanisms for mutable workloads. This draft describes the algorithmic
 foundation inherited from `bm25s`, the PostgreSQL-specific design
-choices in `ii42`, and the main architectural enhancement over
+choices in `evoke`, and the main architectural enhancement over
 the original static-corpus model: a more maintainable storage and
 maintenance design for frequent `INSERT`, `UPDATE`, and `DELETE`. It
 also describes the mainline fusion surfaces used by production search
@@ -58,7 +58,7 @@ report:
 - SQL users need explicit query surfaces and operational controls
 - row churn must be handled without collapsing read performance
 
-`ii42` is designed around those database constraints while
+`evoke` is designed around those database constraints while
 keeping the BM25 scoring model aligned with the `bm25s` family.
 
 ## 2. Algorithmic Foundation from BM25S
@@ -127,7 +127,7 @@ non-occurrence baseline. That observation matters because it means the
 project can preserve exact variant semantics without giving up sparse
 retrieval.
 
-`ii42` keeps this alignment for the supported variants:
+`evoke` keeps this alignment for the supported variants:
 
 - `robertson`
 - `lucene`
@@ -328,7 +328,7 @@ of those $k$ heap elements produces the exact ranked result.
 
 ## 3. Project Scope and Design Goals
 
-The goal of `ii42` is not to reproduce the original Python API.
+The goal of `evoke` is not to reproduce the original Python API.
 The goal is to preserve the retrieval contract while embedding it into
 PostgreSQL as a first-class index access method.
 
@@ -353,8 +353,8 @@ The implementation is organized as four layers.
 
 Files:
 
-- `src/ii42_core.c`
-- `src/ii42_core.h`
+- `src/evoke_core.c`
+- `src/evoke_core.h`
 
 Responsibilities:
 
@@ -371,12 +371,12 @@ This is the layer that stays closest to the `bm25s` retrieval model.
 
 Files:
 
-- `src/ii42_storage.c`
+- `src/evoke_storage.c`
 
 Responsibilities:
 
 - portable little-endian serialization
-- storage for the internal `ii42_index` SQL type
+- storage for the internal `evoke_index` SQL type
 - storage for payloads inside PostgreSQL index relations
 
 The mainline design extends the earlier single-payload model with the
@@ -394,7 +394,7 @@ database-friendly.
 
 Files:
 
-- `src/ii42_pg.c`
+- `src/evoke_pg.c`
 
 Responsibilities:
 
@@ -430,11 +430,11 @@ when the application already owns tokenization or token-ID assignment.
 
 Files:
 
-- `src/ii42_am.c`
+- `src/evoke_am.c`
 
 Responsibilities:
 
-- `CREATE INDEX USING ii42`
+- `CREATE INDEX USING evoke`
 - canonical exact retrieval over stored indexes
 - ordered scans through `<=>`
 - predicate scans through `@@`
@@ -463,7 +463,7 @@ before the fused token stream is appended to the shared BM25 build path.
 
 ### 5.1 Native index relation
 
-Unlike an offline matrix stored outside the database, `ii42`
+Unlike an offline matrix stored outside the database, `evoke`
 stores its state inside a PostgreSQL index relation. This makes the
 index participate in ordinary PostgreSQL durability mechanisms:
 
@@ -479,8 +479,8 @@ database index.
 
 The extension defines two canonical exact retrieval surfaces:
 
-- `ii42_query_ids(...)`
-- `ii42_query_tokens(...)`
+- `evoke_query_ids(...)`
+- `evoke_query_tokens(...)`
 
 These functions are the clearest definition of the exact BM25 contract
 in this project and are the primary performance path. Other SQL
@@ -529,18 +529,18 @@ BM25 build path as a single-column document. This is a storage and
 query-surface convenience; it does not change the BM25 scoring formula.
 
 The second pattern is public score fusion across separate indexes. Functions
-such as `ii42_fusion_query(...)` and `ii42_fusion_query_fields(...)` let
+such as `evoke_fusion_query(...)` and `evoke_fusion_query_fields(...)` let
 applications, regression suites, and benchmark harnesses
 retrieve field-specific candidates from independent BM25 indexes,
 apply query-time weights, and return one ranked result set. This is a
 composition layer above independently maintained indexes; one-index queries
-still use `ii42_query(...)`.
+still use `evoke_query(...)`.
 
 For `field_aware = true` multicolumn indexes, one posting payload preserves
 field-scoped lexical terms and, in `sae = true` / SSR mode, field-scoped
 semantic atoms.
 Applications query all indexed fields with equal weight or use the public
-`ii42_query(...)` overload for explicit whole-field weights. Each weight
+`evoke_query(...)` overload for explicit whole-field weights. Each weight
 scales the field's combined BM25 and semantic evidence in one native
 accumulator.
 Semantic admission applies the configured budget ratio per field before the
@@ -550,12 +550,12 @@ This is still one PostgreSQL-native index, not a separate BM25F engine and not
 multiple hidden sub-indexes.
 
 The public hybrid fusion surfaces also keep historical BM25/vector comparisons
-reproducible. `ii42` does not implement dense
+reproducible. `evoke` does not implement dense
 vector indexing; that role belongs to pgvector, VectorChord, or another
 vector access method. A product SQL statement can therefore combine:
 
 - relational filters
-- BM25 candidates from `ii42`
+- BM25 candidates from `evoke`
 - semantic candidates from a vector index
 - SQL-side normalization, gating, or weighted score fusion
 - a final ordered candidate set for comparison or AI reranking
@@ -563,7 +563,7 @@ vector access method. A product SQL statement can therefore combine:
 This remains useful for controlled AI and RAG comparisons, but it is
 not the semantic-enabled product route. An SSR index (`sae = true`) compiles
 lexical and model evidence into one relation-owned unified posting
-generation, which applications query through `ii42_query(...)`.
+generation, which applications query through `evoke_query(...)`.
 
 The detailed user-facing behavior is documented in
 [Multicolumn Indexes](multicolumn-indexes.md),
@@ -705,7 +705,7 @@ exact tuple/version mutation, and then performs larger generation compaction.
 Base, pending lexical records, semantic completions, and tombstones remain one
 logical unified query surface throughout progressive convergence.
 
-The recommended automatic deployment path loads `ii42` through
+The recommended automatic deployment path loads `evoke` through
 `shared_preload_libraries`. In that mode, a timer-based generic catch-up
 supervisor wakes bounded workers, each worker maintains at most one due
 index, and advisory locks prevent duplicate work on the same index.
@@ -749,12 +749,12 @@ low-debt refresh.
 
 The extension exposes maintenance state and policy helpers, including:
 
-- `ii42_index_details(regclass)`
-- `ii42_index_policy_recommend(regclass, profile text)`
-- `ii42_index_refresh(regclass)`
-- `ii42_index_maintain(regclass)`
-- `ii42_index_try_maintain(regclass)`
-- `ii42_index_maintain_due(max_indexes integer DEFAULT 1)`
+- `evoke_index_details(regclass)`
+- `evoke_index_policy_recommend(regclass, profile text)`
+- `evoke_index_refresh(regclass)`
+- `evoke_index_maintain(regclass)`
+- `evoke_index_try_maintain(regclass)`
+- `evoke_index_maintain_due(max_indexes integer DEFAULT 1)`
 
 This is an explicitly database-oriented addition. The intent is to make
 index maintenance observable and tunable rather than hidden.
@@ -979,8 +979,8 @@ The current cross-engine benchmark authority is the refreshed PG18
 `15 x 5` BEIR matrix published on `2026-04-02`. It compares:
 
 - upstream Python `bm25s`
-- `ii42 ids`
-- `ii42 text[]`
+- `evoke ids`
+- `evoke text[]`
 - ParadeDB `pg_search`
 - TensorChord `vchord_bm25`
 
@@ -993,14 +993,14 @@ Run shape:
 - local uploaded dataset cache
 - `top_k = 1000`
 - base matrix: `2026-03-31` full `15 x 5`, one dataset-engine task per VM
-- refresh matrix: `2026-04-02` `ii42 ids/text[]` rerun on the same
+- refresh matrix: `2026-04-02` `evoke ids/text[]` rerun on the same
   GCP PG18 shape
 
 The public matrix is intentionally anchored to the pretokenized input
 paths:
 
-- `ii42 ids` uses `int4[]`
-- `ii42 text[]` uses `text[]`
+- `evoke ids` uses `int4[]`
+- `evoke text[]` uses `text[]`
 
 Scalar `text` and `varchar` source-column support is part of the
 extension design, but it is not the basis of the current cross-engine
@@ -1014,7 +1014,7 @@ in:
 
 The refreshed matrix keeps `45/75` upstream / `pg_search` /
 `vchord_bm25` cells from the stable `2026-03-31` PG18 run and replaces
-`30/75` `ii42` cells with the `2026-04-02` rerun. All `75/75`
+`30/75` `evoke` cells with the `2026-04-02` rerun. All `75/75`
 dataset-engine cells matched exactly on:
 
 - `stats`
@@ -1031,7 +1031,7 @@ default reference.
 
 Current query-throughput matrix, with dataset size and QPS:
 
-| Dataset | Docs | Queries | upstream `bm25s` QPS | `ii42 ids` QPS | `ii42 text[]` QPS | `pg_search` QPS | `vchord_bm25` QPS |
+| Dataset | Docs | Queries | upstream `bm25s` QPS | `evoke ids` QPS | `evoke text[]` QPS | `pg_search` QPS | `vchord_bm25` QPS |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `arguana` | 8,674 | 1,406 | 1158.34 | 1402.63 | 1112.01 | 115.94 | 78.77 |
 | `climate-fever` | 5,416,593 | 1,535 | 3.04 | 57.78 | 50.75 | 2.84 | 5.25 |
@@ -1055,14 +1055,14 @@ Scale-versus-throughput view:
 
 Summary readout:
 
-- `ii42 ids` beat upstream on `12/15` datasets and had the
+- `evoke ids` beat upstream on `12/15` datasets and had the
   strongest median query-throughput ratio at `3.97x`.
-- `ii42 text[]` also beat upstream on `11/15` datasets, with a
+- `evoke text[]` also beat upstream on `11/15` datasets, with a
   `3.93x` median ratio and a higher build cost than `ids`.
 - `pg_search` beat upstream on `3/15` datasets and had the weakest
   suite median at `0.17x`.
 - `vchord_bm25` beat upstream on `7/15` datasets and materially
-  outperformed `pg_search`, but still trailed both `ii42` paths
+  outperformed `pg_search`, but still trailed both `evoke` paths
   on median throughput.
 
 Index construction should be read alongside query throughput, because
@@ -1072,7 +1072,7 @@ time only; it excludes query execution and orchestration overhead.
 
 Current build-time matrix:
 
-| Dataset | Docs | Queries | upstream `bm25s` build | `ii42 ids` build | `ii42 text[]` build | `pg_search` build | `vchord_bm25` build |
+| Dataset | Docs | Queries | upstream `bm25s` build | `evoke ids` build | `evoke text[]` build | `pg_search` build | `vchord_bm25` build |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `nfcorpus` | 3,633 | 3,237 | 167ms | 82ms | 113ms | 254ms | 326ms |
 | `scifact` | 5,183 | 1,109 | 224ms | 99ms | 150ms | 326ms | 449ms |
@@ -1096,9 +1096,9 @@ Scale-versus-build-time view:
 
 Build-side readout:
 
-- `ii42 ids` was faster than upstream on `15/15` datasets and had
+- `evoke ids` was faster than upstream on `15/15` datasets and had
   the strongest build-side median ratio at `0.34x` of upstream.
-- `ii42 text[]` was also faster than upstream on `15/15`
+- `evoke text[]` was also faster than upstream on `15/15`
   datasets, with a `0.56x` median build ratio.
 - `pg_search` beat upstream on `12/15` datasets and remained
   competitive on build time, even though it lagged badly on query
@@ -1110,8 +1110,8 @@ Build-side readout:
 Total build-time summary:
 
 - upstream Python `bm25s`: `848046.35 ms`
-- `ii42 ids`: `262955.79 ms`
-- `ii42 text[]`: `443975.35 ms`
+- `evoke ids`: `262955.79 ms`
+- `evoke text[]`: `443975.35 ms`
 - `pg_search`: `356944.25 ms`
 - `vchord_bm25`: `739014.63 ms`
 
@@ -1126,8 +1126,8 @@ query count can be smaller than the full query count shown in the QPS
 table.
 
 The local machine had all five comparison engines available for this
-relevance run: upstream Python `bm25s`, `ii42 ids`,
-`ii42 text[]`, `pg_search`, and `vchord_bm25`.
+relevance run: upstream Python `bm25s`, `evoke ids`,
+`evoke text[]`, `pg_search`, and `vchord_bm25`.
 
 The primary chart is an absolute-score heatmap rather than a
 dataset-scale line chart. Each cell is the metric value for one engine
@@ -1144,7 +1144,7 @@ Quality readout:
 - All five engines sit in a close relevance band on this BM25 quality
   matrix. Average `NDCG@10` ranges from `0.3976` to `0.4019` across
   the compared engines.
-- `ii42 ids` and `ii42 text[]` remain quality-neutral exact
+- `evoke ids` and `evoke text[]` remain quality-neutral exact
   PostgreSQL paths in this run. Their largest absolute metric
   difference from the Python reference implementation is below
   `0.0030`, while their engineering cost profile is covered by the QPS,
@@ -1163,11 +1163,11 @@ The present design still has boundaries.
 - Canonical exact retrieval is strongest on the explicit `rowset`
   APIs. SQL convenience layers are broader but not always equally cheap.
 - `<=>` only matches the exact BM25 ordering when PostgreSQL is
-  executing a real `ii42` index scan.
+  executing a real `evoke` index scan.
 - Post-delete cleanup still follows PostgreSQL's heap lifecycle, but
   exact corpus-statistics convergence is handled by automatic or
   explicit index maintenance. Operators should keep autovacuum and the
-  `ii42` maintenance worker path healthy rather than treating
+  `evoke` maintenance worker path healthy rather than treating
   manual `VACUUM` as the synchronization primitive.
 - The current text processing stack is practical and configurable, but
   it is not intended to replace a full external search-text ecosystem.
@@ -1179,7 +1179,7 @@ The present design still has boundaries.
 
 ## 10. Conclusion
 
-`ii42` should be understood as a PostgreSQL-native extension that
+`evoke` should be understood as a PostgreSQL-native extension that
 inherits the most important retrieval insight from `bm25s` and then
 extends it for database reality.
 
@@ -1192,7 +1192,7 @@ The main project-specific contribution is:
 - turning that retrieval model into a durable, replicated,
   SQL-addressable, and more maintainable PostgreSQL index
 
-In that sense, `ii42` is not merely a wrapper around `bm25s`.
+In that sense, `evoke` is not merely a wrapper around `bm25s`.
 It is a database-oriented system design that preserves the BM25
 contract while adding the storage, maintenance, and operational
 properties that a PostgreSQL extension must have.
@@ -1226,7 +1226,7 @@ retrieval composition.
   <https://arxiv.org/abs/2407.03618>
 - BM25S codebase:
   <https://github.com/xhluca/bm25s>
-- `ii42` source repository: this development tree; the planned public
+- `evoke` source repository: this development tree; the planned public
   repository is not yet provisioned.
-- `ii42` performance benchmark reference:
+- `evoke` performance benchmark reference:
   [Performance and Benchmarks](performance/README.md)

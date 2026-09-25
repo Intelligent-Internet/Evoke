@@ -74,11 +74,11 @@ OFFICIAL_ORDER = [
 ]
 TOP_K = 1000
 DEFAULT_RESULTS_DIR = Path('benchmarks')
-DEFAULT_DATASETS_DIR = Path('/tmp/ii42_beir')
-DB_PREFIX = 'ii42_official_'
+DEFAULT_DATASETS_DIR = Path('/tmp/evoke_beir')
+DB_PREFIX = 'evoke_official_'
 ARIA2C = shutil.which('aria2c')
-BOOTSTRAP_SQL = os.environ.get('II42_BENCH_BOOTSTRAP_SQL')
-MODULE_PATH = os.environ.get('II42_BENCH_MODULE_PATH')
+BOOTSTRAP_SQL = os.environ.get('EVOKE_BENCH_BOOTSTRAP_SQL')
+MODULE_PATH = os.environ.get('EVOKE_BENCH_MODULE_PATH')
 
 
 @dataclass
@@ -117,7 +117,7 @@ def summarize_latencies(latencies_ms: list[float]) -> QueryStats:
 
 
 def benchmark_admin_dsn() -> str:
-    base_dsn = os.environ.get('II42_BENCH_DSN', 'dbname=postgres')
+    base_dsn = os.environ.get('EVOKE_BENCH_DSN', 'dbname=postgres')
     params = conninfo.conninfo_to_dict(base_dsn)
     if not params.get('user'):
         params['user'] = 'postgres'
@@ -203,12 +203,12 @@ def extension_is_current(cur: psycopg.Cursor[Any]) -> bool:
             EXISTS (
                 SELECT 1
                 FROM pg_proc
-                WHERE proname = 'ii42_query_ids'
+                WHERE proname = 'evoke_query_ids'
             )
             AND EXISTS (
                 SELECT 1
                 FROM pg_proc
-                WHERE proname = 'ii42_query_tokens'
+                WHERE proname = 'evoke_query_tokens'
             )
         """
     )
@@ -219,8 +219,8 @@ def install_extension_via_sql(cur: psycopg.Cursor[Any]) -> None:
     if not BOOTSTRAP_SQL or not MODULE_PATH:
         raise RuntimeError(
             'Manual extension bootstrap requires both '
-            'II42_BENCH_BOOTSTRAP_SQL and '
-            'II42_BENCH_MODULE_PATH'
+            'EVOKE_BENCH_BOOTSTRAP_SQL and '
+            'EVOKE_BENCH_MODULE_PATH'
         )
     sql_path = pathlib.Path(BOOTSTRAP_SQL)
     sql_text = sql_path.read_text(encoding='utf-8')
@@ -253,14 +253,14 @@ def ensure_extension(cur: psycopg.Cursor[Any], reuse_db: bool) -> None:
         install_extension_via_sql(cur)
         return
     if not reuse_db:
-        cur.execute('DROP EXTENSION IF EXISTS ii42 CASCADE')
-        cur.execute('CREATE EXTENSION ii42')
+        cur.execute('DROP EXTENSION IF EXISTS evoke CASCADE')
+        cur.execute('CREATE EXTENSION evoke')
         return
-    cur.execute('CREATE EXTENSION IF NOT EXISTS ii42')
+    cur.execute('CREATE EXTENSION IF NOT EXISTS evoke')
     if extension_is_current(cur):
         return
-    cur.execute('DROP EXTENSION ii42 CASCADE')
-    cur.execute('CREATE EXTENSION ii42')
+    cur.execute('DROP EXTENSION evoke CASCADE')
+    cur.execute('CREATE EXTENSION evoke')
 
 
 def count_lines(path: Path) -> int:
@@ -483,7 +483,7 @@ def benchmark_postgres_ids(
     db_dsn = conninfo.make_conninfo(
         PG_DSN,
         dbname=db_name,
-        application_name='ii42_bench',
+        application_name='evoke_bench',
     )
     with psycopg.connect(db_dsn, autocommit=True) as conn:
         with conn.cursor() as cur:
@@ -515,7 +515,7 @@ def benchmark_postgres_ids(
             cur.execute(
                 """
                 CREATE INDEX docs_ids_bm25_idx
-                ON bench.docs_ids USING ii42 (token_ids)
+                ON bench.docs_ids USING evoke (token_ids)
                 WITH (
                     method = 'lucene',
                     idf_method = 'lucene',
@@ -539,7 +539,7 @@ def benchmark_postgres_ids(
                     count(*),
                     coalesce(min(doc_id), 0),
                     coalesce(max(score), 0::real)
-                FROM public.ii42_query_ids(
+                FROM public.evoke_query_ids(
                     'bench.docs_ids_bm25_idx'::regclass,
                     %s::int4[],
                     %s::int4,
@@ -577,7 +577,7 @@ def maybe_benchmark_postgres_text(
     db_dsn = conninfo.make_conninfo(
         PG_DSN,
         dbname=db_name,
-        application_name='ii42_bench',
+        application_name='evoke_bench',
     )
     with psycopg.connect(db_dsn, autocommit=True) as conn:
         with conn.cursor() as cur:
@@ -609,7 +609,7 @@ def maybe_benchmark_postgres_text(
             cur.execute(
                 """
                 CREATE INDEX docs_tokens_bm25_idx
-                ON bench.docs_tokens USING ii42 (tokens)
+                ON bench.docs_tokens USING evoke (tokens)
                 WITH (
                     method = 'lucene',
                     idf_method = 'lucene',
@@ -632,7 +632,7 @@ def maybe_benchmark_postgres_text(
                     count(*),
                     coalesce(min(doc_id), 0),
                     coalesce(max(score), 0::real)
-                FROM public.ii42_query_tokens(
+                FROM public.evoke_query_tokens(
                     'bench.docs_tokens_bm25_idx'::regclass,
                     %s::text[],
                     %s::int4,
@@ -790,7 +790,7 @@ def run_dataset(
         'stats': dataset_stats(corpus_tokenized, query_ids),
     }
     if path_mode in ('ids', 'both'):
-        result['ii42_ids'] = benchmark_postgres_ids(
+        result['evoke_ids'] = benchmark_postgres_ids(
             dataset,
             corpus_tokenized.ids,
             query_ids,
@@ -805,7 +805,7 @@ def run_dataset(
             top_k,
         )
     if path_mode in ('text', 'both'):
-        result['ii42_text'] = maybe_benchmark_postgres_text(
+        result['evoke_text'] = maybe_benchmark_postgres_text(
             dataset,
             corpus_tokenized.ids,
             query_ids,

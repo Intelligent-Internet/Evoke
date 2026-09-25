@@ -6,11 +6,11 @@ Date: 2026-03-23
 
 This note evaluates
 [`tensorchord/VectorChord-bm25`](https://github.com/tensorchord/VectorChord-bm25)
-as a source of ideas for `ii42`.
+as a source of ideas for `evoke`.
 
 The goal is not to reproduce its implementation. The goal is to separate:
 
-- ideas that improve `ii42` without breaking its design goals
+- ideas that improve `evoke` without breaking its design goals
 - ideas that are only useful in a future major format revision
 - ideas that are good for VectorChord-BM25 but are not a good fit here
 
@@ -20,7 +20,7 @@ The analysis is based on the upstream repository at commit
 ## Executive Summary
 
 VectorChord-BM25 is a more mature PostgreSQL-native BM25 access method,
-but it solves a somewhat different problem from `ii42`.
+but it solves a somewhat different problem from `evoke`.
 
 It is built around:
 
@@ -45,7 +45,7 @@ But it also makes different tradeoffs:
 - it accepts a much more complex on-disk AM and segment architecture
 - it depends on a separate tokenizer extension for its richer text stack
 
-For `ii42`, the main conclusion is:
+For `evoke`, the main conclusion is:
 
 - do not replace the current `bm25s`-aligned retrieval core
 - do learn from VectorChord-BM25's API discipline, mutable-index
@@ -130,7 +130,7 @@ Relevant source:
 - `src/segment/posting/*.rs`
 - `src/segment/field_norm.rs`
 
-This is fundamentally different from `ii42`, which is still
+This is fundamentally different from `evoke`, which is still
 organized around the `bm25s` eager sparse-scoring core.
 
 ### Mutable index architecture
@@ -155,7 +155,7 @@ Relevant source:
 - `src/index/vacuum.rs`
 
 This is a real strength of the project, but it is also the single
-biggest architectural difference from `ii42`.
+biggest architectural difference from `evoke`.
 
 ### Tokenization and text processing
 
@@ -179,11 +179,11 @@ Relevant source:
 - upstream `README.md`
 - `tests/init.sql`
 
-## Comparison With `ii42`
+## Comparison With `evoke`
 
-### Where `ii42` is stronger
+### Where `evoke` is stronger
 
-`ii42` is stronger when the priority is:
+`evoke` is stronger when the priority is:
 
 - fidelity to upstream `bm25s`
 - a clear canonical exact BM25 function path
@@ -191,7 +191,7 @@ Relevant source:
 - explicit separation between canonical BM25 APIs and convenience SQL
   surfaces
 
-In other words, `ii42` is currently the better implementation if
+In other words, `evoke` is currently the better implementation if
 the project goal remains:
 
 - "port `bm25s` into PostgreSQL without losing its core behavior"
@@ -215,10 +215,10 @@ than:
 - "a `bm25s` port"
 
 That distinction matters. It explains why some of its best ideas are
-good future extensions for `ii42`, but not good replacements for
+good future extensions for `evoke`, but not good replacements for
 the current core.
 
-## What `ii42` Should Learn Now
+## What `evoke` Should Learn Now
 
 ### 1. Prepared sparse query and vector APIs
 
@@ -230,12 +230,12 @@ explicit:
 - a sparse term-frequency representation is a first-class value
 - corpus-dependent BM25 queries should be explicitly index-bound
 
-`ii42` should consider an optional future surface like:
+`evoke` should consider an optional future surface like:
 
 - a sparse term-frequency input type for precomputed corpora
 - a prepared query value bound to one index
 
-Benefits for `ii42`:
+Benefits for `evoke`:
 
 - less query marshalling for repeated searches
 - fewer repeated token-to-ID resolution steps
@@ -264,7 +264,7 @@ semantics:
   try to return the top `k` qualifying rows, not just the top `k`
   global rows later filtered away
 
-`ii42` currently has filtered ordered-scan integration centered on
+`evoke` currently has filtered ordered-scan integration centered on
 `@@`. VectorChord-BM25 suggests a broader future direction:
 
 - support simple extra quals during ranked scans
@@ -286,9 +286,9 @@ Relevant source:
 
 - `src/tests/fuzz.rs`
 
-This is immediately useful for `ii42`.
+This is immediately useful for `evoke`.
 
-The current `ii42` test story is already much better than where it
+The current `evoke` test story is already much better than where it
 started, but a dedicated randomized differential harness would still be
 valuable for:
 
@@ -305,7 +305,7 @@ This is low-risk and high-value.
 VectorChord-BM25's sparse vector contract is a real usability win for
 large pretokenized corpora.
 
-Right now, `ii42` accepts:
+Right now, `evoke` accepts:
 
 - `int4[]`
 - `text[]`
@@ -314,7 +314,7 @@ Right now, `ii42` accepts:
 That is practical, but repeated token IDs are a verbose carrier for
 large precomputed corpora.
 
-An optional sparse term-frequency carrier in `ii42` would help:
+An optional sparse term-frequency carrier in `evoke` would help:
 
 - large documents
 - offline tokenization pipelines
@@ -324,7 +324,7 @@ An optional sparse term-frequency carrier in `ii42` would help:
 This should remain optional. It should not replace the current array
 surfaces.
 
-## What `ii42` Should Learn Later, If Ever
+## What `evoke` Should Learn Later, If Ever
 
 ### 1. Online mutable segment architecture
 
@@ -335,7 +335,7 @@ not a gimmick. It is probably the strongest answer in this analysis to:
 
 But this is not a small feature. It is a major storage-model rewrite.
 
-For `ii42`, this only makes sense as a future mutable-storage line of work if
+For `evoke`, this only makes sense as a future mutable-storage line of work if
 the project decides that:
 
 - online updates are more important than strict serialized `bm25s`
@@ -348,11 +348,11 @@ That tradeoff should be explicit before any implementation starts.
 The Block-WeakAnd machinery is good engineering for compressed inverted
 postings.
 
-But `ii42` should not graft it onto the current core just because
+But `evoke` should not graft it onto the current core just because
 it looks faster in the abstract. The current core is built around
 `bm25s` eager sparse scoring, not a WAND iterator model.
 
-If `ii42` ever adds a second storage engine optimized for:
+If `evoke` ever adds a second storage engine optimized for:
 
 - online updates
 - much larger dynamic corpora
@@ -367,7 +367,7 @@ For the current storage engine, they are not a drop-in win.
 
 ### 1. Replacing the current core with Block-WeakAnd
 
-This would move `ii42` away from its stated purpose.
+This would move `evoke` away from its stated purpose.
 
 The project is valuable precisely because it is a `bm25s`-aligned
 PostgreSQL port. Replacing its retrieval core with a very different
@@ -376,7 +376,7 @@ rank-time algorithm would undercut that.
 ### 2. Mandatory dependence on an external tokenizer extension
 
 VectorChord-BM25's split between ranking and tokenization is reasonable
-for that ecosystem, but `ii42` should not make that a hard
+for that ecosystem, but `evoke` should not make that a hard
 requirement.
 
 The current built-in helper layer for tokenization, normalization,
@@ -392,7 +392,7 @@ VectorChord-BM25 negates BM25 scores so plain ascending `ORDER BY`
 returns the best rows first.
 
 That is pragmatic for its operator surface, but it is not a good fit for
-`ii42`, which already distinguishes:
+`evoke`, which already distinguishes:
 
 - canonical BM25 scores in `rowset`
 - `<=>` as an ordered-scan/operator surface
@@ -429,7 +429,7 @@ Its `bm25query` type clearly says:
 That is better than pretending an arbitrary operator always has
 standalone meaning.
 
-For `ii42`, the most promising API follow-up is:
+For `evoke`, the most promising API follow-up is:
 
 - an optional prepared-query or sparse-query value bound to an index
 - while keeping `rowset` as the canonical exact BM25 path
@@ -449,7 +449,7 @@ The real lessons are:
 4. differential testing matters when ranked scans, MVCC, deletes, and
    LIMIT interact
 
-For the current `ii42` architecture, the best near-term
+For the current `evoke` architecture, the best near-term
 performance lessons are therefore:
 
 - reduce repeated query preparation through prepared sparse queries
@@ -461,7 +461,7 @@ Not:
 
 - replace the existing eager sparse-scoring engine
 
-## Recommended Follow-Ups For `ii42`
+## Recommended Follow-Ups For `evoke`
 
 ### Worth adding to future plans
 
@@ -484,7 +484,7 @@ Not:
 
 VectorChord-BM25 is worth studying, but not suitable for wholesale adoption.
 
-The best parts for `ii42` are:
+The best parts for `evoke` are:
 
 - sparse-vector and prepared-query API discipline
 - filtered top-k correctness inside the AM
@@ -494,10 +494,10 @@ The best parts for `ii42` are:
 The parts to resist are:
 
 - abandoning the current `bm25s`-aligned core
-- turning `ii42` into a different search engine under the same
+- turning `evoke` into a different search engine under the same
   name
 
 The right way to learn from VectorChord-BM25 is to absorb its best
-PostgreSQL-native ideas while keeping `ii42` anchored to its own
+PostgreSQL-native ideas while keeping `evoke` anchored to its own
 goal: a fast, explicit, semantically disciplined PostgreSQL port of
 `bm25s`.

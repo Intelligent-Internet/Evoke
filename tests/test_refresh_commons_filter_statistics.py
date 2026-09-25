@@ -44,7 +44,7 @@ def test_statistics_refresh_covers_every_filter_authority() -> None:
     assert 'ANALYZE commons.sys_chunks' in SQL
 
 
-def test_statistics_refresh_does_not_touch_ii42_relations() -> None:
+def test_statistics_refresh_does_not_touch_evoke_relations() -> None:
     analyze_lines = [
         line.strip()
         for line in SQL.splitlines()

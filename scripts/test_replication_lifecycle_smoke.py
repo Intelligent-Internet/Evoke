@@ -16,7 +16,7 @@ from typing import Any, Callable
 import psycopg
 from psycopg import sql
 
-from ii42_test_support import (
+from evoke_test_support import (
     REPO_ROOT,
     create_short_socket_root,
     ensure_temp_root,
@@ -101,7 +101,7 @@ def wait_until_timed(
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            'Verify physical replication of unified ii42 index generations.'
+            'Verify physical replication of unified evoke index generations.'
         ),
     )
     parser.add_argument(
@@ -130,7 +130,7 @@ def parse_args() -> argparse.Namespace:
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share directory containing extension/ii42.control, '
+            'PostgreSQL share directory containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -154,7 +154,7 @@ def relation_filenode(conn: psycopg.Connection[Any], name: str) -> int:
 
 def index_status(conn: psycopg.Connection[Any], name: str) -> dict[str, Any]:
     row = conn.execute(
-        'SELECT ii42_index_status(%s::regclass)',
+        'SELECT evoke_index_status(%s::regclass)',
         (name,),
     ).fetchone()
     if row is None or not isinstance(row[0], dict):
@@ -177,7 +177,7 @@ def acquire_maintenance_lock(
     while True:
         conn = psycopg.connect(dsn, autocommit=False)
         row = conn.execute(
-            'SELECT ii42_index_try_maintenance_lock(%s::regclass)',
+            'SELECT evoke_index_try_maintenance_lock(%s::regclass)',
             (index_name,),
         ).fetchone()
         if row is not None and row[0] is True:
@@ -197,7 +197,7 @@ def release_maintenance_lock(
 ) -> None:
     try:
         conn.execute(
-            'SELECT ii42_index_maintenance_unlock(%s::regclass)',
+            'SELECT evoke_index_maintenance_unlock(%s::regclass)',
             (index_name,),
         )
         conn.commit()
@@ -219,7 +219,7 @@ def maintain_until_converged(
 
     with psycopg.connect(dsn, autocommit=True) as conn:
         conn.execute(
-            "SET ii42.test_convergent_l0_rotation_records = '1'"
+            "SET evoke.test_convergent_l0_rotation_records = '1'"
         )
         try:
             while attempts < max_attempts and time.monotonic() < deadline:
@@ -234,7 +234,7 @@ def maintain_until_converged(
                         'status': status,
                     }
                 row = conn.execute(
-                    'SELECT ii42_index_maintain(%s::regclass)',
+                    'SELECT evoke_index_maintain(%s::regclass)',
                     (index_name,),
                 ).fetchone()
                 if row is None:
@@ -255,7 +255,7 @@ def maintain_until_converged(
                     time.sleep(0.05)
         finally:
             conn.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
 
     raise RuntimeError(
@@ -270,7 +270,7 @@ def generation_cache_state(
     name: str,
 ) -> dict[str, Any]:
     row = conn.execute(
-        'SELECT ii42_index_runtime_state_json(%s::regclass)',
+        'SELECT evoke_index_runtime_state_json(%s::regclass)',
         (name,),
     ).fetchone()
     if row is None or not isinstance(row[0], dict):
@@ -369,7 +369,7 @@ def bm25_top_hit(conn: psycopg.Connection[Any]) -> int | None:
     row = conn.execute(
         '''
         SELECT docs.id
-        FROM ii42_query_ids(
+        FROM evoke_query_ids(
             'docs_bm25_idx'::regclass,
             ARRAY[0, 4]::int4[],
             1,
@@ -403,7 +403,7 @@ def semantic_filtered_hits(
     rows = conn.execute(
         '''
         SELECT docs.id, hit.score
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_semantic_idx'::regclass,
             %s,
             jsonb_build_object(
@@ -430,7 +430,7 @@ def text_hits(
     statement = sql.SQL(
         '''
         SELECT docs.id, hit.score
-        FROM ii42_query(
+        FROM evoke_query(
             {index_name}::regclass,
             %s,
             100
@@ -452,13 +452,13 @@ def write_cluster_config(
     extension_control_dir: Path | None,
 ) -> None:
     lines = [
-        "shared_preload_libraries = 'ii42'",
+        "shared_preload_libraries = 'evoke'",
         'max_worker_processes = 16',
         "wal_level = 'replica'",
         'max_wal_senders = 5',
         'max_prepared_transactions = 10',
         'hot_standby = on',
-        "ii42.shared_runtime_size = '64MB'",
+        "evoke.shared_runtime_size = '64MB'",
     ]
     if extension_libdir is not None:
         libdir = str(extension_libdir).replace("'", "''")
@@ -511,11 +511,11 @@ def main() -> None:
     temp_root = ensure_temp_root(args.temp_root)
     root = Path(
         tempfile.mkdtemp(
-            prefix='ii42_replication_',
+            prefix='evoke_replication_',
             dir=temp_root,
         )
     )
-    socket_root = create_short_socket_root('ii42_replication_socket_')
+    socket_root = create_short_socket_root('evoke_replication_socket_')
     primary_data = root / 'primary'
     standby_data = root / 'standby'
     primary_socket = socket_root / 'p'
@@ -538,7 +538,7 @@ def main() -> None:
     standby_started = False
     semantic_maintenance_lock: psycopg.Connection[Any] | None = None
     summary: dict[str, Any] = {
-        'api_version': 'ii42_index_v1',
+        'api_version': 'evoke_index_v1',
         'suite': 'physical_replication_lifecycle',
         'checks': {},
     }
@@ -590,7 +590,7 @@ def main() -> None:
         wait_ready(primary_dsn)
 
         with psycopg.connect(primary_dsn) as conn:
-            conn.execute('CREATE EXTENSION ii42')
+            conn.execute('CREATE EXTENSION evoke')
             conn.execute(
                 '''
                 CREATE TABLE docs_bm25 (
@@ -684,14 +684,14 @@ def main() -> None:
             conn.execute(
                 '''
                 CREATE INDEX docs_bm25_idx
-                ON docs_bm25 USING ii42 (token_ids)
+                ON docs_bm25 USING evoke (token_ids)
                 WITH (sae = false)
                 ''',
             )
             conn.execute(
                 f'''
                 CREATE INDEX docs_semantic_idx
-                ON docs_semantic USING ii42 (body) INCLUDE (scope)
+                ON docs_semantic USING evoke (body) INCLUDE (scope)
                 WITH (
                     sae = true,
                     model_path = '{escaped_model_path}'
@@ -701,7 +701,7 @@ def main() -> None:
             conn.execute(
                 '''
                 CREATE INDEX docs_convert_idx
-                ON docs_convert USING ii42 (body)
+                ON docs_convert USING evoke (body)
                 WITH (sae = false)
                 ''',
             )
@@ -896,8 +896,8 @@ def main() -> None:
             stable_generation_replay,
             started_at=stable_generation_started,
         )
-        rollback_gid = 'ii42_replication_rollback_prepared'
-        commit_gid = 'ii42_replication_commit_prepared'
+        rollback_gid = 'evoke_replication_rollback_prepared'
+        commit_gid = 'evoke_replication_commit_prepared'
         rollback_query = 'rollback prepared replication sentinel'
         commit_query = 'commit prepared replication sentinel'
 
@@ -1402,7 +1402,7 @@ def main() -> None:
             conn.commit()
         with psycopg.connect(primary_dsn) as conn:
             conn.execute(
-                "SELECT ii42_index_maintain('docs_bm25_idx'::regclass)",
+                "SELECT evoke_index_maintain('docs_bm25_idx'::regclass)",
             )
             conn.commit()
         semantic_insert_maintenance = maintain_until_converged(
@@ -1516,7 +1516,7 @@ def main() -> None:
             conn.commit()
         with psycopg.connect(primary_dsn) as conn:
             conn.execute(
-                "SELECT ii42_index_maintain('docs_bm25_idx'::regclass)",
+                "SELECT evoke_index_maintain('docs_bm25_idx'::regclass)",
             )
             conn.commit()
         semantic_update_maintenance = maintain_until_converged(

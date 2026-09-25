@@ -12,7 +12,7 @@ from typing import Any
 
 import psycopg
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -22,7 +22,7 @@ QUERY = 'obsidian hummingbird quantum relay exact sentinel'
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            'Validate empty and UNLOGGED ii42 BM25/SAE index lifecycle.'
+            'Validate empty and UNLOGGED evoke BM25/SAE index lifecycle.'
         ),
     )
     parser.add_argument(
@@ -39,13 +39,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         '--extension-libdir',
         type=Path,
-        help='Directory containing the staged ii42 shared library.',
+        help='Directory containing the staged evoke shared library.',
     )
     parser.add_argument(
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share root containing extension/ii42.control, '
+            'PostgreSQL share root containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -101,13 +101,13 @@ def configure_cluster(
 ) -> None:
     config = data_dir / 'postgresql.conf'
     with config.open('a', encoding='utf-8') as handle:
-        handle.write("\nshared_preload_libraries = 'ii42'\n")
-        handle.write("ii42.shared_runtime_size = '64MB'\n")
+        handle.write("\nshared_preload_libraries = 'evoke'\n")
+        handle.write("evoke.shared_runtime_size = '64MB'\n")
         handle.write("listen_addresses = ''\n")
         handle.write(f"unix_socket_directories = '{socket_dir}'\n")
         handle.write(f'port = {port}\n')
         handle.write('max_worker_processes = 16\n')
-        handle.write("ii42.maintenance_timer_interval_ms = '100ms'\n")
+        handle.write("evoke.maintenance_timer_interval_ms = '100ms'\n")
         handle.write(
             "dynamic_library_path = '"
             f'{quote_config(extension_libdir)}:'
@@ -165,7 +165,7 @@ def index_status(
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_status(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass)',
             (index_name,),
         )
         row = cursor.fetchone()
@@ -259,7 +259,7 @@ def search_count(
 ) -> int:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT count(*) FROM ii42_query(%s::regclass, %s, 10)',
+            'SELECT count(*) FROM evoke_query(%s::regclass, %s, 10)',
             (index_name, QUERY),
         )
         row = cursor.fetchone()
@@ -285,17 +285,17 @@ def setup(
     model_path: Path,
 ) -> None:
     ddl = f"""
-        CREATE EXTENSION ii42;
+        CREATE EXTENSION evoke;
         CREATE SCHEMA lifecycle;
 
         CREATE TABLE lifecycle.empty_bm25 (id int, body text NOT NULL);
         CREATE INDEX empty_bm25_idx
-        ON lifecycle.empty_bm25 USING ii42 (body)
+        ON lifecycle.empty_bm25 USING evoke (body)
         WITH (sae = false, consistency = realtime);
 
         CREATE TABLE lifecycle.empty_sae (id int, body text NOT NULL);
         CREATE INDEX empty_sae_idx
-        ON lifecycle.empty_sae USING ii42 (body)
+        ON lifecycle.empty_sae USING evoke (body)
         WITH (
             sae = true,
             model_path = {sql_literal(str(model_path))},
@@ -310,7 +310,7 @@ def setup(
             (1, '{QUERY}'),
             (2, 'postgresql inverted index lifecycle');
         CREATE INDEX unlogged_bm25_idx
-        ON lifecycle.unlogged_bm25 USING ii42 (body)
+        ON lifecycle.unlogged_bm25 USING evoke (body)
         WITH (sae = false, consistency = realtime);
 
         CREATE UNLOGGED TABLE lifecycle.unlogged_sae (
@@ -321,7 +321,7 @@ def setup(
             (1, '{QUERY}'),
             (2, 'semantic posting recovery lifecycle');
         CREATE INDEX unlogged_sae_idx
-        ON lifecycle.unlogged_sae USING ii42 (body)
+        ON lifecycle.unlogged_sae USING evoke (body)
         WITH (
             sae = true,
             model_path = {sql_literal(str(model_path))},
@@ -352,7 +352,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     gates: dict[str, bool] = {}
     evidence: dict[str, Any] = {}
 
-    with tempfile.TemporaryDirectory(prefix='ii42_empty_unlogged_') as tmp:
+    with tempfile.TemporaryDirectory(prefix='evoke_empty_unlogged_') as tmp:
         root = Path(tmp)
         data_dir = root / 'data'
         socket_dir = root / 'socket'
@@ -619,7 +619,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 stop_cluster(pg_ctl, data_dir, 'fast')
 
     return {
-        'api_version': 'ii42_index_v1',
+        'api_version': 'evoke_index_v1',
         'route': 'empty and UNLOGGED unified index lifecycle',
         'model_path': str(model_path),
         'gates': gates,

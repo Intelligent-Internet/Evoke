@@ -83,6 +83,15 @@ def signature(path: Path) -> dict[str, Any]:
     }
 
 
+def checkout_signature(
+    path: Path,
+    checkout_relative_path: str,
+) -> dict[str, Any]:
+    payload = signature(path)
+    payload['path'] = checkout_relative_path
+    return payload
+
+
 def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding='utf-8'))
 
@@ -179,7 +188,7 @@ def validate_query_calibration_runtime(
         '<8sIIQ',
         contents,
     )
-    if magic != b'II42P2R1' or version != 1:
+    if magic != b'EVOKP2R1' or version != 1:
         raise ValueError('invalid P2 query calibration header')
     if artifact_dims != total_dims:
         raise ValueError(
@@ -348,7 +357,7 @@ def main() -> int:
             'global_scale': args.global_scale,
             'lexical_encoder': {
                 'impact': 'query_term_frequency',
-                'tokenizer': 'ii42_plain_query_v1',
+                'tokenizer': 'evoke_plain_query_v1',
                 'unknown_terms': 'drop',
             },
             'mode': 'rms',
@@ -413,7 +422,10 @@ def main() -> int:
             'runtime_artifact': 'calibration/query_calibration_rms.f32',
         }
         contract_payload['query_calibration_runtime'] = {
-            **signature(args.query_calibration_runtime),
+            **checkout_signature(
+                args.query_calibration_runtime,
+                'calibration/query_calibration_rms.f32',
+            ),
             **calibration_stats,
         }
         if args.query_calibration_statistics is not None:
@@ -424,8 +436,11 @@ def main() -> int:
             scoring_payload['query_compiler']['corpus_statistics'][
                 'artifact'
             ] = 'calibration/query_calibration_stats.npz'
-            contract_payload['query_calibration_statistics'] = signature(
-                args.query_calibration_statistics,
+            contract_payload['query_calibration_statistics'] = (
+                checkout_signature(
+                    args.query_calibration_statistics,
+                    'calibration/query_calibration_stats.npz',
+                )
             )
 
     write_json(atom_space_path, atom_space_payload)

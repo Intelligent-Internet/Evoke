@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Benchmark bounded semantic-accelerator routes on a native II42 index."""
+"""Benchmark bounded semantic-accelerator routes on a native Evoke index."""
 
 from __future__ import annotations
 
@@ -141,14 +141,14 @@ def read_queries(path: Path, limit: int) -> list[str]:
 def bind_probe(cursor: psycopg.Cursor[Any]) -> None:
     cursor.execute(
         """
-        CREATE OR REPLACE FUNCTION pg_temp.ii42_query_topk(
+        CREATE OR REPLACE FUNCTION pg_temp.evoke_query_topk(
             regclass,
             int4[],
             real[],
             int4,
             bool
         ) RETURNS jsonb
-        AS '$libdir/ii42', 'ii42_test_query_page_native_topk'
+        AS '$libdir/evoke', 'evoke_test_query_page_native_topk'
         LANGUAGE C STRICT
         """
     )
@@ -157,41 +157,41 @@ def bind_probe(cursor: psycopg.Cursor[Any]) -> None:
 def configure_route(cursor: psycopg.Cursor[Any], route: Route) -> None:
     error_budget = effective_error_budget(route)
     settings = {
-        'ii42.test_disable_semantic_accelerator': (
+        'evoke.test_disable_semantic_accelerator': (
             'on' if route.heap_factor is None else 'off'
         ),
-        'ii42.test_semantic_accelerator_heap_factor': str(
+        'evoke.test_semantic_accelerator_heap_factor': str(
             route.heap_factor or 0.0
         ),
-        'ii42.test_semantic_accelerator_candidate_multiplier': str(
+        'evoke.test_semantic_accelerator_candidate_multiplier': str(
             route.candidate_multiplier
         ),
-        'ii42.test_semantic_accelerator_bound_residual_candidates': (
+        'evoke.test_semantic_accelerator_bound_residual_candidates': (
             'on' if route.bound_residual else 'off'
         ),
-        'ii42.test_semantic_accelerator_accumulate_residual_candidates': (
+        'evoke.test_semantic_accelerator_accumulate_residual_candidates': (
             'on' if route.accumulate_residual else 'off'
         ),
-        'ii42.test_semantic_accelerator_summarize_residual_candidates': (
+        'evoke.test_semantic_accelerator_summarize_residual_candidates': (
             'on' if route.summarize_residual else 'off'
         ),
-        'ii42.test_semantic_accelerator_summary_multiplier': str(
+        'evoke.test_semantic_accelerator_summary_multiplier': str(
             route.summary_multiplier
         ),
-        'ii42.test_semantic_accelerator_seed_bmp': (
+        'evoke.test_semantic_accelerator_seed_bmp': (
             'on' if route.seed_bmp else 'off'
         ),
-        'ii42.test_force_semantic_bmp': (
+        'evoke.test_force_semantic_bmp': (
             'on' if route.seed_bmp or route.name == 'forced_bmp' else 'off'
         ),
-        'ii42.test_disable_semantic_bmp': (
+        'evoke.test_disable_semantic_bmp': (
             'on' if error_budget > 0.0 else 'off'
         ),
-        'ii42.test_query_max_df_ratio': '1',
-        'ii42.test_query_semantic_work_target_postings': '0',
-        'ii42.test_query_semantic_error_budget_ratio': str(error_budget),
-        'ii42.test_query_semantic_impact_floor_ratio': '0',
-        'ii42.test_query_semantic_min_support_ratio': '0',
+        'evoke.test_query_max_df_ratio': '1',
+        'evoke.test_query_semantic_work_target_postings': '0',
+        'evoke.test_query_semantic_error_budget_ratio': str(error_budget),
+        'evoke.test_query_semantic_impact_floor_ratio': '0',
+        'evoke.test_query_semantic_min_support_ratio': '0',
     }
     if route.use_session_defaults:
         for name in settings:
@@ -265,7 +265,7 @@ def encode_query(
     field_count: int,
 ) -> dict[str, Any]:
     cursor.execute(
-        'SELECT ii42_encode_text_internal(%s::regclass, %s)',
+        'SELECT evoke_encode_text_internal(%s::regclass, %s)',
         (index_name, text),
     )
     encoded = cursor.fetchone()[0]
@@ -293,7 +293,7 @@ def fetch_hits(
     cursor.execute(
         """
         SELECT hit.ctid::text, hit.score::float8
-        FROM ii42_query(%s::regclass, %s, %s) AS hit
+        FROM evoke_query(%s::regclass, %s, %s) AS hit
         ORDER BY hit.score DESC, hit.ctid
         """,
         (index_name, text, k),
@@ -310,7 +310,7 @@ def fetch_telemetry(
 ) -> dict[str, Any]:
     cursor.execute(
         """
-        SELECT pg_temp.ii42_query_topk(
+        SELECT pg_temp.evoke_query_topk(
             %s::regclass,
             %s::int4[],
             %s::real[],
@@ -448,7 +448,7 @@ def main() -> int:
                 )
 
     result = {
-        'schema': 'ii42_semantic_accelerator_scale_v2',
+        'schema': 'evoke_semantic_accelerator_scale_v2',
         'index_name': args.index,
         'k': args.k,
         'query_count': len(query_rows),

@@ -12,7 +12,7 @@ from typing import Any
 
 import psycopg
 
-from ii42_test_support import (
+from evoke_test_support import (
     create_short_socket_root,
     extension_control_root,
 )
@@ -139,11 +139,11 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         args.extension_control_dir
     )
     extension_libraries = [
-        extension_libdir / name for name in ('ii42.so', 'ii42.dylib')
+        extension_libdir / name for name in ('evoke.so', 'evoke.dylib')
     ]
     if not any(path.is_file() for path in extension_libraries):
         raise FileNotFoundError(
-            f'ii42 library is missing from {extension_libdir}'
+            f'evoke library is missing from {extension_libdir}'
         )
 
     initdb = args.pg_bin / 'initdb'
@@ -190,7 +190,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
 
         fixture_started = time.perf_counter()
         with connection.cursor() as cursor:
-            cursor.execute('CREATE EXTENSION ii42')
+            cursor.execute('CREATE EXTENSION evoke')
             cursor.execute('CREATE SCHEMA frontier')
             cursor.execute(
                 'CREATE TABLE frontier.docs ('
@@ -204,7 +204,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             )
             cursor.execute(
                 'CREATE INDEX docs_idx ON frontier.docs '
-                'USING ii42 (tokens) '
+                'USING evoke (tokens) '
                 'WITH (sae=false, consistency=realtime)'
             )
         timings['fixture_build_seconds'] = round(
@@ -227,13 +227,13 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         with connection.cursor() as cursor:
             cursor.execute('DELETE FROM frontier.docs')
             cursor.execute(
-                "SET ii42.test_convergent_vacuum_error_after_batch = 'on'"
+                "SET evoke.test_convergent_vacuum_error_after_batch = 'on'"
             )
             try:
                 cursor.execute('VACUUM (INDEX_CLEANUP ON) frontier.docs')
             except psycopg.Error as error:
                 if (
-                    'injected ii42 convergent VACUUM document-COW batch '
+                    'injected evoke convergent VACUUM document-COW batch '
                     'error' not in str(error)
                 ):
                     raise
@@ -243,7 +243,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
                 )
             finally:
                 cursor.execute(
-                    'RESET ii42.test_convergent_vacuum_error_after_batch'
+                    'RESET evoke.test_convergent_vacuum_error_after_batch'
                 )
         timings['injected_vacuum_seconds'] = round(
             time.perf_counter() - failure_started,
@@ -433,7 +433,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         6,
     )
     return {
-        'api_version': 'ii42_index_v1',
+        'api_version': 'evoke_index_v1',
         'route': 'bounded convergent VACUUM retirement frontier',
         'gates': gates,
         'passed_gates': sum(gates.values()),

@@ -6,22 +6,22 @@ set -euo pipefail
 # runtime workers disable it unless the operator explicitly opted in.
 export ORT_DISABLE_TELEMETRY=${ORT_DISABLE_TELEMETRY:-1}
 
-model_path=${II42_MODEL_PATH:-/usr/local/share/ii42/models/default}
-checkout_signature=${II42_CHECKOUT_SIGNATURE:-}
-runtime_precision=${II42_RUNTIME_PRECISION:-fp16}
-http_workers=${II42_HTTP_WORKER_COUNT:-4}
-http_queue_depth=${II42_HTTP_QUEUE_DEPTH:-}
-http_host=${II42_HTTP_HOST:-0.0.0.0}
-http_port=${II42_HTTP_PORT:-8042}
-max_batch_size=${II42_MAX_BATCH_SIZE:-128}
-max_delay_ms=${II42_MAX_DELAY_MS:-5}
-max_request_bytes=${II42_MAX_REQUEST_BYTES:-67108864}
-intra_op_threads=${II42_INTRA_OP_THREADS:-}
+model_path=${EVOKE_MODEL_PATH:-/usr/local/share/evoke/models/default}
+checkout_signature=${EVOKE_CHECKOUT_SIGNATURE:-}
+runtime_precision=${EVOKE_RUNTIME_PRECISION:-fp16}
+http_workers=${EVOKE_HTTP_WORKER_COUNT:-4}
+http_queue_depth=${EVOKE_HTTP_QUEUE_DEPTH:-}
+http_host=${EVOKE_HTTP_HOST:-0.0.0.0}
+http_port=${EVOKE_HTTP_PORT:-8042}
+max_batch_size=${EVOKE_MAX_BATCH_SIZE:-128}
+max_delay_ms=${EVOKE_MAX_DELAY_MS:-5}
+max_request_bytes=${EVOKE_MAX_REQUEST_BYTES:-67108864}
+intra_op_threads=${EVOKE_INTRA_OP_THREADS:-}
 
 case "$checkout_signature" in
     ''|*[!0-9a-fA-F]*)
         cat >&2 <<'MSG'
-II42_CHECKOUT_SIGNATURE is required.
+EVOKE_CHECKOUT_SIGNATURE is required.
 
 The direct accelerator does not have PostgreSQL available to reconstruct the
 extension checkout identity. Pass the signature produced by the coordinator
@@ -31,16 +31,16 @@ MSG
         ;;
 esac
 if [ "${#checkout_signature}" -ne 64 ]; then
-    echo "II42_CHECKOUT_SIGNATURE must be 64 hex chars" >&2
+    echo "EVOKE_CHECKOUT_SIGNATURE must be 64 hex chars" >&2
     exit 1
 fi
 
 for item in \
-    "II42_HTTP_WORKER_COUNT:$http_workers" \
-    "II42_HTTP_PORT:$http_port" \
-    "II42_MAX_BATCH_SIZE:$max_batch_size" \
-    "II42_MAX_DELAY_MS:$max_delay_ms" \
-    "II42_MAX_REQUEST_BYTES:$max_request_bytes"
+    "EVOKE_HTTP_WORKER_COUNT:$http_workers" \
+    "EVOKE_HTTP_PORT:$http_port" \
+    "EVOKE_MAX_BATCH_SIZE:$max_batch_size" \
+    "EVOKE_MAX_DELAY_MS:$max_delay_ms" \
+    "EVOKE_MAX_REQUEST_BYTES:$max_request_bytes"
 do
     name=${item%%:*}
     value=${item#*:}
@@ -53,7 +53,7 @@ do
 done
 
 server_args=(
-    ii42-runtime-server
+    evoke-runtime-server
     --model-path "$model_path"
     --checkout-signature "$checkout_signature"
     --runtime-precision "$runtime_precision"
@@ -69,7 +69,7 @@ case "$http_queue_depth" in
     '')
         ;;
     *[!0-9]*)
-        echo "II42_HTTP_QUEUE_DEPTH must be a positive integer" >&2
+        echo "EVOKE_HTTP_QUEUE_DEPTH must be a positive integer" >&2
         exit 1
         ;;
     *)
@@ -81,7 +81,7 @@ case "$intra_op_threads" in
     '')
         ;;
     *[!0-9]*)
-        echo "II42_INTRA_OP_THREADS must be a positive integer" >&2
+        echo "EVOKE_INTRA_OP_THREADS must be a positive integer" >&2
         exit 1
         ;;
     *)

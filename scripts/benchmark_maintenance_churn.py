@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import psycopg
 
 
-DEFAULT_DB_NAME = 'ii42_maintenance_churn_bench'
+DEFAULT_DB_NAME = 'evoke_maintenance_churn_bench'
 DEFAULT_DOC_COUNT = 5000
 DEFAULT_DOC_LEN = 24
 DEFAULT_VOCAB_SIZE = 4000
@@ -130,7 +130,7 @@ def measure_query(
         cur.execute(
             '''
             SELECT *
-            FROM public.ii42_query_ids(
+            FROM public.evoke_query_ids(
                 %s::regclass,
                 %s::int4[],
                 %s,
@@ -165,7 +165,7 @@ def maintenance_state(cur: psycopg.Cursor, index_name: str) -> str:
             delta_bytes,
             stale
         )
-        FROM public.ii42_index_details(%s::regclass)
+        FROM public.evoke_index_details(%s::regclass)
         ''',
         (index_name,),
     )
@@ -179,7 +179,7 @@ def maintenance_policy(cur: psycopg.Cursor, index_name: str) -> str:
             'maintenance_policy(consistency=%%s)',
             consistency
         )
-        FROM public.ii42_index_details(%s::regclass)
+        FROM public.evoke_index_details(%s::regclass)
         ''',
         (index_name,),
     )
@@ -214,7 +214,7 @@ def setup_table(
     cur.execute(
         f'''
         CREATE INDEX {mode.table_name}_bm25_idx
-            ON {mode.table_name} USING ii42 (token_ids)
+            ON {mode.table_name} USING evoke (token_ids)
             WITH ({mode.reloptions})
         '''
     )
@@ -384,7 +384,7 @@ def main() -> None:
 
     with psycopg.connect(f'dbname={cfg.db_name}') as conn:
         with conn.cursor() as cur:
-            cur.execute('CREATE EXTENSION ii42')
+            cur.execute('CREATE EXTENSION evoke')
             for mode in modes:
                 setup_table(cur, docs, mode)
             conn.commit()

@@ -6,9 +6,9 @@ reloptions or supported recommendation profiles.
 
 ## Current Recommendations
 
-`ii42_index_policy_recommend(index, profile)` is advisory. It returns options;
+`evoke_index_policy_recommend(index, profile)` is advisory. It returns options;
 it does not alter an index or tune the scheduler automatically. The implementation
-is [`ii42_am_get_policy_recommendation`](../../src/ii42_am_options.c).
+is [`evoke_am_get_policy_recommendation`](../../src/evoke_am_options.c).
 
 | Index mode | Accepted profile | Recommended consistency |
 | --- | --- | --- |
@@ -31,7 +31,7 @@ emergency threshold; hard pressure and missing artifacts remain actionable.
 Compatible serving baselines have no maximum age and remain available while
 replacement work proceeds. Do not trigger `REINDEX` simply because delta exists.
 
-Set `ii42.maintenance_worker_limit` and memory budgets from measured CPU,
+Set `evoke.maintenance_worker_limit` and memory budgets from measured CPU,
 memory, and I/O headroom. Increasing background parallelism can hurt foreground
 latency even when readers do not wait for a build lock. Compare warm-query
 latency, root/accelerator identities, completed work, bytes rewritten, and

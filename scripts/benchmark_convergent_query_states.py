@@ -15,7 +15,7 @@ from typing import Any
 
 import psycopg
 
-from ii42_test_support import (
+from evoke_test_support import (
     create_short_socket_root,
     extension_control_root,
 )
@@ -51,7 +51,7 @@ POSTING_HEAT_BENEFIT_BYTES = 65_536
 POSTGRES_BLOCK_BYTES = 8_192
 QUERY_SQL = (
     'SELECT doc_id, score::float8 '
-    'FROM ii42_query_ids(%s::regclass, %s::int4[], %s)'
+    'FROM evoke_query_ids(%s::regclass, %s::int4[], %s)'
 )
 
 
@@ -70,7 +70,7 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         required=True,
         help=(
-            'PostgreSQL share root containing extension/ii42.control, '
+            'PostgreSQL share root containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -128,7 +128,7 @@ def source_identity() -> dict[str, Any]:
         '--porcelain',
         '--',
         'Makefile',
-        'ii42.control',
+        'evoke.control',
         'sql',
         'src',
     ])
@@ -157,19 +157,19 @@ def host_snapshot() -> dict[str, Any]:
 def extension_library_exists(extension_libdir: Path) -> bool:
     return any(
         (extension_libdir / name).is_file()
-        for name in ('ii42.so', 'ii42.dylib')
+        for name in ('evoke.so', 'evoke.dylib')
     )
 
 
 def extension_library_identity(extension_libdir: Path) -> dict[str, Any]:
     libraries = [
         extension_libdir / name
-        for name in ('ii42.so', 'ii42.dylib')
+        for name in ('evoke.so', 'evoke.dylib')
         if (extension_libdir / name).is_file()
     ]
     if len(libraries) != 1:
         raise FileNotFoundError(
-            'expected exactly one staged ii42 extension library in '
+            'expected exactly one staged evoke extension library in '
             f'{extension_libdir}'
         )
     library = libraries[0]
@@ -209,7 +209,7 @@ def create_convergent_index(
     with connection.cursor() as cursor:
         cursor.execute(
             f'CREATE INDEX {index_name} '
-            'ON bench.documents USING ii42 (tokens) '
+            'ON bench.documents USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)'
         )
 
@@ -221,7 +221,7 @@ def create_static_reference_index(
     with connection.cursor() as cursor:
         cursor.execute(
             f'CREATE INDEX {index_name} '
-            'ON bench.documents USING ii42 (tokens) '
+            'ON bench.documents USING evoke (tokens) '
             'WITH (sae=false, consistency=realtime)'
         )
 
@@ -261,7 +261,7 @@ def append_sealed_batch(
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT set_config("
-            "'ii42.test_convergent_l0_rotation_records', %s, false)",
+            "'evoke.test_convergent_l0_rotation_records', %s, false)",
             (str(document_count),),
         )
     try:
@@ -269,7 +269,7 @@ def append_sealed_batch(
     finally:
         with connection.cursor() as cursor:
             cursor.execute(
-                'RESET ii42.test_convergent_l0_rotation_records'
+                'RESET evoke.test_convergent_l0_rotation_records'
             )
     return drain_l0(connection, index_name)
 
@@ -619,14 +619,14 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
     )
     if not extension_library_exists(extension_libdir):
         raise FileNotFoundError(
-            f'ii42 library is missing from {extension_libdir}'
+            f'evoke library is missing from {extension_libdir}'
         )
 
     initdb = args.pg_bin / 'initdb'
     pg_ctl = args.pg_bin / 'pg_ctl'
     system_libdir = pg_config_value(args.pg_bin, '--pkglibdir')
     system_sharedir = pg_config_value(args.pg_bin, '--sharedir')
-    root = create_short_socket_root('ii42-query-states-')
+    root = create_short_socket_root('evoke-query-states-')
     data_dir = root / 'data'
     socket_dir = root / 's'
     log_path = root / 'postgres.log'
@@ -659,12 +659,12 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
         started = True
         connection = connect(socket_dir, port)
         with connection.cursor() as cursor:
-            cursor.execute('CREATE EXTENSION ii42')
+            cursor.execute('CREATE EXTENSION evoke')
             cursor.execute('CREATE SCHEMA bench')
             cursor.execute(
                 'CREATE FUNCTION bench.test_query_page_native_topk('
                 'regclass, int4[], int4) RETURNS jsonb '
-                "AS '$libdir/ii42', 'ii42_test_query_page_native_topk' "
+                "AS '$libdir/evoke', 'evoke_test_query_page_native_topk' "
                 'LANGUAGE C STRICT'
             )
             cursor.execute(
@@ -686,7 +686,7 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
         maintenance: list[str] = []
         next_id = args.base_docs + 1
         with connection.cursor() as cursor:
-            cursor.execute('SET ii42.test_force_structural_term_fold = true')
+            cursor.execute('SET evoke.test_force_structural_term_fold = true')
         try:
             for _ in range(args.delta_batches):
                 maintenance.extend(
@@ -701,7 +701,7 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
         finally:
             with connection.cursor() as cursor:
                 cursor.execute(
-                    'RESET ii42.test_force_structural_term_fold'
+                    'RESET evoke.test_force_structural_term_fold'
                 )
 
         fragmented_status = fetch_status(
@@ -1137,8 +1137,8 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
             ),
         }
         return {
-            'benchmark': 'ii42_convergent_query_states_v3',
-            'api': 'ii42_query_ids',
+            'benchmark': 'evoke_convergent_query_states_v3',
+            'api': 'evoke_query_ids',
             'source': source_identity(),
             'extension_library': extension_library_identity(
                 extension_libdir

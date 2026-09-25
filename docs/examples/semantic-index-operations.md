@@ -8,11 +8,11 @@ maintenance authority.
 
 | Operation | Interface |
 | --- | --- |
-| Build | `CREATE INDEX ... USING ii42 ... WITH (sae = true)` |
-| Query | `ii42_query(...)` |
-| Inspect | `ii42_index_options(...)`, `ii42_index_status(...)` |
-| Maintain | `ii42_index_maintain(...)` |
-| Schedule | `ii42_index_maintain_due(...)` |
+| Build | `CREATE INDEX ... USING evoke ... WITH (sae = true)` |
+| Query | `evoke_query(...)` |
+| Inspect | `evoke_index_options(...)`, `evoke_index_status(...)` |
+| Maintain | `evoke_index_maintain(...)` |
+| Schedule | `evoke_index_maintain_due(...)` |
 | Rebuild | PostgreSQL `REINDEX` |
 | Remove | PostgreSQL `DROP INDEX` |
 
@@ -28,7 +28,7 @@ different qualified checkout:
 
 ```sql
 CREATE INDEX docs_search_idx
-ON docs USING ii42 (body)
+ON docs USING evoke (body)
 WITH (
     sae = true,
     consistency = eventual,
@@ -46,7 +46,7 @@ writable:
 
 ```sql
 CREATE INDEX CONCURRENTLY docs_search_idx
-ON docs USING ii42 (body)
+ON docs USING evoke (body)
 WITH (sae = true);
 ```
 
@@ -94,8 +94,8 @@ cannot expose partial lexical or semantic state.
 ## Maintenance
 
 ```sql
-SELECT ii42_index_maintain('docs_search_idx'::regclass);
-SELECT ii42_index_try_maintain('docs_search_idx'::regclass);
+SELECT evoke_index_maintain('docs_search_idx'::regclass);
+SELECT evoke_index_try_maintain('docs_search_idx'::regclass);
 ```
 
 Mutation seals and selected compaction use bounded work. Accelerator
@@ -113,8 +113,8 @@ REINDEX INDEX docs_search_idx;
 ## Readiness
 
 ```sql
-SELECT ii42_index_options('docs_search_idx'::regclass);
-SELECT ii42_index_status('docs_search_idx'::regclass);
+SELECT evoke_index_options('docs_search_idx'::regclass);
+SELECT evoke_index_status('docs_search_idx'::regclass);
 ```
 
 `query_ready` is a correctness/readiness gate, not a warm-latency guarantee.
@@ -134,16 +134,16 @@ or rebuilding the index. Inspect warm metadata, candidate quality, latency,
 and actual background progress separately. See
 [Maintenance lifecycle](../maintenance-lifecycle.md).
 
-`ii42_index_status(...)` deliberately does not hash every model artifact or walk
-the complete generation. Use `ii42_index_audit(...)` for that explicit heavy
+`evoke_index_status(...)` deliberately does not hash every model artifact or walk
+the complete generation. Use `evoke_index_audit(...)` for that explicit heavy
 qualification step, not for routine polling.
 
 ```sql
 -- Explicit release/incident qualification, not a frequent health check.
-SELECT ii42_index_audit('docs_search_idx'::regclass);
+SELECT evoke_index_audit('docs_search_idx'::regclass);
 ```
 
-Applications still query only through `ii42_query(...)`. Runtime queue and
+Applications still query only through `evoke_query(...)`. Runtime queue and
 worker telemetry are privileged operational diagnostics, not a second API.
 
 If maintenance workers are unavailable but query inference remains healthy,
@@ -171,13 +171,13 @@ rows.
 
 ## Memory And Security
 
-SSR requires `shared_preload_libraries = 'ii42'` and a positive
-`ii42.shared_runtime_size`. This is the bounded shared runtime and residency
+SSR requires `shared_preload_libraries = 'evoke'` and a positive
+`evoke.shared_runtime_size`. This is the bounded shared runtime and residency
 arena. Runtime workers own tokenizer and ONNX sessions; query backends keep
 only bounded request and scoring scratch.
 
 Server-local model paths require trusted deployment ownership. Grant
-applications table access and `ii42_query(...)`; do not grant internal runtime
+applications table access and `evoke_query(...)`; do not grant internal runtime
 or payload helpers.
 
 ## Teardown

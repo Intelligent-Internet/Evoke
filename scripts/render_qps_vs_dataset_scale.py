@@ -31,8 +31,8 @@ PLOT_H = HEIGHT - TOP - BOTTOM
 
 ENGINES = [
     ('upstream_bm25s', 'upstream bm25s', '#1f77b4', 'circle'),
-    ('ii42_ids', 'ii42 ids', '#d62728', 'triangle_up'),
-    ('ii42_text', 'ii42 text[]', '#ff7f0e', 'triangle_down'),
+    ('evoke_ids', 'evoke ids', '#d62728', 'triangle_up'),
+    ('evoke_text', 'evoke text[]', '#ff7f0e', 'triangle_down'),
     ('pg_search', 'pg_search', '#2ca02c', 'square'),
     ('vchord_bm25', 'vchord_bm25', '#9467bd', 'diamond'),
 ]

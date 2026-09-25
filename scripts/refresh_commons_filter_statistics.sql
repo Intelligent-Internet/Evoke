@@ -2,7 +2,7 @@
 
 -- Run only after restoring the production autovacuum policy. This refreshes
 -- planner statistics for the metadata predicates used by the Commons query
--- matrix without scanning II42 relations or changing scorer settings.
+-- matrix without scanning Evoke relations or changing scorer settings.
 DO $preflight$
 DECLARE
     required_column record;

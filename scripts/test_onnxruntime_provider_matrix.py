@@ -116,7 +116,7 @@ def validate_model_contract(model_path: Path) -> None:
 def setup_sql(model_path: Path) -> str:
     escaped_path = str(model_path).replace("'", "''")
     return f'''
-    CREATE EXTENSION ii42;
+    CREATE EXTENSION evoke;
     CREATE TABLE docs (
         id int PRIMARY KEY,
         body text NOT NULL
@@ -128,7 +128,7 @@ def setup_sql(model_path: Path) -> str:
 
     CREATE INDEX docs_body_idx
     ON docs
-    USING ii42 (body)
+    USING evoke (body)
     WITH (
         sae = true,
         model_path = '{escaped_path}'
@@ -156,17 +156,17 @@ def run_provider_case(
             socket_dir,
             port,
             f'''
-            SELECT ii42_runtime_service_query_atoms(
+            SELECT evoke_runtime_service_query_atoms(
                 '{escaped_path}',
                 'provider matrix iteration {iteration}'
             )::text;
             SELECT count(*)
-            FROM ii42_query(
+            FROM evoke_query(
                 'docs_body_idx'::regclass,
                 'alpha cuda provider matrix {iteration}',
                 3
             );
-            SELECT ii42_runtime_service_status()::text;
+            SELECT evoke_runtime_service_status()::text;
             ''',
         ).splitlines()
         if len(output) != 3:
@@ -242,7 +242,7 @@ def main() -> None:
     pg_ctl = pg_bin / 'pg_ctl'
     psql_bin = pg_bin / 'psql'
 
-    with tempfile.TemporaryDirectory(prefix='ii42_ort_matrix_') as tmp:
+    with tempfile.TemporaryDirectory(prefix='evoke_ort_matrix_') as tmp:
         root = Path(tmp)
         data_dir = root / 'data'
         socket_dir = root / 'socket'
@@ -255,8 +255,8 @@ def main() -> None:
             'a',
             encoding='utf-8',
         ) as config:
-            config.write("\nshared_preload_libraries = 'ii42'\n")
-            config.write("ii42.shared_runtime_size = '64MB'\n")
+            config.write("\nshared_preload_libraries = 'evoke'\n")
+            config.write("evoke.shared_runtime_size = '64MB'\n")
             config.write("listen_addresses = ''\n")
             config.write('max_worker_processes = 16\n')
 

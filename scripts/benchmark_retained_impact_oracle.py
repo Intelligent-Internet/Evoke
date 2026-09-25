@@ -525,7 +525,7 @@ def main() -> int:
             'elapsed_seconds': time.perf_counter() - variant_started,
         }
     output = {
-        'schema': 'ii42_retained_impact_oracle_v2',
+        'schema': 'evoke_retained_impact_oracle_v2',
         'dataset': args.dataset_root.name,
         'documents': documents.shape[0],
         'queries': queries.shape[0],

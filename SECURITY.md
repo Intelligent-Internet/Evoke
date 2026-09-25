@@ -3,7 +3,7 @@
 ## Supported Versions
 
 Security fixes are developed against the current extension version declared in
-`ii42.control`. The package does not ship historical Evoke catalogs, payload
+`evoke.control`. The package does not ship historical Evoke catalogs, payload
 readers, or version-to-version upgrade SQL. Unsupported historical formats must
 be rebuilt from their source relations. A qualified deployment of a compatible
 current-format package can retain its indexes; stop PostgreSQL before replacing

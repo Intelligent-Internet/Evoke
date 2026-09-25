@@ -43,16 +43,16 @@ shadow-v5-pubmed-date-category.json
 ## Live Deployment Snapshot
 
 The following read-only inventory was captured at `2026-08-26T04:49:36Z`.
-PostgreSQL reported no active rebuild or II42 maintenance statement on any
+PostgreSQL reported no active rebuild or Evoke maintenance statement on any
 host.
 
-| Host | PostgreSQL | Extension | II42 indexes | Valid / ready | Stored bytes | Installed binary SHA-256 | State |
+| Host | PostgreSQL | Extension | Evoke indexes | Valid / ready | Stored bytes | Installed binary SHA-256 | State |
 | --- | --- | --- | ---: | ---: | ---: | --- | --- |
 | Shadow | 18.4 | 0.2.4 | 14 | 14 / 14 | 178 GiB | `a415dd9b921586b5499b076d5522d53e00e4f8474455c7cebfedbd2e7091acf0` | Qualification host; PubMed remains `current_next` |
 | Elm | 18.6 | 0.2.4 | 12 | 12 / 12 | 203 GiB | `27ad2f346b4c81982c32424d2b024e7c38bdb6af3039da942133974876f71606` | Mixed transition inventory remains |
 | macOS | 18.6 | 0.2.4 | 19 | 19 / 19 | 1,143 MiB | `a5dc743f6bd5b4e76d6641d01a9c2f597ff93b76bc19aa2ff22ec7a4155aa32a` | Research indexes only |
 
-Shadow uses `ii42.maintenance_worker_limit=4` and preloads II42. Its nine
+Shadow uses `evoke.maintenance_worker_limit=4` and preloads Evoke. Its nine
 Commons product-shaped roots are valid and ready, but the PubMed root is still
 named `commons.data_pubmed__title_abstract__current_next_idx`. Five additional
 roots belong to benchmark/runtime calibration schemas. Valid and ready catalog

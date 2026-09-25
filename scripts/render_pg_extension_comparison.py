@@ -111,8 +111,8 @@ def render_report(payload: dict[str, Any], source_path: Path) -> str:
         if name in results and 'pg_bm25s' not in results[name]
     ]
 
-    ids_stats = ratio_stats(ordered_results, 'ii42_ids')
-    text_stats = ratio_stats(ordered_results, 'ii42_text')
+    ids_stats = ratio_stats(ordered_results, 'evoke_ids')
+    text_stats = ratio_stats(ordered_results, 'evoke_text')
     pg_stats = ratio_stats(ordered_results, 'pg_bm25s')
 
     lines = [
@@ -133,8 +133,8 @@ def render_report(payload: dict[str, Any], source_path: Path) -> str:
         '  `pg_bm25s` PostgreSQL-native measurements',
         '- top-k: `1000`',
         '- local upstream path: Python `bm25s` on the same token stream',
-        '- `ii42 ids`: `ii42_query_ids(...)`',
-        '- `ii42 text[]`: `ii42_query_tokens(...)`',
+        '- `evoke ids`: `evoke_query_ids(...)`',
+        '- `evoke text[]`: `evoke_query_tokens(...)`',
         '- `pg_bm25s`: `bm25s_search(...)` after `CREATE INDEX USING bm25s`',
         '- `pg_bm25s` corpus/query text is pretokenized and space-joined so',
         '  both PostgreSQL extensions receive the same normalized tokens',
@@ -151,11 +151,11 @@ def render_report(payload: dict[str, Any], source_path: Path) -> str:
         '| Path | At or above local upstream | Min vs local upstream | '
         'Median vs local upstream | Max vs local upstream |',
         '| --- | ---: | ---: | ---: | ---: |',
-        f'| `ii42 ids` | `{ids_stats[1]}/{ids_stats[0]}` | '
+        f'| `evoke ids` | `{ids_stats[1]}/{ids_stats[0]}` | '
         f'`{fmt_ratio(ids_stats[2], 1.0)}` | '
         f'`{fmt_ratio(ids_stats[3], 1.0)}` | '
         f'`{fmt_ratio(ids_stats[4], 1.0)}` |',
-        f'| `ii42 text[]` | `{text_stats[1]}/{text_stats[0]}` | '
+        f'| `evoke text[]` | `{text_stats[1]}/{text_stats[0]}` | '
         f'`{fmt_ratio(text_stats[2], 1.0)}` | '
         f'`{fmt_ratio(text_stats[3], 1.0)}` | '
         f'`{fmt_ratio(text_stats[4], 1.0)}` |',
@@ -170,18 +170,18 @@ def render_report(payload: dict[str, Any], source_path: Path) -> str:
         '',
         '| Path | Total build vs local upstream |',
         '| --- | ---: |',
-        f'| `ii42 ids` | '
-        f'`{fmt_ratio(total_build_ratio(ordered_results, "ii42_ids"), 1.0)}` |',
-        f'| `ii42 text[]` | '
-        f'`{fmt_ratio(total_build_ratio(ordered_results, "ii42_text"), 1.0)}` |',
+        f'| `evoke ids` | '
+        f'`{fmt_ratio(total_build_ratio(ordered_results, "evoke_ids"), 1.0)}` |',
+        f'| `evoke text[]` | '
+        f'`{fmt_ratio(total_build_ratio(ordered_results, "evoke_text"), 1.0)}` |',
         f'| `pg_bm25s` | '
         f'`{fmt_ratio(total_build_ratio(ordered_results, "pg_bm25s"), 1.0)}` |',
         '',
         '## Dataset Table',
         '',
         '| Dataset | Docs | Queries | `bm25s` official QPS | '
-        '`bm25s` local QPS | `ii42 ids` QPS | `ids / local` | '
-        '`ii42 text[]` QPS | `text[] / local` | '
+        '`bm25s` local QPS | `evoke ids` QPS | `ids / local` | '
+        '`evoke text[]` QPS | `text[] / local` | '
         '`pg_bm25s` QPS | `pg_bm25s / local` |',
         '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | '
         '---: | ---: | ---: |',
@@ -198,14 +198,14 @@ def render_report(payload: dict[str, Any], source_path: Path) -> str:
                     f'{stats.get("queries", "n/a"):,}',
                     fmt_float(entry.get('official_qps')),
                     fmt_float(query_qps(entry, 'upstream_bm25s')),
-                    fmt_float(query_qps(entry, 'ii42_ids')),
+                    fmt_float(query_qps(entry, 'evoke_ids')),
                     fmt_ratio(
-                        query_qps(entry, 'ii42_ids'),
+                        query_qps(entry, 'evoke_ids'),
                         query_qps(entry, 'upstream_bm25s'),
                     ),
-                    fmt_float(query_qps(entry, 'ii42_text')),
+                    fmt_float(query_qps(entry, 'evoke_text')),
                     fmt_ratio(
-                        query_qps(entry, 'ii42_text'),
+                        query_qps(entry, 'evoke_text'),
                         query_qps(entry, 'upstream_bm25s'),
                     ),
                     fmt_float(query_qps(entry, 'pg_bm25s')),
@@ -227,9 +227,9 @@ def render_report(payload: dict[str, Any], source_path: Path) -> str:
         '  upstream `bm25s`.',
         '- The public upstream QPS column is context only. It is not used',
         '  for the speedup ratios in this report.',
-        '- `ii42 ids` remains the strongest path when raw throughput',
+        '- `evoke ids` remains the strongest path when raw throughput',
         '  matters.',
-        '- `ii42 text[]` is the closer apples-to-apples comparison',
+        '- `evoke text[]` is the closer apples-to-apples comparison',
         '  against `pg_bm25s`, because both operate on token strings inside',
         '  PostgreSQL rather than integer token IDs.',
         '- `pg_bm25s` here is measured through its database-native path,',

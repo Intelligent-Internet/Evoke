@@ -16,10 +16,10 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=evoke_onnxruntime_pkg . /tmp/ort_pkg/
-COPY packaging/onnxruntime.version /tmp/ii42-onnxruntime.version
+COPY packaging/onnxruntime.version /tmp/evoke-onnxruntime.version
 RUN set -eux; \
     expected_version="$(tr -d '[:space:]' \
-        </tmp/ii42-onnxruntime.version)"; \
+        </tmp/evoke-onnxruntime.version)"; \
     test -e "/tmp/ort_pkg/lib/libonnxruntime.so.${expected_version}"; \
     mkdir -p /usr/local/include/onnxruntime /usr/local/lib/pkgconfig; \
     cp -P /tmp/ort_pkg/lib/libonnxruntime*.so* /usr/local/lib/; \
@@ -43,20 +43,20 @@ RUN set -eux; \
     printf '%s\n' \
         /usr/local/lib \
         /usr/local/cuda/targets/sbsa-linux/lib \
-        > /etc/ld.so.conf.d/ii42-gpu.conf; \
+        > /etc/ld.so.conf.d/evoke-gpu.conf; \
     ldconfig; \
-    rm -rf /tmp/ort_pkg /tmp/ii42-onnxruntime.version
+    rm -rf /tmp/ort_pkg /tmp/evoke-onnxruntime.version
 
 WORKDIR /src
-COPY Makefile CMakeLists.txt ii42.control LICENSE README.md ./
+COPY Makefile CMakeLists.txt evoke.control LICENSE README.md ./
 COPY src ./src
 COPY packaging ./packaging
-COPY --from=evoke_milestone_model . /usr/local/share/ii42/models/default/
+COPY --from=evoke_milestone_model . /usr/local/share/evoke/models/default/
 
 RUN PKG_CONFIG_PATH=/usr/local/lib/pkgconfig \
         make runtime-server PG_CONFIG=/no/such/pg_config \
-    && install -D -m 0755 build/ii42-runtime-server \
-        /usr/local/bin/ii42-runtime-server \
+    && install -D -m 0755 build/evoke-runtime-server \
+        /usr/local/bin/evoke-runtime-server \
     && install -D -m 0755 \
         packaging/docker/runtime-gpu-aarch64/evoke-gpu-runtime-entrypoint \
         /usr/local/bin/evoke-gpu-runtime-entrypoint \

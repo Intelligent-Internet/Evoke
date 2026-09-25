@@ -18,13 +18,13 @@
     "p95_ms": 0.5248234000021057,
     "qps": 2203.3249612093314
   },
-  "ii42_before_repair": {
+  "evoke_before_repair": {
     "mean_ms": 63.430,
     "p50_ms": 63.370,
     "p95_ms": 65.896,
     "qps": 15.8
   },
-  "ii42_after_repair": {
+  "evoke_after_repair": {
     "sample_count": 3327,
     "mean_ms": 0.44760555785993383,
     "p50_ms": 0.435125,
@@ -35,8 +35,8 @@
   "same_cluster_same_srf_shape": {
     "historical_binary_mean_ms": 0.3142541487826871,
     "historical_binary_p95_ms": 0.4085875,
-    "ii42_mean_ms": 0.44760555785993383,
-    "ii42_p95_ms": 0.5576374999999999
+    "evoke_mean_ms": 0.44760555785993383,
+    "evoke_p95_ms": 0.5576374999999999
   },
   "correctness": {
     "resident_page_queries_checked": 101,

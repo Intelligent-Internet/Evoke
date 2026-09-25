@@ -13,7 +13,7 @@ from typing import Any
 
 import psycopg
 
-from ii42_test_support import (
+from evoke_test_support import (
     create_short_socket_root,
     extension_control_root,
 )
@@ -111,7 +111,7 @@ def create_index(
         )
         cursor.execute(
             f'CREATE INDEX docs_{suffix}_idx '
-            f'ON {table_name} USING ii42 (body) '
+            f'ON {table_name} USING evoke (body) '
             'WITH (sae=false, consistency=realtime)'
         )
     return table_name, index_name
@@ -129,13 +129,13 @@ def maintain_until_mode(
         started_at = time.perf_counter()
         with connection.cursor() as cursor:
             cursor.execute(
-                'SELECT ii42_index_try_maintain(%s::regclass)',
+                'SELECT evoke_index_try_maintain(%s::regclass)',
                 (index_name,),
             )
             row = cursor.fetchone()
         elapsed = time.perf_counter() - started_at
         if row is None or not isinstance(row[0], str):
-            raise AssertionError('invalid ii42 maintenance result')
+            raise AssertionError('invalid evoke maintenance result')
         fields = maintenance_result_fields(row[0])
         fields['elapsed_seconds'] = f'{elapsed:.9f}'
         results.append(fields)
@@ -160,7 +160,7 @@ def append_segment(
 ) -> list[dict[str, str]]:
     with connection.cursor() as cursor:
         cursor.execute(
-            "SET ii42.test_convergent_l0_rotation_records = '1'"
+            "SET evoke.test_convergent_l0_rotation_records = '1'"
         )
         cursor.execute(
             f'INSERT INTO {table_name} VALUES (%s, %s)',
@@ -169,7 +169,7 @@ def append_segment(
                 f'v{1:09d} fresh_{vocabulary_size}_{ordinal}',
             ),
         )
-        cursor.execute('RESET ii42.test_convergent_l0_rotation_records')
+        cursor.execute('RESET evoke.test_convergent_l0_rotation_records')
     _, _, maintenance = maintain_until_mode(
         connection,
         index_name,
@@ -195,13 +195,13 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
     )
     if not any(
         (extension_libdir / name).is_file()
-        for name in ('ii42.so', 'ii42.dylib')
+        for name in ('evoke.so', 'evoke.dylib')
     ):
         raise FileNotFoundError(
-            f'ii42 library is missing from {extension_libdir}'
+            f'evoke library is missing from {extension_libdir}'
         )
 
-    root = create_short_socket_root('ii42-reclamation-bench-')
+    root = create_short_socket_root('evoke-reclamation-bench-')
     data_dir = root / 'data'
     socket_dir = root / 's'
     log_path = root / 'postgres.log'
@@ -237,7 +237,7 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
         started = True
         connection = connect(socket_dir, port)
         with connection.cursor() as cursor:
-            cursor.execute('CREATE EXTENSION ii42')
+            cursor.execute('CREATE EXTENSION evoke')
             cursor.execute('CREATE SCHEMA bench')
 
         for vocabulary_size in args.vocab_sizes:
@@ -268,7 +268,7 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
                 )
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        'SELECT count(*) FROM ii42_query('
+                        'SELECT count(*) FROM evoke_query('
                         '%s::regclass, %s, 10)',
                         (index_name, 'v000000001'),
                     )
@@ -310,7 +310,7 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
         shutil.rmtree(root, ignore_errors=True)
 
     return {
-        'api_version': 'ii42_benchmark_v1',
+        'api_version': 'evoke_benchmark_v1',
         'benchmark': 'convergent optional compaction reclamation',
         'vocabulary_sizes': args.vocab_sizes,
         'repeats': args.repeats,

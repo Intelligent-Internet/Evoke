@@ -39,10 +39,7 @@ fi
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [ -z "$model_checkout" ]; then
-    model_checkout="$(
-        printf '%s' \
-            "${EVOKE_MILESTONE_MODEL_CHECKOUT:-${II42_MILESTONE_MODEL_CHECKOUT:-}}"
-    )"
+    model_checkout="${EVOKE_MILESTONE_MODEL_CHECKOUT:-}"
 fi
 if [ -z "$model_checkout" ]; then
     model_checkout="${repo_root}/.artifacts/evoke-milestone-model"
@@ -70,10 +67,10 @@ if git -C "$repo_root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
         git_tree_state='dirty'
     fi
 else
-    git_commit="${II42_GIT_COMMIT:-}"
-    git_tree_state="${II42_GIT_TREE_STATE:-source-archive}"
+    git_commit="${EVOKE_GIT_COMMIT:-}"
+    git_tree_state="${EVOKE_GIT_TREE_STATE:-source-archive}"
     if [ -z "$git_commit" ]; then
-        echo 'II42_GIT_COMMIT is required outside a Git worktree' >&2
+        echo 'EVOKE_GIT_COMMIT is required outside a Git worktree' >&2
         exit 1
     fi
 fi
@@ -84,9 +81,9 @@ if [ "$git_tree_state" = 'dirty' ] && [ "$allow_dirty" != true ]; then
 fi
 control_version="$(sed -n \
     "s/^default_version = '\(.*\)'$/\1/p" \
-    "${repo_root}/ii42.control")"
+    "${repo_root}/evoke.control")"
 if [ "$version" != "$control_version" ]; then
-    echo "Docker version ${version} does not match ii42.control " \
+    echo "Docker version ${version} does not match evoke.control " \
         "version ${control_version}" >&2
     exit 1
 fi
@@ -110,12 +107,12 @@ mkdir -p "$dist_dir"
 docker build \
     --pull \
     --build-context "evoke_milestone_model=${model_checkout}" \
-    --build-arg "II42_VERSION=${version}" \
+    --build-arg "EVOKE_VERSION=${version}" \
     --build-arg "ONNXRUNTIME_VERSION=${onnxruntime_version}" \
-    --build-arg "II42_GIT_COMMIT=${git_commit}" \
-    --build-arg "II42_GIT_TREE_STATE=${git_tree_state}" \
-    --build-arg "II42_MODEL_ID=${model_id}" \
-    --build-arg "II42_MODEL_MANIFEST_SHA256=${model_manifest_sha256}" \
+    --build-arg "EVOKE_GIT_COMMIT=${git_commit}" \
+    --build-arg "EVOKE_GIT_TREE_STATE=${git_tree_state}" \
+    --build-arg "EVOKE_MODEL_ID=${model_id}" \
+    --build-arg "EVOKE_MODEL_MANIFEST_SHA256=${model_manifest_sha256}" \
     --file "${repo_root}/packaging/docker/postgres18/Dockerfile" \
     --tag "${image_tag}" \
     "${repo_root}"

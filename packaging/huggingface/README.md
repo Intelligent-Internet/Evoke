@@ -43,8 +43,8 @@ identity as the index.
 | Model API | `evoke_model_v1` |
 | Runtime ABI | `evoke_p2_unified_text_atoms_v2` |
 | Upstream revision | `ad82b1fd09541c998c8d45045d601c51fdb8a9b7` |
-| Manifest SHA-256 | `b61060a3958ee56209de47a34ee5cbe08351bfeb3fcbbfdcbf477403210764f7` |
-| ZIP SHA-256 | `ab5cd4b2a1fec10c70113d2997c6ce070caa34cf7a74c114b7ab48d81643cd98` |
+| Manifest SHA-256 | `dd0993f0638a3f683fbb6475a8509c228d8f6547aab90a0b762b1ff6fd7d0041` |
+| ZIP SHA-256 | `b202ca7e80b219a2540bf75365a3df8b81cf638b6c8c2207ed4ea8ba93f212d1` |
 | Total atom dimensions | 79,787: 29,522 lexical + 50,265 semantic |
 | Uncompressed checkout | 400,908,113 bytes; manifest + 13 artifacts |
 | Evoke build dependency | ONNX Runtime 1.29.0, C API 29 |

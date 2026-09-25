@@ -1,6 +1,6 @@
 # Multicolumn Indexes
 
-This page describes the current multicolumn `ii42` index feature.
+This page describes the current multicolumn `evoke` index feature.
 
 The goal is to support one index over several homogeneous text-like columns
 without turning the feature into a hidden tax on the existing single-column
@@ -8,7 +8,7 @@ hot path. The fused-document shape is available for BM25 and `sae = true`.
 
 ## What This Feature Is
 
-A multicolumn fusion index lets one `ii42` index treat multiple
+A multicolumn fusion index lets one `evoke` index treat multiple
 `text[]`, `varchar[]`, `text`, or `varchar` columns as one BM25
 document.
 
@@ -22,7 +22,7 @@ CREATE TABLE docs (
 );
 
 CREATE INDEX docs_fused_bm25_idx
-    ON docs USING ii42 (title_tokens, body_tokens);
+    ON docs USING evoke (title_tokens, body_tokens);
 ```
 
 In the current implementation:
@@ -54,7 +54,7 @@ CREATE TABLE docs_text (
 );
 
 CREATE INDEX docs_text_semantic_idx
-    ON docs_text USING ii42 (title, body)
+    ON docs_text USING evoke (title, body)
     WITH (sae = true);
 ```
 
@@ -63,7 +63,7 @@ fuses columns in definition order. The semantic compiler receives one model
 input: scalar text columns are joined in definition order, while token arrays
 are joined into one token stream. `NULL` columns are skipped.
 
-Applications search with the same `ii42_query(...)` call used by a
+Applications search with the same `evoke_query(...)` call used by a
 single-column Sparse Semantic Retrieval (SSR) index. SSR is eventual-only, and
 foreground writes remain lexical-first while shared workers complete the changed
 document version.
@@ -71,7 +71,7 @@ document version.
 By default, semantic-enabled multicolumn indexes do not preserve lexical field
 identity. Add `field_aware = true` to place each field's lexical and semantic
 atoms in separate namespaces while retaining one native scorer and lifecycle.
-Public `ii42_query(...)` supports equal or explicit whole-field weights.
+Public `evoke_query(...)` supports equal or explicit whole-field weights.
 
 ## What This Feature Is Not
 
@@ -97,7 +97,7 @@ index can preserve field identity inside one BM25 payload:
 
 ```sql
 CREATE INDEX docs_field_bm25_idx
-    ON docs USING ii42 (title_tokens, body_tokens)
+    ON docs USING evoke (title_tokens, body_tokens)
     WITH (field_aware = true);
 ```
 
@@ -105,7 +105,7 @@ The same shape supports the unified semantic index:
 
 ```sql
 CREATE INDEX docs_field_semantic_idx
-    ON docs_text USING ii42 (title, body)
+    ON docs_text USING evoke (title, body)
     WITH (sae = true, field_aware = true);
 ```
 
@@ -114,12 +114,12 @@ batch-encodes nonempty fields and publishes one completion for each changed
 document version.
 
 This mode stores field-scoped internal tokens. Applications query it through
-`ii42_query(...)`, which uses equal field weights by default. Applications
+`evoke_query(...)`, which uses equal field weights by default. Applications
 can select a subset and set whole-field weights with its public overload:
 
 ```sql
 SELECT d.id, h.score
-FROM ii42_query(
+FROM evoke_query(
     'docs_field_semantic_idx'::regclass,
     'bird migration',
     ARRAY['title', 'body'],
@@ -131,10 +131,10 @@ ORDER BY h.score DESC, d.id;
 ```
 
 The score is `sum(weight * (field_BM25 + field_semantic))`. Owner-only
-`ii42_field_aware_query(...)` and `ii42_field_aware_query_tokens(...)` remain
+`evoke_field_aware_query(...)` and `evoke_field_aware_query_tokens(...)` remain
 exact-BM25 diagnostic surfaces.
 
-`ii42_query(...)` searches all indexed fields with equal weight on
+`evoke_query(...)` searches all indexed fields with equal weight on
 `field_aware = true` indexes for token and simple raw term queries. Its public
 field-aware overload can select a field subset or custom per-field weights.
 For BM25 indexes, complex raw-query semantics such as phrases and boolean
@@ -149,10 +149,10 @@ normalization still applies.
 
 The explicit-hit API for multicolumn fusion indexes is:
 
-- `ii42_query(...)`
+- `evoke_query(...)`
 
 An SSR multicolumn index also supports planner-native
-`ORDER BY ii42_query(...) DESC LIMIT k`. BM25 fusion indexes retain the explicit
+`ORDER BY evoke_query(...) DESC LIMIT k`. BM25 fusion indexes retain the explicit
 hit route because the existing ordinary BM25 ordering operators are
 single-column surfaces.
 
@@ -160,7 +160,7 @@ Example application query:
 
 ```sql
 SELECT d.id, h.score
-FROM ii42_query(
+FROM evoke_query(
     'docs_fused_bm25_idx'::regclass,
     'cat bird',
     10
@@ -169,13 +169,13 @@ JOIN docs AS d ON d.ctid = h.ctid
 ORDER BY h.score DESC, d.id;
 ```
 
-Owner-only exact diagnostics may additionally use `ii42_query_tokens(...)`
+Owner-only exact diagnostics may additionally use `evoke_query_tokens(...)`
 and prepared-query helpers built on the same regclass retrieval path. For
 example:
 
 ```sql
 SELECT d.id, h.score
-FROM ii42_query_tokens(
+FROM evoke_query_tokens(
     'docs_fused_bm25_idx'::regclass,
     ARRAY['cat', 'bird']::text[],
     10
@@ -204,11 +204,11 @@ Reason:
 
 So the practical rule is:
 
-- use `ii42_query(...)` for multicolumn fusion indexes
+- use `evoke_query(...)` for multicolumn fusion indexes
 - use operator scans on single-column indexes
-- on `field_aware = true` multicolumn indexes, `ii42_query(...)` searches all
+- on `field_aware = true` multicolumn indexes, `evoke_query(...)` searches all
   fields with equal weight for token and simple raw term queries
-- use the public field-aware `ii42_query(...)` overload for custom whole-field
+- use the public field-aware `evoke_query(...)` overload for custom whole-field
   weights or a field subset
 
 ## Build And Refresh Semantics
@@ -274,12 +274,12 @@ Do not use the default fused-document multicolumn index when:
 
 To compose separate single-column indexes, use the public product APIs:
 
-- `ii42_fusion_query_weighted(...)`
-- `ii42_fusion_query_fields(...)`
-- `ii42_fusion_query(...)`
+- `evoke_fusion_query_weighted(...)`
+- `evoke_fusion_query_fields(...)`
+- `evoke_fusion_query(...)`
 
 For the lowest-overhead route, use one multicolumn index and
-`ii42_query(...)`. If field identity is more important than BM25F-style field
+`evoke_query(...)`. If field identity is more important than BM25F-style field
 normalization, use `field_aware = true`; the public field-aware overload can
 select fields and apply custom whole-field weights.
 See [Multi-Index Fusion](multi-index-fusion.md) and

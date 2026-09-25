@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Calibrate II42 semantic work and concurrent latency on real queries."""
+"""Calibrate Evoke semantic work and concurrent latency on real queries."""
 
 from __future__ import annotations
 
@@ -72,25 +72,25 @@ def parse_args() -> argparse.Namespace:
 def bind_probes(cursor: psycopg.Cursor[Any]) -> None:
     cursor.execute(
         """
-        CREATE OR REPLACE FUNCTION pg_temp.ii42_query_block_cost(
+        CREATE OR REPLACE FUNCTION pg_temp.evoke_query_block_cost(
             regclass,
             int4[],
             real[],
             int4
         ) RETURNS jsonb
-        AS '$libdir/ii42', 'ii42_test_query_block_cost'
+        AS '$libdir/evoke', 'evoke_test_query_block_cost'
         LANGUAGE C STRICT
         """
     )
     cursor.execute(
         """
-        CREATE OR REPLACE FUNCTION pg_temp.ii42_query_topk(
+        CREATE OR REPLACE FUNCTION pg_temp.evoke_query_topk(
             regclass,
             int4[],
             real[],
             int4
         ) RETURNS jsonb
-        AS '$libdir/ii42', 'ii42_test_query_page_native_topk'
+        AS '$libdir/evoke', 'evoke_test_query_page_native_topk'
         LANGUAGE C STRICT
         """
     )
@@ -135,7 +135,7 @@ def encode_queries(
     with connection.cursor() as cursor:
         for query_text in query_texts:
             cursor.execute(
-                'SELECT ii42_encode_text_internal(%s::regclass, %s)',
+                'SELECT evoke_encode_text_internal(%s::regclass, %s)',
                 (index_name, query_text),
             )
             encoded = cursor.fetchone()[0]
@@ -192,7 +192,7 @@ def call_public_search(
     cursor.execute(
         """
         SELECT count(*), sum(score)
-        FROM ii42_query(%s::regclass, %s, %s)
+        FROM evoke_query(%s::regclass, %s, %s)
         """,
         (index_name, query_text, k),
     )
@@ -215,7 +215,7 @@ def collect_serial_baseline(
         for query in queries:
             audit, audit_ms = call_probe(
                 cursor,
-                'ii42_query_block_cost',
+                'evoke_query_block_cost',
                 index_name,
                 query,
                 k,
@@ -226,7 +226,7 @@ def collect_serial_baseline(
             for _ in range(repetitions):
                 stats, probe_ms = call_probe(
                     cursor,
-                    'ii42_query_topk',
+                    'evoke_query_topk',
                     index_name,
                     query,
                     k,
@@ -369,49 +369,49 @@ def concurrent_worker(
             cursor.execute(
                 'SELECT set_config(%s, %s, false)',
                 (
-                    'ii42.test_query_max_df_ratio',
+                    'evoke.test_query_max_df_ratio',
                     format(max_df_ratio, '.17g'),
                 ),
             )
             cursor.execute(
                 'SELECT set_config(%s, %s, false)',
                 (
-                    'ii42.test_query_semantic_work_target_postings',
+                    'evoke.test_query_semantic_work_target_postings',
                     str(semantic_work_target_postings),
                 ),
             )
             cursor.execute(
                 'SELECT set_config(%s, %s, false)',
                 (
-                    'ii42.test_disable_semantic_bmp',
+                    'evoke.test_disable_semantic_bmp',
                     'on' if disable_semantic_bmp else 'off',
                 ),
             )
             cursor.execute(
                 'SELECT set_config(%s, %s, false)',
                 (
-                    'ii42.test_force_semantic_bmp',
+                    'evoke.test_force_semantic_bmp',
                     'on' if force_semantic_bmp else 'off',
                 ),
             )
             cursor.execute(
                 'SELECT set_config(%s, %s, false)',
                 (
-                    'ii42.test_query_semantic_bmp_super_batch',
+                    'evoke.test_query_semantic_bmp_super_batch',
                     str(bmp_super_batch),
                 ),
             )
             cursor.execute(
                 'SELECT set_config(%s, %s, false)',
                 (
-                    'ii42.test_query_semantic_error_budget_ratio',
+                    'evoke.test_query_semantic_error_budget_ratio',
                     format(semantic_error_budget, '.17g'),
                 ),
             )
             cursor.execute(
                 'SELECT set_config(%s, %s, false)',
                 (
-                    'ii42.test_query_semantic_min_support_ratio',
+                    'evoke.test_query_semantic_min_support_ratio',
                     format(semantic_min_support, '.17g'),
                 ),
             )
@@ -568,49 +568,49 @@ def main() -> int:
         connection.execute(
             'SELECT set_config(%s, %s, false)',
             (
-                'ii42.test_query_max_df_ratio',
+                'evoke.test_query_max_df_ratio',
                 format(args.max_df_ratio, '.17g'),
             ),
         )
         connection.execute(
             'SELECT set_config(%s, %s, false)',
             (
-                'ii42.test_query_semantic_work_target_postings',
+                'evoke.test_query_semantic_work_target_postings',
                 str(args.semantic_work_target_postings),
             ),
         )
         connection.execute(
             'SELECT set_config(%s, %s, false)',
             (
-                'ii42.test_disable_semantic_bmp',
+                'evoke.test_disable_semantic_bmp',
                 'on' if args.disable_semantic_bmp else 'off',
             ),
         )
         connection.execute(
             'SELECT set_config(%s, %s, false)',
             (
-                'ii42.test_force_semantic_bmp',
+                'evoke.test_force_semantic_bmp',
                 'on' if args.force_semantic_bmp else 'off',
             ),
         )
         connection.execute(
             'SELECT set_config(%s, %s, false)',
             (
-                'ii42.test_query_semantic_bmp_super_batch',
+                'evoke.test_query_semantic_bmp_super_batch',
                 str(args.bmp_super_batch),
             ),
         )
         connection.execute(
             'SELECT set_config(%s, %s, false)',
             (
-                'ii42.test_query_semantic_error_budget_ratio',
+                'evoke.test_query_semantic_error_budget_ratio',
                 format(args.semantic_error_budget, '.17g'),
             ),
         )
         connection.execute(
             'SELECT set_config(%s, %s, false)',
             (
-                'ii42.test_query_semantic_min_support_ratio',
+                'evoke.test_query_semantic_min_support_ratio',
                 format(args.semantic_min_support, '.17g'),
             ),
         )

@@ -564,7 +564,7 @@ def worker(args):
     disabled = {key: False for key in ('detect_repository', 'hydra', 'pytorch',
         'scikit', 'joblib', 'matplotlib', 'tensorflow', 'tensorboard', 'tfdefines',
         'megengine', 'xgboost', 'catboost', 'fastai', 'lightgbm', 'gradio')}
-    task = Task.init(project_name='II42-NG', task_name='NG-0069/' + args.phase,
+    task = Task.init(project_name='Evoke-NG', task_name='NG-0069/' + args.phase,
         task_type=Task.TaskTypes.training if args.phase.startswith('train-')
         else Task.TaskTypes.testing, reuse_last_task_id=False,
         auto_connect_frameworks=disabled, auto_connect_streams=False,

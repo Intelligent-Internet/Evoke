@@ -16,7 +16,7 @@ from benchmark_maintenance_policy_sweep import run_scenario
 from benchmark_maintenance_policy_sweep import summarize_scenario
 
 
-DEFAULT_DB_NAME = 'ii42_maintenance_longrun_mixed'
+DEFAULT_DB_NAME = 'evoke_maintenance_longrun_mixed'
 DEFAULT_DOC_COUNT = 15000
 DEFAULT_QUERY_COUNT = 150
 DEFAULT_CYCLE_COUNT = 12
@@ -79,7 +79,7 @@ def main() -> None:
     repeats: list[dict[str, object]] = []
 
     with tempfile.TemporaryDirectory(
-        prefix='ii42_maintenance_longrun_profiles_'
+        prefix='evoke_maintenance_longrun_profiles_'
     ) as td:
         tmpdir = Path(td)
         for repeat_idx in range(args.repeat_count):

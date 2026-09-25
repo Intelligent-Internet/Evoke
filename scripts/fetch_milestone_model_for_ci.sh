@@ -7,14 +7,10 @@ if [ -z "$output" ]; then
     echo 'usage: fetch_milestone_model_for_ci.sh OUTPUT' >&2
     exit 1
 fi
-model_url="${EVOKE_MILESTONE_MODEL_URL:-${II42_MILESTONE_MODEL_URL:-}}"
-model_sha256="$(
-    printf '%s' \
-        "${EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256:-${II42_MILESTONE_MODEL_ARCHIVE_SHA256:-}}"
-)"
+model_url="${EVOKE_MILESTONE_MODEL_URL:-}"
+model_sha256="${EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256:-}"
 if [ -z "$model_url" ]; then
     echo 'EVOKE_MILESTONE_MODEL_URL repository variable is required' >&2
-    echo 'legacy II42_MILESTONE_MODEL_URL is also accepted' >&2
     exit 1
 fi
 
@@ -32,5 +28,4 @@ python3 scripts/fetch_milestone_model.py "${args[@]}"
 
 if [ -n "${GITHUB_ENV:-}" ]; then
     echo "EVOKE_MILESTONE_MODEL_CHECKOUT=${output}" >>"$GITHUB_ENV"
-    echo "II42_MILESTONE_MODEL_CHECKOUT=${output}" >>"$GITHUB_ENV"
 fi

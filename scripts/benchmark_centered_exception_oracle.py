@@ -258,7 +258,7 @@ def main() -> int:
             'elapsed_seconds': time.perf_counter() - variant_started,
         }
     output = {
-        'schema': 'ii42_centered_exception_oracle_v1',
+        'schema': 'evoke_centered_exception_oracle_v1',
         'dataset': args.dataset_root.name,
         'documents': documents.shape[0],
         'queries': queries.shape[0],

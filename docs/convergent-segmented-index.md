@@ -78,7 +78,7 @@ share CPU, storage, buffers, memory bandwidth, and PostgreSQL locks.
 
 ## Product Invariants
 
-- One `USING ii42` relation owns posting payloads, document versions, linked
+- One `USING evoke` relation owns posting payloads, document versions, linked
   mutation debt, derived durable objects, and reclamation evidence.
 - The checked metapage and manifest lineage select the physical read surface.
   PostgreSQL transactions and heap MVCC still decide row visibility; the
@@ -116,7 +116,7 @@ availability failure. `baseline_current=false` records remaining convergence;
 it is not a TTL. `query_metadata_warm`, `resident_fold_current`, and
 `hot_fold_current` describe different artifacts and are not latency SLOs.
 
-The default `ii42.maintenance_low_debt_interval_ms` is one hour. It allows
+The default `evoke.maintenance_low_debt_interval_ms` is one hour. It allows
 small outstanding debt to receive periodic attention without rebuilding after
 every write. It neither expires a serving baseline nor promises completion
 within one hour. Hard append pressure, pending-seal work, and missing or
@@ -219,11 +219,11 @@ hash collisions do not weaken equality. Its bucket target is 16,000 bytes,
 chosen to fit within two payload pages on standard 8 KiB PostgreSQL builds.
 This improves utilization over the earlier 4 KiB target. It is not arbitrary
 sub-page packing of unrelated COW objects. See
-[lexicon COW](../src/ii42_lexicon_cow.h).
+[lexicon COW](../src/evoke_lexicon_cow.h).
 
 Prefix leaves hold at most 128 entries and internal nodes at most 48 child
 references. The stable term-id suffix is **not** necessarily a suffix in
-lexicographic order. `ii42_prefix_cow_build_external_append_patch` sorts new
+lexicographic order. `evoke_prefix_cow_build_external_append_patch` sorts new
 keys by bytes and patches every affected subtree, reusing unaffected children;
 it does not only append down the rightmost path. Prefix expansion seeks the
 first possible leaf and stops at the prefix boundary or expansion budget.
@@ -406,8 +406,8 @@ targets:
 | Term extent format capacity | At most 64 extents per term | Checked current-format ceiling, not the target steady-state fanout |
 | Compaction extent pressure | 6 extents | Scheduling pressure, distinct from the format ceiling |
 
-These values come from [segment limits](../src/ii42_segments.h) and
-[AM policy constants](../src/ii42_am.c). Earlier design revisions described
+These values come from [segment limits](../src/evoke_segments.h) and
+[AM policy constants](../src/evoke_am.c). Earlier design revisions described
 32 as the format ceiling and eight as a hard steady-state boundary; those
 historical figures must not be substituted for current codec validation.
 
@@ -496,7 +496,7 @@ workspace with a 64 MiB admission limit. A memory bound can force a different,
 slower exact path. Neither baseline readiness nor warm metadata establishes a
 universal query-time bound.
 
-Remote `ii42.runtime_accelerators` are a different feature: optional services
+Remote `evoke.runtime_accelerators` are a different feature: optional services
 for document-encoding batches. Removing that remote fleet does not remove
 relation-owned query accelerator objects. Local runtime workers still serve
 online query encoding and subsequent semantic completion.
@@ -504,7 +504,7 @@ online query encoding and subsequent semantic completion.
 ## Query Lifecycle
 
 ```text
-scalar planner-native ii42_query        explicit-hit ii42_query(..., k, ...)
+scalar planner-native evoke_query        explicit-hit evoke_query(..., k, ...)
        |                                           |
 supported ranked SQL -> CustomScan        structured JSON / TID / unfiltered
        +---------------------+---------------------+
@@ -574,14 +574,14 @@ recoverable by reconciliation; they are not durable posting authority.
 | Accelerator preparation in flight | Defer conflicting immutable publication unless write safety requires it |
 | Fold, residency, or reclaim debt | Select eligible work subject to action-specific admission and reader safety |
 
-With `ii42.runtime_reserve_query_lane = on`, the query runtime reserves capacity
+With `evoke.runtime_reserve_query_lane = on`, the query runtime reserves capacity
 for online requests when multiple local workers are available. This is queue admission, not preemptive CPU/I/O
 isolation. The implementation does not enforce a universal wall-time, I/O,
 and CPU slice for every loop inside every maintenance action. Long baseline
 scans and cache pressure must therefore be measured under concurrent load.
 
 Automatic maintenance and automatic preload depend on the service being
-enabled. Setting `ii42.maintenance_worker_limit=0` is not a normal converging
+enabled. Setting `evoke.maintenance_worker_limit=0` is not a normal converging
 steady state. Conversely, nonzero workers can run housekeeping, preload,
 reconciliation, or derived-state work even when there are no new client
 writes; a process title alone does not establish runaway rebuilding.
@@ -659,7 +659,7 @@ invalidate a still-serving baseline's metadata. Exact resident folds and
 narrow hot projections have their own eligibility rules; they must not be
 confused with the persistent semantic accelerator.
 
-`ii42.prewarm_max_bytes` is a per-index relation-page warming work budget,
+`evoke.prewarm_max_bytes` is a per-index relation-page warming work budget,
 64 MiB by default. It does not cap shared resident-fold admission; that uses
 the global arena, priorities, and materialization headroom. Nor does page
 warming require copying every relation byte into a resident image. Successful
@@ -712,7 +712,7 @@ transfer of its benchmark guarantees:
 ### Preserved Design Evidence
 
 The pre-convergent baseline tag was
-`ii42-pre-convergent-segments-20260730`; the historical architecture milestone
+`evoke-pre-convergent-segments-20260730`; the historical architecture milestone
 was `csg-beta-arch-1-qualified`. These names locate experiments, not the current
 deployment or final Beta 1 qualification.
 
@@ -769,13 +769,13 @@ even if a document describes the intended design correctly.
 
 | Concern | Source |
 | --- | --- |
-| Checked root and manifest codecs | [segments](../src/ii42_segments.c), [types](../src/ii42_segments.h) |
-| Relation-page objects and publication | [segment pages](../src/ii42_segment_pages.c) |
-| Term and document COW | [term COW](../src/ii42_term_cow.c), [document COW](../src/ii42_document_cow.c) |
-| Exact lexical and ordered-prefix lookup | [lexicon COW](../src/ii42_lexicon_cow.c), [prefix COW](../src/ii42_prefix_cow.c) |
-| Build, append, and orchestration | [AM](../src/ii42_am.c), [build](../src/ii42_am_build.c), [mutation](../src/ii42_am_mutation.c) |
-| Maintenance selection and deduplication | [scheduler](../src/ii42_am_scheduler.c), [maintenance locks](../src/ii42_am_maintenance.c) |
-| Accelerator preparation and compatibility | [accelerator](../src/ii42_am_accelerator.c) |
-| Predicate routing and heap scope capture | [planner](../src/ii42_planner.c), [filter](../src/ii42_filter.c), [scope](../src/ii42_scope_pg.c) |
-| Warm images and reclamation | [preload](../src/ii42_am_preload.c), [resident fold](../src/ii42_am_resident_fold.c), [hot fold](../src/ii42_am_hot_fold.c), [reclamation](../src/ii42_am_reclamation.c) |
-| Installed public API | [extension SQL](../sql/ii42--0.2.5.sql) |
+| Checked root and manifest codecs | [segments](../src/evoke_segments.c), [types](../src/evoke_segments.h) |
+| Relation-page objects and publication | [segment pages](../src/evoke_segment_pages.c) |
+| Term and document COW | [term COW](../src/evoke_term_cow.c), [document COW](../src/evoke_document_cow.c) |
+| Exact lexical and ordered-prefix lookup | [lexicon COW](../src/evoke_lexicon_cow.c), [prefix COW](../src/evoke_prefix_cow.c) |
+| Build, append, and orchestration | [AM](../src/evoke_am.c), [build](../src/evoke_am_build.c), [mutation](../src/evoke_am_mutation.c) |
+| Maintenance selection and deduplication | [scheduler](../src/evoke_am_scheduler.c), [maintenance locks](../src/evoke_am_maintenance.c) |
+| Accelerator preparation and compatibility | [accelerator](../src/evoke_am_accelerator.c) |
+| Predicate routing and heap scope capture | [planner](../src/evoke_planner.c), [filter](../src/evoke_filter.c), [scope](../src/evoke_scope_pg.c) |
+| Warm images and reclamation | [preload](../src/evoke_am_preload.c), [resident fold](../src/evoke_am_resident_fold.c), [hot fold](../src/evoke_am_hot_fold.c), [reclamation](../src/evoke_am_reclamation.c) |
+| Installed public API | [extension SQL](../sql/evoke--0.2.5.sql) |

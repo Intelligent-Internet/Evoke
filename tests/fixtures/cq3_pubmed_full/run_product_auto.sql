@@ -1,8 +1,8 @@
 \set ON_ERROR_STOP on
 SET statement_timeout = '60s';
-SET ii42.test_disable_semantic_accelerator = off;
-SET ii42.test_force_semantic_bmp = off;
-SELECT set_config('ii42.test_filtered_forward_route', 'auto', false);
+SET evoke.test_disable_semantic_accelerator = off;
+SET evoke.test_force_semantic_bmp = off;
+SELECT set_config('evoke.test_filtered_forward_route', 'auto', false);
 SET application_name = :'route';
 
 DELETE FROM bench.cq3_full_results
@@ -13,7 +13,7 @@ DELETE FROM bench.cq3_full_root_identity
 WHERE route = current_setting('application_name');
 
 WITH source AS (
-    SELECT ii42_index_generation_status_internal(
+    SELECT evoke_index_generation_status_internal(
         'bench.pubmed_full_v2_idx'::regclass
     )::jsonb AS status
 )
@@ -48,7 +48,7 @@ ORDER BY filter_set.name
 \gexec
 
 WITH source AS (
-    SELECT ii42_index_generation_status_internal(
+    SELECT evoke_index_generation_status_internal(
         'bench.pubmed_full_v2_idx'::regclass
     )::jsonb AS status
 )

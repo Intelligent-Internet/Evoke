@@ -16,7 +16,7 @@ from typing import Any, Callable
 
 import psycopg
 
-from ii42_test_support import (
+from evoke_test_support import (
     REPO_ROOT,
     create_short_socket_root,
     ensure_temp_root,
@@ -42,7 +42,7 @@ def parse_args() -> argparse.Namespace:
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share directory containing extension/ii42.control, '
+            'PostgreSQL share directory containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -123,16 +123,16 @@ def write_cluster_config(
         "listen_addresses = ''",
         f"unix_socket_directories = '{socket_dir}'",
         f'port = {port}',
-        "shared_preload_libraries = 'ii42'",
+        "shared_preload_libraries = 'evoke'",
         'max_worker_processes = 16',
         "wal_level = 'replica'",
         'max_wal_senders = 5',
         'max_replication_slots = 5',
         'hot_standby = on',
-        "ii42.shared_runtime_size = '64MB'",
-        "ii42.preload_timer_interval_ms = '1000ms'",
-        "ii42.maintenance_timer_interval_ms = '1h'",
-        'ii42.maintenance_worker_limit = 1',
+        "evoke.shared_runtime_size = '64MB'",
+        "evoke.preload_timer_interval_ms = '1000ms'",
+        "evoke.maintenance_timer_interval_ms = '1h'",
+        'evoke.maintenance_worker_limit = 1',
     ]
     if extension_libdir is not None:
         libdir = str(extension_libdir).replace("'", "''")
@@ -148,7 +148,7 @@ def index_status(
     index_name: str = 'docs_bm25_idx',
 ) -> dict[str, Any]:
     row = conn.execute(
-        'SELECT ii42_index_status(%s::regclass)',
+        'SELECT evoke_index_status(%s::regclass)',
         (index_name,),
     ).fetchone()
     if row is None or not isinstance(row[0], dict):
@@ -168,7 +168,7 @@ def index_status(
 
 def cache_state(conn: psycopg.Connection[Any]) -> str:
     row = conn.execute(
-        "SELECT ii42_index_runtime_state('docs_bm25_idx')",
+        "SELECT evoke_index_runtime_state('docs_bm25_idx')",
     ).fetchone()
     if row is None:
         raise RuntimeError('runtime state is unavailable')
@@ -213,7 +213,7 @@ def query_ids(conn: psycopg.Connection[Any], query: str) -> list[int]:
     rows = conn.execute(
         '''
         SELECT docs.id
-        FROM ii42_query('docs_bm25_idx'::regclass, %s, 20) AS hit
+        FROM evoke_query('docs_bm25_idx'::regclass, %s, 20) AS hit
         JOIN docs ON docs.ctid = hit.ctid
         ORDER BY hit.score DESC, docs.id
         ''',
@@ -228,7 +228,7 @@ def generation_id(status: dict[str, Any]) -> int:
 
 def reachable_blocks(conn: psycopg.Connection[Any]) -> int:
     row = conn.execute(
-        "SELECT ii42_index_generation_audit_internal("
+        "SELECT evoke_index_generation_audit_internal("
         "'docs_bm25_idx'::regclass)",
     ).fetchone()
     if row is None or not isinstance(row[0], dict):
@@ -262,7 +262,7 @@ def wait_for_auto_preload(
             if generation_id(status) < expected_generation:
                 return None
             row = conn.execute(
-                "SELECT ii42_index_shared_preload_resident("
+                "SELECT evoke_index_shared_preload_resident("
                 "'docs_bm25_idx')",
             ).fetchone()
             if row is None or row[0] is not True:
@@ -290,13 +290,13 @@ def verify_standby_maintenance_noops(dsn: str) -> list[str]:
             '''
             SELECT pg_is_in_recovery()::text
             UNION ALL
-            SELECT ii42_index_try_maintain('docs_bm25_idx')::text
+            SELECT evoke_index_try_maintain('docs_bm25_idx')::text
             UNION ALL
-            SELECT ii42_index_maintain('docs_bm25_idx')::text
+            SELECT evoke_index_maintain('docs_bm25_idx')::text
             UNION ALL
-            SELECT ii42_index_refresh('docs_bm25_idx')::text
+            SELECT evoke_index_refresh('docs_bm25_idx')::text
             UNION ALL
-            SELECT count(*)::text FROM ii42_index_maintain_due(10)
+            SELECT count(*)::text FROM evoke_index_maintain_due(10)
             ''',
         ).fetchall()
     values = [str(row[0]) for row in rows]
@@ -330,7 +330,7 @@ def maintain_primary(
                 conn.execute('CHECKPOINT')
                 return {'results': results, 'status': status}
             row = conn.execute(
-                "SELECT ii42_index_maintain('docs_bm25_idx')",
+                "SELECT evoke_index_maintain('docs_bm25_idx')",
             ).fetchone()
             if row is None:
                 raise RuntimeError('primary maintenance returned no result')
@@ -345,19 +345,19 @@ def explicit_exact_preload(dsn: str) -> dict[str, Any]:
         status = index_status(conn)
         wanted = reachable_blocks(conn)
         lock_row = conn.execute(
-            "SELECT ii42_index_try_maintenance_lock("
+            "SELECT evoke_index_try_maintenance_lock("
             "'docs_bm25_idx')",
         ).fetchone()
         if lock_row is None or lock_row[0] is not True:
             raise RuntimeError('could not lock standby preload probe')
         try:
-            conn.execute('SELECT ii42_runtime_cache_clear()')
+            conn.execute('SELECT evoke_runtime_cache_clear()')
             evicted = conn.execute(
                 "SELECT * FROM pg_buffercache_evict_relation("
                 "'docs_bm25_idx')",
             ).fetchone()
             preload_row = conn.execute(
-                "SELECT ii42_index_preload("
+                "SELECT evoke_index_preload("
                 "'docs_bm25_idx')",
             ).fetchone()
             if preload_row is None:
@@ -375,7 +375,7 @@ def explicit_exact_preload(dsn: str) -> dict[str, Any]:
             resident_fold = 'tier=shared_resident_fold' in preload_state
             cached = cached_relation_blocks(conn)
             resident_row = conn.execute(
-                "SELECT ii42_index_shared_preload_resident("
+                "SELECT evoke_index_shared_preload_resident("
                 "'docs_bm25_idx')",
             ).fetchone()
             state = cache_state(conn)
@@ -407,7 +407,7 @@ def explicit_exact_preload(dsn: str) -> dict[str, Any]:
             }
         finally:
             conn.execute(
-                "SELECT ii42_index_maintenance_unlock("
+                "SELECT evoke_index_maintenance_unlock("
                 "'docs_bm25_idx')",
             )
 
@@ -455,9 +455,9 @@ def main() -> None:
     env.setdefault('LC_ALL', 'C')
     temp_root = ensure_temp_root(args.temp_root)
     root = Path(
-        tempfile.mkdtemp(prefix='ii42_v3_preload_', dir=temp_root)
+        tempfile.mkdtemp(prefix='evoke_v3_preload_', dir=temp_root)
     )
-    socket_root = create_short_socket_root('ii42_v3_preload_socket_')
+    socket_root = create_short_socket_root('evoke_v3_preload_socket_')
     primary_data = root / 'primary'
     standby_data = root / 'standby'
     primary_socket = socket_root / 'p'
@@ -477,7 +477,7 @@ def main() -> None:
     primary_started = False
     standby_started = False
     summary: dict[str, Any] = {
-        'api_version': 'ii42_index_v1',
+        'api_version': 'evoke_index_v1',
         'suite': 'convergent_standby_auto_preload',
         'checks': {},
     }
@@ -518,7 +518,7 @@ def main() -> None:
         wait_ready(primary_dsn, args.timeout)
 
         with psycopg.connect(primary_dsn, autocommit=True) as conn:
-            conn.execute('CREATE EXTENSION ii42')
+            conn.execute('CREATE EXTENSION evoke')
             conn.execute('CREATE EXTENSION pg_buffercache')
             conn.execute(
                 'CREATE TABLE docs (id int PRIMARY KEY, body text NOT NULL)'
@@ -533,7 +533,7 @@ def main() -> None:
             conn.execute(
                 '''
                 CREATE INDEX docs_bm25_idx
-                ON docs USING ii42 (body)
+                ON docs USING evoke (body)
                 WITH (
                     consistency = 'eventual',
                     auto_preload = 1

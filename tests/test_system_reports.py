@@ -115,8 +115,8 @@ def test_system_report_bm25_timings_match_record(path: Path) -> None:
     record = json.loads(record_path.read_text(encoding='utf-8'))
     for key in (
         'historical_official_psql_bm25s',
-        'ii42_before_repair',
-        'ii42_after_repair',
+        'evoke_before_repair',
+        'evoke_after_repair',
     ):
         row = record[key]
         values = ' | '.join(

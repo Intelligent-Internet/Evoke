@@ -1,6 +1,6 @@
 # Performance and Benchmarks
 
-This page is the default performance entry point for `ii42`.
+This page is the default performance entry point for `evoke`.
 
 ## Current Guides And Dated Evidence
 
@@ -33,28 +33,28 @@ for the frozen cross-engine matrix below.
 The PG18 `15 x 5` BEIR matrix compares:
 
 - upstream Python `bm25s`
-- `ii42 ids`
-- `ii42 text[]`
+- `evoke ids`
+- `evoke text[]`
 - ParadeDB `pg_search`
 - TensorChord `vchord_bm25`
 
-The `ii42` labels below are normalized names for the earlier `psql_bm25s`
+The `evoke` labels below are normalized names for the earlier `psql_bm25s`
 implementation; raw archives preserve the original engine names and run
 provenance. Renaming a label does not rerun a benchmark against Evoke.
 
 The corresponding current owner-only exact BM25 diagnostic APIs are regression
 anchors, not recommended application entrypoints:
 
-- `ii42_query_ids(...)`
-- `ii42_query_tokens(...)`
+- `evoke_query_ids(...)`
+- `evoke_query_tokens(...)`
 
-Applications use the public [`ii42_query(...)` family](../api-reference.md).
+Applications use the public [`evoke_query(...)` family](../api-reference.md).
 
 The published matrix on this page is intentionally based on the
 pretokenized index paths:
 
-- `ii42 ids` uses `int4[]`
-- `ii42 text[]` uses `text[]`
+- `evoke ids` uses `int4[]`
+- `evoke text[]` uses `text[]`
 
 Scalar `text` and `varchar` source columns are supported in the
 extension, but they are not the basis of the public `2026-04-02`
@@ -85,7 +85,7 @@ Validation status:
 
 - `75/75` dataset-engine cells in the rolled-up frozen matrix were
   checked against the backing raw archives
-- `30/75` refreshed `ii42` cells come from the
+- `30/75` refreshed `evoke` cells come from the
   `2026-04-02` Google Cloud rerun
 - `45/75` carried-forward upstream / `pg_search` / `vchord_bm25` cells
   remain pinned to the stable `2026-03-31` PG18 matrix
@@ -104,8 +104,8 @@ That distinction matters:
 
 - the older 2026-03-21 "current" files were a localhost M2 Ultra study
 - the 2026-03-31 files established the stable GCP PG18 `15 x 5` matrix
-- the 2026-04-02 refresh reran only `ii42 ids` and
-  `ii42 text[]` on the same GCP shape
+- the 2026-04-02 refresh reran only `evoke ids` and
+  `evoke text[]` on the same GCP shape
 - the refreshed 2026-04-02 matrix is the source for the lexical
   cross-engine comparison reproduced here
 
@@ -120,7 +120,7 @@ The frozen read-performance comparison combines two aligned GCP PG18 runs:
 
 - the stable `2026-03-31` full `15 x 5` matrix
 - the `2026-04-02` rerun that refreshed only
-  `ii42 ids` and `ii42 text[]`
+  `evoke ids` and `evoke text[]`
 - all 15 official BEIR subsets used in the BM25S benchmark set
 - the local-uploaded dataset cache recorded with those runs
 - `top_k = 1000`
@@ -135,8 +135,8 @@ Benchmark scope:
 - upstream path: Python `bm25s` carried forward from the stable
   `2026-03-31` matrix
 - PostgreSQL paths:
-  - `ii42_query_ids(...)` refreshed on `2026-04-02`
-  - `ii42_query_tokens(...)` refreshed on `2026-04-02`
+  - `evoke_query_ids(...)` refreshed on `2026-04-02`
+  - `evoke_query_tokens(...)` refreshed on `2026-04-02`
   - ParadeDB `pg_search` carried forward from `2026-03-31`
   - TensorChord `vchord_bm25` carried forward from `2026-03-31`
 
@@ -157,13 +157,13 @@ the local microbenchmark target:
 ```bash
 cmake -S . -B build_tmp -DCMAKE_BUILD_TYPE=Release
 cmake --build build_tmp -j
-II42_SIMD_MODE=scalar ./build_tmp/ii42_simd_bench
-II42_SIMD_MODE=avx2 ./build_tmp/ii42_simd_bench
+EVOKE_SIMD_MODE=scalar ./build_tmp/evoke_simd_bench
+EVOKE_SIMD_MODE=avx2 ./build_tmp/evoke_simd_bench
 ```
 
 Notes:
 
-- `II42_SIMD_MODE=auto` is the default.
+- `EVOKE_SIMD_MODE=auto` is the default.
 - The benchmark prints both `simd_env` and `simd_active`.
 - If `simd_env=avx2` but hardware support is unavailable, the active
   path remains `scalar`.
@@ -171,7 +171,7 @@ Notes:
   a warning, and the resulting extension uses the scalar path on that
   machine unless AVX2-capable hardware is available at runtime.
 - Optional positional args are:
-  `./build_tmp/ii42_simd_bench [num_docs] [timed_iters] [warmup_iters]`
+  `./build_tmp/evoke_simd_bench [num_docs] [timed_iters] [warmup_iters]`
 
 ## Query Summary
 
@@ -180,8 +180,8 @@ QPS against upstream Python `bm25s` across the full 15-dataset suite.
 
 | Path | At or above upstream | Min vs upstream | Median vs upstream | Max vs upstream |
 | --- | ---: | ---: | ---: | ---: |
-| `ii42 ids` | `12/15` | `0.35x` | `3.97x` | `60.10x` |
-| `ii42 text[]` | `11/15` | `0.31x` | `3.93x` | `51.06x` |
+| `evoke ids` | `12/15` | `0.35x` | `3.97x` | `60.10x` |
+| `evoke text[]` | `11/15` | `0.31x` | `3.93x` | `51.06x` |
 | `pg_search` | `3/15` | `0.01x` | `0.17x` | `2.76x` |
 | `vchord_bm25` | `7/15` | `0.07x` | `0.54x` | `11.31x` |
 
@@ -192,14 +192,14 @@ QPS against upstream Python `bm25s` across the full 15-dataset suite.
 | Path | Total build ms | Relative to upstream |
 | --- | ---: | ---: |
 | upstream Python `bm25s` | `848046.35` | `1.00x` |
-| `ii42 ids` | `262955.79` | `0.31x` |
-| `ii42 text[]` | `443975.35` | `0.52x` |
+| `evoke ids` | `262955.79` | `0.31x` |
+| `evoke text[]` | `443975.35` | `0.52x` |
 | `pg_search` | `356944.25` | `0.42x` |
 | `vchord_bm25` | `739014.63` | `0.87x` |
 
 ## Dataset Table
 
-| Dataset | Docs | Queries | upstream `bm25s` QPS | `ii42 ids` QPS | `ii42 text[]` QPS | `pg_search` QPS | `vchord_bm25` QPS |
+| Dataset | Docs | Queries | upstream `bm25s` QPS | `evoke ids` QPS | `evoke text[]` QPS | `pg_search` QPS | `vchord_bm25` QPS |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `arguana` | 8,674 | 1,406 | 1158.34 | 1402.63 | 1112.01 | 115.94 | 78.77 |
 | `climate-fever` | 5,416,593 | 1,535 | 3.04 | 57.78 | 50.75 | 2.84 | 5.25 |
@@ -234,7 +234,7 @@ easy to compare the two dimensions directly: one table answers "how fast
 is query execution after the index exists?" and the second answers "how
 expensive is it to get to that state?".
 
-| Dataset | Docs | Queries | upstream `bm25s` build | `ii42 ids` build | `ii42 text[]` build | `pg_search` build | `vchord_bm25` build |
+| Dataset | Docs | Queries | upstream `bm25s` build | `evoke ids` build | `evoke text[]` build | `pg_search` build | `vchord_bm25` build |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `nfcorpus` | 3,633 | 3,237 | 167ms | 82ms | 113ms | 254ms | 326ms |
 | `scifact` | 5,183 | 1,109 | 224ms | 99ms | 150ms | 326ms | 449ms |
@@ -258,10 +258,10 @@ expensive is it to get to that state?".
 
 Build-time trend highlights:
 
-- `ii42 ids` is the clear build-time winner. It is faster than
+- `evoke ids` is the clear build-time winner. It is faster than
   upstream on `15/15` datasets and has the lowest median build ratio at
   `0.34x` of upstream.
-- `ii42 text[]` is also consistently cheaper than upstream. It is
+- `evoke text[]` is also consistently cheaper than upstream. It is
   faster on `15/15` datasets with a median build ratio of `0.56x`.
 - `pg_search` is generally competitive on build time and still beats
   upstream on `12/15` datasets, but it does not carry that advantage
@@ -280,7 +280,7 @@ The matrix also records PostgreSQL index relation size as `build_bytes`.
 The upstream Python `bm25s` path is omitted here because it is not a
 PostgreSQL index relation and does not report an equivalent byte count.
 
-| Dataset | Docs | `ii42 ids` size | `ii42 text[]` size | `pg_search` size | `vchord_bm25` size |
+| Dataset | Docs | `evoke ids` size | `evoke text[]` size | `pg_search` size | `vchord_bm25` size |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | `nfcorpus` | 3,633 | 4.60 MiB | 4.80 MiB | 4.98 MiB | 165.37 MiB |
 | `scifact` | 5,183 | 6.09 MiB | 6.35 MiB | 5.70 MiB | 227.52 MiB |
@@ -312,8 +312,8 @@ This table uses qrels-bearing queries only. That means the evaluated query
 count can be smaller than the full query count shown in the QPS table.
 
 The local machine had all five comparison engines available for this
-relevance run: upstream Python `bm25s`, `ii42 ids`,
-`ii42 text[]`, `pg_search`, and `vchord_bm25`.
+relevance run: upstream Python `bm25s`, `evoke ids`,
+`evoke text[]`, `pg_search`, and `vchord_bm25`.
 
 The primary chart is an absolute-score heatmap rather than a dataset-scale
 line chart. Each cell is the metric value for one engine on one dataset.
@@ -325,78 +325,78 @@ metric.
 | Dataset | Docs | Eval queries | Engine | NDCG@10 | MAP@100 | Recall@100 | Precision@10 |
 | --- | ---: | ---: | --- | ---: | ---: | ---: | ---: |
 | `nfcorpus` | 3,633 | 323 | upstream `bm25s` | 0.3230 | 0.1533 | 0.2474 | 0.2319 |
-| `nfcorpus` | 3,633 | 323 | `ii42 ids` | 0.3235 | 0.1535 | 0.2503 | 0.2322 |
-| `nfcorpus` | 3,633 | 323 | `ii42 text[]` | 0.3235 | 0.1535 | 0.2504 | 0.2322 |
+| `nfcorpus` | 3,633 | 323 | `evoke ids` | 0.3235 | 0.1535 | 0.2503 | 0.2322 |
+| `nfcorpus` | 3,633 | 323 | `evoke text[]` | 0.3235 | 0.1535 | 0.2504 | 0.2322 |
 | `nfcorpus` | 3,633 | 323 | `pg_search` | 0.3215 | 0.1523 | 0.2486 | 0.2313 |
 | `nfcorpus` | 3,633 | 323 | `vchord_bm25` | 0.3209 | 0.1518 | 0.2468 | 0.2303 |
 | `scifact` | 5,183 | 300 | upstream `bm25s` | 0.6863 | 0.6439 | 0.9127 | 0.0907 |
-| `scifact` | 5,183 | 300 | `ii42 ids` | 0.6863 | 0.6439 | 0.9127 | 0.0907 |
-| `scifact` | 5,183 | 300 | `ii42 text[]` | 0.6863 | 0.6439 | 0.9127 | 0.0907 |
+| `scifact` | 5,183 | 300 | `evoke ids` | 0.6863 | 0.6439 | 0.9127 | 0.0907 |
+| `scifact` | 5,183 | 300 | `evoke text[]` | 0.6863 | 0.6439 | 0.9127 | 0.0907 |
 | `scifact` | 5,183 | 300 | `pg_search` | 0.6819 | 0.6397 | 0.9127 | 0.0900 |
 | `scifact` | 5,183 | 300 | `vchord_bm25` | 0.6766 | 0.6350 | 0.9127 | 0.0893 |
 | `arguana` | 8,674 | 1,406 | upstream `bm25s` | 0.3655 | 0.2524 | 0.9659 | 0.0760 |
-| `arguana` | 8,674 | 1,406 | `ii42 ids` | 0.3656 | 0.2524 | 0.9659 | 0.0760 |
-| `arguana` | 8,674 | 1,406 | `ii42 text[]` | 0.3656 | 0.2524 | 0.9659 | 0.0760 |
+| `arguana` | 8,674 | 1,406 | `evoke ids` | 0.3656 | 0.2524 | 0.9659 | 0.0760 |
+| `arguana` | 8,674 | 1,406 | `evoke text[]` | 0.3656 | 0.2524 | 0.9659 | 0.0760 |
 | `arguana` | 8,674 | 1,406 | `pg_search` | 0.3060 | 0.2100 | 0.9161 | 0.0654 |
 | `arguana` | 8,674 | 1,406 | `vchord_bm25` | 0.3597 | 0.2484 | 0.9580 | 0.0749 |
 | `scidocs` | 25,657 | 1,000 | upstream `bm25s` | 0.1578 | 0.1077 | 0.3646 | 0.0816 |
-| `scidocs` | 25,657 | 1,000 | `ii42 ids` | 0.1578 | 0.1077 | 0.3646 | 0.0816 |
-| `scidocs` | 25,657 | 1,000 | `ii42 text[]` | 0.1578 | 0.1077 | 0.3646 | 0.0816 |
+| `scidocs` | 25,657 | 1,000 | `evoke ids` | 0.1578 | 0.1077 | 0.3646 | 0.0816 |
+| `scidocs` | 25,657 | 1,000 | `evoke text[]` | 0.1578 | 0.1077 | 0.3646 | 0.0816 |
 | `scidocs` | 25,657 | 1,000 | `pg_search` | 0.1567 | 0.1066 | 0.3607 | 0.0805 |
 | `scidocs` | 25,657 | 1,000 | `vchord_bm25` | 0.1561 | 0.1066 | 0.3616 | 0.0802 |
 | `fiqa` | 57,638 | 648 | upstream `bm25s` | 0.2514 | 0.2041 | 0.5593 | 0.0699 |
-| `fiqa` | 57,638 | 648 | `ii42 ids` | 0.2514 | 0.2041 | 0.5593 | 0.0699 |
-| `fiqa` | 57,638 | 648 | `ii42 text[]` | 0.2514 | 0.2041 | 0.5593 | 0.0699 |
+| `fiqa` | 57,638 | 648 | `evoke ids` | 0.2514 | 0.2041 | 0.5593 | 0.0699 |
+| `fiqa` | 57,638 | 648 | `evoke text[]` | 0.2514 | 0.2041 | 0.5593 | 0.0699 |
 | `fiqa` | 57,638 | 648 | `pg_search` | 0.2504 | 0.2034 | 0.5589 | 0.0688 |
 | `fiqa` | 57,638 | 648 | `vchord_bm25` | 0.2517 | 0.2036 | 0.5542 | 0.0698 |
 | `trec-covid` | 171,332 | 50 | upstream `bm25s` | 0.5988 | 0.3354 | 0.1121 | 0.6500 |
-| `trec-covid` | 171,332 | 50 | `ii42 ids` | 0.5994 | 0.3353 | 0.1121 | 0.6500 |
-| `trec-covid` | 171,332 | 50 | `ii42 text[]` | 0.5994 | 0.3353 | 0.1121 | 0.6500 |
+| `trec-covid` | 171,332 | 50 | `evoke ids` | 0.5994 | 0.3353 | 0.1121 | 0.6500 |
+| `trec-covid` | 171,332 | 50 | `evoke text[]` | 0.5994 | 0.3353 | 0.1121 | 0.6500 |
 | `trec-covid` | 171,332 | 50 | `pg_search` | 0.5903 | 0.3240 | 0.1104 | 0.6420 |
 | `trec-covid` | 171,332 | 50 | `vchord_bm25` | 0.5895 | 0.3271 | 0.1108 | 0.6460 |
 | `webis-touche2020` | 382,545 | 49 | upstream `bm25s` | 0.3259 | 0.2105 | 0.5557 | 0.3041 |
-| `webis-touche2020` | 382,545 | 49 | `ii42 ids` | 0.3259 | 0.2106 | 0.5557 | 0.3041 |
-| `webis-touche2020` | 382,545 | 49 | `ii42 text[]` | 0.3259 | 0.2106 | 0.5557 | 0.3041 |
+| `webis-touche2020` | 382,545 | 49 | `evoke ids` | 0.3259 | 0.2106 | 0.5557 | 0.3041 |
+| `webis-touche2020` | 382,545 | 49 | `evoke text[]` | 0.3259 | 0.2106 | 0.5557 | 0.3041 |
 | `webis-touche2020` | 382,545 | 49 | `pg_search` | 0.3347 | 0.2120 | 0.5600 | 0.3102 |
 | `webis-touche2020` | 382,545 | 49 | `vchord_bm25` | 0.3379 | 0.2140 | 0.5589 | 0.3122 |
 | `cqadupstack` | 457,199 | 13,145 | upstream `bm25s` | 0.2994 | 0.2723 | 0.5543 | 0.0488 |
-| `cqadupstack` | 457,199 | 13,145 | `ii42 ids` | 0.2994 | 0.2723 | 0.5543 | 0.0488 |
-| `cqadupstack` | 457,199 | 13,145 | `ii42 text[]` | 0.2994 | 0.2723 | 0.5543 | 0.0488 |
+| `cqadupstack` | 457,199 | 13,145 | `evoke ids` | 0.2994 | 0.2723 | 0.5543 | 0.0488 |
+| `cqadupstack` | 457,199 | 13,145 | `evoke text[]` | 0.2994 | 0.2723 | 0.5543 | 0.0488 |
 | `cqadupstack` | 457,199 | 13,145 | `pg_search` | 0.3005 | 0.2735 | 0.5508 | 0.0489 |
 | `cqadupstack` | 457,199 | 13,145 | `vchord_bm25` | 0.3007 | 0.2734 | 0.5503 | 0.0490 |
 | `quora` | 522,931 | 10,000 | upstream `bm25s` | 0.8045 | 0.7630 | 0.9771 | 0.1216 |
-| `quora` | 522,931 | 10,000 | `ii42 ids` | 0.8056 | 0.7643 | 0.9775 | 0.1218 |
-| `quora` | 522,931 | 10,000 | `ii42 text[]` | 0.8056 | 0.7643 | 0.9775 | 0.1218 |
+| `quora` | 522,931 | 10,000 | `evoke ids` | 0.8056 | 0.7643 | 0.9775 | 0.1218 |
+| `quora` | 522,931 | 10,000 | `evoke text[]` | 0.8056 | 0.7643 | 0.9775 | 0.1218 |
 | `quora` | 522,931 | 10,000 | `pg_search` | 0.8075 | 0.7662 | 0.9786 | 0.1223 |
 | `quora` | 522,931 | 10,000 | `vchord_bm25` | 0.8069 | 0.7658 | 0.9770 | 0.1220 |
 | `nq` | 2,681,468 | 3,452 | upstream `bm25s` | 0.2849 | 0.2409 | 0.7430 | 0.0521 |
-| `nq` | 2,681,468 | 3,452 | `ii42 ids` | 0.2849 | 0.2408 | 0.7430 | 0.0521 |
-| `nq` | 2,681,468 | 3,452 | `ii42 text[]` | 0.2849 | 0.2408 | 0.7430 | 0.0521 |
+| `nq` | 2,681,468 | 3,452 | `evoke ids` | 0.2849 | 0.2408 | 0.7430 | 0.0521 |
+| `nq` | 2,681,468 | 3,452 | `evoke text[]` | 0.2849 | 0.2408 | 0.7430 | 0.0521 |
 | `nq` | 2,681,468 | 3,452 | `pg_search` | 0.2933 | 0.2487 | 0.7506 | 0.0532 |
 | `nq` | 2,681,468 | 3,452 | `vchord_bm25` | 0.2935 | 0.2491 | 0.7494 | 0.0532 |
 | `dbpedia-entity` | 4,635,922 | 400 | upstream `bm25s` | 0.2801 | 0.2113 | 0.4472 | 0.2658 |
-| `dbpedia-entity` | 4,635,922 | 400 | `ii42 ids` | 0.2803 | 0.2110 | 0.4472 | 0.2658 |
-| `dbpedia-entity` | 4,635,922 | 400 | `ii42 text[]` | 0.2803 | 0.2110 | 0.4472 | 0.2658 |
+| `dbpedia-entity` | 4,635,922 | 400 | `evoke ids` | 0.2803 | 0.2110 | 0.4472 | 0.2658 |
+| `dbpedia-entity` | 4,635,922 | 400 | `evoke text[]` | 0.2803 | 0.2110 | 0.4472 | 0.2658 |
 | `dbpedia-entity` | 4,635,922 | 400 | `pg_search` | 0.2837 | 0.2169 | 0.4538 | 0.2683 |
 | `dbpedia-entity` | 4,635,922 | 400 | `vchord_bm25` | 0.2845 | 0.2172 | 0.4536 | 0.2685 |
 | `hotpotqa` | 5,233,329 | 7,405 | upstream `bm25s` | 0.5689 | 0.4858 | 0.7586 | 0.1199 |
-| `hotpotqa` | 5,233,329 | 7,405 | `ii42 ids` | 0.5689 | 0.4859 | 0.7586 | 0.1199 |
-| `hotpotqa` | 5,233,329 | 7,405 | `ii42 text[]` | 0.5689 | 0.4859 | 0.7586 | 0.1199 |
+| `hotpotqa` | 5,233,329 | 7,405 | `evoke ids` | 0.5689 | 0.4859 | 0.7586 | 0.1199 |
+| `hotpotqa` | 5,233,329 | 7,405 | `evoke text[]` | 0.5689 | 0.4859 | 0.7586 | 0.1199 |
 | `hotpotqa` | 5,233,329 | 7,405 | `pg_search` | 0.5927 | 0.5094 | 0.7760 | 0.1242 |
 | `hotpotqa` | 5,233,329 | 7,405 | `vchord_bm25` | 0.5884 | 0.5050 | 0.7716 | 0.1234 |
 | `fever` | 5,416,568 | 6,666 | upstream `bm25s` | 0.4811 | 0.4284 | 0.8494 | 0.0712 |
-| `fever` | 5,416,568 | 6,666 | `ii42 ids` | 0.4811 | 0.4284 | 0.8494 | 0.0712 |
-| `fever` | 5,416,568 | 6,666 | `ii42 text[]` | 0.4811 | 0.4284 | 0.8494 | 0.0712 |
+| `fever` | 5,416,568 | 6,666 | `evoke ids` | 0.4811 | 0.4284 | 0.8494 | 0.0712 |
+| `fever` | 5,416,568 | 6,666 | `evoke text[]` | 0.4811 | 0.4284 | 0.8494 | 0.0712 |
 | `fever` | 5,416,568 | 6,666 | `pg_search` | 0.5125 | 0.4598 | 0.8633 | 0.0744 |
 | `fever` | 5,416,568 | 6,666 | `vchord_bm25` | 0.5121 | 0.4593 | 0.8638 | 0.0744 |
 | `climate-fever` | 5,416,593 | 1,535 | upstream `bm25s` | 0.1361 | 0.1020 | 0.3666 | 0.0429 |
-| `climate-fever` | 5,416,593 | 1,535 | `ii42 ids` | 0.1361 | 0.1020 | 0.3666 | 0.0429 |
-| `climate-fever` | 5,416,593 | 1,535 | `ii42 text[]` | 0.1361 | 0.1020 | 0.3666 | 0.0429 |
+| `climate-fever` | 5,416,593 | 1,535 | `evoke ids` | 0.1361 | 0.1020 | 0.3666 | 0.0429 |
+| `climate-fever` | 5,416,593 | 1,535 | `evoke text[]` | 0.1361 | 0.1020 | 0.3666 | 0.0429 |
 | `climate-fever` | 5,416,593 | 1,535 | `pg_search` | 0.1421 | 0.1064 | 0.3867 | 0.0456 |
 | `climate-fever` | 5,416,593 | 1,535 | `vchord_bm25` | 0.1403 | 0.1046 | 0.3784 | 0.0449 |
 | `msmarco` | 8,841,823 | 43 | upstream `bm25s` | 0.4005 | 0.3212 | 0.4248 | 0.5767 |
-| `msmarco` | 8,841,823 | 43 | `ii42 ids` | 0.3996 | 0.3225 | 0.4247 | 0.5767 |
-| `msmarco` | 8,841,823 | 43 | `ii42 text[]` | 0.3996 | 0.3225 | 0.4247 | 0.5767 |
+| `msmarco` | 8,841,823 | 43 | `evoke ids` | 0.3996 | 0.3225 | 0.4247 | 0.5767 |
+| `msmarco` | 8,841,823 | 43 | `evoke text[]` | 0.3996 | 0.3225 | 0.4247 | 0.5767 |
 | `msmarco` | 8,841,823 | 43 | `pg_search` | 0.4097 | 0.3526 | 0.4506 | 0.5907 |
 | `msmarco` | 8,841,823 | 43 | `vchord_bm25` | 0.4093 | 0.3346 | 0.4393 | 0.5837 |
 
@@ -405,7 +405,7 @@ Quality readout:
 - All five engines sit in a close relevance band on this BM25 quality
   matrix. Average `NDCG@10` ranges from `0.3976` to `0.4019` across the
   compared engines.
-- `ii42 ids` and `ii42 text[]` remain quality-neutral exact
+- `evoke ids` and `evoke text[]` remain quality-neutral exact
   PostgreSQL paths in this run. Their largest absolute metric difference
   from the Python reference implementation is below `0.0030`, while their
   engineering cost profile is covered by the QPS, build-time, and
@@ -419,26 +419,26 @@ Quality readout:
 
 ## Readout
 
-- `ii42 ids` has the strongest suite-median PostgreSQL result in this snapshot. It beats
+- `evoke ids` has the strongest suite-median PostgreSQL result in this snapshot. It beats
   upstream on `12/15` datasets and has the highest median ratio.
-- `ii42 text[]` is also strong. It beats upstream on `11/15`
+- `evoke text[]` is also strong. It beats upstream on `11/15`
   datasets and sits almost level with `ids` on the suite median,
   though it still has the higher total build cost.
 - `pg_search` remains much slower on the full suite. It clears upstream
   on only `3/15` datasets and has the weakest median ratio.
 - `vchord_bm25` is materially stronger than `pg_search`, but still lags
-  behind both `ii42` paths on the suite median.
+  behind both `evoke` paths on the suite median.
 - The largest workloads remain the clearest signal. On `msmarco`,
-  `ii42 ids` reached `96.67` QPS, `ii42 text[]` reached
+  `evoke ids` reached `96.67` QPS, `evoke text[]` reached
   `82.13` QPS, `vchord_bm25` reached `18.20` QPS, `pg_search` reached
   `4.44` QPS, and upstream Python `bm25s` reached `1.61` QPS.
-- Build performance is also in good shape. Both `ii42` paths are
+- Build performance is also in good shape. Both `evoke` paths are
   substantially cheaper than upstream on total build time, with `ids`
   remaining the clear winner.
 
 ## Practical Conclusion
 
-- Use the public `ii42_query(...)` API and choose source types according to
+- Use the public `evoke_query(...)` API and choose source types according to
   [Supported Input Types](../input-types.md), not an owner-only diagnostic API
   merely because it labels a benchmark series.
 - This historical comparison covers pretokenized `int4[]` and `text[]`, not

@@ -15,10 +15,10 @@
 /outputs/
 /runs/
 .DS_Store
-/ii42-m*.json
-/ii42-m*.jsonl
-/ii42-m*.sha256
-/ii42-m*.txt
+/evoke-m*.json
+/evoke-m*.jsonl
+/evoke-m*.sha256
+/evoke-m*.txt
 /m[0-9]*.json
 __pycache__/
 *.py[cod]

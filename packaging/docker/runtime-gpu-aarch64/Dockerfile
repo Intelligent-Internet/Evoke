@@ -12,12 +12,12 @@ RUN set -eux; \
         pkg-config; \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=ii42_gpu_rootfs . /
+COPY --from=evoke_gpu_rootfs . /
 COPY --from=evoke_onnxruntime_headers include/ /usr/local/include/
 
 WORKDIR /src
 
-COPY Makefile CMakeLists.txt ii42.control LICENSE README.md ./
+COPY Makefile CMakeLists.txt evoke.control LICENSE README.md ./
 COPY src ./src
 COPY packaging/onnxruntime.version ./packaging/onnxruntime.version
 
@@ -36,21 +36,21 @@ RUN set -eux; \
         libstdc++6; \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=ii42_gpu_rootfs . /
-COPY --from=build /src/build/ii42-runtime-server \
-    /usr/local/bin/ii42-runtime-server
+COPY --from=evoke_gpu_rootfs . /
+COPY --from=build /src/build/evoke-runtime-server \
+    /usr/local/bin/evoke-runtime-server
 COPY --from=evoke_milestone_model . \
-    /usr/local/share/ii42/models/default/
+    /usr/local/share/evoke/models/default/
 COPY packaging/docker/runtime-gpu-aarch64/evoke-gpu-runtime-entrypoint \
     /usr/local/bin/evoke-gpu-runtime-entrypoint
 
 RUN set -eux; \
-    chmod 0755 /usr/local/bin/ii42-runtime-server; \
+    chmod 0755 /usr/local/bin/evoke-runtime-server; \
     chmod 0755 /usr/local/bin/evoke-gpu-runtime-entrypoint; \
     printf '%s\n' \
         /usr/local/lib \
         /usr/local/cuda/targets/sbsa-linux/lib \
-        > /etc/ld.so.conf.d/ii42-gpu.conf; \
+        > /etc/ld.so.conf.d/evoke-gpu.conf; \
     ldconfig
 
 ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/cuda/targets/sbsa-linux/lib:/usr/lib/aarch64-linux-gnu

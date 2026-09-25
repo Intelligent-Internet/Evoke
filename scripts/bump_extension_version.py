@@ -80,7 +80,7 @@ def main() -> int:
         )
 
     root = repo_root()
-    control_path = root / 'ii42.control'
+    control_path = root / 'evoke.control'
     sql_dir = root / 'sql'
 
     current_version = read_current_version(control_path)
@@ -93,13 +93,13 @@ def main() -> int:
             f'next version {next_version} matches current version'
         )
 
-    current_sql = sql_dir / f'ii42--{current_version}.sql'
-    next_sql = sql_dir / f'ii42--{next_version}.sql'
+    current_sql = sql_dir / f'evoke--{current_version}.sql'
+    next_sql = sql_dir / f'evoke--{next_version}.sql'
     if not current_sql.exists():
         raise RuntimeError(f'missing install script: {current_sql.name}')
     if next_sql.exists():
         raise RuntimeError('target version file already exists')
-    versioned_sql_files = sorted(sql_dir.glob('ii42--*.sql'))
+    versioned_sql_files = sorted(sql_dir.glob('evoke--*.sql'))
     if versioned_sql_files != [current_sql]:
         raise RuntimeError(
             'expected exactly one current install SQL before versioning; '

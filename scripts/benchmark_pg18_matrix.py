@@ -30,12 +30,12 @@ from benchmark_beir_official import (
 )
 
 
-DEFAULT_DB_PREFIX = 'ii42_pg18_matrix_'
+DEFAULT_DB_PREFIX = 'evoke_pg18_matrix_'
 DEFAULT_TEMP_ROOT = Path(tempfile.gettempdir())
 DEFAULT_DATASETS_DIR = (
-    DEFAULT_TEMP_ROOT / 'ii42_dataset_cache/beir_official'
+    DEFAULT_TEMP_ROOT / 'evoke_dataset_cache/beir_official'
 )
-DEFAULT_OUTPUT = DEFAULT_TEMP_ROOT / 'ii42_pg18_matrix/results/smoke.json'
+DEFAULT_OUTPUT = DEFAULT_TEMP_ROOT / 'evoke_pg18_matrix/results/smoke.json'
 OFFICIAL_ORDER = [
     'arguana',
     'climate-fever',
@@ -55,8 +55,8 @@ OFFICIAL_ORDER = [
 ]
 ENGINE_ORDER = [
     'upstream_bm25s',
-    'ii42_ids',
-    'ii42_text',
+    'evoke_ids',
+    'evoke_text',
     'pg_search',
     'vchord_bm25',
 ]
@@ -66,7 +66,7 @@ def benchmark_admin_dsn(
     env_name: str | None = None,
 ) -> str:
     env_dsn = os.environ.get(env_name) if env_name else None
-    base_dsn = os.environ.get('II42_BENCH_DSN', 'dbname=postgres')
+    base_dsn = os.environ.get('EVOKE_BENCH_DSN', 'dbname=postgres')
     if env_dsn:
         base_dsn = env_dsn
     params = conninfo.conninfo_to_dict(base_dsn)
@@ -77,14 +77,14 @@ def benchmark_admin_dsn(
     return conninfo.make_conninfo(**params)
 
 
-II42_ADMIN_DSN = benchmark_admin_dsn(
-    'II42_MATRIX_II42_DSN'
+EVOKE_ADMIN_DSN = benchmark_admin_dsn(
+    'EVOKE_MATRIX_EVOKE_DSN'
 )
 PG_SEARCH_ADMIN_DSN = benchmark_admin_dsn(
-    'II42_MATRIX_PG_SEARCH_DSN'
+    'EVOKE_MATRIX_PG_SEARCH_DSN'
 )
 VCHORD_BM25_ADMIN_DSN = benchmark_admin_dsn(
-    'II42_MATRIX_VCHORD_BM25_DSN'
+    'EVOKE_MATRIX_VCHORD_BM25_DSN'
 )
 
 
@@ -185,19 +185,19 @@ def ensure_vchord_bm25_extension(
     )
 
 
-def benchmark_ii42_ids(
+def benchmark_evoke_ids(
     dataset: str,
     corpus_id_tokens: list[list[int]],
     query_id_tokens: list[list[int]],
     top_k: int,
     db_prefix: str,
 ) -> dict[str, Any]:
-    db_name = f'{db_prefix}ii42_{dataset.replace("-", "_")}'
-    ensure_local_database(II42_ADMIN_DSN, db_name)
+    db_name = f'{db_prefix}evoke_{dataset.replace("-", "_")}'
+    ensure_local_database(EVOKE_ADMIN_DSN, db_name)
     db_dsn = make_database_dsn(
-        II42_ADMIN_DSN,
+        EVOKE_ADMIN_DSN,
         db_name,
-        'ii42_matrix',
+        'evoke_matrix',
     )
 
     with psycopg.connect(db_dsn, autocommit=True) as conn:
@@ -223,7 +223,7 @@ def benchmark_ii42_ids(
             cur.execute(
                 """
                 CREATE INDEX docs_ids_bm25_idx
-                ON bench.docs_ids USING ii42 (token_ids)
+                ON bench.docs_ids USING evoke (token_ids)
                 WITH (
                     method = 'lucene',
                     idf_method = 'lucene',
@@ -247,7 +247,7 @@ def benchmark_ii42_ids(
                     count(*),
                     coalesce(min(doc_id), 0),
                     coalesce(max(score), 0::real)
-                FROM public.ii42_query_ids(
+                FROM public.evoke_query_ids(
                     'bench.docs_ids_bm25_idx'::regclass,
                     %s::int4[],
                     %s::int4,
@@ -267,7 +267,7 @@ def benchmark_ii42_ids(
     }
 
 
-def benchmark_ii42_text(
+def benchmark_evoke_text(
     dataset: str,
     corpus_id_tokens: list[list[int]],
     query_id_tokens: list[list[int]],
@@ -275,12 +275,12 @@ def benchmark_ii42_text(
     top_k: int,
     db_prefix: str,
 ) -> dict[str, Any]:
-    db_name = f'{db_prefix}ii42_text_{dataset.replace("-", "_")}'
-    ensure_local_database(II42_ADMIN_DSN, db_name)
+    db_name = f'{db_prefix}evoke_text_{dataset.replace("-", "_")}'
+    ensure_local_database(EVOKE_ADMIN_DSN, db_name)
     db_dsn = make_database_dsn(
-        II42_ADMIN_DSN,
+        EVOKE_ADMIN_DSN,
         db_name,
-        'ii42_matrix',
+        'evoke_matrix',
     )
 
     def decode(token_ids: list[int]) -> list[str]:
@@ -309,7 +309,7 @@ def benchmark_ii42_text(
             cur.execute(
                 """
                 CREATE INDEX docs_tokens_bm25_idx
-                ON bench.docs_tokens USING ii42 (tokens)
+                ON bench.docs_tokens USING evoke (tokens)
                 WITH (
                     method = 'lucene',
                     idf_method = 'lucene',
@@ -332,7 +332,7 @@ def benchmark_ii42_text(
                     count(*),
                     coalesce(min(doc_id), 0),
                     coalesce(max(score), 0::real)
-                FROM public.ii42_query_tokens(
+                FROM public.evoke_query_tokens(
                     'bench.docs_tokens_bm25_idx'::regclass,
                     %s::text[],
                     %s::int4,
@@ -572,16 +572,16 @@ def run_dataset(
             query_ids,
             top_k,
         )
-    if 'ii42_ids' in paths:
-        result['ii42_ids'] = benchmark_ii42_ids(
+    if 'evoke_ids' in paths:
+        result['evoke_ids'] = benchmark_evoke_ids(
             dataset,
             corpus_tokenized.ids,
             query_ids,
             top_k,
             db_prefix,
         )
-    if 'ii42_text' in paths:
-        result['ii42_text'] = benchmark_ii42_text(
+    if 'evoke_text' in paths:
+        result['evoke_text'] = benchmark_evoke_text(
             dataset,
             corpus_tokenized.ids,
             query_ids,

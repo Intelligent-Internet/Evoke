@@ -47,11 +47,11 @@ def test_term_budget_route_sets_only_requested_error_budget() -> None:
     MODULE.configure_route(cursor, route('term_budget0025'))
     values = setting_values(cursor)
 
-    assert values['ii42.test_query_semantic_error_budget_ratio'] == '0.0025'
-    assert values['ii42.test_disable_semantic_bmp'] == 'on'
-    assert values['ii42.test_disable_semantic_accelerator'] == 'on'
-    assert values['ii42.test_query_max_df_ratio'] == '1'
-    assert values['ii42.test_query_semantic_work_target_postings'] == '0'
+    assert values['evoke.test_query_semantic_error_budget_ratio'] == '0.0025'
+    assert values['evoke.test_disable_semantic_bmp'] == 'on'
+    assert values['evoke.test_disable_semantic_accelerator'] == 'on'
+    assert values['evoke.test_query_max_df_ratio'] == '1'
+    assert values['evoke.test_query_semantic_work_target_postings'] == '0'
 
 
 def test_custom_term_budget_sets_requested_ratio() -> None:
@@ -71,9 +71,9 @@ def test_custom_term_budget_sets_requested_ratio() -> None:
     MODULE.configure_route(cursor, custom)
     values = setting_values(cursor)
 
-    assert values['ii42.test_query_semantic_error_budget_ratio'] == '0.02'
-    assert values['ii42.test_disable_semantic_accelerator'] == 'on'
-    assert values['ii42.test_disable_semantic_bmp'] == 'on'
+    assert values['evoke.test_query_semantic_error_budget_ratio'] == '0.02'
+    assert values['evoke.test_disable_semantic_accelerator'] == 'on'
+    assert values['evoke.test_disable_semantic_bmp'] == 'on'
 
 
 def test_exact_route_resets_approximation_controls() -> None:
@@ -82,11 +82,11 @@ def test_exact_route_resets_approximation_controls() -> None:
     MODULE.configure_route(cursor, route('exact'))
     values = setting_values(cursor)
 
-    assert values['ii42.test_query_semantic_error_budget_ratio'] == '0.0'
-    assert values['ii42.test_disable_semantic_bmp'] == 'off'
-    assert values['ii42.test_query_semantic_impact_floor_ratio'] == '0'
-    assert values['ii42.test_query_semantic_min_support_ratio'] == '0'
-    assert values['ii42.test_disable_semantic_accelerator'] == 'on'
+    assert values['evoke.test_query_semantic_error_budget_ratio'] == '0.0'
+    assert values['evoke.test_disable_semantic_bmp'] == 'off'
+    assert values['evoke.test_query_semantic_impact_floor_ratio'] == '0'
+    assert values['evoke.test_query_semantic_min_support_ratio'] == '0'
+    assert values['evoke.test_disable_semantic_accelerator'] == 'on'
 
 
 def test_default_route_resets_all_hidden_route_overrides() -> None:
@@ -100,9 +100,9 @@ def test_default_route_resets_all_hidden_route_overrides() -> None:
         query.removeprefix('RESET ')
         for query, _params in cursor.calls
     }
-    assert 'ii42.test_disable_semantic_accelerator' in reset_names
-    assert 'ii42.test_semantic_accelerator_heap_factor' in reset_names
-    assert 'ii42.test_query_semantic_error_budget_ratio' in reset_names
+    assert 'evoke.test_disable_semantic_accelerator' in reset_names
+    assert 'evoke.test_semantic_accelerator_heap_factor' in reset_names
+    assert 'evoke.test_query_semantic_error_budget_ratio' in reset_names
 
 
 def test_combined_budget_clones_accelerator_route() -> None:
@@ -136,6 +136,6 @@ def test_combined_budget_reaches_accelerator_and_budget_gucs() -> None:
     MODULE.configure_route(cursor, combined)
     values = setting_values(cursor)
 
-    assert values['ii42.test_disable_semantic_accelerator'] == 'off'
-    assert values['ii42.test_query_semantic_error_budget_ratio'] == '0.01'
-    assert values['ii42.test_disable_semantic_bmp'] == 'on'
+    assert values['evoke.test_disable_semantic_accelerator'] == 'off'
+    assert values['evoke.test_query_semantic_error_budget_ratio'] == '0.01'
+    assert values['evoke.test_disable_semantic_bmp'] == 'on'

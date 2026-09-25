@@ -18,7 +18,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PG_BIN = Path('/opt/homebrew/opt/postgresql@18/bin')
 DEFAULT_OUTPUT = (
-    Path(tempfile.gettempdir()) / 'ii42_product_maturity_suite.json'
+    Path(tempfile.gettempdir()) / 'evoke_product_maturity_suite.json'
 )
 PINNED_ONNXRUNTIME_VERSION = (
     REPO_ROOT / 'packaging/onnxruntime.version'
@@ -266,7 +266,7 @@ def inspect_model_binding(
     }
     errors: list[str] = report['errors']
     try:
-        expected_location = sharedir / 'ii42/models/default'
+        expected_location = sharedir / 'evoke/models/default'
         location_text = build_info.get('Milestone model location')
         if location_text != str(expected_location):
             raise ValueError(
@@ -404,8 +404,8 @@ def extension_sql_artifacts(
     extension_dir: Path,
     version: str,
 ) -> list[Path]:
-    install_sql = extension_dir / f'ii42--{version}.sql'
-    actual_sql = sorted(extension_dir.glob('ii42--*.sql'))
+    install_sql = extension_dir / f'evoke--{version}.sql'
+    actual_sql = sorted(extension_dir.glob('evoke--*.sql'))
     expected_sql = [install_sql]
     if actual_sql != expected_sql:
         raise ValueError(
@@ -478,7 +478,7 @@ def inspect_package_binding(
             package_root,
             sharedir / 'extension',
         )
-        control_path = staged_extension_dir / 'ii42.control'
+        control_path = staged_extension_dir / 'evoke.control'
         if not control_path.is_file():
             raise ValueError(
                 f'staged extension control file is missing: {control_path}'
@@ -487,16 +487,16 @@ def inspect_package_binding(
         report['extension_version'] = version
         if build_info.get('Version') != version:
             errors.append(
-                'BUILD-INFO version does not match staged ii42.control'
+                'BUILD-INFO version does not match staged evoke.control'
             )
 
         extension_candidates = sorted(
-            path for path in staged_pkglibdir.glob('ii42.*')
+            path for path in staged_pkglibdir.glob('evoke.*')
             if path.suffix in {'.dylib', '.so'}
         )
         if len(extension_candidates) != 1:
             raise ValueError(
-                'staged package must contain exactly one ii42 shared library '
+                'staged package must contain exactly one evoke shared library '
                 f'in {staged_pkglibdir}'
             )
 
@@ -1044,7 +1044,7 @@ def main() -> int:
                 '--model-path',
                 args.model_path,
                 '--runtime-server-binary',
-                REPO_ROOT / 'build/ii42-runtime-server',
+                REPO_ROOT / 'build/evoke-runtime-server',
             ],
         ),
         (
@@ -1058,7 +1058,7 @@ def main() -> int:
                 '--model-path',
                 args.model_path,
                 '--runtime-server-binary',
-                REPO_ROOT / 'build/ii42-runtime-server',
+                REPO_ROOT / 'build/evoke-runtime-server',
                 '--runtime-liveness-timeout-ms',
                 '3000',
                 '--failover-backpressure-only',
@@ -1239,7 +1239,7 @@ def main() -> int:
     if not args.skip_benchmark:
         benchmark_cmd: list[str | Path] = [
             sys.executable,
-            'scripts/benchmark_ii42_product_path.py',
+            'scripts/benchmark_evoke_product_path.py',
             '--pg-bin',
             args.pg_bin,
             '--docs',
@@ -1296,8 +1296,8 @@ def main() -> int:
             and all(step['returncode'] == 0 for step in results)
         )
         suite = {
-            'api_version': 'ii42_index_v1',
-            'suite': 'ii42_product_maturity',
+            'api_version': 'evoke_index_v1',
+            'suite': 'evoke_product_maturity',
             'elapsed_ms': round((time.perf_counter() - started) * 1000.0, 3),
             'pg_bin': str(args.pg_bin),
             'output': str(args.output),

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run an II42 same-root binary A/B in a private mount namespace."""
+"""Run an Evoke same-root binary A/B in a private mount namespace."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ def parse_args() -> argparse.Namespace:
         '--qualified-index',
         required=True,
         help=(
-            'Permanent, non-empty II42 index whose current persistent root '
+            'Permanent, non-empty Evoke index whose current persistent root '
             'is being qualified.'
         ),
     )
@@ -68,7 +68,7 @@ def parse_args() -> argparse.Namespace:
         '--freeze-final-maintenance',
         action='store_true',
         help=(
-            'Keep II42 maintenance frozen on the successful final variant '
+            'Keep Evoke maintenance frozen on the successful final variant '
             'for a follow-up same-root probe.'
         ),
     )
@@ -183,7 +183,7 @@ def namespace_start_command(
     freeze_maintenance: bool,
 ) -> list[str]:
     if not library_targets:
-        raise ValueError('at least one II42 library target is required')
+        raise ValueError('at least one Evoke library target is required')
     script = """
 set -eu
 binary="$1"
@@ -197,13 +197,13 @@ for library_target in "$@"; do
     mount --bind "$binary" "$library_target"
 done
 if [ "$mode" = "freeze" ]; then
-    options="$options -c ii42.maintenance_worker_limit=0"
+    options="$options -c evoke.maintenance_worker_limit=0"
     exec runuser -u "$postgres_user" -- "$pg_ctl" -D "$data_dir" \
-        -l "$data_dir/ii42-same-root-ab-postgres.log" \
+        -l "$data_dir/evoke-same-root-ab-postgres.log" \
         -o "$options" -w start
 fi
 exec runuser -u "$postgres_user" -- "$pg_ctl" -D "$data_dir" \
-    -l "$data_dir/ii42-same-root-ab-postgres.log" \
+    -l "$data_dir/evoke-same-root-ab-postgres.log" \
     -o "$options" -w start
 """.strip()
     start_options = shlex.join([
@@ -304,7 +304,7 @@ def assert_catalog_library_targets(
         args,
         "SELECT coalesce(json_agg(probin ORDER BY probin)::text, '[]') "
         "FROM (SELECT DISTINCT probin FROM pg_proc "
-        "WHERE probin LIKE '%ii42%') AS targets",
+        "WHERE probin LIKE '%evoke%') AS targets",
     )
     catalog_targets = json.loads(raw_targets)
     declared_targets = {
@@ -316,15 +316,15 @@ def assert_catalog_library_targets(
         if target.suffix:
             declared_names.add(str(target.with_suffix('')))
     for catalog_target in catalog_targets:
-        if catalog_target in ('$libdir/ii42', '$libdir/ii42.so'):
+        if catalog_target in ('$libdir/evoke', '$libdir/evoke.so'):
             continue
         if not catalog_target.startswith('/'):
             raise RuntimeError(
-                f'unsupported II42 catalog library target: {catalog_target}'
+                f'unsupported Evoke catalog library target: {catalog_target}'
             )
         if catalog_target not in declared_names:
             raise RuntimeError(
-                'II42 catalog library target is not isolated by the A/B: '
+                'Evoke catalog library target is not isolated by the A/B: '
                 f'{catalog_target}'
             )
 
@@ -343,7 +343,7 @@ def assert_qualified_index(args: argparse.Namespace) -> dict[str, Any]:
         ' index_catalog.indisvalid AS valid,'
         ' index_catalog.indisready AS ready,'
         ' index_catalog.indislive AS live,'
-        ' ii42_index_generation_status_internal('
+        ' evoke_index_generation_status_internal('
         ' index_relation.oid)::jsonb AS status'
         ' FROM target'
         ' JOIN pg_class AS index_relation'
@@ -383,8 +383,8 @@ def assert_qualified_index(args: argparse.Namespace) -> dict[str, Any]:
         failures.append('index is not permanent')
     if identity.get('heap_persistence') != 'p':
         failures.append('heap is not permanent')
-    if identity.get('access_method') != 'ii42':
-        failures.append('access method is not ii42')
+    if identity.get('access_method') != 'evoke':
+        failures.append('access method is not evoke')
     for field in ('valid', 'ready', 'live'):
         if identity.get(field) is not True:
             failures.append(f'index is not {field}')
@@ -400,7 +400,7 @@ def assert_qualified_index(args: argparse.Namespace) -> dict[str, Any]:
     if failures:
         detail = ', '.join(failures)
         raise RuntimeError(
-            'qualified index is not a persistent non-empty II42 root: '
+            'qualified index is not a persistent non-empty Evoke root: '
             f'{detail}; identity={raw_identity}'
         )
     return identity
@@ -461,14 +461,14 @@ def start_server(
             )
             if actual_hash != expected_hash:
                 raise RuntimeError(
-                    'isolated PostgreSQL loaded the wrong II42 binary: '
+                    'isolated PostgreSQL loaded the wrong Evoke binary: '
                     f'target={library_target}, expected={expected_hash}, '
                     f'actual={actual_hash}'
                 )
         assert_endpoint_identity(args)
         if freeze_maintenance:
             limit = int(
-                query_scalar(args, 'SHOW ii42.maintenance_worker_limit')
+                query_scalar(args, 'SHOW evoke.maintenance_worker_limit')
             )
             if limit != 0:
                 raise RuntimeError(
@@ -630,9 +630,9 @@ def main() -> int:
     args.output_dir = prepare_output_directory(args.output_dir)
 
     pkglibdir = run_command([args.pg_config, '--pkglibdir']).stdout.strip()
-    library_target = Path(pkglibdir) / 'ii42.so'
+    library_target = Path(pkglibdir) / 'evoke.so'
     if not library_target.is_file():
-        raise RuntimeError(f'installed II42 library is absent: {library_target}')
+        raise RuntimeError(f'installed Evoke library is absent: {library_target}')
     library_targets = list(dict.fromkeys([
         library_target.resolve(strict=True),
         *args.library_targets,
@@ -865,7 +865,7 @@ def main() -> int:
         )
         if host_hashes_after != host_hashes_before:
             raise RuntimeError(
-                'host II42 library targets changed during isolated A/B'
+                'host Evoke library targets changed during isolated A/B'
             )
         if (
             guard_pid_before is not None and

@@ -58,7 +58,7 @@ fi
 if [ -z "$version" ]; then
     version_file="${repo_root}/packaging/onnxruntime.version"
     if [ ! -s "$version_file" ]; then
-        echo '--version is required outside the ii42 source tree' >&2
+        echo '--version is required outside the evoke source tree' >&2
         exit 1
     fi
     version="$(tr -d '[:space:]' <"$version_file")"
@@ -87,13 +87,13 @@ if [ -n "$asset_override" ]; then
     asset="$asset_override"
 fi
 
-checksum_file="${II42_ONNXRUNTIME_CHECKSUMS:-}"
+checksum_file="${EVOKE_ONNXRUNTIME_CHECKSUMS:-}"
 if [ -z "$checksum_file" ]; then
     checksum_file="${repo_root}/packaging/onnxruntime.sha256"
 fi
 if [ ! -f "$checksum_file" ] \
-    && [ -f /usr/local/share/ii42/onnxruntime.sha256 ]; then
-    checksum_file='/usr/local/share/ii42/onnxruntime.sha256'
+    && [ -f /usr/local/share/evoke/onnxruntime.sha256 ]; then
+    checksum_file='/usr/local/share/evoke/onnxruntime.sha256'
 fi
 if [ ! -f "$checksum_file" ]; then
     echo 'ONNX Runtime checksum manifest was not found' >&2
@@ -111,7 +111,7 @@ if [ -z "$expected_sha256" ]; then
     exit 1
 fi
 
-temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/ii42-onnxruntime.XXXXXX")"
+temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/evoke-onnxruntime.XXXXXX")"
 trap 'rm -rf "$temp_dir"' EXIT
 archive="${temp_dir}/${archive_name}"
 url="https://github.com/microsoft/onnxruntime/releases/download/v${version}/${archive_name}"

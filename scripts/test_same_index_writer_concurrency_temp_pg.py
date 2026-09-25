@@ -18,7 +18,7 @@ from typing import Any
 import psycopg
 from psycopg import sql
 
-from ii42_test_support import (
+from evoke_test_support import (
     create_short_socket_root,
     extension_control_root,
 )
@@ -77,7 +77,7 @@ def configure_cluster(
     extension_control_dir: Path | None,
 ) -> None:
     with (data_dir / 'postgresql.conf').open('a', encoding='utf-8') as handle:
-        handle.write("\nshared_preload_libraries = 'ii42'\n")
+        handle.write("\nshared_preload_libraries = 'evoke'\n")
         if extension_libdir is not None:
             libdir = str(extension_libdir).replace("'", "''")
             handle.write(
@@ -92,14 +92,14 @@ def configure_cluster(
                 f'{control_dir}:$system'
                 "'\n"
             )
-        handle.write("ii42.shared_runtime_size = '64MB'\n")
+        handle.write("evoke.shared_runtime_size = '64MB'\n")
         # Every maintenance transition in this harness is driven explicitly.
         # Keep the global supervisor outside the test window so it cannot
         # rotate an L0 chain between deterministic root-snapshot assertions.
         handle.write(
-            "ii42.maintenance_timer_interval_ms = '3600000ms'\n"
+            "evoke.maintenance_timer_interval_ms = '3600000ms'\n"
         )
-        handle.write('ii42.maintenance_worker_limit = 0\n')
+        handle.write('evoke.maintenance_worker_limit = 0\n')
         handle.write('log_lock_waits = on\n')
         handle.write("deadlock_timeout = '100ms'\n")
         handle.write("log_line_prefix = '%m [%p] %a '\n")
@@ -128,14 +128,14 @@ def setup(connection: psycopg.Connection[Any]) -> None:
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            CREATE EXTENSION ii42;
+            CREATE EXTENSION evoke;
             CREATE TABLE docs (
                 id text PRIMARY KEY,
                 body text NOT NULL
             );
             INSERT INTO docs VALUES ('base', 'base stable sentinel');
             CREATE INDEX docs_body_idx
-            ON docs USING ii42 (body)
+            ON docs USING evoke (body)
             WITH (
                 consistency = eventual
             );
@@ -165,7 +165,7 @@ def setup_model_eventual(
             sql.SQL(
                 """
                 CREATE INDEX model_docs_body_idx
-                ON model_docs USING ii42 (body)
+                ON model_docs USING evoke (body)
                 WITH (
                     sae = true,
                     model_path = {},
@@ -183,7 +183,7 @@ def maintain(
     with connect(socket_dir, port, autocommit=True) as connection:
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT ii42_index_maintain('docs_body_idx'::regclass)"
+                "SELECT evoke_index_maintain('docs_body_idx'::regclass)"
             )
             row = cursor.fetchone()
     if row is None:
@@ -200,13 +200,13 @@ def model_search_ids(
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT set_config("
-            "'ii42.test_unified_overlay_oracle', %s, false)",
+            "'evoke.test_unified_overlay_oracle', %s, false)",
             ('on' if oracle else 'off',),
         )
         cursor.execute(
             """
             SELECT docs.id
-            FROM ii42_query(
+            FROM evoke_query(
                 'model_docs_body_idx'::regclass,
                 %s,
                 100
@@ -227,7 +227,7 @@ def lexical_search_ids(
         cursor.execute(
             """
             SELECT docs.id
-            FROM ii42_query(
+            FROM evoke_query(
                 'docs_body_idx'::regclass,
                 %s,
                 100
@@ -259,8 +259,8 @@ def fetch_deep_status(
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_status(%s::regclass), '
-            'ii42_index_generation_audit_internal(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass), '
+            'evoke_index_generation_audit_internal(%s::regclass)',
             (index_name, index_name),
         )
         row = cursor.fetchone()
@@ -283,7 +283,7 @@ def model_status(
 ) -> dict[str, Any]:
     return fetch_json(
         connection,
-        "SELECT ii42_index_status('model_docs_body_idx'::regclass)",
+        "SELECT evoke_index_status('model_docs_body_idx'::regclass)",
     )
 
 
@@ -292,7 +292,7 @@ def lexical_status(
 ) -> dict[str, Any]:
     return fetch_json(
         connection,
-        "SELECT ii42_index_status('docs_body_idx'::regclass)",
+        "SELECT evoke_index_status('docs_body_idx'::regclass)",
     )
 
 
@@ -340,7 +340,7 @@ def maintain_index_until_clean(
     for _ in range(max_attempts + 1):
         status_value = fetch_json(
             connection,
-            "SELECT ii42_index_status(%s::regclass)",
+            "SELECT evoke_index_status(%s::regclass)",
             (index_name,),
         )
         details = status_value.get('details', {})
@@ -348,7 +348,7 @@ def maintain_index_until_clean(
             break
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT ii42_index_try_maintain(%s::regclass)",
+                "SELECT evoke_index_try_maintain(%s::regclass)",
                 (index_name,),
             )
             row = cursor.fetchone()
@@ -361,7 +361,7 @@ def maintain_index_until_clean(
         if 'maintained=false' in result and 'reason=no_pending' in result:
             status_value = fetch_json(
                 connection,
-                "SELECT ii42_index_status(%s::regclass)",
+                "SELECT evoke_index_status(%s::regclass)",
                 (index_name,),
             )
             details = status_value.get('details', {})
@@ -388,7 +388,7 @@ def maintain_index_until_clean(
 
 
 def maintenance_result_fields(result: str) -> dict[str, str]:
-    prefix = 'ii42_maintenance_result('
+    prefix = 'evoke_maintenance_result('
 
     if not result.startswith(prefix) or not result.endswith(')'):
         raise AssertionError(f'invalid maintenance result: {result}')
@@ -432,12 +432,12 @@ def exercise_vacuum_maintenance_authority(
                     ('retired', 'retired document boundary'),
                     ('stable', 'stable document boundary');
                 CREATE INDEX authority_docs_body_idx
-                ON authority_docs USING ii42 (body)
+                ON authority_docs USING evoke (body)
                 WITH (consistency = eventual);
                 """
             )
             cursor.execute(
-                "SELECT ii42_index_try_maintenance_lock(%s::regclass)",
+                "SELECT evoke_index_try_maintenance_lock(%s::regclass)",
                 (index_name,),
             )
             lock_row = cursor.fetchone()
@@ -454,7 +454,7 @@ def exercise_vacuum_maintenance_authority(
                 """
             )
             cursor.execute(
-                "SELECT ii42_index_try_maintain(%s::regclass)",
+                "SELECT evoke_index_try_maintain(%s::regclass)",
                 (index_name,),
             )
             row = cursor.fetchone()
@@ -474,14 +474,14 @@ def exercise_vacuum_maintenance_authority(
             try:
                 with maintenance_connection.cursor() as cursor:
                     cursor.execute(
-                        "SET ii42.test_online_maintenance_pause_ms = '2000'"
+                        "SET evoke.test_online_maintenance_pause_ms = '2000'"
                     )
                     cursor.execute('SELECT pg_backend_pid()')
                     maintenance_pid.append(int(cursor.fetchone()[0]))
                     maintenance_ready.set()
                     for _ in range(100):
                         cursor.execute(
-                            "SELECT ii42_index_try_maintain(%s::regclass)",
+                            "SELECT evoke_index_try_maintain(%s::regclass)",
                             (index_name,),
                         )
                         result = cursor.fetchone()
@@ -498,7 +498,7 @@ def exercise_vacuum_maintenance_authority(
                 if session_lock_held:
                     with maintenance_connection.cursor() as cursor:
                         cursor.execute(
-                            "SELECT ii42_index_maintenance_unlock("
+                            "SELECT evoke_index_maintenance_unlock("
                             "%s::regclass)",
                             (index_name,),
                         )
@@ -567,7 +567,7 @@ def exercise_vacuum_maintenance_authority(
         if session_lock_held:
             with maintenance_connection.cursor() as cursor:
                 cursor.execute(
-                    "SELECT ii42_index_maintenance_unlock(%s::regclass)",
+                    "SELECT evoke_index_maintenance_unlock(%s::regclass)",
                     (index_name,),
                 )
         maintenance_connection.close()
@@ -586,13 +586,13 @@ def exercise_vacuum_maintenance_authority(
             ):
                 cursor.execute(
                     "SELECT set_config("
-                    "'ii42.test_unified_overlay_oracle', %s, false)",
+                    "'evoke.test_unified_overlay_oracle', %s, false)",
                     ('on' if oracle else 'off',),
                 )
                 cursor.execute(
                     """
                     SELECT docs.id
-                    FROM ii42_query(
+                    FROM evoke_query(
                         'authority_docs_body_idx'::regclass,
                         'boundary',
                         100
@@ -604,7 +604,7 @@ def exercise_vacuum_maintenance_authority(
                 target.extend(str(value[0]) for value in cursor.fetchall())
         status_value = fetch_json(
             connection,
-            "SELECT ii42_index_status(%s::regclass)",
+            "SELECT evoke_index_status(%s::regclass)",
             (index_name,),
         )
 
@@ -657,13 +657,13 @@ def exercise_shared_retirement_sequence_guard(
         with connection.cursor() as cursor:
             cursor.execute(
                 "SELECT set_config("
-                "'ii42.test_unified_overlay_oracle', %s, false)",
+                "'evoke.test_unified_overlay_oracle', %s, false)",
                 ('on' if oracle else 'off',),
             )
             cursor.execute(
                 f"""
                 SELECT docs.id
-                FROM ii42_query(
+                FROM evoke_query(
                     '{index_name}'::regclass,
                     'shared retirement sentinel',
                     100
@@ -677,7 +677,7 @@ def exercise_shared_retirement_sequence_guard(
     def delta_records(connection: psycopg.Connection[Any]) -> int:
         status_value = fetch_json(
             connection,
-            'SELECT ii42_index_status(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass)',
             (index_name,),
         )
         return int(
@@ -695,7 +695,7 @@ def exercise_shared_retirement_sequence_guard(
                 INSERT INTO {table_name} VALUES
                     ('stable', 'shared retirement sentinel stable');
                 CREATE INDEX {index_name}
-                ON {table_name} USING ii42 (body)
+                ON {table_name} USING evoke (body)
                 WITH (consistency = eventual);
                 INSERT INTO {table_name} VALUES
                     ('dead-a', 'shared retirement sentinel alpha'),
@@ -779,13 +779,13 @@ def exercise_retired_page_reader_fence(
         with connection.cursor() as cursor:
             cursor.execute(
                 "SELECT set_config("
-                "'ii42.test_unified_overlay_oracle', %s, false)",
+                "'evoke.test_unified_overlay_oracle', %s, false)",
                 ('on' if oracle else 'off',),
             )
             cursor.execute(
                 f"""
                 SELECT docs.id
-                FROM ii42_query(
+                FROM evoke_query(
                     '{index_name}'::regclass,
                     'reader fence stable',
                     100
@@ -810,7 +810,7 @@ def exercise_retired_page_reader_fence(
     def maintenance_actor() -> str:
         with maintenance_connection.cursor() as cursor:
             cursor.execute(
-                'SELECT ii42_index_try_maintain(%s::regclass)',
+                'SELECT evoke_index_try_maintain(%s::regclass)',
                 (index_name,),
             )
             row = cursor.fetchone()
@@ -820,7 +820,7 @@ def exercise_retired_page_reader_fence(
         with connect(socket_dir, port, autocommit=True) as connection:
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SET ii42.test_convergent_root_snapshot_pause_ms "
+                    "SET evoke.test_convergent_root_snapshot_pause_ms "
                     "= '1000'"
                 )
                 cursor.execute('SELECT pg_backend_pid()')
@@ -843,12 +843,12 @@ def exercise_retired_page_reader_fence(
                 INSERT INTO {table_name} VALUES
                     ('stable', 'reader fence stable initial');
                 CREATE INDEX {index_name}
-                ON {table_name} USING ii42 (body)
+                ON {table_name} USING evoke (body)
                 WITH (consistency = eventual);
                 """
             )
             cursor.execute(
-                'SELECT ii42_index_try_maintenance_lock(%s::regclass)',
+                'SELECT evoke_index_try_maintenance_lock(%s::regclass)',
                 (index_name,),
             )
             row = cursor.fetchone()
@@ -898,7 +898,7 @@ def exercise_retired_page_reader_fence(
             for _ in range(16):
                 with maintenance_connection.cursor() as cursor:
                     cursor.execute(
-                        'SELECT ii42_index_try_maintain(%s::regclass)',
+                        'SELECT evoke_index_try_maintain(%s::regclass)',
                         (index_name,),
                     )
                     row = cursor.fetchone()
@@ -910,7 +910,7 @@ def exercise_retired_page_reader_fence(
                     break
                 status_value = fetch_json(
                     maintenance_connection,
-                    'SELECT ii42_index_status(%s::regclass)',
+                    'SELECT evoke_index_status(%s::regclass)',
                     (index_name,),
                 )
                 if int(
@@ -979,10 +979,10 @@ def exercise_retired_page_reader_fence(
 
         with maintenance_connection.cursor() as cursor:
             cursor.execute(
-                "SET ii42.test_prepared_cow_publication_pause_ms = '2000'"
+                "SET evoke.test_prepared_cow_publication_pause_ms = '2000'"
             )
             cursor.execute(
-                "SET ii42.test_reuse_reader_fence_pause_ms = '2000'"
+                "SET evoke.test_reuse_reader_fence_pause_ms = '2000'"
             )
             cursor.execute('SELECT pg_backend_pid()')
             maintenance_pid = int(cursor.fetchone()[0])
@@ -1090,9 +1090,9 @@ def exercise_retired_page_reader_fence(
 
         with maintenance_connection.cursor() as cursor:
             cursor.execute(
-                'RESET ii42.test_prepared_cow_publication_pause_ms'
+                'RESET evoke.test_prepared_cow_publication_pause_ms'
             )
-            cursor.execute('RESET ii42.test_reuse_reader_fence_pause_ms')
+            cursor.execute('RESET evoke.test_reuse_reader_fence_pause_ms')
         convergence = maintain_index_until_clean(
             maintenance_connection,
             index_name=index_name,
@@ -1143,7 +1143,7 @@ def exercise_retired_page_reader_fence(
         if maintenance_locked:
             with maintenance_connection.cursor() as cursor:
                 cursor.execute(
-                    'SELECT ii42_index_maintenance_unlock(%s::regclass)',
+                    'SELECT evoke_index_maintenance_unlock(%s::regclass)',
                     (index_name,),
                 )
         maintenance_connection.close()
@@ -1254,7 +1254,7 @@ def exercise_linked_l0_logical_prefix(
 
     with observer.cursor() as cursor:
         cursor.execute(
-            "SELECT ii42_index_try_maintenance_lock("
+            "SELECT evoke_index_try_maintenance_lock("
             "'docs_body_idx'::regclass)"
         )
         row = cursor.fetchone()
@@ -1305,7 +1305,7 @@ def exercise_linked_l0_logical_prefix(
             try:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SET ii42.test_convergent_root_snapshot_pause_ms = "
+                        "SET evoke.test_convergent_root_snapshot_pause_ms = "
                         "'1000'"
                     )
                     cursor.execute('SELECT pg_backend_pid()')
@@ -1449,7 +1449,7 @@ def exercise_linked_l0_logical_prefix(
         if maintenance_locked:
             with observer.cursor() as cursor:
                 cursor.execute(
-                    "SELECT ii42_index_maintenance_unlock("
+                    "SELECT evoke_index_maintenance_unlock("
                     "'docs_body_idx'::regclass)"
                 )
         observer.close()
@@ -1475,7 +1475,7 @@ def exercise_generation_staging_reuse(
     def capture(phase: str, cycle: int, result: str) -> None:
         status_value = fetch_json(
             connection,
-            "SELECT ii42_index_status("
+            "SELECT evoke_index_status("
             "'model_docs_body_idx'::regclass)",
         )
         with connection.cursor() as cursor:
@@ -1602,7 +1602,7 @@ def exercise_online_tail_handoff(
     observer = connect(socket_dir, port, autocommit=True)
     initial_status = fetch_json(
         observer,
-        "SELECT ii42_index_status("
+        "SELECT evoke_index_status("
         "'model_docs_body_idx'::regclass)",
     )
     if (
@@ -1627,12 +1627,12 @@ def exercise_online_tail_handoff(
             try:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SET ii42.test_online_maintenance_pause_ms = '1000'"
+                        "SET evoke.test_online_maintenance_pause_ms = '1000'"
                     )
                     cursor.execute('SELECT pg_backend_pid()')
                     maintenance_pid.append(int(cursor.fetchone()[0]))
                     cursor.execute(
-                        "SELECT ii42_index_try_maintenance_lock("
+                        "SELECT evoke_index_try_maintenance_lock("
                         "'model_docs_body_idx'::regclass)"
                     )
                     lock_row = cursor.fetchone()
@@ -1649,7 +1649,7 @@ def exercise_online_tail_handoff(
                         )
                     for _ in range(2):
                         cursor.execute(
-                            "SELECT ii42_index_try_maintain("
+                            "SELECT evoke_index_try_maintain("
                             "'model_docs_body_idx'::regclass)"
                         )
                         row = cursor.fetchone()
@@ -1664,7 +1664,7 @@ def exercise_online_tail_handoff(
                 if lock_held:
                     with connection.cursor() as cursor:
                         cursor.execute(
-                            "SELECT ii42_index_maintenance_unlock("
+                            "SELECT evoke_index_maintenance_unlock("
                             "'model_docs_body_idx'::regclass)"
                         )
         return ' -> '.join(results)
@@ -1716,7 +1716,7 @@ def exercise_online_tail_handoff(
                 )
             baseline = fetch_json(
                 observer,
-                "SELECT ii42_index_status("
+                "SELECT evoke_index_status("
                 "'model_docs_body_idx'::regclass)",
             )
             if int(
@@ -1746,7 +1746,7 @@ def exercise_online_tail_handoff(
 
         tail_status = fetch_json(
             observer,
-            "SELECT ii42_index_status("
+            "SELECT evoke_index_status("
             "'model_docs_body_idx'::regclass)",
         )
         details = tail_status.get('details', {})
@@ -1795,7 +1795,7 @@ def verify_online_tail_handoff_after_restart(
     with connect(socket_dir, port, autocommit=True) as connection:
         before = fetch_json(
             connection,
-            "SELECT ii42_index_status("
+            "SELECT evoke_index_status("
             "'model_docs_body_idx'::regclass)",
         )
         normal_rows = model_search_ids(
@@ -1857,7 +1857,7 @@ def search_ids(
         cursor.execute(
             """
             SELECT docs.id
-            FROM ii42_query('docs_body_idx'::regclass, %s, 10) AS hit
+            FROM evoke_query('docs_body_idx'::regclass, %s, 10) AS hit
             JOIN docs ON docs.ctid = hit.ctid
             ORDER BY docs.id
             """,
@@ -1868,22 +1868,22 @@ def search_ids(
 
 def status(connection: psycopg.Connection[Any]) -> dict[str, Any]:
     with connection.cursor() as cursor:
-        cursor.execute("SELECT ii42_index_status('docs_body_idx'::regclass)")
+        cursor.execute("SELECT evoke_index_status('docs_body_idx'::regclass)")
         row = cursor.fetchone()
     if row is None or not isinstance(row[0], dict):
-        raise AssertionError(f'invalid ii42 status: {row}')
+        raise AssertionError(f'invalid evoke status: {row}')
     return dict(row[0])
 
 
 def cache_status(connection: psycopg.Connection[Any]) -> dict[str, Any]:
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT ii42_index_runtime_state_json("
+            "SELECT evoke_index_runtime_state_json("
             "'docs_body_idx'::regclass)"
         )
         row = cursor.fetchone()
     if row is None or not isinstance(row[0], dict):
-        raise AssertionError(f'invalid ii42 cache status: {row}')
+        raise AssertionError(f'invalid evoke cache status: {row}')
     return dict(row[0])
 
 
@@ -2180,7 +2180,7 @@ def exercise_model_eventual_concurrency(
 
         def actor(actor_id: int) -> dict[str, float | int]:
             with connect(socket_dir, port, autocommit=True) as connection:
-                configure(connection, f'ii42-control-reader-{actor_id}')
+                configure(connection, f'evoke-control-reader-{actor_id}')
                 for _ in range(2):
                     model_search_ids(
                         connection,
@@ -2209,7 +2209,7 @@ def exercise_model_eventual_concurrency(
             return list(executor.map(actor, range(actor_count)))
 
     with connect(socket_dir, port, autocommit=True) as connection:
-        configure(connection, 'ii42-baseline-latency')
+        configure(connection, 'evoke-baseline-latency')
         baseline_query_latency_ms = measure_query_latency(connection)
     control_reader_latency_ms = measure_parallel_query_latency(
         actor_count=readers
@@ -2220,7 +2220,7 @@ def exercise_model_eventual_concurrency(
         latencies_ms: list[float] = []
         try:
             with connect(socket_dir, port, autocommit=True) as connection:
-                configure(connection, f'ii42-reader-{reader_id}')
+                configure(connection, f'evoke-reader-{reader_id}')
                 start_barrier.wait()
                 while not stop_event.is_set():
                     started = time.perf_counter()
@@ -2272,12 +2272,12 @@ def exercise_model_eventual_concurrency(
             )
             status = fetch_json(
                 connection,
-                "SELECT ii42_index_status("
+                "SELECT evoke_index_status("
                 "'model_docs_body_idx'::regclass)",
             )
             cache = fetch_json(
                 connection,
-                "SELECT ii42_index_runtime_state_json("
+                "SELECT evoke_index_runtime_state_json("
                 "'model_docs_body_idx'::regclass)",
             )
             raise AssertionError(json.dumps({
@@ -2294,7 +2294,7 @@ def exercise_model_eventual_concurrency(
 
         try:
             with connect(socket_dir, port, autocommit=True) as connection:
-                configure(connection, f'ii42-writer-{writer_id}')
+                configure(connection, f'evoke-writer-{writer_id}')
                 start_barrier.wait()
                 for cycle in range(cycles):
                     doc_id = f'model-writer-{writer_id}-{cycle}'
@@ -2369,12 +2369,12 @@ def exercise_model_eventual_concurrency(
         results: dict[str, int] = {}
         try:
             with connect(socket_dir, port, autocommit=True) as connection:
-                configure(connection, 'ii42-maintenance')
+                configure(connection, 'evoke-maintenance')
                 start_barrier.wait()
                 while not stop_event.is_set():
                     with connection.cursor() as cursor:
                         cursor.execute(
-                            "SELECT ii42_index_try_maintain("
+                            "SELECT evoke_index_try_maintain("
                             "'model_docs_body_idx'::regclass)"
                         )
                         row = cursor.fetchone()
@@ -2459,7 +2459,7 @@ def exercise_model_eventual_concurrency(
         )
 
     with connect(socket_dir, port, autocommit=True) as connection:
-        configure(connection, 'ii42-finalizer')
+        configure(connection, 'evoke-finalizer')
         with connection.cursor() as cursor:
             cursor.execute('VACUUM model_docs')
             cursor.execute('SELECT count(*) FROM model_docs')
@@ -2471,12 +2471,12 @@ def exercise_model_eventual_concurrency(
         )
         final_status = fetch_json(
             connection,
-            "SELECT ii42_index_status("
+            "SELECT evoke_index_status("
             "'model_docs_body_idx'::regclass)",
         )
         runtime_status = fetch_json(
             connection,
-            'SELECT ii42_runtime_service_status()',
+            'SELECT evoke_runtime_service_status()',
         )
         normal_rows = model_search_ids(
             connection,
@@ -2584,9 +2584,9 @@ def main() -> None:
         if not executable.is_file():
             raise FileNotFoundError(f'missing PostgreSQL executable: {executable}')
 
-    socket_root = create_short_socket_root('ii42-writer-')
+    socket_root = create_short_socket_root('evoke-writer-')
     try:
-        with tempfile.TemporaryDirectory(prefix='ii42-writer-data-') as temp:
+        with tempfile.TemporaryDirectory(prefix='evoke-writer-data-') as temp:
             root = Path(temp)
             data_dir = root / 'data'
             socket_dir = socket_root / 's'
@@ -2727,8 +2727,8 @@ def main() -> None:
                     reader_lock_waits = [
                         line for line in log_lines
                         if (
-                            'ii42-reader-' in line or
-                            'ii42-control-reader-' in line
+                            'evoke-reader-' in line or
+                            'evoke-control-reader-' in line
                         ) and (
                             'still waiting for' in line or
                             'acquired ' in line and ' after ' in line

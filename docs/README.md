@@ -11,9 +11,9 @@ The `sae` reloption is the current SQL/catalog name. In prose, the current
 product retrieval path is SSR; SAE is reserved for encoder/vocabulary
 mechanisms, historical experiment names, and literal API or GUC names.
 
-Both modes share `ii42_index_status(...)` and common maintenance functions.
+Both modes share `evoke_index_status(...)` and common maintenance functions.
 PostgreSQL `DROP INDEX` owns teardown for both modes. BM25 keeps its ordinary
-index-scan surface. Semantic ranking uses one overloaded `ii42_query(...)`
+index-scan surface. Semantic ranking uses one overloaded `evoke_query(...)`
 family for both ordinary ranked table SQL and explicit hit rows. The current
 implementation is page-native v3.
 SSR is eventual-only and lexical-first; shared workers complete semantic

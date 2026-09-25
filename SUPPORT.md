@@ -16,7 +16,7 @@ the issue tracker.
 
 Before reporting a bug, reproduce it on a supported PostgreSQL version and a
 current Evoke package or source checkout. Include a minimal schema and query,
-`SELECT extversion FROM pg_extension WHERE extname = 'ii42'`, and whether the
+`SELECT extversion FROM pg_extension WHERE extname = 'evoke'`, and whether the
 index is BM25 or `sae = true`. Remove credentials, private data, model assets,
 and infrastructure addresses.
 

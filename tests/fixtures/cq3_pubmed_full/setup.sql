@@ -16,7 +16,7 @@ BEGIN
         index_catalog.indisvalid,
         index_catalog.indisready,
         index_catalog.indislive,
-        ii42_index_generation_status_internal(
+        evoke_index_generation_status_internal(
             index_relation.oid
         )::jsonb
     INTO
@@ -121,7 +121,7 @@ VALUES ('unfiltered', NULL);
 
 CREATE TABLE bench.cq3_full_query_vector AS
 WITH encoded AS MATERIALIZED (
-    SELECT ii42_encode_text_internal(
+    SELECT evoke_encode_text_internal(
         'bench.pubmed_full_v2_idx'::regclass,
         'cancer immunotherapy biomarkers'
     ) AS value
@@ -186,7 +186,7 @@ BEGIN
     INTO hit_count
     FROM bench.cq3_full_query_vector AS query_vector
     CROSS JOIN bench.cq3_full_filter_sets AS filter_set
-    CROSS JOIN LATERAL ii42_index_semantic_query_native_internal(
+    CROSS JOIN LATERAL evoke_index_semantic_query_native_internal(
         'bench.pubmed_full_v2_idx'::regclass,
         query_vector.atoms,
         query_vector.weights,
@@ -202,7 +202,7 @@ BEGIN
     elapsed_ms := 1000 * extract(
         epoch FROM clock_timestamp() - started_at
     );
-    trace_value := ii42_query_trace_internal();
+    trace_value := evoke_query_trace_internal();
     SELECT sum(total_bytes)::int8
     INTO backend_memory_bytes
     FROM pg_backend_memory_contexts;
@@ -253,7 +253,7 @@ AS $function$
         hit.score
     FROM bench.cq3_full_query_vector AS query_vector
     CROSS JOIN bench.cq3_full_filter_sets AS filter_set
-    CROSS JOIN LATERAL ii42_index_semantic_query_native_internal(
+    CROSS JOIN LATERAL evoke_index_semantic_query_native_internal(
         'bench.pubmed_full_v2_idx'::regclass,
         query_vector.atoms,
         query_vector.weights,

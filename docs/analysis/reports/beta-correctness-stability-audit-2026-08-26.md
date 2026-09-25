@@ -10,7 +10,7 @@ policy, or performance thresholds. The review is limited to correctness,
 lifecycle closure, failure safety, resource ownership, and product boundaries.
 
 The product still has one relation-owned root, one mutation lifecycle, one
-maintenance authority, and one public `ii42_query(...)` entry point. SAE
+maintenance authority, and one public `evoke_query(...)` entry point. SAE
 remains lexical-first and eventual-only. Shared workers own model sessions;
 backends do not retain index-sized semantic state.
 
@@ -31,12 +31,12 @@ and maintenance convergence. This adds no product path or compatibility code.
 ## Reproduced Evidence
 
 The outputs used for this source audit are retained under
-`/private/tmp/ii42-correctness-*`. They are disposable local audit artifacts,
+`/private/tmp/evoke-correctness-*`. They are disposable local audit artifacts,
 not packaged release evidence. The principal result files are
-`ii42-correctness-sae-lifecycle-rr2.json`,
-`ii42-correctness-unified-lifecycle.json`,
-`ii42-correctness-2pc.json`, `ii42-correctness-vacuum-frontier.json`,
-`ii42-correctness-replication.json`, and the matching build, pytest, inventory,
+`evoke-correctness-sae-lifecycle-rr2.json`,
+`evoke-correctness-unified-lifecycle.json`,
+`evoke-correctness-2pc.json`, `evoke-correctness-vacuum-frontier.json`,
+`evoke-correctness-replication.json`, and the matching build, pytest, inventory,
 regression, runtime, preload, schema, privilege, and corruption logs.
 
 | Surface | Result |
@@ -77,8 +77,8 @@ threshold, cache, or scorer micro-tuning is implied by this audit.
 
 ### Read-Only Shadow Transition Check
 
-A read-only check on 2026-08-26 found PostgreSQL 18.4 and II42 0.2.4 on
-Shadow. `ii_dev` is the only database with the extension and owns 14 II42
+A read-only check on 2026-08-26 found PostgreSQL 18.4 and Evoke 0.2.4 on
+Shadow. `ii_dev` is the only database with the extension and owns 14 Evoke
 indexes, all valid and ready. All nine declared Commons product roots report a
 healthy current generation and accelerator policy 7. The six product roots
 with included scope columns report scope v6 and `scope_current=true`; the

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Benchmark the read-only II42 query contract used by Commons."""
+"""Benchmark the read-only Evoke query contract used by Commons."""
 
 from __future__ import annotations
 
@@ -16,19 +16,19 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_OUTPUT = Path('/tmp/ii42-commons-query-matrix.json')
-APPLICATION_NAME = 'ii42_commons_query_matrix'
+DEFAULT_OUTPUT = Path('/tmp/evoke-commons-query-matrix.json')
+APPLICATION_NAME = 'evoke_commons_query_matrix'
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ONNXRUNTIME_VERSION_PATH = REPO_ROOT / 'packaging/onnxruntime.version'
 MATRIX_CONTRACT_VERSION = 10
-CATALOG_CONTRACT = 'ii42_catalog_v1'
+CATALOG_CONTRACT = 'evoke_catalog_v1'
 FIRST_QUERY_MAX_MS = 2_000.0
 MAX_RESTART_EVIDENCE_AGE_SECONDS = 600
 REQUIRED_CATALOG_SIGNATURES = (
-    'ii42_catalog_contract_internal()',
-    'ii42_index_generation_status_internal(regclass)',
-    'ii42_index_runtime_state_json(regclass)',
-    'ii42_query_trace_internal()',
+    'evoke_catalog_contract_internal()',
+    'evoke_index_generation_status_internal(regclass)',
+    'evoke_index_runtime_state_json(regclass)',
+    'evoke_query_trace_internal()',
 )
 REQUIRED_FILTER_STATS = {
     'data_arxiv': {
@@ -103,13 +103,13 @@ class BenchmarkCase:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            'Run the exact Commons II42 query matrix against one PostgreSQL '
+            'Run the exact Commons Evoke query matrix against one PostgreSQL '
             'database without mutating tables or indexes.'
         ),
     )
     parser.add_argument(
         '--dsn',
-        default=os.environ.get('II42_COMMONS_DSN', 'dbname=ii_dev'),
+        default=os.environ.get('EVOKE_COMMONS_DSN', 'dbname=ii_dev'),
     )
     parser.add_argument('--psql', default='psql')
     parser.add_argument('--output', type=Path, default=DEFAULT_OUTPUT)
@@ -347,7 +347,7 @@ def resolve_pubmed_index(args: argparse.Namespace) -> tuple[str, str]:
     )
     if result['stable']:
         return result['stable'], 'stable'
-    raise RuntimeError('the stable Commons PubMed II42 index is not present')
+    raise RuntimeError('the stable Commons PubMed Evoke index is not present')
 
 
 def timed_search_case(
@@ -454,7 +454,7 @@ def field_search(
     if filters is not None:
         arguments.append(json_literal(filters))
     arguments.append(str(k))
-    return f'ii42_query({", ".join(arguments)})'
+    return f'evoke_query({", ".join(arguments)})'
 
 
 def field_search_allowed(
@@ -468,7 +468,7 @@ def field_search_allowed(
     field_sql = 'ARRAY[' + ','.join(sql_literal(item) for item in fields) + ']'
     weight_sql = 'ARRAY[' + ','.join(str(item) for item in weights) + ']'
     return (
-        'ii42_query('
+        'evoke_query('
         f'{regclass_literal(index_name)}, {sql_literal(query_text)}, '
         f'{field_sql}::text[], {weight_sql}::real[], '
         f'{allowed_tids_sql}, {k})'
@@ -485,7 +485,7 @@ def single_search(
     if filters is not None:
         arguments.append(json_literal(filters))
     arguments.append(str(k))
-    return f'ii42_query({", ".join(arguments)})'
+    return f'evoke_query({", ".join(arguments)})'
 
 
 def single_search_allowed(
@@ -495,7 +495,7 @@ def single_search_allowed(
     k: int = 50,
 ) -> str:
     return (
-        'ii42_query('
+        'evoke_query('
         f'{regclass_literal(index_name)}, {sql_literal(query_text)}, '
         f'{allowed_tids_sql}, {k})'
     )
@@ -580,7 +580,7 @@ def chunk_scope_case(
     hits AS MATERIALIZED (
         SELECT hit.*
         FROM started CROSS JOIN sample
-        CROSS JOIN LATERAL ii42_query(
+        CROSS JOIN LATERAL evoke_query(
             {regclass_literal(index_name)},
             {sql_literal(DEFAULT_QUERY)},
             jsonb_build_object(
@@ -945,7 +945,7 @@ def summarize_attempts(
     if case.oracle_sql is not None:
         oracle_attempts = []
         for item in completed:
-            trace = item.get('ii42_trace')
+            trace = item.get('evoke_trace')
             oracle = item.get('filter_oracle')
             expected = (
                 int(oracle['allowed_documents'])
@@ -1129,7 +1129,7 @@ def run_case_attempt(
             'error': str(exc),
             'stdout': result.stdout,
         }
-    payload['ii42_trace'] = trace_payload.get('ii42_trace')
+    payload['evoke_trace'] = trace_payload.get('evoke_trace')
     if oracle_payload is not None:
         payload['filter_oracle'] = oracle_payload
     if rank_oracle_payload is not None:
@@ -1158,7 +1158,7 @@ def run_case(
         case.sql,
         (
             "SELECT json_build_object("
-            "'ii42_trace', ii42_query_trace_internal());"
+            "'evoke_trace', evoke_query_trace_internal());"
         ),
     ]
     if case.oracle_sql is not None:
@@ -1237,7 +1237,7 @@ def collect_environment(
           ON namespace.oid = installed.extnamespace
         JOIN pg_available_extensions AS available
           ON available.name = installed.extname
-        WHERE installed.extname = 'ii42'
+        WHERE installed.extname = 'evoke'
     ),
     required_catalog_function(signature) AS (
         VALUES {required_catalog_values}
@@ -1267,7 +1267,7 @@ def collect_environment(
             ) AS paths,
             count(*) > 0
             AND bool_and(
-                installed_procedure.probin = '$libdir/ii42'
+                installed_procedure.probin = '$libdir/evoke'
             ) AS current
         FROM extension_catalog
         JOIN pg_depend AS dependency
@@ -1320,10 +1320,10 @@ def collect_environment(
         WHERE name IN (
             'autovacuum',
             'default_statistics_target',
-            'ii42.shared_runtime_size',
-            'ii42.maintenance_worker_limit',
-            'ii42.test_disable_semantic_accelerator',
-            'ii42.test_filtered_forward_route',
+            'evoke.shared_runtime_size',
+            'evoke.maintenance_worker_limit',
+            'evoke.test_disable_semantic_accelerator',
+            'evoke.test_filtered_forward_route',
             'shared_preload_libraries',
             'track_counts'
         )
@@ -1437,7 +1437,7 @@ def collect_environment(
         'postmaster_age_seconds',
             extract(epoch FROM clock_timestamp() - pg_postmaster_start_time()),
         'extension_version', (
-            SELECT extversion FROM pg_extension WHERE extname = 'ii42'
+            SELECT extversion FROM pg_extension WHERE extname = 'evoke'
         ),
         'catalog_contract', (SELECT value FROM catalog_contract),
         'pubmed_index', {sql_literal(pubmed_index)},
@@ -1546,7 +1546,7 @@ def catalog_contract_qualified(contract: Any) -> bool:
         and SIMPLE_IDENTIFIER_RE.fullmatch(
             contract['extension_schema']
         ) is not None
-        and contract.get('c_module_paths') == ['$libdir/ii42']
+        and contract.get('c_module_paths') == ['$libdir/evoke']
         and contract.get('c_module_path_current') is True
         and contract.get('catalog_identity') == CATALOG_CONTRACT
         and isinstance(required_functions, dict)
@@ -1568,7 +1568,7 @@ def collect_catalog_identity(
         return None
     function = (
         f'{quote_identifier(schema)}.'
-        '"ii42_catalog_contract_internal"'
+        '"evoke_catalog_contract_internal"'
     )
     try:
         value = query_json(
@@ -1594,8 +1594,8 @@ def collect_onnxruntime_contract(
             'error': 'extension schema is unavailable',
         }
     qualified_schema = quote_identifier(schema)
-    build_info_fn = f'{qualified_schema}."ii42_onnxruntime_build_info"'
-    probe_fn = f'{qualified_schema}."ii42_onnxruntime_probe"'
+    build_info_fn = f'{qualified_schema}."evoke_onnxruntime_build_info"'
+    probe_fn = f'{qualified_schema}."evoke_onnxruntime_probe"'
     try:
         observed = query_json(
             args,
@@ -1715,22 +1715,22 @@ def evaluate_runtime_health(environment: dict[str, Any]) -> dict[str, Any]:
         reasons.append('settings are missing')
         return {'qualified': False, 'reasons': reasons}
 
-    worker_limit = settings.get('ii42.maintenance_worker_limit')
+    worker_limit = settings.get('evoke.maintenance_worker_limit')
     try:
         workers_enabled = int(worker_limit) > 0
     except (TypeError, ValueError):
         workers_enabled = False
     if not workers_enabled:
-        reasons.append('II42 maintenance workers are disabled')
+        reasons.append('Evoke maintenance workers are disabled')
 
     accelerator_override = settings.get(
-        'ii42.test_disable_semantic_accelerator'
+        'evoke.test_disable_semantic_accelerator'
     )
     if accelerator_override is None:
         reasons.append('semantic accelerator test control is unavailable')
     elif accelerator_override != 'off':
         reasons.append('semantic accelerator test override is active')
-    forward_route = settings.get('ii42.test_filtered_forward_route')
+    forward_route = settings.get('evoke.test_filtered_forward_route')
     if forward_route is None:
         reasons.append('filtered forward-route control is unavailable')
     elif forward_route != 'auto':
@@ -1811,12 +1811,12 @@ def collect_index_status(
 ) -> dict[str, Any]:
     sql_text = f"""
     WITH source AS (
-        SELECT ii42_index_generation_status_internal(
+        SELECT evoke_index_generation_status_internal(
             {regclass_literal(index_name)}
         )::jsonb AS status
     ),
     runtime_source AS (
-        SELECT ii42_index_runtime_state_json(
+        SELECT evoke_index_runtime_state_json(
             {regclass_literal(index_name)}
         )::jsonb AS runtime
     )

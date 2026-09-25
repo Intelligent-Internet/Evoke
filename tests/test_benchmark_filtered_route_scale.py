@@ -121,12 +121,12 @@ def test_bound_route_is_auditable_against_one_candidate_binary() -> None:
     assert 'filtered_forward_bound_estimated_bytes' in MODULE.TRACE_COUNTERS
     assert 'filtered_forward_bound_blocks_scored' in MODULE.TRACE_COUNTERS
     assert '--candidate-library' in SCRIPT_TEXT
-    assert 'pg_temp.ii42_filtered_route_query' in SCRIPT_TEXT
-    assert 'pg_temp.ii42_filtered_route_status' in SCRIPT_TEXT
+    assert 'pg_temp.evoke_filtered_route_query' in SCRIPT_TEXT
+    assert 'pg_temp.evoke_filtered_route_status' in SCRIPT_TEXT
     assert 'auto_vs_direct' in SCRIPT_TEXT
     assert 'direct_vs_hybrid' in SCRIPT_TEXT
     assert 'direct_vs_bound' in SCRIPT_TEXT
-    assert "'schema': 'ii42_filtered_route_scale_v2'" in SCRIPT_TEXT
+    assert "'schema': 'evoke_filtered_route_scale_v2'" in SCRIPT_TEXT
 
 
 def forward_trace(**overrides: object) -> dict[str, object]:
@@ -221,8 +221,8 @@ def test_query_vector_fixture_bypasses_runtime_encoding() -> None:
 
 
 def test_large_filter_sets_remain_server_side() -> None:
-    assert 'CREATE TEMP TABLE ii42_filtered_route_sets' in SCRIPT_TEXT
-    assert 'FROM pg_temp.ii42_filtered_route_sets' in SCRIPT_TEXT
+    assert 'CREATE TEMP TABLE evoke_filtered_route_sets' in SCRIPT_TEXT
+    assert 'FROM pg_temp.evoke_filtered_route_sets' in SCRIPT_TEXT
     assert 'array_agg(ctid ORDER BY ctid)' in SCRIPT_TEXT
     assert 'list[str] | None' not in SCRIPT_TEXT
 

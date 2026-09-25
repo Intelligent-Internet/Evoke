@@ -19,7 +19,7 @@ from typing import Any, Callable, TypeVar
 
 import psycopg
 
-from ii42_test_support import (
+from evoke_test_support import (
     extension_control_root,
     vacuum_with_session_maintenance_lock,
 )
@@ -54,7 +54,7 @@ def parse_args() -> argparse.Namespace:
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share directory containing extension/ii42.control, '
+            'PostgreSQL share directory containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -143,7 +143,7 @@ def acquire_maintenance_lock(
     while True:
         with connection.cursor() as cursor:
             cursor.execute(
-                'SELECT ii42_index_try_maintenance_lock(%s::regclass)',
+                'SELECT evoke_index_try_maintenance_lock(%s::regclass)',
                 (index_name,),
             )
             row = cursor.fetchone()
@@ -166,7 +166,7 @@ def release_maintenance_lock(
     try:
         with connection.cursor() as cursor:
             cursor.execute(
-                'SELECT ii42_index_maintenance_unlock(%s::regclass)',
+                'SELECT evoke_index_maintenance_unlock(%s::regclass)',
                 (index_name,),
             )
         connection.commit()
@@ -180,14 +180,14 @@ def configure_maintenance_worker_limit(
 ) -> None:
     with connection.cursor() as cursor:
         cursor.execute(
-            'ALTER SYSTEM SET ii42.maintenance_worker_limit = '
+            'ALTER SYSTEM SET evoke.maintenance_worker_limit = '
             f"'{int(worker_limit)}'",
         )
         cursor.execute('SELECT pg_reload_conf()')
     deadline = time.monotonic() + 10.0
     while True:
         with connection.cursor() as cursor:
-            cursor.execute('SHOW ii42.maintenance_worker_limit')
+            cursor.execute('SHOW evoke.maintenance_worker_limit')
             observed = int(cursor.fetchone()[0])
         if observed == worker_limit:
             return
@@ -209,7 +209,7 @@ def wait_for_maintenance_worker_quiescence(
                 """
                 SELECT count(*)
                 FROM pg_stat_activity
-                WHERE backend_type = 'ii42 background'
+                WHERE backend_type = 'evoke background'
                   AND datname = current_database()
                 """
             )
@@ -249,7 +249,7 @@ def p2_runtime_result(
 ) -> dict[str, Any]:
     return fetch_json(
         connection,
-        'SELECT ii42_runtime_service_query_atoms(%s, %s)::jsonb',
+        'SELECT evoke_runtime_service_query_atoms(%s, %s)::jsonb',
         (str(model_path), text),
     )
 
@@ -261,7 +261,7 @@ def p2_runtime_batch_result(
 ) -> dict[str, Any]:
     return fetch_json(
         connection,
-        'SELECT ii42_runtime_service_query_atoms_batch(%s, %s)::jsonb',
+        'SELECT evoke_runtime_service_query_atoms_batch(%s, %s)::jsonb',
         (str(model_path), texts),
     )
 
@@ -535,14 +535,14 @@ def p2_full_text_window_audit(
 def index_status(connection: psycopg.Connection[Any]) -> dict[str, Any]:
     return fetch_json(
         connection,
-        "SELECT ii42_index_status('p2_mutable.docs_idx'::regclass)",
+        "SELECT evoke_index_status('p2_mutable.docs_idx'::regclass)",
     )
 
 
 def index_audit(connection: psycopg.Connection[Any]) -> dict[str, Any]:
     return fetch_json(
         connection,
-        "SELECT ii42_index_audit('p2_mutable.docs_idx'::regclass)",
+        "SELECT evoke_index_audit('p2_mutable.docs_idx'::regclass)",
     )
 
 
@@ -552,7 +552,7 @@ def cache_state(
 ) -> dict[str, Any]:
     return fetch_json(
         connection,
-        'SELECT ii42_index_runtime_state_json(%s::regclass)',
+        'SELECT evoke_index_runtime_state_json(%s::regclass)',
         (index_name,),
     )
 
@@ -565,12 +565,12 @@ def page_native_backend_memory_state(
             """
             SELECT
                 count(*) FILTER (
-                    WHERE name = 'ii42 transaction-local SAE delta cache'
+                    WHERE name = 'evoke transaction-local SAE delta cache'
                 )::int8,
                 COALESCE(
                     sum(total_bytes) FILTER (
                         WHERE name =
-                            'ii42 transaction-local SAE delta cache'
+                            'evoke transaction-local SAE delta cache'
                     ),
                     0
                 )::int8,
@@ -843,13 +843,13 @@ def query_hits(
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT set_config("
-            "'ii42.test_unified_overlay_oracle', %s, false)",
+            "'evoke.test_unified_overlay_oracle', %s, false)",
             ('on' if oracle else 'off',),
         )
         cursor.execute(
             """
             SELECT source.id, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 'p2_mutable.docs_idx'::regclass,
                 %s,
                 20
@@ -872,13 +872,13 @@ def query_trace(
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT set_config("
-            "'ii42.test_unified_overlay_oracle', %s, false)",
+            "'evoke.test_unified_overlay_oracle', %s, false)",
             ('on' if oracle else 'off',),
         )
         cursor.execute(
             """
             SELECT to_jsonb(hit)
-            FROM ii42_query_semantic_internal(
+            FROM evoke_query_semantic_internal(
                 'p2_mutable.docs_idx'::regclass,
                 %s,
                 20
@@ -898,7 +898,7 @@ def stale_query_encoding_audit(
     encoded = fetch_json(
         connection,
         """
-        SELECT ii42_encode_text_internal(
+        SELECT evoke_encode_text_internal(
             'p2_mutable.docs_idx'::regclass,
             %s
         )
@@ -919,7 +919,7 @@ def stale_query_encoding_audit(
             cursor.execute(
                 """
                 SELECT count(*)
-                FROM ii42_index_semantic_query_native_internal(
+                FROM evoke_index_semantic_query_native_internal(
                     'p2_mutable.docs_idx'::regclass,
                     %s::int4[],
                     %s::real[],
@@ -946,7 +946,7 @@ def stale_query_encoding_audit(
         'error': error,
         'passed': (
             error.get('sqlstate') == '55000'
-            and 'ii42 semantic query generation changed'
+            and 'evoke semantic query generation changed'
                 in error.get('message', '')
         ),
     }
@@ -1005,7 +1005,7 @@ def semantic_mvcc_query_rows(
         cursor.execute(
             """
             SELECT source.id, hit.ctid::text, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 'p2_semantic_mvcc.docs_idx'::regclass,
                 'database semantic retrieval',
                 20
@@ -1039,7 +1039,7 @@ def run_online_maintenance_rounds(
     results: list[str] = []
     status = fetch_json(
         connection,
-        'SELECT ii42_index_status(%s::regclass)',
+        'SELECT evoke_index_status(%s::regclass)',
         (index_name,),
     )
     for _ in range(max_rounds):
@@ -1052,7 +1052,7 @@ def run_online_maintenance_rounds(
         )
         status = fetch_json(
             connection,
-            'SELECT ii42_index_status(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass)',
             (index_name,),
         )
         time.sleep(0.01)
@@ -1088,12 +1088,12 @@ def run_tiny_fixture_maintenance(
         with connection.cursor() as cursor:
             cursor.execute(
                 f'{setting} '
-                "ii42.test_convergent_l0_rotation_records = '1'"
+                "evoke.test_convergent_l0_rotation_records = '1'"
             )
             function_name = (
-                'ii42_index_try_maintain'
+                'evoke_index_try_maintain'
                 if try_only
-                else 'ii42_index_maintain'
+                else 'evoke_index_maintain'
             )
             cursor.execute(
                 f'SELECT {function_name}(%s::regclass)',
@@ -1106,7 +1106,7 @@ def run_tiny_fixture_maintenance(
         if connection.autocommit:
             with connection.cursor() as cursor:
                 cursor.execute(
-                    'RESET ii42.test_convergent_l0_rotation_records'
+                    'RESET evoke.test_convergent_l0_rotation_records'
                 )
     if row is None:
         raise AssertionError('tiny-fixture maintenance returned no row')
@@ -1124,7 +1124,7 @@ def run_eventual_maintenance_until_converged(
     phases: list[dict[str, Any]] = []
     status = fetch_json(
         connection,
-        'SELECT ii42_index_status(%s::regclass)',
+        'SELECT evoke_index_status(%s::regclass)',
         (index_name,),
     )
     if not connection.autocommit:
@@ -1155,7 +1155,7 @@ def run_eventual_maintenance_until_converged(
         result = run_tiny_fixture_maintenance(connection, index_name)
         status = fetch_json(
             connection,
-            'SELECT ii42_index_status(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass)',
             (index_name,),
         )
         if not connection.autocommit:
@@ -1195,7 +1195,7 @@ def run_eventual_maintenance_until_reason(
     phases: list[dict[str, Any]] = []
     status = fetch_json(
         connection,
-        'SELECT ii42_index_status(%s::regclass)',
+        'SELECT evoke_index_status(%s::regclass)',
         (index_name,),
     )
     if not connection.autocommit:
@@ -1205,7 +1205,7 @@ def run_eventual_maintenance_until_reason(
         result = run_tiny_fixture_maintenance(connection, index_name)
         status = fetch_json(
             connection,
-            'SELECT ii42_index_status(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass)',
             (index_name,),
         )
         if not connection.autocommit:
@@ -1270,7 +1270,7 @@ def run_semantic_long_snapshot_compaction_audit(
         cursor.execute(
             'CREATE INDEX docs_idx '
             'ON p2_semantic_mvcc.docs '
-            'USING ii42 (body) '
+            'USING evoke (body) '
             'WITH ('
             'sae = true, '
             f'model_path = {sql_literal(str(model_path))}, '
@@ -1289,7 +1289,7 @@ def run_semantic_long_snapshot_compaction_audit(
     try:
         initial_status = fetch_json(
             connection,
-            'SELECT ii42_index_status(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass)',
             (index_name,),
         )
         guard_connection = acquire_maintenance_lock(
@@ -1317,7 +1317,7 @@ def run_semantic_long_snapshot_compaction_audit(
             new_tid = str(cursor.fetchone()[0])
         pending_status = fetch_json(
             connection,
-            'SELECT ii42_index_status(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass)',
             (index_name,),
         )
         fresh_rows_before = semantic_mvcc_query_rows(connection)
@@ -1347,7 +1347,7 @@ def run_semantic_long_snapshot_compaction_audit(
         )
         vacuum_status = fetch_json(
             connection,
-            'SELECT ii42_index_status(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass)',
             (index_name,),
         )
         final_maintain, final_status = run_eventual_maintenance_until_converged(
@@ -1422,7 +1422,7 @@ def eventual_status(
 ) -> dict[str, Any]:
     return fetch_json(
         connection,
-        "SELECT ii42_index_status('p2_eventual.docs_idx'::regclass)",
+        "SELECT evoke_index_status('p2_eventual.docs_idx'::regclass)",
     )
 
 
@@ -1433,7 +1433,7 @@ def eventual_query_hits(
         cursor.execute(
             """
             SELECT source.id
-            FROM ii42_query(
+            FROM evoke_query(
                 'p2_eventual.docs_idx'::regclass,
                 %s,
                 20
@@ -1452,7 +1452,7 @@ def eventual_deferred_status(
 ) -> dict[str, Any]:
     return fetch_json(
         connection,
-        "SELECT ii42_index_status('p2_eventual.deferred_idx'::regclass)",
+        "SELECT evoke_index_status('p2_eventual.deferred_idx'::regclass)",
     )
 
 
@@ -1465,13 +1465,13 @@ def eventual_deferred_query_rows(
         if exact:
             cursor.execute(
                 "SELECT set_config("
-                "'ii42.test_disable_semantic_accelerator', 'on', false)"
+                "'evoke.test_disable_semantic_accelerator', 'on', false)"
             )
         try:
             cursor.execute(
                 """
                 SELECT source.id, hit.score::float8
-                FROM ii42_query(
+                FROM evoke_query(
                     'p2_eventual.deferred_idx'::regclass,
                     %s,
                     20
@@ -1490,7 +1490,7 @@ def eventual_deferred_query_rows(
             if exact:
                 cursor.execute(
                     "SELECT set_config("
-                    "'ii42.test_disable_semantic_accelerator', 'off', false)"
+                    "'evoke.test_disable_semantic_accelerator', 'off', false)"
                 )
 
 
@@ -1512,7 +1512,7 @@ def eventual_deferred_filtered_background_hit(
             SELECT source.id
             FROM p2_eventual.deferred_docs AS source
             WHERE source.id = 'deferred-background'
-            ORDER BY ii42_query(
+            ORDER BY evoke_query(
                 'p2_eventual.deferred_idx'::regclass,
                 'unrelated archival background record'
             ) DESC
@@ -1568,7 +1568,7 @@ def run_semantic_root_snapshot_race_audit(
         try:
             with actor_connection.cursor() as cursor:
                 cursor.execute(
-                    "SET ii42.test_convergent_root_snapshot_pause_ms = '1000'"
+                    "SET evoke.test_convergent_root_snapshot_pause_ms = '1000'"
                 )
                 cursor.execute('SELECT pg_backend_pid()')
                 actor_pid.append(int(cursor.fetchone()[0]))
@@ -1616,7 +1616,7 @@ def run_semantic_root_snapshot_race_audit(
         wait_for_snapshot_pause(query_future)
         with guard_connection.cursor() as cursor:
             cursor.execute(
-                "SELECT ii42_index_try_maintain("
+                "SELECT evoke_index_try_maintain("
                 "'p2_eventual.deferred_idx'::regclass)"
             )
             row = cursor.fetchone()
@@ -1674,7 +1674,7 @@ def run_semantic_root_snapshot_race_audit(
 def bm25_status(connection: psycopg.Connection[Any]) -> dict[str, Any]:
     return fetch_json(
         connection,
-        "SELECT ii42_index_status('p2_bm25.docs_idx'::regclass)",
+        "SELECT evoke_index_status('p2_bm25.docs_idx'::regclass)",
     )
 
 
@@ -1685,7 +1685,7 @@ def bm25_query_hits(
         cursor.execute(
             """
             SELECT source.id
-            FROM ii42_query(
+            FROM evoke_query(
                 'p2_bm25.docs_idx'::regclass,
                 %s,
                 20
@@ -1723,7 +1723,7 @@ def configure_cluster(
 ) -> None:
     config = data_dir / 'postgresql.conf'
     with config.open('a', encoding='utf-8') as handle:
-        handle.write("\nshared_preload_libraries = 'ii42'\n")
+        handle.write("\nshared_preload_libraries = 'evoke'\n")
         if extension_libdir is not None:
             libdir = str(extension_libdir).replace("'", "''")
             handle.write(
@@ -1743,8 +1743,8 @@ def configure_cluster(
         handle.write(f'port = {port}\n')
         handle.write('max_worker_processes = 16\n')
         handle.write('max_prepared_transactions = 10\n')
-        handle.write("ii42.maintenance_timer_interval_ms = '100ms'\n")
-        handle.write("ii42.shared_runtime_size = '256MB'\n")
+        handle.write("evoke.maintenance_timer_interval_ms = '100ms'\n")
+        handle.write("evoke.shared_runtime_size = '256MB'\n")
 
 
 def start_cluster(pg_ctl: Path, data_dir: Path, log_path: Path) -> None:
@@ -1815,7 +1815,7 @@ def setup(
     model_path: Path,
 ) -> None:
     ddl = f"""
-        CREATE EXTENSION ii42;
+        CREATE EXTENSION evoke;
         CREATE SCHEMA p2_mutable;
         CREATE TABLE p2_mutable.docs (
             id text PRIMARY KEY,
@@ -1841,7 +1841,7 @@ def setup(
             );
         CREATE INDEX docs_idx
         ON p2_mutable.docs
-        USING ii42 (body)
+        USING evoke (body)
         WITH (
             sae = true,
             model_path = {sql_literal(str(model_path))}
@@ -1867,7 +1867,7 @@ def setup_eventual(
             ('eventual-base-b', 'semantic retrieval baseline');
         CREATE INDEX docs_idx
         ON p2_eventual.docs
-        USING ii42 (body)
+        USING evoke (body)
         WITH (
             sae = true,
             model_path = {sql_literal(str(model_path))},
@@ -1885,7 +1885,7 @@ def setup_eventual(
             ('deferred-base-b', 'semantic retrieval baseline');
         CREATE INDEX deferred_idx
         ON p2_eventual.deferred_docs
-        USING ii42 (body)
+        USING evoke (body)
         INCLUDE (id, scope)
         WITH (
             sae = true,
@@ -1911,50 +1911,50 @@ def run_temporary_relation_policy_audit(
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            CREATE TEMP TABLE ii42_temp_bm25_docs (
+            CREATE TEMP TABLE evoke_temp_bm25_docs (
                 id text PRIMARY KEY,
                 body text NOT NULL
             );
-            INSERT INTO ii42_temp_bm25_docs VALUES
+            INSERT INTO evoke_temp_bm25_docs VALUES
                 ('bm25-a', 'temporary lexical sentinel'),
                 ('bm25-b', 'other temporary text');
-            CREATE INDEX ii42_temp_bm25_idx
-            ON ii42_temp_bm25_docs
-            USING ii42 (body)
+            CREATE INDEX evoke_temp_bm25_idx
+            ON evoke_temp_bm25_docs
+            USING evoke (body)
             WITH (sae = false, consistency = manual);
-            INSERT INTO ii42_temp_bm25_docs VALUES
+            INSERT INTO evoke_temp_bm25_docs VALUES
                 ('bm25-c', 'temporary lexical sentinel updated');
-            UPDATE ii42_temp_bm25_docs
+            UPDATE evoke_temp_bm25_docs
             SET body = 'temporary lexical sentinel replacement'
             WHERE id = 'bm25-a';
-            DELETE FROM ii42_temp_bm25_docs WHERE id = 'bm25-b';
+            DELETE FROM evoke_temp_bm25_docs WHERE id = 'bm25-b';
             """
         )
         cursor.execute(
-            "SELECT ii42_index_maintain("
-            "'ii42_temp_bm25_idx'::regclass)"
+            "SELECT evoke_index_maintain("
+            "'evoke_temp_bm25_idx'::regclass)"
         )
         maintenance_results.append(str(cursor.fetchone()[0]))
         cursor.execute(
             """
             SELECT count(*)
-            FROM ii42_query(
-                'ii42_temp_bm25_idx'::regclass,
+            FROM evoke_query(
+                'evoke_temp_bm25_idx'::regclass,
                 'lexical sentinel',
                 10
             ) AS hit
-            JOIN ii42_temp_bm25_docs AS source
+            JOIN evoke_temp_bm25_docs AS source
               ON source.ctid = hit.ctid
             """
         )
         bm25_hits = int(cursor.fetchone()[0])
         cursor.execute(
             """
-            CREATE TEMP TABLE ii42_temp_automatic_docs (
+            CREATE TEMP TABLE evoke_temp_automatic_docs (
                 id text PRIMARY KEY,
                 body text NOT NULL
             );
-            CREATE TEMP TABLE ii42_temp_sae_docs (
+            CREATE TEMP TABLE evoke_temp_sae_docs (
                 id text PRIMARY KEY,
                 body text NOT NULL
             );
@@ -1965,16 +1965,16 @@ def run_temporary_relation_policy_audit(
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                CREATE INDEX ii42_temp_automatic_idx
-                ON ii42_temp_automatic_docs
-                USING ii42 (body)
+                CREATE INDEX evoke_temp_automatic_idx
+                ON evoke_temp_automatic_docs
+                USING evoke (body)
                 WITH (sae = false, consistency = eventual)
                 """
             )
     except psycopg.errors.FeatureNotSupported as error:
         automatic_error = str(error)
         automatic_rejected = (
-            'temporary ii42 indexes require manual consistency'
+            'temporary evoke indexes require manual consistency'
             in automatic_error
         )
 
@@ -1982,9 +1982,9 @@ def run_temporary_relation_policy_audit(
         with connection.cursor() as cursor:
             cursor.execute(
                 f"""
-                CREATE INDEX ii42_temp_sae_idx
-                ON ii42_temp_sae_docs
-                USING ii42 (body)
+                CREATE INDEX evoke_temp_sae_idx
+                ON evoke_temp_sae_docs
+                USING evoke (body)
                 WITH (
                     sae = true,
                     model_path = {sql_literal(str(model_path))}
@@ -1994,7 +1994,7 @@ def run_temporary_relation_policy_audit(
     except psycopg.errors.FeatureNotSupported as error:
         sae_error = str(error)
         sae_rejected = (
-            'temporary ii42 indexes do not support SAE' in sae_error
+            'temporary evoke indexes do not support SAE' in sae_error
         )
 
     with connection.cursor() as cursor:
@@ -2004,17 +2004,17 @@ def run_temporary_relation_policy_audit(
             FROM pg_catalog.pg_class
             WHERE relnamespace = pg_my_temp_schema()
               AND relname IN (
-                  'ii42_temp_automatic_idx',
-                  'ii42_temp_sae_idx'
+                  'evoke_temp_automatic_idx',
+                  'evoke_temp_sae_idx'
               )
             """
         )
         failed_index_count = int(cursor.fetchone()[0])
         cursor.execute(
             """
-            DROP TABLE ii42_temp_automatic_docs;
-            DROP TABLE ii42_temp_sae_docs;
-            DROP TABLE ii42_temp_bm25_docs;
+            DROP TABLE evoke_temp_automatic_docs;
+            DROP TABLE evoke_temp_sae_docs;
+            DROP TABLE evoke_temp_bm25_docs;
             """
         )
         cursor.execute(
@@ -2022,7 +2022,7 @@ def run_temporary_relation_policy_audit(
             SELECT count(*)
             FROM pg_catalog.pg_class
             WHERE relnamespace = pg_my_temp_schema()
-              AND relname LIKE 'ii42_temp_%'
+              AND relname LIKE 'evoke_temp_%'
             """
         )
         residue_count = int(cursor.fetchone()[0])
@@ -2058,7 +2058,7 @@ def setup_bm25(connection: psycopg.Connection[Any]) -> None:
             ('bm25-base-b', 'semantic retrieval baseline');
         CREATE INDEX docs_idx
         ON p2_bm25.docs
-        USING ii42 (body)
+        USING evoke (body)
         WITH (
             sae = false,
             consistency = realtime
@@ -2072,7 +2072,7 @@ def setup_bm25(connection: psycopg.Connection[Any]) -> None:
             ('contract-base-b', 'semantic retrieval baseline');
         CREATE INDEX contract_idx
         ON p2_bm25.contract_docs
-        USING ii42 (body)
+        USING evoke (body)
         WITH (
             sae = false,
             consistency = eventual
@@ -2087,7 +2087,7 @@ def bm25_fold_status(
 ) -> dict[str, Any]:
     return fetch_json(
         connection,
-        "SELECT ii42_index_status('p2_bm25_fold.docs_idx'::regclass)",
+        "SELECT evoke_index_status('p2_bm25_fold.docs_idx'::regclass)",
     )
 
 
@@ -2099,7 +2099,7 @@ def bm25_fold_query_hits(
         cursor.execute(
             """
             SELECT source.id
-            FROM ii42_query(
+            FROM evoke_query(
                 'p2_bm25_fold.docs_idx'::regclass,
                 %s,
                 20
@@ -2122,7 +2122,7 @@ def acquire_bm25_fold_maintenance_guard(
     while True:
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT ii42_index_try_maintenance_lock("
+                "SELECT evoke_index_try_maintenance_lock("
                 "'p2_bm25_fold.docs_idx'::regclass)"
             )
             acquired = bool(cursor.fetchone()[0])
@@ -2140,7 +2140,7 @@ def release_bm25_fold_maintenance_guard(
 ) -> None:
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT ii42_index_maintenance_unlock("
+            "SELECT evoke_index_maintenance_unlock("
             "'p2_bm25_fold.docs_idx'::regclass)"
         )
 
@@ -2161,7 +2161,7 @@ def run_bm25_page_native_seal_race_audit(
             ('fold-base-b', 'fold baseline semantic retrieval');
         CREATE INDEX docs_idx
         ON p2_bm25_fold.docs
-        USING ii42 (body)
+        USING evoke (body)
         WITH (
             sae = false,
             consistency = eventual
@@ -2187,13 +2187,13 @@ def run_bm25_page_native_seal_race_audit(
             )
             for ordinal, function_name in enumerate(
                 (
-                    'ii42_index_try_maintain',
-                    'ii42_index_maintain',
-                    'ii42_index_refresh',
+                    'evoke_index_try_maintain',
+                    'evoke_index_maintain',
+                    'evoke_index_refresh',
                 ),
                 start=1,
             ):
-                savepoint = f'ii42_same_xact_{ordinal}'
+                savepoint = f'evoke_same_xact_{ordinal}'
                 cursor.execute(f'SAVEPOINT {savepoint}')
                 try:
                     cursor.execute(
@@ -2216,7 +2216,7 @@ def run_bm25_page_native_seal_race_audit(
     savepoint_connection.autocommit = False
     try:
         with savepoint_connection.cursor() as cursor:
-            cursor.execute('SAVEPOINT ii42_bm25_fold_abort')
+            cursor.execute('SAVEPOINT evoke_bm25_fold_abort')
             cursor.execute(
                 'INSERT INTO p2_bm25_fold.docs VALUES (%s, %s)',
                 (
@@ -2224,8 +2224,8 @@ def run_bm25_page_native_seal_race_audit(
                     'foldsavepointabortunique rejected row',
                 ),
             )
-            cursor.execute('ROLLBACK TO SAVEPOINT ii42_bm25_fold_abort')
-            cursor.execute('RELEASE SAVEPOINT ii42_bm25_fold_abort')
+            cursor.execute('ROLLBACK TO SAVEPOINT evoke_bm25_fold_abort')
+            cursor.execute('RELEASE SAVEPOINT evoke_bm25_fold_abort')
         savepoint_connection.commit()
     finally:
         savepoint_connection.close()
@@ -2244,7 +2244,7 @@ def run_bm25_page_native_seal_race_audit(
         before_blocked_maintain = bm25_fold_status(connection)
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT ii42_index_try_maintain("
+                "SELECT evoke_index_try_maintain("
                 "'p2_bm25_fold.docs_idx'::regclass)"
             )
             blocked_maintain_result = str(cursor.fetchone()[0])
@@ -2280,10 +2280,10 @@ def run_bm25_page_native_seal_race_audit(
                 # This dedicated actor must force the tiny fixture through the
                 # pending-seal pause exercised below.
                 cursor.execute(
-                    'SET ii42.test_convergent_l0_rotation_records = 1'
+                    'SET evoke.test_convergent_l0_rotation_records = 1'
                 )
                 cursor.execute(
-                    "SET ii42.test_online_maintenance_pause_ms = '1000'"
+                    "SET evoke.test_online_maintenance_pause_ms = '1000'"
                 )
                 cursor.execute('SELECT pg_backend_pid()')
                 actor_pid.append(int(cursor.fetchone()[0]))
@@ -2293,7 +2293,7 @@ def run_bm25_page_native_seal_race_audit(
             actor_guard_acquired.set()
             with actor_connection.cursor() as cursor:
                 cursor.execute(
-                    "SELECT ii42_index_try_maintain("
+                    "SELECT evoke_index_try_maintain("
                     "'p2_bm25_fold.docs_idx'::regclass)"
                 )
                 row = cursor.fetchone()
@@ -2470,11 +2470,11 @@ def backend_memory_state(
             """
             SELECT
                 count(*) FILTER (
-                    WHERE name = 'ii42 pending SAE mutation'
+                    WHERE name = 'evoke pending SAE mutation'
                 )::int8,
                 COALESCE(
                     sum(total_bytes) FILTER (
-                        WHERE name = 'ii42 pending SAE mutation'
+                        WHERE name = 'evoke pending SAE mutation'
                     ),
                     0
                 )::int8,
@@ -2555,7 +2555,7 @@ def run_failed_subtransaction_memory_audit(
     try:
         with connection.cursor() as cursor:
             for cycle in range(warmup_cycles + measured_cycles):
-                cursor.execute('SAVEPOINT ii42_failed_mutation')
+                cursor.execute('SAVEPOINT evoke_failed_mutation')
                 try:
                     cursor.execute(
                         """
@@ -2574,14 +2574,14 @@ def run_failed_subtransaction_memory_audit(
                 except psycopg.errors.RaiseException:
                     errors += 1
                     cursor.execute(
-                        'ROLLBACK TO SAVEPOINT ii42_failed_mutation'
+                        'ROLLBACK TO SAVEPOINT evoke_failed_mutation'
                     )
                 else:
                     raise AssertionError(
                         'memory-sentinel insert unexpectedly succeeded'
                     )
                 cursor.execute(
-                    'RELEASE SAVEPOINT ii42_failed_mutation'
+                    'RELEASE SAVEPOINT evoke_failed_mutation'
                 )
                 if cycle + 1 == warmup_cycles:
                     baseline = backend_memory_state(connection)
@@ -2668,7 +2668,7 @@ def run_page_native_partial_batch_audit(
             );
             CREATE INDEX docs_idx
             ON p2_page_native_batch.docs
-            USING ii42 (body)
+            USING evoke (body)
             WITH (
                 sae = true,
                 model_path = {sql_literal(str(model_path))}
@@ -2693,14 +2693,14 @@ def run_page_native_partial_batch_audit(
 
     status_before = fetch_json(
         connection,
-        'SELECT ii42_index_status(%s::regclass)',
+        'SELECT evoke_index_status(%s::regclass)',
         (index_name,),
     )
     error_message = ''
     connection.autocommit = False
     try:
         with connection.cursor() as cursor:
-            cursor.execute('SAVEPOINT ii42_page_native_partial')
+            cursor.execute('SAVEPOINT evoke_page_native_partial')
             try:
                 cursor.execute(
                     """
@@ -2713,13 +2713,13 @@ def run_page_native_partial_batch_audit(
             except psycopg.errors.RaiseException as error:
                 error_message = str(error).splitlines()[0]
                 cursor.execute(
-                    'ROLLBACK TO SAVEPOINT ii42_page_native_partial'
+                    'ROLLBACK TO SAVEPOINT evoke_page_native_partial'
                 )
             else:
                 raise AssertionError(
                     'page-native partial mutation unexpectedly succeeded'
                 )
-            cursor.execute('RELEASE SAVEPOINT ii42_page_native_partial')
+            cursor.execute('RELEASE SAVEPOINT evoke_page_native_partial')
             rollback_memory = backend_memory_state(connection)
             cursor.execute(
                 "SELECT count(*) FROM p2_page_native_batch.docs "
@@ -2735,7 +2735,7 @@ def run_page_native_partial_batch_audit(
 
     status_after_rollback = fetch_json(
         connection,
-        'SELECT ii42_index_status(%s::regclass)',
+        'SELECT evoke_index_status(%s::regclass)',
         (index_name,),
     )
     guard = acquire_maintenance_lock(socket_dir, port, index_name)
@@ -2753,7 +2753,7 @@ def run_page_native_partial_batch_audit(
             )
         pending_status = fetch_json(
             connection,
-            'SELECT ii42_index_status(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass)',
             (index_name,),
         )
         with connection.cursor() as cursor:
@@ -2761,7 +2761,7 @@ def run_page_native_partial_batch_audit(
                 """
                 SELECT EXISTS (
                     SELECT 1
-                    FROM ii42_query(
+                    FROM evoke_query(
                         'p2_page_native_batch.docs_idx'::regclass,
                         'page native wal marker 16',
                         20
@@ -2800,7 +2800,7 @@ def run_page_native_partial_batch_audit(
     )
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_maintain(%s::regclass)',
+            'SELECT evoke_index_maintain(%s::regclass)',
             (index_name,),
         )
         post_convergence_maintenance = str(cursor.fetchone()[0])
@@ -2910,7 +2910,7 @@ def run_bulk_dml_batch_audit(
             f"""
             CREATE INDEX docs_idx
             ON p2_batch.docs
-            USING ii42 (body)
+            USING evoke (body)
             WITH (
                 sae = true,
                 model_path = {sql_literal(str(model_path))}
@@ -2920,13 +2920,13 @@ def run_bulk_dml_batch_audit(
 
     initial_status = fetch_json(
         connection,
-        'SELECT ii42_index_status(%s::regclass)',
+        'SELECT evoke_index_status(%s::regclass)',
         (index_name,),
     )
     guard = acquire_maintenance_lock(socket_dir, port, index_name)
     runtime_before = fetch_json(
         connection,
-        'SELECT ii42_runtime_service_status()',
+        'SELECT evoke_runtime_service_status()',
     )
     try:
         with connection.cursor() as cursor:
@@ -2950,11 +2950,11 @@ def run_bulk_dml_batch_audit(
                     ))
         runtime_after_foreground = fetch_json(
             connection,
-            'SELECT ii42_runtime_service_status()',
+            'SELECT evoke_runtime_service_status()',
         )
         pending_status = fetch_json(
             connection,
-            'SELECT ii42_index_status(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass)',
             (index_name,),
         )
         with connection.cursor() as cursor:
@@ -2963,7 +2963,7 @@ def run_bulk_dml_batch_audit(
             cursor.execute(
                 """
                 SELECT source.id
-                FROM ii42_query(
+                FROM evoke_query(
                     'p2_batch.docs_idx'::regclass,
                     'copy batch semantic marker 63',
                     20
@@ -2975,7 +2975,7 @@ def run_bulk_dml_batch_audit(
             copy_hits = [int(row[0]) for row in cursor.fetchall()]
         runtime_after_lexical_query = fetch_json(
             connection,
-            'SELECT ii42_runtime_service_status()',
+            'SELECT evoke_runtime_service_status()',
         )
     finally:
         release_maintenance_lock(guard, index_name)
@@ -2988,7 +2988,7 @@ def run_bulk_dml_batch_audit(
     )
     runtime_after_completion = fetch_json(
         connection,
-        'SELECT ii42_runtime_service_status()',
+        'SELECT evoke_runtime_service_status()',
     )
 
     max_batch_size = int(runtime_before['max_supported_batch_size'])
@@ -3161,7 +3161,7 @@ def run_concurrent_crud_soak(
 
     runtime_before = fetch_json(
         connection,
-        'SELECT ii42_runtime_service_status()',
+        'SELECT evoke_runtime_service_status()',
     )
     cache_before = cache_state(connection, 'p2_mutable.docs_idx')
     stop_event = threading.Event()
@@ -3387,7 +3387,7 @@ def run_concurrent_crud_soak(
                 started = time.perf_counter()
                 with actor_connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT ii42_index_maintain("
+                        "SELECT evoke_index_maintain("
                         "'p2_mutable.docs_idx'::regclass)"
                     )
                     cursor.fetchone()
@@ -3463,7 +3463,7 @@ def run_concurrent_crud_soak(
         final_cache = cache_state(connection, 'p2_mutable.docs_idx')
     runtime_after = fetch_json(
         connection,
-        'SELECT ii42_runtime_service_status()',
+        'SELECT evoke_runtime_service_status()',
     )
     actors = reader_results + writer_results + [maintenance_result]
     expected_operations = cycles * writers * 3
@@ -3556,13 +3556,13 @@ def delta_trace_query_rows(
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT set_config("
-            "'ii42.test_unified_overlay_oracle', %s, false)",
+            "'evoke.test_unified_overlay_oracle', %s, false)",
             ('on' if oracle else 'off',),
         )
         cursor.execute(
             """
             SELECT source.id, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 'p2_delta_trace.docs_idx'::regclass,
                 %s,
                 100
@@ -3585,18 +3585,18 @@ def tid_reuse_query_rows(
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT set_config("
-            "'ii42.test_disable_semantic_accelerator', 'on', false)"
+            "'evoke.test_disable_semantic_accelerator', 'on', false)"
         )
         cursor.execute(
             "SELECT set_config("
-            "'ii42.test_unified_overlay_oracle', %s, false)",
+            "'evoke.test_unified_overlay_oracle', %s, false)",
             ('on' if oracle else 'off',),
         )
         try:
             cursor.execute(
                 """
                 SELECT source.id, hit.score::float8
-                FROM ii42_query(
+                FROM evoke_query(
                     'p2_tid_reuse.docs_idx'::regclass,
                     %s,
                     100
@@ -3614,7 +3614,7 @@ def tid_reuse_query_rows(
         finally:
             cursor.execute(
                 "SELECT set_config("
-                "'ii42.test_disable_semantic_accelerator', 'off', false)"
+                "'evoke.test_disable_semantic_accelerator', 'off', false)"
             )
 
 
@@ -3647,7 +3647,7 @@ def _run_tid_reuse_after_vacuum_audit(
         old_tid = str(cursor.fetchone()[0])
         cursor.execute(
             'CREATE INDEX docs_idx ON p2_tid_reuse.docs '
-            'USING ii42 (body) WITH ('
+            'USING evoke (body) WITH ('
             'sae = true, '
             f'model_path = {sql_literal(str(model_path))}, '
             'consistency = eventual)'
@@ -3655,7 +3655,7 @@ def _run_tid_reuse_after_vacuum_audit(
 
     initial_status = fetch_json(
         connection,
-        "SELECT ii42_index_status('p2_tid_reuse.docs_idx'::regclass)",
+        "SELECT evoke_index_status('p2_tid_reuse.docs_idx'::regclass)",
     )
     guard_connection = acquire_maintenance_lock(
         socket_dir,
@@ -3686,7 +3686,7 @@ def _run_tid_reuse_after_vacuum_audit(
     tid_reused = replacement_tid == old_tid
     overlay_status = fetch_json(
         connection,
-        "SELECT ii42_index_status('p2_tid_reuse.docs_idx'::regclass)",
+        "SELECT evoke_index_status('p2_tid_reuse.docs_idx'::regclass)",
     )
     vacuum_attempts = 1
     while (
@@ -3703,7 +3703,7 @@ def _run_tid_reuse_after_vacuum_audit(
         vacuum_attempts += 1
         overlay_status = fetch_json(
             connection,
-            "SELECT ii42_index_status('p2_tid_reuse.docs_idx'::regclass)",
+            "SELECT evoke_index_status('p2_tid_reuse.docs_idx'::regclass)",
         )
     queries = [old_query, new_query]
     overlay_rows = {
@@ -3737,7 +3737,7 @@ def _run_tid_reuse_after_vacuum_audit(
         cursor.execute('REINDEX INDEX p2_tid_reuse.docs_idx')
     reindexed_status = fetch_json(
         connection,
-        "SELECT ii42_index_status('p2_tid_reuse.docs_idx'::regclass)",
+        "SELECT evoke_index_status('p2_tid_reuse.docs_idx'::regclass)",
     )
     reindexed_rows = {
         query_text: tid_reuse_query_rows(connection, query_text)
@@ -3829,7 +3829,7 @@ def run_tid_reuse_after_vacuum_audit(
     port: int,
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
-        cursor.execute('SHOW ii42.maintenance_worker_limit')
+        cursor.execute('SHOW evoke.maintenance_worker_limit')
         original_worker_limit = int(cursor.fetchone()[0])
 
     configure_maintenance_worker_limit(connection, 0)
@@ -3880,7 +3880,7 @@ def run_unified_delta_crud_differential(
         )
         cursor.execute(
             'CREATE INDEX docs_idx ON p2_delta_trace.docs '
-            'USING ii42 (body) WITH ('
+            'USING evoke (body) WITH ('
             'sae = true, '
             f'model_path = {sql_literal(str(model_path))}, '
             'consistency = eventual)'
@@ -3888,7 +3888,7 @@ def run_unified_delta_crud_differential(
 
     initial_status = fetch_json(
         connection,
-        "SELECT ii42_index_status('p2_delta_trace.docs_idx'::regclass)",
+        "SELECT evoke_index_status('p2_delta_trace.docs_idx'::regclass)",
     )
     guard_connection = acquire_maintenance_lock(
         socket_dir,
@@ -3976,7 +3976,7 @@ def run_unified_delta_crud_differential(
 
     overlay_status = fetch_json(
         connection,
-        "SELECT ii42_index_status('p2_delta_trace.docs_idx'::regclass)",
+        "SELECT evoke_index_status('p2_delta_trace.docs_idx'::regclass)",
     )
     overlay_rows = {
         query_text: delta_trace_query_rows(connection, query_text)
@@ -4014,7 +4014,7 @@ def run_unified_delta_crud_differential(
         cursor.execute('REINDEX INDEX p2_delta_trace.docs_idx')
     reindexed_status = fetch_json(
         connection,
-        "SELECT ii42_index_status('p2_delta_trace.docs_idx'::regclass)",
+        "SELECT evoke_index_status('p2_delta_trace.docs_idx'::regclass)",
     )
     reindexed_rows = {
         query_text: delta_trace_query_rows(connection, query_text)
@@ -4093,7 +4093,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
     gates: dict[str, bool] = {}
     evidence: dict[str, Any] = {}
 
-    with tempfile.TemporaryDirectory(prefix='ii42_unified_lifecycle_') as tmp:
+    with tempfile.TemporaryDirectory(prefix='evoke_unified_lifecycle_') as tmp:
         root = Path(tmp)
         data_dir = root / 'data'
         socket_dir = root / 'socket'
@@ -4253,7 +4253,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
             )
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SELECT count(*) FROM ii42_query("
+                    "SELECT count(*) FROM evoke_query("
                     "'p2_mutable.docs_idx'::regclass, %s, 10)",
                     (QUERY,),
                 )
@@ -4263,7 +4263,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
                 try:
                     with connection.cursor() as cursor:
                         cursor.execute(
-                            "SELECT count(*) FROM ii42_query_tokens("
+                            "SELECT count(*) FROM evoke_query_tokens("
                             "'p2_mutable.docs_idx'::regclass, "
                             "ARRAY[%s]::text[], 10, %s::real[])",
                             (QUERY, weight_mask),
@@ -4277,7 +4277,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
                 and len(exact_bm25_errors) == 2
                 and all(
                     'exact BM25 access is unavailable' in error
-                    and 'Use ii42_query' in error
+                    and 'Use evoke_query' in error
                     for error in exact_bm25_errors
                 )
             )
@@ -4376,28 +4376,28 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
             )
 
             with connection.cursor() as cursor:
-                cursor.execute('CREATE ROLE ii42_product_reader')
+                cursor.execute('CREATE ROLE evoke_product_reader')
                 cursor.execute(
                     'GRANT USAGE ON SCHEMA p2_mutable '
-                    'TO ii42_product_reader'
+                    'TO evoke_product_reader'
                 )
                 cursor.execute(
                     'GRANT SELECT ON p2_mutable.docs '
-                    'TO ii42_product_reader'
+                    'TO evoke_product_reader'
                 )
-                cursor.execute('SET ROLE ii42_product_reader')
+                cursor.execute('SET ROLE evoke_product_reader')
                 cursor.execute(
-                    "SELECT ii42_index_options("
+                    "SELECT evoke_index_options("
                     "'p2_mutable.docs_idx'::regclass)"
                 )
                 reader_options = cursor.fetchone()[0]
                 cursor.execute(
-                    "SELECT ii42_index_status("
+                    "SELECT evoke_index_status("
                     "'p2_mutable.docs_idx'::regclass)"
                 )
                 reader_status = cursor.fetchone()[0]
                 cursor.execute(
-                    "SELECT count(*) FROM ii42_query("
+                    "SELECT count(*) FROM evoke_query("
                     "'p2_mutable.docs_idx'::regclass, %s, 5)",
                     (QUERY,),
                 )
@@ -4434,7 +4434,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
                 cursor.execute(
                     """
                     SELECT hit.ctid::text
-                    FROM ii42_query(
+                    FROM evoke_query(
                         'p2_mutable.docs_idx'::regclass,
                         'rare zebra quantum flux capacitor semantic retrieval',
                         20
@@ -4545,7 +4545,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
             savepoint_tid = ''
             try:
                 with savepoint_connection.cursor() as cursor:
-                    cursor.execute('SAVEPOINT ii42_semantic_write')
+                    cursor.execute('SAVEPOINT evoke_semantic_write')
                     cursor.execute(
                         'INSERT INTO p2_mutable.docs (id, body) '
                         'VALUES (%s, %s) RETURNING ctid::text',
@@ -4553,9 +4553,9 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
                     )
                     savepoint_tid = str(cursor.fetchone()[0])
                     cursor.execute(
-                        'ROLLBACK TO SAVEPOINT ii42_semantic_write'
+                        'ROLLBACK TO SAVEPOINT evoke_semantic_write'
                     )
-                    cursor.execute('RELEASE SAVEPOINT ii42_semantic_write')
+                    cursor.execute('RELEASE SAVEPOINT evoke_semantic_write')
                 savepoint_connection.commit()
             finally:
                 savepoint_connection.close()
@@ -4603,14 +4603,14 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
             insert_tid = ''
             try:
                 with committed_savepoint_connection.cursor() as cursor:
-                    cursor.execute('SAVEPOINT ii42_semantic_commit')
+                    cursor.execute('SAVEPOINT evoke_semantic_commit')
                     cursor.execute(
                         'INSERT INTO p2_mutable.docs (id, body) '
                         'VALUES (%s, %s) RETURNING ctid::text',
                         ('insert-target', QUERY),
                     )
                     insert_tid = str(cursor.fetchone()[0])
-                    cursor.execute('RELEASE SAVEPOINT ii42_semantic_commit')
+                    cursor.execute('RELEASE SAVEPOINT evoke_semantic_commit')
                 committed_savepoint_connection.commit()
             finally:
                 committed_savepoint_connection.close()
@@ -4912,7 +4912,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
             )
             eventual_runtime_before = fetch_json(
                 connection,
-                'SELECT ii42_runtime_service_status()',
+                'SELECT evoke_runtime_service_status()',
             )
             with connection.cursor() as cursor:
                 cursor.execute(
@@ -4939,7 +4939,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
             )
             eventual_runtime_after_write = fetch_json(
                 connection,
-                'SELECT ii42_runtime_service_status()',
+                'SELECT evoke_runtime_service_status()',
             )
             eventual_before_maintain = eventual_status(connection)
             eventual_pending_hits = eventual_query_hits(connection)
@@ -5107,7 +5107,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
             deferred_pending = eventual_deferred_status(connection)
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SELECT ii42_index_preload("
+                    "SELECT evoke_index_preload("
                     "'p2_eventual.deferred_idx'::regclass)"
                 )
                 deferred_preload_result = str(cursor.fetchone()[0])
@@ -5346,7 +5346,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
             )
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SELECT ii42_index_preload("
+                    "SELECT evoke_index_preload("
                     "'p2_eventual.deferred_idx'::regclass)"
                 )
                 deferred_seal_preload_result = str(cursor.fetchone()[0])
@@ -5420,7 +5420,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
             )
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SELECT ii42_index_preload("
+                    "SELECT evoke_index_preload("
                     "'p2_eventual.deferred_idx'::regclass)"
                 )
                 deferred_repreload_result = str(cursor.fetchone()[0])
@@ -5628,13 +5628,13 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
             bm25_savepoint_connection.autocommit = False
             try:
                 with bm25_savepoint_connection.cursor() as cursor:
-                    cursor.execute('SAVEPOINT ii42_bm25_write')
+                    cursor.execute('SAVEPOINT evoke_bm25_write')
                     cursor.execute(
                         'INSERT INTO p2_bm25.docs VALUES (%s, %s)',
                         ('bm25-savepoint-target', QUERY),
                     )
-                    cursor.execute('ROLLBACK TO SAVEPOINT ii42_bm25_write')
-                    cursor.execute('RELEASE SAVEPOINT ii42_bm25_write')
+                    cursor.execute('ROLLBACK TO SAVEPOINT evoke_bm25_write')
+                    cursor.execute('RELEASE SAVEPOINT evoke_bm25_write')
                 bm25_savepoint_connection.commit()
             finally:
                 bm25_savepoint_connection.close()
@@ -5818,7 +5818,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
 
             contract_initial = fetch_json(
                 connection,
-                "SELECT ii42_index_status("
+                "SELECT evoke_index_status("
                 "'p2_bm25.contract_idx'::regclass)",
             )
             contract_lock_connection = connect(socket_dir, args.port)
@@ -5826,7 +5826,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
             contract_lock_acquired = False
             with contract_lock_connection.cursor() as cursor:
                 cursor.execute(
-                    "SELECT ii42_index_try_maintenance_lock("
+                    "SELECT evoke_index_try_maintenance_lock("
                     "'p2_bm25.contract_idx'::regclass)"
                 )
                 contract_lock_acquired = bool(cursor.fetchone()[0])
@@ -5844,13 +5844,13 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
                     )
                 contract_pending = fetch_json(
                     connection,
-                    "SELECT ii42_index_status("
+                    "SELECT evoke_index_status("
                     "'p2_bm25.contract_idx'::regclass)",
                 )
                 try:
                     with connection.cursor() as cursor:
                         cursor.execute(
-                            "SELECT * FROM ii42_query("
+                            "SELECT * FROM evoke_query("
                             "'p2_bm25.contract_idx'::regclass, %s, 20)",
                             (QUERY,),
                         )
@@ -5861,7 +5861,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
                     if contract_lock_acquired:
                         with contract_lock_connection.cursor() as cursor:
                             cursor.execute(
-                                "SELECT ii42_index_maintenance_unlock("
+                                "SELECT evoke_index_maintenance_unlock("
                                 "'p2_bm25.contract_idx'::regclass)"
                             )
                     contract_lock_connection.commit()
@@ -5873,14 +5873,14 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
             contract_rebuild_action = 'REINDEX INDEX p2_bm25.contract_idx'
             contract_ready = fetch_json(
                 connection,
-                "SELECT ii42_index_status("
+                "SELECT evoke_index_status("
                 "'p2_bm25.contract_idx'::regclass)",
             )
             with connection.cursor() as cursor:
                 cursor.execute(
                     """
                     SELECT source.id
-                    FROM ii42_query(
+                    FROM evoke_query(
                         'p2_bm25.contract_idx'::regclass,
                         %s,
                         20
@@ -6292,7 +6292,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
                 stop_cluster(pg_ctl, data_dir)
 
     return {
-        'api_version': 'ii42_index_v1',
+        'api_version': 'evoke_index_v1',
         'route': 'unified relation-owned P2 SAE index lifecycle',
         'extension_binding': {
             'mode': (
@@ -6343,11 +6343,11 @@ def main() -> None:
         args.extension_libdir = args.extension_libdir.resolve()
         extension_libraries = [
             args.extension_libdir / name
-            for name in ('ii42.so', 'ii42.dylib')
+            for name in ('evoke.so', 'evoke.dylib')
         ]
         if not any(path.is_file() for path in extension_libraries):
             raise FileNotFoundError(
-                'ii42 extension library is missing from '
+                'evoke extension library is missing from '
                 f'{args.extension_libdir}'
             )
     if args.extension_control_dir is not None:

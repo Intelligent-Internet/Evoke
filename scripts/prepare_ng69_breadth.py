@@ -132,7 +132,7 @@ def worker(args):
     require(not (args.run / 'clearml.json').exists(), 'Worker already started')
     Task.set_offline(True)
     task = Task.init(
-        project_name='II42-NG', task_name='NG-0069/breadth-teacher-preparation',
+        project_name='Evoke-NG', task_name='NG-0069/breadth-teacher-preparation',
         task_type=Task.TaskTypes.data_processing, reuse_last_task_id=False,
         auto_connect_frameworks=False, auto_connect_arg_parser=False,
         auto_connect_streams=False, auto_resource_monitoring=False)

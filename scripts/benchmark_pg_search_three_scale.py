@@ -35,15 +35,15 @@ from benchmark_beir_official import (
 DEFAULT_STATS_SOURCE = Path(
     'docs/performance/data/canonical/official-beir-text-current-2026-04-02.json'
 )
-DEFAULT_DB_PREFIX = 'ii42_extcmp_'
+DEFAULT_DB_PREFIX = 'evoke_extcmp_'
 
 
 def default_work_root() -> Path:
-    return Path(tempfile.gettempdir()) / 'ii42_extcmp'
+    return Path(tempfile.gettempdir()) / 'evoke_extcmp'
 
 
 def benchmark_admin_dsn() -> str:
-    base_dsn = os.environ.get('II42_BENCH_DSN', 'dbname=postgres')
+    base_dsn = os.environ.get('EVOKE_BENCH_DSN', 'dbname=postgres')
     params = conninfo.conninfo_to_dict(base_dsn)
     if not params.get('user'):
         params['user'] = getpass.getuser()
@@ -219,19 +219,19 @@ def benchmark_pg_search(
     }
 
 
-def benchmark_ii42_ids(
+def benchmark_evoke_ids(
     dataset: str,
     corpus_id_tokens: list[list[int]],
     query_id_tokens: list[list[int]],
     top_k: int,
     db_prefix: str,
 ) -> dict[str, Any]:
-    db_name = f'{db_prefix}ii42_{dataset.replace("-", "_")}'
+    db_name = f'{db_prefix}evoke_{dataset.replace("-", "_")}'
     ensure_local_database(db_name)
     db_dsn = conninfo.make_conninfo(
         ADMIN_DSN,
         dbname=db_name,
-        application_name='ii42_extcmp',
+        application_name='evoke_extcmp',
     )
 
     with psycopg.connect(db_dsn, autocommit=True) as conn:
@@ -257,7 +257,7 @@ def benchmark_ii42_ids(
             cur.execute(
                 """
                 CREATE INDEX docs_ids_bm25_idx
-                ON bench.docs_ids USING ii42 (token_ids)
+                ON bench.docs_ids USING evoke (token_ids)
                 WITH (
                     method = 'lucene',
                     idf_method = 'lucene',
@@ -281,7 +281,7 @@ def benchmark_ii42_ids(
                     count(*),
                     coalesce(min(doc_id), 0),
                     coalesce(max(score), 0::real)
-                FROM public.ii42_query_ids(
+                FROM public.evoke_query_ids(
                     'bench.docs_ids_bm25_idx'::regclass,
                     %s::int4[],
                     %s::int4,
@@ -434,7 +434,7 @@ def run_dataset(
     result = {
         'dataset': dataset,
         'stats': dataset_stats(corpus_tokenized, query_ids),
-        'ii42_ids': benchmark_ii42_ids(
+        'evoke_ids': benchmark_evoke_ids(
             dataset,
             corpus_tokenized.ids,
             query_ids,
@@ -474,7 +474,7 @@ def run_dataset(
 def parse_args() -> argparse.Namespace:
     root = default_work_root()
     parser = argparse.ArgumentParser(
-        description='Compare ii42, pg_search, and pg_bm25s.'
+        description='Compare evoke, pg_search, and pg_bm25s.'
     )
     parser.add_argument(
         '--datasets',
@@ -516,7 +516,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     payload = load_existing_results(args.output)
-    payload['paths'] = ['ii42_ids', 'pg_search', 'pg_bm25s']
+    payload['paths'] = ['evoke_ids', 'pg_search', 'pg_bm25s']
     payload['datasets_dir'] = str(args.datasets_dir)
     payload['db_prefix'] = args.db_prefix
 

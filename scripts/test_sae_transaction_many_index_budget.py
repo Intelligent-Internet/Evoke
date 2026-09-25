@@ -95,7 +95,7 @@ def setup(
     with connection.cursor() as cursor:
         cursor.execute(
             f"""
-            CREATE EXTENSION ii42;
+            CREATE EXTENSION evoke;
             CREATE SCHEMA {SCHEMA};
             CREATE TABLE {TABLE} (
                 id text PRIMARY KEY,
@@ -112,7 +112,7 @@ def setup(
                 f"""
                 CREATE INDEX docs_idx_{ordinal:02d}
                 ON {TABLE}
-                USING ii42 (body)
+                USING evoke (body)
                 WITH (
                     sae = true,
                     model_path = {sql_literal(str(model_path))},
@@ -141,7 +141,7 @@ def set_budget(
     with connection.cursor() as cursor:
         cursor.execute(
             'SELECT set_config('
-            "'ii42.sae_transaction_mutation_max_bytes', %s, false)",
+            "'evoke.sae_transaction_mutation_max_bytes', %s, false)",
             (str(budget_bytes),),
         )
 
@@ -155,7 +155,7 @@ def total_delta_records(
         for ordinal in range(index_count):
             cursor.execute(
                 'SELECT ('
-                'ii42_index_status(%s::regclass)'
+                'evoke_index_status(%s::regclass)'
                 "->'details'->>'delta_records'"
                 ')::int8',
                 (index_name(ordinal),),
@@ -174,13 +174,13 @@ def query_ids(
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT set_config("
-            "'ii42.test_unified_overlay_oracle', %s, false)",
+            "'evoke.test_unified_overlay_oracle', %s, false)",
             ('on' if oracle else 'off',),
         )
         cursor.execute(
             f"""
             SELECT source.id
-            FROM ii42_query(
+            FROM evoke_query(
                 %s::regclass,
                 %s,
                 10
@@ -243,17 +243,17 @@ def rollback_fixture(
     connection.autocommit = False
     try:
         with connection.cursor() as cursor:
-            cursor.execute('SAVEPOINT ii42_many_index_rollback')
+            cursor.execute('SAVEPOINT evoke_many_index_rollback')
             cursor.execute(
                 f'INSERT INTO {TABLE} (id, body) VALUES (%s, %s)',
                 ('rolledback-row', body),
             )
             before_rollback = backend_memory_state(connection)
             cursor.execute(
-                'ROLLBACK TO SAVEPOINT ii42_many_index_rollback'
+                'ROLLBACK TO SAVEPOINT evoke_many_index_rollback'
             )
             cursor.execute(
-                'RELEASE SAVEPOINT ii42_many_index_rollback'
+                'RELEASE SAVEPOINT evoke_many_index_rollback'
             )
             after_rollback = backend_memory_state(connection)
             cursor.execute(
@@ -371,7 +371,7 @@ def late_failure_fixture(
         with connection.cursor() as cursor:
             cursor.execute(
                 "SELECT set_config("
-                "'ii42.test_precommit_error_after_flush', 'on', true)"
+                "'evoke.test_precommit_error_after_flush', 'on', true)"
             )
             cursor.execute(
                 f'INSERT INTO {TABLE} (id, body) VALUES (%s, %s)',
@@ -398,7 +398,7 @@ def late_failure_fixture(
         'memory_after': memory_after,
         'visible_rows': visible_rows,
         'passed': (
-            'injected ii42 error after pre-commit delta flush'
+            'injected evoke error after pre-commit delta flush'
             in error_message
             and visible_rows == 0
             and memory_after['pending_contexts'] == 0
@@ -413,7 +413,7 @@ def prepared_fixture(
     budget_bytes: int,
     index_count: int,
 ) -> dict[str, Any]:
-    gid = 'ii42_many_index_budget'
+    gid = 'evoke_many_index_budget'
     set_budget(connection, budget_bytes)
     with connection.cursor() as cursor:
         cursor.execute('BEGIN')
@@ -494,7 +494,7 @@ def main() -> None:
         encoding='utf-8',
     ) as handle:
         handle.write(
-            "ii42.maintenance_timer_interval_ms = '3600000ms'\n"
+            "evoke.maintenance_timer_interval_ms = '3600000ms'\n"
         )
     start_cluster(pg_ctl, data_dir, log_path)
 

@@ -400,7 +400,7 @@ def worker(args):
     torch.backends.cuda.matmul.allow_tf32 = False
     torch.backends.cudnn.allow_tf32 = False
     Task.set_offline(True)
-    task = Task.init(project_name='II42-NG', task_name='NG-0077/no-optimizer-canary', reuse_last_task_id=False,
+    task = Task.init(project_name='Evoke-NG', task_name='NG-0077/no-optimizer-canary', reuse_last_task_id=False,
         auto_connect_frameworks=False, auto_connect_arg_parser=False, auto_connect_streams=False,
         auto_resource_monitoring=False)
     receipt = dict(task_id=task.id, actual_start=True, post_hoc=False, offline=True,

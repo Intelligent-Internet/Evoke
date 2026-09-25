@@ -78,14 +78,14 @@ def cut_query(
 def bind_fast_probe(cursor: psycopg.Cursor[Any]) -> None:
     cursor.execute(
         """
-        CREATE OR REPLACE FUNCTION pg_temp.ii42_query_topk_fast(
+        CREATE OR REPLACE FUNCTION pg_temp.evoke_query_topk_fast(
             regclass,
             int4[],
             real[],
             int4,
             boolean
         ) RETURNS jsonb
-        AS '$libdir/ii42', 'ii42_test_query_page_native_topk'
+        AS '$libdir/evoke', 'evoke_test_query_page_native_topk'
         LANGUAGE C STRICT
         """
     )
@@ -100,7 +100,7 @@ def call_fast_probe(
     started = time.perf_counter()
     cursor.execute(
         """
-        SELECT pg_temp.ii42_query_topk_fast(
+        SELECT pg_temp.evoke_query_topk_fast(
             %s::regclass,
             %s::int4[],
             %s::real[],

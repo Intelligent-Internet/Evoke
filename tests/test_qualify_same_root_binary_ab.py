@@ -29,11 +29,11 @@ def test_namespace_start_command_keeps_paths_as_arguments() -> None:
         port=56544,
         server_options=[
             '-c',
-            'shared_preload_libraries=ii42',
+            'shared_preload_libraries=evoke',
         ],
     )
     binary = Path('/data/candidate;not-shell.so')
-    target = Path('/usr/lib/postgresql/18/lib/ii42.so')
+    target = Path('/usr/lib/postgresql/18/lib/evoke.so')
 
     command = MODULE.namespace_start_command(
         args,
@@ -56,13 +56,13 @@ def test_namespace_start_command_keeps_paths_as_arguments() -> None:
     assert str(args.data_dir) in command
     assert str(args.socket_dir) in command[-3]
     assert command[-2] == 'freeze'
-    assert 'shared_preload_libraries=ii42' in command[-3]
+    assert 'shared_preload_libraries=evoke' in command[-3]
     shell_program = command[9]
     assert str(binary) not in shell_program
     assert str(args.data_dir) not in shell_program
     assert str(args.socket_dir) not in shell_program
-    assert 'ii42.maintenance_worker_limit=0' in shell_program
-    assert '-l "$data_dir/ii42-same-root-ab-postgres.log"' in shell_program
+    assert 'evoke.maintenance_worker_limit=0' in shell_program
+    assert '-l "$data_dir/evoke-same-root-ab-postgres.log"' in shell_program
 
 
 def test_namespace_restore_command_does_not_freeze_maintenance() -> None:
@@ -78,7 +78,7 @@ def test_namespace_restore_command_does_not_freeze_maintenance() -> None:
     command = MODULE.namespace_start_command(
         args,
         Path('/data/baseline.so'),
-        [Path('/usr/lib/postgresql/18/lib/ii42.so')],
+        [Path('/usr/lib/postgresql/18/lib/evoke.so')],
         freeze_maintenance=False,
     )
 
@@ -127,7 +127,7 @@ def test_qualified_index_requires_persistent_nonempty_root(monkeypatch) -> None:
         'index_name': 'bench.docs_idx',
         'index_persistence': 'p',
         'heap_persistence': 'p',
-        'access_method': 'ii42',
+        'access_method': 'evoke',
         'valid': True,
         'ready': True,
         'live': True,
@@ -154,7 +154,7 @@ def test_qualified_index_accepts_current_folded_root(monkeypatch) -> None:
         'index_name': 'bench.docs_idx',
         'index_persistence': 'p',
         'heap_persistence': 'p',
-        'access_method': 'ii42',
+        'access_method': 'evoke',
         'valid': True,
         'ready': True,
         'live': True,
@@ -190,7 +190,7 @@ def test_qualified_index_rejects_root_without_persistent_authority(
         'index_name': 'bench.docs_idx',
         'index_persistence': 'p',
         'heap_persistence': 'p',
-        'access_method': 'ii42',
+        'access_method': 'evoke',
         'valid': True,
         'ready': True,
         'live': True,
@@ -229,7 +229,7 @@ def test_qualified_index_rejects_unlogged_or_empty_root(monkeypatch) -> None:
         'index_name': 'bench.docs_idx',
         'index_persistence': 'u',
         'heap_persistence': 'u',
-        'access_method': 'ii42',
+        'access_method': 'evoke',
         'valid': True,
         'ready': True,
         'live': True,
@@ -294,7 +294,7 @@ def test_start_server_stops_endpoint_rejected_after_start(monkeypatch) -> None:
             args,
             Path('/data/candidate.so'),
             'expected',
-            [Path('/usr/lib/postgresql/18/lib/ii42.so')],
+            [Path('/usr/lib/postgresql/18/lib/evoke.so')],
             freeze_maintenance=False,
         )
     except RuntimeError as exc:
@@ -308,8 +308,8 @@ def test_start_server_stops_endpoint_rejected_after_start(monkeypatch) -> None:
 def test_start_server_verifies_every_library_target(monkeypatch) -> None:
     args = Namespace(command_timeout_seconds=60)
     targets = [
-        Path('/usr/lib/postgresql/18/lib/ii42.so'),
-        Path('/data/staged/lib/ii42'),
+        Path('/usr/lib/postgresql/18/lib/evoke.so'),
+        Path('/data/staged/lib/evoke'),
     ]
     observed: list[Path] = []
 
@@ -445,7 +445,7 @@ def test_sql_input_manifest_binds_optional_normal_probe(
 def test_validate_args_rejects_missing_normal_probe(
     tmp_path: Path,
 ) -> None:
-    binary = tmp_path / 'ii42.so'
+    binary = tmp_path / 'evoke.so'
     setup_sql = tmp_path / 'setup.sql'
     run_sql = tmp_path / 'run.sql'
     compare_sql = tmp_path / 'compare.sql'
@@ -571,8 +571,8 @@ def test_catalog_library_targets_require_every_absolute_probin(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    installed = tmp_path / 'installed-ii42.so'
-    staged = tmp_path / 'staged-ii42.so'
+    installed = tmp_path / 'installed-evoke.so'
+    staged = tmp_path / 'staged-evoke.so'
     catalog_staged = staged.with_suffix('')
     installed.write_bytes(b'binary')
     staged.write_bytes(b'binary')
@@ -580,7 +580,7 @@ def test_catalog_library_targets_require_every_absolute_probin(
         MODULE,
         'query_scalar',
         lambda unused_args, unused_sql: (
-            f'["$libdir/ii42", "{catalog_staged}"]'
+            f'["$libdir/evoke", "{catalog_staged}"]'
         ),
     )
 
@@ -615,7 +615,7 @@ def test_full_root_fixture_guards_generation_identity() -> None:
     assert "'{primary,published_block_high_watermark}'" in setup_sql
     assert "'before'" in run_sql
     assert "'after'" in run_sql
-    assert 'ii42_index_generation_status_internal' in run_sql
+    assert 'evoke_index_generation_status_internal' in run_sql
     assert 'count(DISTINCT identity) = 1' in compare_sql
     assert 'root identity changed during A/B' in compare_sql
     assert "WHERE name IN ('p006', 'unfiltered')" not in normal_sql

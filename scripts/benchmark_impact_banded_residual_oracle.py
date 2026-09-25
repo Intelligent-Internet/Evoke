@@ -35,14 +35,14 @@ DEFAULT_ERROR_RATIOS = (0.0,)
 DEFAULT_LAZY_BLOCK_BATCHES = (1024,)
 DIRECTORY_WIDTHS = (8, 12, 16)
 IMPACT_WIDTHS = (4, 8)
-II42_TERMS_PER_FRONTIER_SHARD = 64
-II42_FRONTIER_HEADER_SIZE = 64
-II42_PACKED_HEADER_SIZE = 136
-II42_PACKED_TERM_SIZE = 52
-II42_PACKED_REF_SIZE = 5
-II42_PACKED_SUPER_REF_SIZE = 16
-II42_PACKED_BLOCK_SHIFT = 4
-II42_PACKED_SUPERBLOCK_SHIFT = 8
+EVOKE_TERMS_PER_FRONTIER_SHARD = 64
+EVOKE_FRONTIER_HEADER_SIZE = 64
+EVOKE_PACKED_HEADER_SIZE = 136
+EVOKE_PACKED_TERM_SIZE = 52
+EVOKE_PACKED_REF_SIZE = 5
+EVOKE_PACKED_SUPER_REF_SIZE = 16
+EVOKE_PACKED_BLOCK_SHIFT = 4
+EVOKE_PACKED_SUPERBLOCK_SHIFT = 8
 
 
 @dataclass(frozen=True)
@@ -904,7 +904,7 @@ def publication_shape(
     packed_membership_bytes = 0
     packed_doc_delta_bytes = 0
     packed_block_count = math.ceil(
-        columns.shape[0] / (1 << II42_PACKED_BLOCK_SHIFT)
+        columns.shape[0] / (1 << EVOKE_PACKED_BLOCK_SHIFT)
     )
     for term_id in np.flatnonzero(~selected_terms):
         postings = load_posting(columns, int(term_id))
@@ -913,11 +913,11 @@ def publication_shape(
             packed_term_count += 1
             packed_blocks = np.right_shift(
                 postings.documents,
-                II42_PACKED_BLOCK_SHIFT,
+                EVOKE_PACKED_BLOCK_SHIFT,
             )
             packed_superblocks = np.right_shift(
                 postings.documents,
-                II42_PACKED_SUPERBLOCK_SHIFT,
+                EVOKE_PACKED_SUPERBLOCK_SHIFT,
             )
             packed_refs = np.unique(packed_blocks).size
             packed_ref_count += packed_refs
@@ -954,10 +954,10 @@ def publication_shape(
                 compact_block_header_bytes += varint_size(int(count))
                 previous = int(block_id)
     current_packed_bytes = (
-        II42_PACKED_HEADER_SIZE
-        + packed_term_count * II42_PACKED_TERM_SIZE
-        + packed_super_ref_count * II42_PACKED_SUPER_REF_SIZE
-        + packed_ref_count * II42_PACKED_REF_SIZE
+        EVOKE_PACKED_HEADER_SIZE
+        + packed_term_count * EVOKE_PACKED_TERM_SIZE
+        + packed_super_ref_count * EVOKE_PACKED_SUPER_REF_SIZE
+        + packed_ref_count * EVOKE_PACKED_REF_SIZE
         + packed_membership_bytes
         + packed_doc_delta_bytes
         + posting_count * 4
@@ -986,11 +986,11 @@ def publication_shape(
                 ),
             }
     shard_count = math.ceil(columns.shape[1] /
-                            II42_TERMS_PER_FRONTIER_SHARD)
+                            EVOKE_TERMS_PER_FRONTIER_SHARD)
     compact_directory_bytes = (
         compact_block_header_bytes
         + (columns.shape[1] + shard_count) * 8
-        + shard_count * II42_FRONTIER_HEADER_SIZE
+        + shard_count * EVOKE_FRONTIER_HEADER_SIZE
     )
     compact_posting_width = max(1, math.ceil(block_shift / 8)) + 4
     compact_posting_bytes = posting_count * compact_posting_width

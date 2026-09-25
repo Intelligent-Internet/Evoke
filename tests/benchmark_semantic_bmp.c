@@ -1,6 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "ii42_semantic_bmp.h"
+#include "evoke_semantic_bmp.h"
 
 #include <float.h>
 #include <inttypes.h>
@@ -94,8 +94,8 @@ compare_u32(const void *left, const void *right)
 static int
 compare_seed_score_desc(const void *left, const void *right)
 {
-    const ii42_semantic_bmp_seed *a = left;
-    const ii42_semantic_bmp_seed *b = right;
+    const evoke_semantic_bmp_seed *a = left;
+    const evoke_semantic_bmp_seed *b = right;
 
     if (a->score > b->score)
     {
@@ -111,8 +111,8 @@ compare_seed_score_desc(const void *left, const void *right)
 
 static double
 topk_overlap(
-    const ii42_topk_result *expected,
-    const ii42_topk_result *actual
+    const evoke_topk_result *expected,
+    const evoke_topk_result *actual
 )
 {
     size_t matches = 0;
@@ -140,9 +140,9 @@ topk_overlap(
     return (double) matches / (double) expected->len;
 }
 
-static ii42_status
+static evoke_status
 build_term_prefixes(
-    const ii42_semantic_bmp_run *runs,
+    const evoke_semantic_bmp_run *runs,
     uint32_t term_count,
     uint32_t prefix_count,
     semantic_term_prefix **prefixes_out,
@@ -157,14 +157,14 @@ build_term_prefixes(
 
     if (prefixes_out == NULL || bytes_out == NULL || prefix_count == 0)
     {
-        return II42_ERR_INVALID;
+        return EVOKE_ERR_INVALID;
     }
     *prefixes_out = NULL;
     *bytes_out = 0;
     storage_count = (uint64_t) term_count * prefix_count * UINT64_C(2);
     if (storage_count > SIZE_MAX / sizeof(*storage))
     {
-        return II42_ERR_RANGE;
+        return EVOKE_ERR_RANGE;
     }
     for (uint32_t term_id = 0; term_id < term_count; term_id++)
     {
@@ -175,7 +175,7 @@ build_term_prefixes(
     }
     if (max_postings > SIZE_MAX / sizeof(*scratch))
     {
-        return II42_ERR_RANGE;
+        return EVOKE_ERR_RANGE;
     }
     prefixes = calloc(term_count, sizeof(*prefixes));
     storage = malloc((size_t) storage_count * sizeof(*storage));
@@ -185,11 +185,11 @@ build_term_prefixes(
         free(scratch);
         free(storage);
         free(prefixes);
-        return II42_ERR_NOMEM;
+        return EVOKE_ERR_NOMEM;
     }
     for (uint32_t term_id = 0; term_id < term_count; term_id++)
     {
-        const ii42_semantic_bmp_run *run = &runs[term_id];
+        const evoke_semantic_bmp_run *run = &runs[term_id];
         uint32_t retained = run->posting_count < prefix_count
             ? (uint32_t) run->posting_count
             : prefix_count;
@@ -229,12 +229,12 @@ build_term_prefixes(
     *prefixes_out = prefixes;
     *bytes_out = storage_count * sizeof(*storage) +
         (uint64_t) term_count * sizeof(*prefixes);
-    return II42_OK;
+    return EVOKE_OK;
 }
 
 static bool
 find_run_impact(
-    const ii42_semantic_bmp_run *run,
+    const evoke_semantic_bmp_run *run,
     uint32_t document_id,
     float *impact_out
 )
@@ -265,16 +265,16 @@ find_run_impact(
     return true;
 }
 
-static ii42_status
+static evoke_status
 prepare_exact_seeds(
     const semantic_term_prefix *prefixes,
-    const ii42_semantic_bmp_run *runs,
+    const evoke_semantic_bmp_run *runs,
     const uint32_t *query_ids,
     const float *query_weights,
     size_t query_count,
     uint32_t *candidate_ids,
     size_t candidate_capacity,
-    ii42_semantic_bmp_seed *seeds,
+    evoke_semantic_bmp_seed *seeds,
     size_t *seed_count_out,
     uint64_t *lookup_count_out
 )
@@ -294,7 +294,7 @@ prepare_exact_seeds(
 
         if (prefix->count > candidate_capacity - candidate_count)
         {
-            return II42_ERR_RANGE;
+            return EVOKE_ERR_RANGE;
         }
         for (uint32_t offset = 0; offset < prefix->count; offset++)
         {
@@ -342,23 +342,23 @@ prepare_exact_seeds(
     }
     *seed_count_out = seed_count;
     *lookup_count_out = lookup_count;
-    return II42_OK;
+    return EVOKE_OK;
 }
 
-static ii42_status
+static evoke_status
 candidate_topk_from_seeds(
-    const ii42_semantic_bmp_seed *seeds,
+    const evoke_semantic_bmp_seed *seeds,
     size_t seed_count,
     size_t top_k,
-    ii42_topk_result *result_out
+    evoke_topk_result *result_out
 )
 {
     size_t result_count = seed_count < top_k ? seed_count : top_k;
 
-    ii42_topk_result_free(result_out);
+    evoke_topk_result_free(result_out);
     if (result_count == 0)
     {
-        return II42_OK;
+        return EVOKE_OK;
     }
     result_out->doc_ids = malloc(
         result_count * sizeof(*result_out->doc_ids)
@@ -368,8 +368,8 @@ candidate_topk_from_seeds(
     );
     if (result_out->doc_ids == NULL || result_out->scores == NULL)
     {
-        ii42_topk_result_free(result_out);
-        return II42_ERR_NOMEM;
+        evoke_topk_result_free(result_out);
+        return EVOKE_ERR_NOMEM;
     }
     for (size_t rank = 0; rank < result_count; rank++)
     {
@@ -377,11 +377,11 @@ candidate_topk_from_seeds(
         result_out->scores[rank] = seeds[rank].score;
     }
     result_out->len = result_count;
-    return II42_OK;
+    return EVOKE_OK;
 }
 
 static void
-free_norm_bounds(ii42_semantic_bmp_norm_bounds *bounds)
+free_norm_bounds(evoke_semantic_bmp_norm_bounds *bounds)
 {
     free((void *) bounds->block_max_l1);
     free((void *) bounds->block_max_l2);
@@ -400,12 +400,12 @@ outward_float(double value)
     return nextafterf((float) nextafter(value, INFINITY), INFINITY);
 }
 
-static ii42_status
+static evoke_status
 build_norm_bounds(
     uint32_t document_count,
-    const ii42_semantic_bmp_run *runs,
+    const evoke_semantic_bmp_run *runs,
     uint32_t term_count,
-    ii42_semantic_bmp_norm_bounds *bounds_out,
+    evoke_semantic_bmp_norm_bounds *bounds_out,
     uint64_t *bytes_out
 )
 {
@@ -438,11 +438,11 @@ build_norm_bounds(
         free(block_l2);
         free(super_l1);
         free(super_l2);
-        return II42_ERR_NOMEM;
+        return EVOKE_ERR_NOMEM;
     }
     for (uint32_t term_id = 0; term_id < term_count; term_id++)
     {
-        const ii42_semantic_bmp_run *run = &runs[term_id];
+        const evoke_semantic_bmp_run *run = &runs[term_id];
 
         for (uint64_t posting_index = 0;
              posting_index < run->posting_count;
@@ -490,7 +490,7 @@ build_norm_bounds(
     *bytes_out = (
         (uint64_t) block_count + superblock_count
     ) * sizeof(float) * UINT64_C(2);
-    return II42_OK;
+    return EVOKE_OK;
 }
 
 static int
@@ -503,24 +503,24 @@ compare_double(const void *left, const void *right)
 }
 
 static uint64_t
-packed_block_hybrid_size(const ii42_semantic_bmp_packed_index *index)
+packed_block_hybrid_size(const evoke_semantic_bmp_packed_index *index)
 {
     uint64_t bytes;
 
-    bytes = II42_SEMANTIC_BMP_HEADER_SIZE;
+    bytes = EVOKE_SEMANTIC_BMP_HEADER_SIZE;
     bytes += (uint64_t) index->term_count *
-        II42_SEMANTIC_BMP_PACKED_TERM_SIZE;
+        EVOKE_SEMANTIC_BMP_PACKED_TERM_SIZE;
     bytes += (uint64_t) index->super_ref_count *
-        II42_SEMANTIC_BMP_PACKED_SUPER_REF_SIZE;
+        EVOKE_SEMANTIC_BMP_PACKED_SUPER_REF_SIZE;
     bytes += (uint64_t) index->ref_count *
-        II42_SEMANTIC_BMP_PACKED_REF_SIZE;
+        EVOKE_SEMANTIC_BMP_PACKED_REF_SIZE;
     bytes += index->doc_delta_bytes;
     bytes += index->posting_count * sizeof(uint32_t);
     return bytes;
 }
 
 static bool
-same_topk(const ii42_topk_result *left, const ii42_topk_result *right)
+same_topk(const evoke_topk_result *left, const evoke_topk_result *right)
 {
     if (left->len != right->len)
     {
@@ -556,40 +556,40 @@ main(int argc, char **argv)
     uint64_t posting_count;
     uint64_t query_posting_count = 0;
     uint32_t *document_ids = NULL;
-    ii42_posting_value *values = NULL;
-    ii42_semantic_bmp_run *runs = NULL;
+    evoke_posting_value *values = NULL;
+    evoke_semantic_bmp_run *runs = NULL;
     uint32_t *query_ids = NULL;
     float *query_weights = NULL;
     float *scores = NULL;
     uint64_t *tie_breaks = NULL;
-    ii42_semantic_bmp_index index;
-    ii42_semantic_bmp_packed_index packed_index;
-    ii42_semantic_bmp_norm_bounds norm_bounds = {0};
+    evoke_semantic_bmp_index index;
+    evoke_semantic_bmp_packed_index packed_index;
+    evoke_semantic_bmp_norm_bounds norm_bounds = {0};
     semantic_term_prefix *prefixes = NULL;
     uint32_t *seed_candidate_ids = NULL;
-    ii42_semantic_bmp_seed *seeds = NULL;
+    evoke_semantic_bmp_seed *seeds = NULL;
     uint64_t prefix_bytes = 0;
     uint64_t norm_bound_bytes = 0;
     uint64_t seed_lookup_count = 0;
     size_t seed_count = 0;
-    ii42_topk_result expected;
-    ii42_topk_result actual;
-    ii42_topk_result packed_actual;
-    ii42_topk_result packed_taat_actual;
-    ii42_topk_result candidate_actual;
-    ii42_topk_result seeded_actual;
-    ii42_topk_result oracle_seeded_actual;
-    ii42_topk_result bounded_actual;
-    ii42_topk_result oracle_bounded_actual;
-    ii42_topk_result norm_actual;
-    ii42_semantic_bmp_stats stats;
-    ii42_semantic_bmp_stats packed_stats;
-    ii42_semantic_bmp_stats packed_taat_stats;
-    ii42_semantic_bmp_stats seeded_stats;
-    ii42_semantic_bmp_stats oracle_seeded_stats;
-    ii42_semantic_bmp_stats bounded_stats;
-    ii42_semantic_bmp_stats oracle_bounded_stats;
-    ii42_semantic_bmp_stats norm_stats;
+    evoke_topk_result expected;
+    evoke_topk_result actual;
+    evoke_topk_result packed_actual;
+    evoke_topk_result packed_taat_actual;
+    evoke_topk_result candidate_actual;
+    evoke_topk_result seeded_actual;
+    evoke_topk_result oracle_seeded_actual;
+    evoke_topk_result bounded_actual;
+    evoke_topk_result oracle_bounded_actual;
+    evoke_topk_result norm_actual;
+    evoke_semantic_bmp_stats stats;
+    evoke_semantic_bmp_stats packed_stats;
+    evoke_semantic_bmp_stats packed_taat_stats;
+    evoke_semantic_bmp_stats seeded_stats;
+    evoke_semantic_bmp_stats oracle_seeded_stats;
+    evoke_semantic_bmp_stats bounded_stats;
+    evoke_semantic_bmp_stats oracle_bounded_stats;
+    evoke_semantic_bmp_stats norm_stats;
     struct timespec started;
     struct timespec finished;
     double build_ms;
@@ -618,7 +618,7 @@ main(int argc, char **argv)
     uint8_t *packed_serialized = NULL;
     size_t serialized_size = 0;
     size_t packed_serialized_size = 0;
-    ii42_status status = II42_OK;
+    evoke_status status = EVOKE_OK;
     bool exact = false;
 
     if (argc > 1)
@@ -703,7 +703,7 @@ main(int argc, char **argv)
         tie_breaks == NULL)
     {
         fprintf(stderr, "benchmark allocation failed\n");
-        status = II42_ERR_NOMEM;
+        status = EVOKE_ERR_NOMEM;
         goto cleanup;
     }
 
@@ -764,7 +764,7 @@ main(int argc, char **argv)
         SIZE_MAX / sizeof(*seed_candidate_ids))
     {
         fprintf(stderr, "seed candidate count exceeds address space\n");
-        status = II42_ERR_RANGE;
+        status = EVOKE_ERR_RANGE;
         goto cleanup;
     }
     seed_candidate_ids = malloc(
@@ -777,7 +777,7 @@ main(int argc, char **argv)
     if (seed_candidate_ids == NULL || seeds == NULL)
     {
         fprintf(stderr, "seed oracle allocation failed\n");
-        status = II42_ERR_NOMEM;
+        status = EVOKE_ERR_NOMEM;
         goto cleanup;
     }
     clock_gettime(CLOCK_MONOTONIC, &started);
@@ -790,10 +790,10 @@ main(int argc, char **argv)
     );
     clock_gettime(CLOCK_MONOTONIC, &finished);
     prefix_build_ms = elapsed_ms(&started, &finished);
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
         fprintf(stderr, "semantic prefix build failed: %s\n",
-                ii42_strerror(status));
+                evoke_strerror(status));
         goto cleanup;
     }
     clock_gettime(CLOCK_MONOTONIC, &started);
@@ -806,15 +806,15 @@ main(int argc, char **argv)
     );
     clock_gettime(CLOCK_MONOTONIC, &finished);
     norm_build_ms = elapsed_ms(&started, &finished);
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
         fprintf(stderr, "semantic norm bounds build failed: %s\n",
-                ii42_strerror(status));
+                evoke_strerror(status));
         goto cleanup;
     }
 
-    ii42_semantic_bmp_index_init(&index);
-    ii42_semantic_bmp_packed_index_init(&packed_index);
+    evoke_semantic_bmp_index_init(&index);
+    evoke_semantic_bmp_packed_index_init(&packed_index);
     memset(&expected, 0, sizeof(expected));
     memset(&actual, 0, sizeof(actual));
     memset(&packed_actual, 0, sizeof(packed_actual));
@@ -834,7 +834,7 @@ main(int argc, char **argv)
     memset(&oracle_bounded_stats, 0, sizeof(oracle_bounded_stats));
     memset(&norm_stats, 0, sizeof(norm_stats));
     clock_gettime(CLOCK_MONOTONIC, &started);
-    status = ii42_semantic_bmp_index_build_runs(
+    status = evoke_semantic_bmp_index_build_runs(
         document_count,
         runs,
         term_count,
@@ -842,18 +842,18 @@ main(int argc, char **argv)
     );
     clock_gettime(CLOCK_MONOTONIC, &finished);
     build_ms = elapsed_ms(&started, &finished);
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
-        fprintf(stderr, "BMP build failed: %s\n", ii42_strerror(status));
+        fprintf(stderr, "BMP build failed: %s\n", evoke_strerror(status));
         goto cleanup_index;
     }
-    status = ii42_semantic_bmp_serialized_size(&index, &serialized_size);
-    if (status != II42_OK)
+    status = evoke_semantic_bmp_serialized_size(&index, &serialized_size);
+    if (status != EVOKE_OK)
     {
         goto cleanup_index;
     }
     clock_gettime(CLOCK_MONOTONIC, &started);
-    status = ii42_semantic_bmp_packed_index_build_runs(
+    status = evoke_semantic_bmp_packed_index_build_runs(
         document_count,
         runs,
         term_count,
@@ -861,44 +861,44 @@ main(int argc, char **argv)
     );
     clock_gettime(CLOCK_MONOTONIC, &finished);
     packed_build_ms = elapsed_ms(&started, &finished);
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
         fprintf(
             stderr,
             "packed BMP build failed: %s\n",
-            ii42_strerror(status)
+            evoke_strerror(status)
         );
         goto cleanup_index;
     }
-    status = ii42_semantic_bmp_packed_serialized_size(
+    status = evoke_semantic_bmp_packed_serialized_size(
         &packed_index,
         &packed_serialized_size
     );
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
         goto cleanup_index;
     }
     {
         size_t estimated_size = packed_serialized_size;
 
-        status = ii42_semantic_bmp_packed_serialize(
+        status = evoke_semantic_bmp_packed_serialize(
             &packed_index,
             &packed_serialized,
             &packed_serialized_size
         );
-        if (status != II42_OK || packed_serialized_size != estimated_size)
+        if (status != EVOKE_OK || packed_serialized_size != estimated_size)
         {
             fprintf(
                 stderr,
                 "packed serialization failed: status=%s "
                 "estimated=%zu actual=%zu\n",
-                ii42_strerror(status),
+                evoke_strerror(status),
                 estimated_size,
                 packed_serialized_size
             );
-            if (status == II42_OK)
+            if (status == EVOKE_OK)
             {
-                status = II42_ERR_FORMAT;
+                status = EVOKE_ERR_FORMAT;
             }
             goto cleanup_index;
         }
@@ -914,7 +914,7 @@ main(int argc, char **argv)
              term_id < query_term_count;
              term_id++)
         {
-            const ii42_semantic_bmp_run *run = &runs[term_id];
+            const evoke_semantic_bmp_run *run = &runs[term_id];
 
             for (uint64_t posting_index = 0;
                  posting_index < run->posting_count;
@@ -925,8 +925,8 @@ main(int argc, char **argv)
                     run->values[posting_index].impact;
             }
         }
-        ii42_topk_result_free(&expected);
-        status = ii42_topk_with_tie_breaks(
+        evoke_topk_result_free(&expected);
+        status = evoke_topk_with_tie_breaks(
             scores,
             document_count,
             top_k,
@@ -936,15 +936,15 @@ main(int argc, char **argv)
         );
         clock_gettime(CLOCK_MONOTONIC, &finished);
         taat_ms[repetition] = elapsed_ms(&started, &finished);
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
             goto cleanup_index;
         }
 
-        ii42_topk_result_free(&actual);
+        evoke_topk_result_free(&actual);
         memset(&stats, 0, sizeof(stats));
         clock_gettime(CLOCK_MONOTONIC, &started);
-        status = ii42_semantic_bmp_topk(
+        status = evoke_semantic_bmp_topk(
             &index,
             query_ids,
             query_weights,
@@ -955,7 +955,7 @@ main(int argc, char **argv)
         );
         clock_gettime(CLOCK_MONOTONIC, &finished);
         bmp_ms[repetition] = elapsed_ms(&started, &finished);
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
             goto cleanup_index;
         }
@@ -963,14 +963,14 @@ main(int argc, char **argv)
         if (!exact)
         {
             fprintf(stderr, "BMP result differs from exact TAAT\n");
-            status = II42_ERR_FORMAT;
+            status = EVOKE_ERR_FORMAT;
             goto cleanup_index;
         }
 
-        ii42_topk_result_free(&packed_actual);
+        evoke_topk_result_free(&packed_actual);
         memset(&packed_stats, 0, sizeof(packed_stats));
         clock_gettime(CLOCK_MONOTONIC, &started);
-        status = ii42_semantic_bmp_packed_topk(
+        status = evoke_semantic_bmp_packed_topk(
             &packed_index,
             query_ids,
             query_weights,
@@ -981,21 +981,21 @@ main(int argc, char **argv)
         );
         clock_gettime(CLOCK_MONOTONIC, &finished);
         packed_ms[repetition] = elapsed_ms(&started, &finished);
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
             goto cleanup_index;
         }
         if (!same_topk(&expected, &packed_actual))
         {
             fprintf(stderr, "packed BMP result differs from exact TAAT\n");
-            status = II42_ERR_FORMAT;
+            status = EVOKE_ERR_FORMAT;
             goto cleanup_index;
         }
 
-        ii42_topk_result_free(&norm_actual);
+        evoke_topk_result_free(&norm_actual);
         memset(&norm_stats, 0, sizeof(norm_stats));
         clock_gettime(CLOCK_MONOTONIC, &started);
-        status = ii42_semantic_bmp_packed_topk_norm(
+        status = evoke_semantic_bmp_packed_topk_norm(
             &packed_index,
             query_ids,
             query_weights,
@@ -1007,17 +1007,17 @@ main(int argc, char **argv)
         );
         clock_gettime(CLOCK_MONOTONIC, &finished);
         norm_ms[repetition] = elapsed_ms(&started, &finished);
-        if (status != II42_OK || !same_topk(&expected, &norm_actual))
+        if (status != EVOKE_OK || !same_topk(&expected, &norm_actual))
         {
             fprintf(stderr, "norm-bound packed BMP differs from exact TAAT\n");
-            if (status == II42_OK)
+            if (status == EVOKE_OK)
             {
-                status = II42_ERR_FORMAT;
+                status = EVOKE_ERR_FORMAT;
             }
             goto cleanup_index;
         }
 
-        ii42_topk_result_free(&seeded_actual);
+        evoke_topk_result_free(&seeded_actual);
         memset(&seeded_stats, 0, sizeof(seeded_stats));
         clock_gettime(CLOCK_MONOTONIC, &started);
         status = prepare_exact_seeds(
@@ -1032,7 +1032,7 @@ main(int argc, char **argv)
             &seed_count,
             &seed_lookup_count
         );
-        if (status == II42_OK)
+        if (status == EVOKE_OK)
         {
             qsort(
                 seeds,
@@ -1049,15 +1049,15 @@ main(int argc, char **argv)
         }
         clock_gettime(CLOCK_MONOTONIC, &finished);
         candidate_ms[repetition] = elapsed_ms(&started, &finished);
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
             fprintf(stderr, "candidate-only rerank failed\n");
             goto cleanup_index;
         }
         candidate_overlap = topk_overlap(&expected, &candidate_actual);
-        if (status == II42_OK)
+        if (status == EVOKE_OK)
         {
-            status = ii42_semantic_bmp_packed_topk_seeded(
+            status = evoke_semantic_bmp_packed_topk_seeded(
                 &packed_index,
                 query_ids,
                 query_weights,
@@ -1071,12 +1071,12 @@ main(int argc, char **argv)
         }
         clock_gettime(CLOCK_MONOTONIC, &finished);
         seeded_ms[repetition] = elapsed_ms(&started, &finished);
-        if (status != II42_OK || !same_topk(&expected, &seeded_actual))
+        if (status != EVOKE_OK || !same_topk(&expected, &seeded_actual))
         {
             fprintf(stderr, "seeded packed BMP differs from exact TAAT\n");
-            if (status == II42_OK)
+            if (status == EVOKE_OK)
             {
-                status = II42_ERR_FORMAT;
+                status = EVOKE_ERR_FORMAT;
             }
             goto cleanup_index;
         }
@@ -1084,10 +1084,10 @@ main(int argc, char **argv)
         boundary_error = seed_count >= top_k
             ? (float) (boundary_error_ratio * seeds[top_k - 1U].score)
             : 0.0f;
-        ii42_topk_result_free(&bounded_actual);
+        evoke_topk_result_free(&bounded_actual);
         memset(&bounded_stats, 0, sizeof(bounded_stats));
         clock_gettime(CLOCK_MONOTONIC, &started);
-        status = ii42_semantic_bmp_packed_topk_seeded_bounded(
+        status = evoke_semantic_bmp_packed_topk_seeded_bounded(
             &packed_index,
             query_ids,
             query_weights,
@@ -1101,14 +1101,14 @@ main(int argc, char **argv)
         );
         clock_gettime(CLOCK_MONOTONIC, &finished);
         bounded_ms[repetition] = elapsed_ms(&started, &finished);
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
             fprintf(stderr, "bounded seeded packed BMP failed\n");
             goto cleanup_index;
         }
         bounded_overlap = topk_overlap(&expected, &bounded_actual);
 
-        ii42_topk_result_free(&oracle_seeded_actual);
+        evoke_topk_result_free(&oracle_seeded_actual);
         memset(&oracle_seeded_stats, 0, sizeof(oracle_seeded_stats));
         for (size_t rank = 0; rank < expected.len; rank++)
         {
@@ -1116,7 +1116,7 @@ main(int argc, char **argv)
             seeds[rank].score = expected.scores[rank];
         }
         clock_gettime(CLOCK_MONOTONIC, &started);
-        status = ii42_semantic_bmp_packed_topk_seeded(
+        status = evoke_semantic_bmp_packed_topk_seeded(
             &packed_index,
             query_ids,
             query_weights,
@@ -1129,13 +1129,13 @@ main(int argc, char **argv)
         );
         clock_gettime(CLOCK_MONOTONIC, &finished);
         oracle_seeded_ms[repetition] = elapsed_ms(&started, &finished);
-        if (status != II42_OK ||
+        if (status != EVOKE_OK ||
             !same_topk(&expected, &oracle_seeded_actual))
         {
             fprintf(stderr, "oracle-seeded BMP differs from exact TAAT\n");
-            if (status == II42_OK)
+            if (status == EVOKE_OK)
             {
-                status = II42_ERR_FORMAT;
+                status = EVOKE_ERR_FORMAT;
             }
             goto cleanup_index;
         }
@@ -1145,10 +1145,10 @@ main(int argc, char **argv)
                 boundary_error_ratio * expected.scores[top_k - 1U]
             )
             : 0.0f;
-        ii42_topk_result_free(&oracle_bounded_actual);
+        evoke_topk_result_free(&oracle_bounded_actual);
         memset(&oracle_bounded_stats, 0, sizeof(oracle_bounded_stats));
         clock_gettime(CLOCK_MONOTONIC, &started);
-        status = ii42_semantic_bmp_packed_topk_seeded_bounded(
+        status = evoke_semantic_bmp_packed_topk_seeded_bounded(
             &packed_index,
             query_ids,
             query_weights,
@@ -1162,7 +1162,7 @@ main(int argc, char **argv)
         );
         clock_gettime(CLOCK_MONOTONIC, &finished);
         oracle_bounded_ms[repetition] = elapsed_ms(&started, &finished);
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
             fprintf(stderr, "oracle-bounded packed BMP failed\n");
             goto cleanup_index;
@@ -1172,10 +1172,10 @@ main(int argc, char **argv)
             &oracle_bounded_actual
         );
 
-        ii42_topk_result_free(&packed_taat_actual);
+        evoke_topk_result_free(&packed_taat_actual);
         memset(&packed_taat_stats, 0, sizeof(packed_taat_stats));
         clock_gettime(CLOCK_MONOTONIC, &started);
-        status = ii42_semantic_bmp_packed_taat_topk(
+        status = evoke_semantic_bmp_packed_taat_topk(
             &packed_index,
             query_ids,
             query_weights,
@@ -1186,13 +1186,13 @@ main(int argc, char **argv)
         );
         clock_gettime(CLOCK_MONOTONIC, &finished);
         packed_taat_ms[repetition] = elapsed_ms(&started, &finished);
-        if (status != II42_OK ||
+        if (status != EVOKE_OK ||
             !same_topk(&expected, &packed_taat_actual))
         {
             fprintf(stderr, "packed TAAT result differs from exact TAAT\n");
-            if (status == II42_OK)
+            if (status == EVOKE_OK)
             {
-                status = II42_ERR_FORMAT;
+                status = EVOKE_ERR_FORMAT;
             }
             goto cleanup_index;
         }
@@ -1259,10 +1259,10 @@ main(int argc, char **argv)
         compare_double
     );
     bound_directory_bytes =
-        (uint64_t) index.term_count * II42_SEMANTIC_BMP_TERM_SIZE +
+        (uint64_t) index.term_count * EVOKE_SEMANTIC_BMP_TERM_SIZE +
         (uint64_t) index.super_ref_count *
-            II42_SEMANTIC_BMP_SUPER_REF_SIZE +
-        (uint64_t) index.ref_count * II42_SEMANTIC_BMP_REF_SIZE;
+            EVOKE_SEMANTIC_BMP_SUPER_REF_SIZE +
+        (uint64_t) index.ref_count * EVOKE_SEMANTIC_BMP_REF_SIZE;
     term_major_exact_bytes = index.posting_count *
         (sizeof(uint32_t) + sizeof(uint32_t));
     hybrid_authoritative_bytes = bound_directory_bytes +
@@ -1276,7 +1276,7 @@ main(int argc, char **argv)
             packed_hybrid_bytes,
             packed_serialized_size
         );
-        status = II42_ERR_FORMAT;
+        status = EVOKE_ERR_FORMAT;
         goto cleanup_index;
     }
     printf(
@@ -1384,13 +1384,13 @@ main(int argc, char **argv)
         index.ref_count,
         index.active_block_count,
         index.record_count,
-        (uint64_t) index.term_count * II42_SEMANTIC_BMP_TERM_SIZE,
+        (uint64_t) index.term_count * EVOKE_SEMANTIC_BMP_TERM_SIZE,
         (uint64_t) index.super_ref_count *
-            II42_SEMANTIC_BMP_SUPER_REF_SIZE,
-        (uint64_t) index.ref_count * II42_SEMANTIC_BMP_REF_SIZE,
+            EVOKE_SEMANTIC_BMP_SUPER_REF_SIZE,
+        (uint64_t) index.ref_count * EVOKE_SEMANTIC_BMP_REF_SIZE,
         (uint64_t) index.active_block_count *
-            II42_SEMANTIC_BMP_BLOCK_SIZE,
-        (uint64_t) index.record_count * II42_SEMANTIC_BMP_RECORD_SIZE,
+            EVOKE_SEMANTIC_BMP_BLOCK_SIZE,
+        (uint64_t) index.record_count * EVOKE_SEMANTIC_BMP_RECORD_SIZE,
         index.posting_count * sizeof(uint32_t),
         bound_directory_bytes,
         term_major_exact_bytes,
@@ -1489,18 +1489,18 @@ main(int argc, char **argv)
 
 cleanup_index:
     free(packed_serialized);
-    ii42_topk_result_free(&candidate_actual);
-    ii42_topk_result_free(&norm_actual);
-    ii42_topk_result_free(&oracle_bounded_actual);
-    ii42_topk_result_free(&bounded_actual);
-    ii42_topk_result_free(&oracle_seeded_actual);
-    ii42_topk_result_free(&seeded_actual);
-    ii42_topk_result_free(&packed_taat_actual);
-    ii42_topk_result_free(&packed_actual);
-    ii42_topk_result_free(&actual);
-    ii42_topk_result_free(&expected);
-    ii42_semantic_bmp_index_free(&index);
-    ii42_semantic_bmp_packed_index_free(&packed_index);
+    evoke_topk_result_free(&candidate_actual);
+    evoke_topk_result_free(&norm_actual);
+    evoke_topk_result_free(&oracle_bounded_actual);
+    evoke_topk_result_free(&bounded_actual);
+    evoke_topk_result_free(&oracle_seeded_actual);
+    evoke_topk_result_free(&seeded_actual);
+    evoke_topk_result_free(&packed_taat_actual);
+    evoke_topk_result_free(&packed_actual);
+    evoke_topk_result_free(&actual);
+    evoke_topk_result_free(&expected);
+    evoke_semantic_bmp_index_free(&index);
+    evoke_semantic_bmp_packed_index_free(&packed_index);
 cleanup:
     free_norm_bounds(&norm_bounds);
     if (prefixes != NULL)
@@ -1517,5 +1517,5 @@ cleanup:
     free(runs);
     free(values);
     free(document_ids);
-    return status == II42_OK ? EXIT_SUCCESS : EXIT_FAILURE;
+    return status == EVOKE_OK ? EXIT_SUCCESS : EXIT_FAILURE;
 }

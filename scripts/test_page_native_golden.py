@@ -12,7 +12,7 @@ from typing import Any
 
 import psycopg
 
-from ii42_test_support import (
+from evoke_test_support import (
     create_short_socket_root,
     extension_control_root,
 )
@@ -71,8 +71,8 @@ def load_golden() -> dict[str, Any]:
 def assert_shared_runtime_config(config_path: Path) -> None:
     config = config_path.read_text(encoding='utf-8')
     required = (
-        "shared_preload_libraries = 'ii42'",
-        'ii42.shared_runtime_size',
+        "shared_preload_libraries = 'evoke'",
+        'evoke.shared_runtime_size',
     )
     missing = [setting for setting in required if setting not in config]
     if missing:
@@ -129,7 +129,7 @@ def assert_surface_map(
 
 def setup(connection: psycopg.Connection[Any]) -> None:
     with connection.cursor() as cursor:
-        cursor.execute('CREATE EXTENSION ii42')
+        cursor.execute('CREATE EXTENSION evoke')
         cursor.execute('CREATE SCHEMA parity')
         cursor.execute(
             'CREATE TABLE parity.docs_v3 ('
@@ -141,7 +141,7 @@ def setup(connection: psycopg.Connection[Any]) -> None:
         )
         cursor.execute(
             'CREATE INDEX docs_v3_idx ON parity.docs_v3 '
-            'USING ii42 (body) WITH (sae=false, consistency=realtime)'
+            'USING evoke (body) WITH (sae=false, consistency=realtime)'
         )
 
         cursor.execute(
@@ -154,7 +154,7 @@ def setup(connection: psycopg.Connection[Any]) -> None:
         )
         cursor.execute(
             'CREATE INDEX predicate_v3_idx ON parity.predicate_v3 '
-            'USING ii42 (body) WITH (sae=false, consistency=realtime)'
+            'USING evoke (body) WITH (sae=false, consistency=realtime)'
         )
 
         cursor.execute(
@@ -167,7 +167,7 @@ def setup(connection: psycopg.Connection[Any]) -> None:
         )
         cursor.execute(
             'CREATE INDEX ids_v3_idx ON parity.ids_v3 '
-            'USING ii42 (tokens) WITH (sae=false, consistency=realtime)'
+            'USING evoke (tokens) WITH (sae=false, consistency=realtime)'
         )
 
         cursor.execute(
@@ -184,7 +184,7 @@ def setup(connection: psycopg.Connection[Any]) -> None:
         )
         cursor.execute(
             'CREATE INDEX semantic_docs_idx ON parity.semantic_docs '
-            'USING ii42 (body) WITH (sae=true, consistency=eventual)'
+            'USING evoke (body) WITH (sae=true, consistency=eventual)'
         )
 
 
@@ -197,7 +197,7 @@ def collect_semantic_surfaces(
         for query in queries:
             cursor.execute(
                 'SELECT source.id, hit.score::float8 '
-                'FROM ii42_query('
+                'FROM evoke_query('
                 "'parity.semantic_docs_idx'::regclass, %s, 3) AS hit "
                 'JOIN parity.semantic_docs AS source '
                 'ON source.ctid = hit.ctid '
@@ -229,12 +229,12 @@ def collect_and_validate(
         )
 
     initial = collect_surfaces(connection, version='v3')
-    initial['raw:ii42_zero_score_missing'] = [
+    initial['raw:evoke_zero_score_missing'] = [
         [document_id, score]
         for document_id, score in fetch_search(
             connection,
             'parity.docs_v3_idx',
-            'ii42_zero_score_missing',
+            'evoke_zero_score_missing',
         )
     ]
     assert_surface_map(initial, bm25['initial'], label='initial')
@@ -254,7 +254,7 @@ def collect_and_validate(
 
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT ii42_index_runtime_signature_internal("
+            "SELECT evoke_index_runtime_signature_internal("
             "'parity.semantic_docs_idx'::regclass)"
         )
         runtime_signature = str(cursor.fetchone()[0])
@@ -319,12 +319,12 @@ def collect_and_validate(
                     '+l0_unique_1999 -missing',
                 )
             ],
-            'raw:ii42_zero_score_missing': [
+            'raw:evoke_zero_score_missing': [
                 [document_id, score]
                 for document_id, score in fetch_search(
                     connection,
                     'parity.docs_v3_idx',
-                    'ii42_zero_score_missing',
+                    'evoke_zero_score_missing',
                 )
             ],
             'search:incremental lexical': [
@@ -474,9 +474,9 @@ def run_golden(args: argparse.Namespace) -> dict[str, Any]:
             encoding='utf-8',
         ) as handle:
             escaped_model = str(model_path).replace("'", "''")
-            handle.write(f"ii42.sae_model_path = '{escaped_model}'\n")
-            handle.write("ii42.control_database = 'template1'\n")
-            handle.write('ii42.runtime_worker_count = 2\n')
+            handle.write(f"evoke.sae_model_path = '{escaped_model}'\n")
+            handle.write("evoke.control_database = 'template1'\n")
+            handle.write('evoke.runtime_worker_count = 2\n')
 
         start_cluster(pg_bin / 'pg_ctl', data_dir, log_path)
         started = True

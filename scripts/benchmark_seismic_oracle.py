@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluate a Seismic-style accelerator over II42 semantic postings."""
+"""Evaluate a Seismic-style accelerator over Evoke semantic postings."""
 
 from __future__ import annotations
 
@@ -71,7 +71,7 @@ def write_document_vectors(args: argparse.Namespace) -> tuple[Path, int]:
         psycopg.connect(args.dsn, autocommit=True) as encode_connection,
         temporary_path.open('w', encoding='utf-8') as output,
     ):
-        with source_connection.cursor(name='ii42_seismic_export') as source:
+        with source_connection.cursor(name='evoke_seismic_export') as source:
             source.itersize = args.batch_size
             source.execute(query)
             while True:
@@ -83,7 +83,7 @@ def write_document_vectors(args: argparse.Namespace) -> tuple[Path, int]:
                     encoder.execute(
                         """
                         SELECT row_ordinal, atom_ids, atom_weights
-                        FROM ii42_encode_document_batch_internal(
+                        FROM evoke_encode_document_batch_internal(
                             %s::regclass,
                             %s::text[]
                         )
@@ -145,7 +145,7 @@ def encode_semantic_queries(
         with connection.cursor() as cursor:
             for query in raw_queries:
                 cursor.execute(
-                    'SELECT ii42_encode_text_internal(%s::regclass, %s)',
+                    'SELECT evoke_encode_text_internal(%s::regclass, %s)',
                     (args.index, query['text']),
                 )
                 payload = cursor.fetchone()[0]
@@ -182,7 +182,7 @@ def exact_rankings(
                 cursor.execute(
                     """
                     SELECT doc_ord
-                    FROM ii42_index_semantic_query_native_internal(
+                    FROM evoke_index_semantic_query_native_internal(
                         %s::regclass,
                         %s::int4[],
                         %s::real[],

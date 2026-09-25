@@ -34,7 +34,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--field-count', type=int, default=1)
     parser.add_argument('--query', action='append', dest='queries')
     parser.add_argument('--query-vector-table')
-    parser.add_argument('--library-path', default='$libdir/ii42')
+    parser.add_argument('--library-path', default='$libdir/evoke')
     parser.add_argument('--filter', action='append', dest='filters')
     parser.add_argument('--k', type=int, default=50)
     parser.add_argument('--ceiling-only', action='store_true')
@@ -49,11 +49,11 @@ def bind_probe(
     cursor.execute(
         sql.SQL(
             """
-        CREATE OR REPLACE FUNCTION pg_temp.ii42_term_suffix_ceiling(
+        CREATE OR REPLACE FUNCTION pg_temp.evoke_term_suffix_ceiling(
             regclass,
             int4[]
         ) RETURNS jsonb
-        AS {}, 'ii42_test_query_term_suffix_ceiling'
+        AS {}, 'evoke_test_query_term_suffix_ceiling'
         LANGUAGE C STRICT
         """
         ).format(sql.Literal(library_path))
@@ -61,14 +61,14 @@ def bind_probe(
     cursor.execute(
         sql.SQL(
             """
-        CREATE OR REPLACE FUNCTION pg_temp.ii42_forward_bound_cost(
+        CREATE OR REPLACE FUNCTION pg_temp.evoke_forward_bound_cost(
             regclass,
             int4[],
             real[],
             int4[],
             int4
         ) RETURNS jsonb
-        AS {}, 'ii42_test_query_forward_bound_cost'
+        AS {}, 'evoke_test_query_forward_bound_cost'
         LANGUAGE C CALLED ON NULL INPUT
         """
         ).format(sql.Literal(library_path))
@@ -76,10 +76,10 @@ def bind_probe(
     cursor.execute(
         sql.SQL(
             """
-        CREATE OR REPLACE FUNCTION pg_temp.ii42_forward_bound_status(
+        CREATE OR REPLACE FUNCTION pg_temp.evoke_forward_bound_status(
             regclass
         ) RETURNS jsonb
-        AS {}, 'ii42_index_generation_readiness_internal_c'
+        AS {}, 'evoke_index_generation_readiness_internal_c'
         LANGUAGE C STRICT
         """
         ).format(sql.Literal(library_path))
@@ -296,7 +296,7 @@ def main() -> int:
         with connection.cursor() as cursor:
             bind_probe(cursor, args.library_path)
             cursor.execute(
-                'SELECT pg_temp.ii42_forward_bound_status(%s::regclass)',
+                'SELECT pg_temp.evoke_forward_bound_status(%s::regclass)',
                 (args.index,),
             )
             root_before = cursor.fetchone()[0]
@@ -310,7 +310,7 @@ def main() -> int:
                 queries = []
                 for query_text in query_texts:
                     cursor.execute(
-                        'SELECT ii42_encode_text_internal('
+                        'SELECT evoke_encode_text_internal('
                         '%s::regclass, %s)',
                         (args.index, query_text),
                     )
@@ -326,7 +326,7 @@ def main() -> int:
                 if args.ceiling_only:
                     started = time.perf_counter()
                     cursor.execute(
-                        'SELECT pg_temp.ii42_term_suffix_ceiling('
+                        'SELECT pg_temp.evoke_term_suffix_ceiling('
                         '%s::regclass, %s::int4[])',
                         (args.index, query_ids),
                     )
@@ -348,7 +348,7 @@ def main() -> int:
                     slots = filter_spec.selector(document_count)
                     started = time.perf_counter()
                     cursor.execute(
-                        'SELECT pg_temp.ii42_forward_bound_cost('
+                        'SELECT pg_temp.evoke_forward_bound_cost('
                         '%s::regclass, %s::int4[], %s::real[], '
                         '%s::int4[], %s)',
                         (
@@ -386,16 +386,16 @@ def main() -> int:
                         }
                     )
             cursor.execute(
-                'SELECT pg_temp.ii42_forward_bound_status(%s::regclass)',
+                'SELECT pg_temp.evoke_forward_bound_status(%s::regclass)',
                 (args.index,),
             )
             root_after = cursor.fetchone()[0]
 
     result = {
         'schema': (
-            'ii42_term_suffix_ceiling_v1'
+            'evoke_term_suffix_ceiling_v1'
             if args.ceiling_only
-            else 'ii42_forward_bound_projection_oracle_v2'
+            else 'evoke_forward_bound_projection_oracle_v2'
         ),
         'index': args.index,
         'document_count': document_count,

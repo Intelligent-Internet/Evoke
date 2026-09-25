@@ -51,8 +51,8 @@ def test_qualification_preserves_psql_failure() -> None:
 
 
 def test_binary_binding_accepts_exact_mapped_copy(tmp_path: Path) -> None:
-    expected = tmp_path / 'expected' / 'ii42.so'
-    mapped = tmp_path / 'loaded' / 'ii42.so'
+    expected = tmp_path / 'expected' / 'evoke.so'
+    mapped = tmp_path / 'loaded' / 'evoke.so'
     expected.parent.mkdir()
     mapped.parent.mkdir()
     expected.write_bytes(b'qualified artifact')
@@ -73,8 +73,8 @@ def test_binary_binding_accepts_exact_mapped_copy(tmp_path: Path) -> None:
 def test_binary_binding_rejects_different_mapped_binary(
     tmp_path: Path,
 ) -> None:
-    expected = tmp_path / 'expected' / 'ii42.so'
-    mapped = tmp_path / 'loaded' / 'ii42.so'
+    expected = tmp_path / 'expected' / 'evoke.so'
+    mapped = tmp_path / 'loaded' / 'evoke.so'
     expected.parent.mkdir()
     mapped.parent.mkdir()
     expected.write_bytes(b'qualified artifact')
@@ -103,11 +103,11 @@ def test_binary_binding_rejects_missing_evidence() -> None:
 def test_memory_qualification_accepts_bounded_rss_without_swap() -> None:
     observed, errors = MODULE.memory_qualification(
         {
-            'ii42 build: heap scan': {
+            'evoke build: heap scan': {
                 'status_VmHWM_bytes': 512 * 1024 * 1024,
                 'status_VmSwap_bytes': 0,
             },
-            'ii42 build: segment publish': {
+            'evoke build: segment publish': {
                 'status_VmHWM_bytes': 768 * 1024 * 1024,
                 'smaps_Swap_bytes': 0,
             },
@@ -133,7 +133,7 @@ def test_memory_qualification_accepts_bounded_rss_without_swap() -> None:
 def test_memory_qualification_rejects_rss_or_swap_over_limit() -> None:
     observed, errors = MODULE.memory_qualification(
         {
-            'ii42 build: COW publish': {
+            'evoke build: COW publish': {
                 'status_VmHWM_bytes': 2 * 1024 * 1024 * 1024,
                 'status_VmSwap_bytes': 4096,
             },
@@ -194,7 +194,7 @@ def test_process_family_memory_accounts_runtime_worker_footprint() -> None:
             },
         ),
         (
-            'postgres: ii42 runtime service 2',
+            'postgres: evoke runtime service 2',
             {
                 'status_VmHWM_bytes': 800,
                 'status_VmRSS_bytes': 700,
@@ -223,7 +223,7 @@ def test_process_family_memory_accounts_runtime_worker_footprint() -> None:
 def test_memory_qualification_uses_process_family_peak() -> None:
     observed, errors = MODULE.memory_qualification(
         {
-            'ii42 build: heap scan': {
+            'evoke build: heap scan': {
                 'status_VmHWM_bytes': 200,
                 'status_VmSwap_bytes': 0,
             },
@@ -231,7 +231,7 @@ def test_memory_qualification_uses_process_family_peak() -> None:
         700,
         0,
         {
-            'ii42 build: heap scan': {
+            'evoke build: heap scan': {
                 'family_MaxProcessHwm_bytes': 800,
                 'family_Private_bytes': 680,
                 'family_Pss_bytes': 730,
@@ -253,7 +253,7 @@ def test_memory_qualification_uses_process_family_peak() -> None:
 def test_memory_qualification_requires_family_pss_when_requested() -> None:
     _, errors = MODULE.memory_qualification(
         {
-            'ii42 build: heap scan': {
+            'evoke build: heap scan': {
                 'status_VmHWM_bytes': 200,
                 'status_VmSwap_bytes': 0,
             },

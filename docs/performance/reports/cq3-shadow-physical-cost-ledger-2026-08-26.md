@@ -16,14 +16,14 @@ the boundary between the existing routes.
 
 The measurement used the running Shadow PostgreSQL 18.4 product instance on
 2026-08-26. The installed extension is 0.2.4 with catalog contract
-`ii42_catalog_v1`, ONNX Runtime 1.29.0, and II42 binary SHA-256:
+`evoke_catalog_v1`, ONNX Runtime 1.29.0, and Evoke binary SHA-256:
 
 ```text
 a415dd9b921586b5499b076d5522d53e00e4f8474455c7cebfedbd2e7091acf0
 ```
 
 That binary is retained under the source snapshot named
-`ii42-cq3-locality-6a5b1df3`. The PubMed root remained generation
+`evoke-cq3-locality-6a5b1df3`. The PubMed root remained generation
 `57036813/1/2440`, accelerator policy 7, scope v6, healthy, valid, ready, and
 free of semantic debt during the measurement.
 

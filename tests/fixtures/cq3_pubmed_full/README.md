@@ -14,7 +14,7 @@ maintenance configuration.
 The caller must pass
 `--qualified-index=bench.pubmed_full_v2_idx`. Before setup, the runner requires
 that index and its heap to be permanent, query-ready, and backed by a non-empty
-II42 generation with immutable segments and posting records. An unlogged
+Evoke generation with immutable segments and posting records. An unlogged
 surface is invalid because crash recovery can reset the heap and index while
 leaving stale catalog statistics that resemble a completed build.
 The fixtures also record bounded generation identity before and after each

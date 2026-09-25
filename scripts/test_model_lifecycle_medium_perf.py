@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -45,7 +45,7 @@ def parse_args() -> argparse.Namespace:
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share directory containing extension/ii42.control, '
+            'PostgreSQL share directory containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -258,7 +258,7 @@ def backend_phase_and_rss(
     rss_text = rss.stdout.strip()
     if rss.returncode != 0 or not rss_text.isdigit():
         return None
-    if not phase.startswith('ii42 build:'):
+    if not phase.startswith('evoke build:'):
         phase = 'sql'
     return phase, int(rss_text) * 1024
 
@@ -271,7 +271,7 @@ def timed_with_backend_rss(
     port: int,
     sql: str,
 ) -> str:
-    application_name = f'ii42_{label}'
+    application_name = f'evoke_{label}'
     environment = dict(os.environ)
     environment['PGAPPNAME'] = application_name
     started = time.perf_counter()
@@ -335,7 +335,7 @@ def timed_with_backend_rss(
 def setup_sql(model_path: Path, docs: int) -> str:
     escaped_path = str(model_path).replace("'", "''")
     return f'''
-    CREATE EXTENSION ii42;
+    CREATE EXTENSION evoke;
     CREATE SCHEMA medium;
     CREATE TABLE medium.docs (
         id int PRIMARY KEY,
@@ -362,7 +362,7 @@ def setup_sql(model_path: Path, docs: int) -> str:
 
     CREATE INDEX docs_body_idx
     ON medium.docs
-    USING ii42 (body)
+    USING evoke (body)
     WITH (
         sae = true,
         model_path = '{escaped_path}',
@@ -376,7 +376,7 @@ def query_sql(query: str = 'cuda graph neural network optimization') -> str:
     return f'''
     WITH hits AS MATERIALIZED (
         SELECT *
-        FROM ii42_query(
+        FROM evoke_query(
             'medium.docs_body_idx'::regclass,
             '{escaped_query}',
             20
@@ -395,7 +395,7 @@ def encode_query_sql(
 ) -> str:
     escaped_query = query.replace("'", "''")
     return (
-        "SELECT ii42_encode_text_internal("
+        "SELECT evoke_encode_text_internal("
         "'medium.docs_body_idx'::regclass, "
         f"'{escaped_query}');"
     )
@@ -407,7 +407,7 @@ def native_query_sql(encoded: dict[str, Any], limit: int = 20) -> str:
     signature = str(encoded['runtime_signature']).replace("'", "''")
     return f'''
     SELECT count(*)
-    FROM ii42_index_semantic_query_native_internal(
+    FROM evoke_index_semantic_query_native_internal(
         'medium.docs_body_idx'::regclass,
         ARRAY[{dims}]::int4[],
         ARRAY[{weights}]::real[],
@@ -425,7 +425,7 @@ def query_diagnostics_sql(
     escaped_query = query.replace("'", "''")
     return f'''
     WITH encoded AS MATERIALIZED (
-        SELECT ii42_encode_text_internal(
+        SELECT evoke_encode_text_internal(
             'medium.docs_body_idx'::regclass,
             '{escaped_query}'
         ) AS value
@@ -448,7 +448,7 @@ def query_diagnostics_sql(
     raw AS MATERIALIZED (
         SELECT candidate.*
         FROM atoms,
-             ii42_index_semantic_query_native_internal(
+             evoke_index_semantic_query_native_internal(
                  'medium.docs_body_idx'::regclass,
                  atoms.dims,
                  atoms.weights,
@@ -472,7 +472,7 @@ def query_diagnostics_sql(
             ),
             '[]'::jsonb
         ),
-        'status', ii42_index_status('medium.docs_body_idx'::regclass)
+        'status', evoke_index_status('medium.docs_body_idx'::regclass)
     );
     '''
 
@@ -511,8 +511,8 @@ def assert_health_sql(docs: int) -> str:
             RAISE EXCEPTION 'unexpected row count after CRUD: %', row_count;
         END IF;
 
-        options := ii42_index_options('medium.docs_body_idx'::regclass);
-        status := ii42_index_status('medium.docs_body_idx'::regclass);
+        options := evoke_index_options('medium.docs_body_idx'::regclass);
+        status := evoke_index_status('medium.docs_body_idx'::regclass);
         generation := status->'generation';
         generation_docs := (generation->>'docs')::int8;
         document_slot_high_watermark := (
@@ -587,7 +587,7 @@ def index_status(
         psql_bin,
         socket_dir,
         port,
-        "SELECT ii42_index_status('medium.docs_body_idx'::regclass);",
+        "SELECT evoke_index_status('medium.docs_body_idx'::regclass);",
     ))
 
 
@@ -634,10 +634,10 @@ def maintain_until_converged(
             psql_bin,
             socket_dir,
             port,
-            "SET ii42.test_convergent_l0_rotation_records = '1';\n"
-            "SELECT ii42_index_maintain("
+            "SET evoke.test_convergent_l0_rotation_records = '1';\n"
+            "SELECT evoke_index_maintain("
             "'medium.docs_body_idx'::regclass);\n"
-            'RESET ii42.test_convergent_l0_rotation_records;',
+            'RESET evoke.test_convergent_l0_rotation_records;',
         )
         actions.append(action)
         if (
@@ -697,7 +697,7 @@ def main() -> None:
     psql_bin = pg_bin / 'psql'
     metrics: dict[str, Any] = {'docs': args.docs}
 
-    with tempfile.TemporaryDirectory(prefix='ii42_native_medium_') as tmp:
+    with tempfile.TemporaryDirectory(prefix='evoke_native_medium_') as tmp:
         root = Path(tmp)
         data_dir = root / 'data'
         socket_dir = root / 'socket'
@@ -724,7 +724,7 @@ def main() -> None:
 
         run([str(initdb), '-D', str(data_dir), '-A', 'trust'])
         with (data_dir / 'postgresql.conf').open('a', encoding='utf-8') as f:
-            f.write("\nshared_preload_libraries = 'ii42'\n")
+            f.write("\nshared_preload_libraries = 'evoke'\n")
             if args.extension_libdir is not None:
                 libdir = str(args.extension_libdir).replace("'", "''")
                 f.write(
@@ -741,10 +741,10 @@ def main() -> None:
                     f'{control_dir}:$system'
                     "'\n"
                 )
-            f.write("ii42.shared_runtime_size = '256MB'\n")
+            f.write("evoke.shared_runtime_size = '256MB'\n")
             f.write("listen_addresses = ''\n")
             f.write('max_worker_processes = 16\n')
-            f.write("ii42.maintenance_timer_interval_ms = '60000ms'\n")
+            f.write("evoke.maintenance_timer_interval_ms = '60000ms'\n")
 
         started = False
         try:
@@ -817,7 +817,7 @@ def main() -> None:
                 psql_bin,
                 socket_dir,
                 args.port,
-                "SELECT ii42_encode_text_internal("
+                "SELECT evoke_encode_text_internal("
                 "'medium.docs_body_idx'::regclass, "
                 "'cuda graph neural network optimization');",
             )
@@ -827,7 +827,7 @@ def main() -> None:
                 psql_bin,
                 socket_dir,
                 args.port,
-                "SELECT ii42_index_preload("
+                "SELECT evoke_index_preload("
                 "'medium.docs_body_idx'::regclass);",
             )
             prewarmed_query = timed(

@@ -366,7 +366,7 @@ def worker(args):
             'worker differs from frozen source')
     from clearml import Task
     Task.set_offline(True)
-    task = Task.init(project_name='II42-NG', task_name='NG-0078/boundary-coverage-v1',
+    task = Task.init(project_name='Evoke-NG', task_name='NG-0078/boundary-coverage-v1',
                      reuse_last_task_id=False, auto_connect_frameworks=False,
                      auto_connect_arg_parser=False, auto_connect_streams=False,
                      auto_resource_monitoring=False)

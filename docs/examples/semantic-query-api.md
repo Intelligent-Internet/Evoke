@@ -4,14 +4,14 @@ Semantic-enabled indexes support natural PostgreSQL ranking:
 
 ```sql
 SELECT source.*,
-       ii42_query('docs_search_idx'::regclass, 'query text') AS score
+       evoke_query('docs_search_idx'::regclass, 'query text') AS score
 FROM docs AS source
 WHERE source.publish_date >= DATE '2026-01-01'
 ORDER BY score DESC
 LIMIT 20;
 ```
 
-The scalar `ii42_query(...)` overload above is a planner marker. One Evoke
+The scalar `evoke_query(...)` overload above is a planner marker. One Evoke
 `CustomScan` evaluates the
 ordinary relation predicate, encodes once, and ranks only the matching rows
 through the same unified root and scorer. It does not evaluate the model once
@@ -20,7 +20,7 @@ per source row.
 The explicit hit API works for semantic-enabled and BM25 indexes:
 
 ```sql
-ii42_query(
+evoke_query(
     index_name regclass,
     query_text text,
     k int4,
@@ -30,12 +30,12 @@ ii42_query(
     stem_english boolean DEFAULT NULL,
     fold_diacritics boolean DEFAULT NULL
 )
-RETURNS SETOF ii42_result_hit
+RETURNS SETOF evoke_result_hit
 ```
 
 ## Explicit Hit Dispatch
 
-`ii42_query(...)` reads the stored index options:
+`evoke_query(...)` reads the stored index options:
 
 - `sae = false`: exact BM25 path;
 - `sae = true`: shared query encoder plus one unified page-native scorer.
@@ -45,11 +45,11 @@ checkout owns query normalization, atom identity, and score calibration.
 
 ## Explicit Hit Result
 
-`ii42_result_hit` contains `ctid`, index-local `doc_id`, and `score`.
+`evoke_result_hit` contains `ctid`, index-local `doc_id`, and `score`.
 
 ```sql
 SELECT source.id, hit.score
-FROM ii42_query('docs_search_idx'::regclass, 'query text', 20) AS hit
+FROM evoke_query('docs_search_idx'::regclass, 'query text', 20) AS hit
 JOIN docs AS source ON source.ctid = hit.ctid
 ORDER BY hit.score DESC, source.id;
 ```
@@ -60,13 +60,13 @@ business identifier.
 ## Readiness
 
 ```sql
-SELECT ii42_index_status('docs_search_idx'::regclass);
+SELECT evoke_index_status('docs_search_idx'::regclass);
 ```
 
 Semantic search requires a valid checked root, shared runtime, model checkout,
 artifact identity, and matching runtime-contract signature. Status performs a
 bounded readiness check and deliberately does not hash every artifact. Run
-`ii42_index_audit(...)` explicitly for deep generation and model-artifact
+`evoke_index_audit(...)` explicitly for deep generation and model-artifact
 qualification. Any detected mismatch fails closed; it does not fall back to
 BM25.
 

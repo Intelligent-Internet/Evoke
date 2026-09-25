@@ -39,7 +39,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             'Run one PostgreSQL rebuild statement and record backend and '
-            'PostgreSQL process-family memory peaks by II42 build phase.'
+            'PostgreSQL process-family memory peaks by Evoke build phase.'
         ),
     )
     parser.add_argument('--psql', type=Path, default=Path('psql'))
@@ -258,7 +258,7 @@ def aggregate_process_family_memory(
         aggregate['family_Pss_bytes'] += pss
         aggregate['family_Private_bytes'] += private
         aggregate['family_Swap_bytes'] += swap
-        if 'ii42 runtime service' in label:
+        if 'evoke runtime service' in label:
             aggregate['runtime_worker_Hwm_bytes'] = max(
                 aggregate['runtime_worker_Hwm_bytes'],
                 hwm,
@@ -279,7 +279,7 @@ def process_family_memory(anchor_pid: int) -> dict[str, int]:
 
 def phase_name(activity: dict[str, Any]) -> str:
     query = str(activity.get('query') or '')
-    if query.startswith('ii42 build:'):
+    if query.startswith('evoke build:'):
         return query
     progress = activity.get('progress_phase')
     if progress:
@@ -313,7 +313,7 @@ def observer_dsn(args: argparse.Namespace) -> str:
         f'port={args.port}',
         f'user={args.user}',
         f'dbname={args.database}',
-        "application_name=ii42_full_rebuild_rss_observer",
+        "application_name=evoke_full_rebuild_rss_observer",
     ])
 
 

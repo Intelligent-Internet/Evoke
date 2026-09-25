@@ -10,7 +10,7 @@ Updated: 2026-07-27
 
 ## Product Decision
 
-The product owns one `ii42` index relation, one durable mutation delta, and one
+The product owns one `evoke` index relation, one durable mutation delta, and one
 generation, transaction, maintenance, and publication lifecycle.
 
 The query acceleration layer is reconstructible:
@@ -183,7 +183,7 @@ this host.
 
 ## Operational Diagnostics
 
-`ii42_generation_cache_state_json(...)` exposes:
+`evoke_generation_cache_state_json(...)` exposes:
 
 - `shared_unified_delta_cache_current` and loading state;
 - unified cache entry count and arena bytes;
@@ -204,4 +204,4 @@ The immutable acceptance artifacts and manifest are stored under:
 The directory includes the old oracle, historical product gate, memory,
 lifecycle, replication, and shared-preload lifecycle evidence. The refreshed
 paired acceptance artifact is
-`ii42-delta-cache-product-acceptance-paired-5x101.json`.
+`evoke-delta-cache-product-acceptance-paired-5x101.json`.

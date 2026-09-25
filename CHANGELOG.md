@@ -10,7 +10,7 @@ The product has two generations in this release lineage:
 
 The version number was reset when the extension, access method, package,
 library, SQL namespace, and configuration namespace changed from
-`psql_bm25s` to `ii42`. Intermediate Evoke tags belong to the development of
+`psql_bm25s` to `evoke`. Intermediate Evoke tags belong to the development of
 the second generation; they are not separate product baselines in this file.
 
 ## [Evoke 0.2.5] - 2026-09-04
@@ -25,7 +25,7 @@ candidate snapshot, not the published Beta 1 package.
 As part of the public brand transition, current release ZIPs, Docker image
 names, repository names, and model-card references use Evoke. The SQL
 extension, access method, shared library, function namespace, GUC namespace,
-and on-disk compatibility identity remain `ii42` for this release.
+and on-disk compatibility identity remain `evoke` for this release.
 
 Comparison baseline: [`psql_bm25s` `v0.4.11`], released on 2026-05-11.
 This section describes user-visible differences from that baseline.
@@ -43,7 +43,7 @@ This section describes user-visible differences from that baseline.
   inputs, plus homogeneous multicolumn text fusion and opt-in
   `field_aware = true` retrieval.
 - Kept owner-only exact token-ID and token-stream query paths, now named
-  `ii42_query_ids(...)` and `ii42_query_tokens(...)`, as BM25 regression and
+  `evoke_query_ids(...)` and `evoke_query_tokens(...)`, as BM25 regression and
   benchmark anchors.
 - Kept the BM25 `@@` and `<=>` operator surfaces for supported index shapes,
   with Evoke types and operator classes replacing the old prefixed objects.
@@ -55,10 +55,17 @@ This section describes user-visible differences from that baseline.
 ### Changed
 
 - Renamed the product and every installation boundary from `psql_bm25s` to
-  `ii42`: extension, access method, shared library, SQL types and functions,
+  `evoke`: extension, access method, shared library, SQL types and functions,
   operator classes, and GUCs. Evoke does not install aliases in the old
   namespace.
-- Made the overloaded `ii42_query(...)` family the recommended application
+- Documented the source-preserving migration route from `psql_bm25s` and the
+  legacy beta `ii42` access method to the current `evoke` package. The route
+  rebuilds from source tables instead of reinterpreting old physical pages.
+- Updated the published Hugging Face model card and frozen checkout contract
+  to use Evoke model identifiers, `evoke_model_v1`, the
+  `evoke_p2_unified_text_atoms_v2` runtime ABI, and
+  Sparse Semantic Retrieval (SSR) wording.
+- Made the overloaded `evoke_query(...)` family the recommended application
   retrieval surface. Explicit-`k` overloads return hit rows; scalar overloads
   support planner-native ranked SQL. Owner-only exact BM25 diagnostic
   functions remain available for regression and benchmark isolation.
@@ -169,12 +176,12 @@ This section describes user-visible differences from that baseline.
   still in L0, skips accelerator construction and lets core convergence run
   before the derived baseline is retried. Low mutation debt now enters
   periodic background convergence after
-  `ii42.maintenance_low_debt_interval_ms` (one hour by default), while record
+  `evoke.maintenance_low_debt_interval_ms` (one hour by default), while record
   and byte high-water marks remain immediate. This interval schedules work; it
   never expires a serving root or compatible accelerator. Successful sealing
   or accelerator publication restarts the interval to avoid continuous tiny
   rebuilds. Failed, raced, or concurrent accelerator attempts now receive a
-  per-index retry cooldown based on `ii42.maintenance_timer_interval_ms`; the
+  per-index retry cooldown based on `evoke.maintenance_timer_interval_ms`; the
   cooldown does not delay semantic completion, L0 rotation, sealing, or query
   service. A due accelerator receives one build opportunity even under
   continuous semantic debt, preventing semantic ingress from starving derived
@@ -240,7 +247,7 @@ This section describes user-visible differences from that baseline.
   searchable first; shared workers append semantic completion or quarantine
   state to the same linked L0.
 - Added planner-native filtered semantic top-k through scalar
-  `ii42_query(...)` markers and a PostgreSQL `CustomScan`. Ordinary SQL
+  `evoke_query(...)` markers and a PostgreSQL `CustomScan`. Ordinary SQL
   predicates define the visible subset before Evoke ranks it.
 - Added explicit filtered-hit overloads and same-root scope postings for
   declared `INCLUDE` metadata. Compatible serving scopes remain eligible with
@@ -259,8 +266,8 @@ This section describes user-visible differences from that baseline.
   the local fallback reserves a foreground query lane when reservation is
   enabled and at least two runtime workers are configured.
 - Added bounded readiness and inspection surfaces through
-  `ii42_index_options(...)`, `ii42_index_status(...)`, and
-  `ii42_index_details(...)`, with `ii42_index_audit(...)` reserved for a full
+  `evoke_index_options(...)`, `evoke_index_status(...)`, and
+  `evoke_index_details(...)`, with `evoke_index_audit(...)` reserved for a full
   integrity walk. Semantic status distinguishes correctness readiness from
   fast-path and requested-prewarm qualification.
 - Added package-bound qualification for schema placement, source-table
@@ -281,7 +288,7 @@ This section describes user-visible differences from that baseline.
   PostgreSQL planning and the native Evoke scan paths own route selection.
 - Removed the old public `filter_query`, `query_prepared`, and
   `ranked_query` convenience layers. Their supported use cases are covered by
-  `ii42_query(...)`, ordinary SQL predicates, or owner-only exact BM25
+  `evoke_query(...)`, ordinary SQL predicates, or owner-only exact BM25
   diagnostics.
 - Replaced `generation_cache_clear`, `generation_cache_state`, and
   `generation_cache_preload` with the current runtime-state, cache-clear, and
@@ -293,7 +300,7 @@ This section describes user-visible differences from that baseline.
 
 - There is no in-place `ALTER EXTENSION` or relation-page conversion from
   `psql_bm25s` to Evoke. The extension identities and physical formats differ.
-- Preserve the source table and build a new `USING ii42` index. Keep the old
+- Preserve the source table and build a new `USING evoke` index. Keep the old
   index online until result parity, CRUD, readiness, restart, and replication
   checks pass and the rollback window closes.
 - Install the two extensions in separate schemas while they coexist because

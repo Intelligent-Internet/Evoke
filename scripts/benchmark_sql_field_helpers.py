@@ -18,7 +18,7 @@ DEFAULT_OUTPUT = Path(
     'docs/performance/data/diagnostics/sql-field-helpers-2026-03-26.json'
 )
 DEFAULT_QUERIES = ['bird', 'cat', 'bird OR cat', 'policy']
-BENCHMARK_DB = 'ii42_sql_field_helpers'
+BENCHMARK_DB = 'evoke_sql_field_helpers'
 
 
 def parse_args() -> argparse.Namespace:
@@ -27,7 +27,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         '--dsn',
-        default=os.environ.get('II42_BENCH_DSN', 'dbname=postgres'),
+        default=os.environ.get('EVOKE_BENCH_DSN', 'dbname=postgres'),
         help='PostgreSQL DSN used for the local benchmark session.',
     )
     parser.add_argument(
@@ -90,7 +90,7 @@ def drop_database_if_exists(cur: psycopg.Cursor[Any], db_name: str) -> None:
 
 
 def setup_schema(cur: psycopg.Cursor[Any], docs: int) -> None:
-    cur.execute('CREATE EXTENSION ii42')
+    cur.execute('CREATE EXTENSION evoke')
     cur.execute('CREATE SCHEMA bench')
     cur.execute(
         """
@@ -124,7 +124,7 @@ def setup_schema(cur: psycopg.Cursor[Any], docs: int) -> None:
     cur.execute(
         """
         CREATE INDEX title_tokens_bm25_idx
-        ON bench.docs USING ii42 (title_tokens)
+        ON bench.docs USING evoke (title_tokens)
         WITH (
             method = 'lucene',
             idf_method = 'lucene',
@@ -135,7 +135,7 @@ def setup_schema(cur: psycopg.Cursor[Any], docs: int) -> None:
     cur.execute(
         """
         CREATE INDEX body_tokens_bm25_idx
-        ON bench.docs USING ii42 (body_tokens)
+        ON bench.docs USING evoke (body_tokens)
         WITH (
             method = 'lucene',
             idf_method = 'lucene',
@@ -204,10 +204,10 @@ def main() -> None:
         'baseline_fused': f"""
             WITH hits AS (
                 SELECT *
-                FROM public.ii42_fusion(
+                FROM public.evoke_fusion(
                     ARRAY(
                         SELECT h
-                        FROM public.ii42_query(
+                        FROM public.evoke_query(
                             'bench.title_tokens_bm25_idx'::regclass,
                             %(query)s::text,
                             {args.candidate_k},
@@ -217,7 +217,7 @@ def main() -> None:
                     2.0,
                     ARRAY(
                         SELECT h
-                        FROM public.ii42_query(
+                        FROM public.evoke_query(
                             'bench.body_tokens_bm25_idx'::regclass,
                             %(query)s::text,
                             {args.candidate_k},
@@ -242,19 +242,19 @@ def main() -> None:
         'weighted_queries': f"""
             WITH hits AS (
                 SELECT *
-                FROM public.ii42_fusion_query_weighted(
+                FROM public.evoke_fusion_query_weighted(
                     ARRAY[
-                        public.ii42_fusion_weighted_query(
+                        public.evoke_fusion_weighted_query(
                             'bench.title_tokens_bm25_idx'::regclass,
                             %(query)s::text,
                             2.0
                         ),
-                        public.ii42_fusion_weighted_query(
+                        public.evoke_fusion_weighted_query(
                             'bench.body_tokens_bm25_idx'::regclass,
                             %(query)s::text,
                             1.0
                         )
-                    ]::public.ii42_result_fusion_weighted_query[],
+                    ]::public.evoke_result_fusion_weighted_query[],
                     {args.k},
                     {args.candidate_k},
                     NULL::real[]
@@ -274,21 +274,21 @@ def main() -> None:
         'field_queries': f"""
             WITH hits AS (
                 SELECT *
-                FROM public.ii42_fusion_query_fields(
+                FROM public.evoke_fusion_query_fields(
                     ARRAY[
-                        public.ii42_fusion_field_query(
+                        public.evoke_fusion_field_query(
                             'title',
                             'bench.title_tokens_bm25_idx'::regclass,
                             %(query)s::text,
                             2.0
                         ),
-                        public.ii42_fusion_field_query(
+                        public.evoke_fusion_field_query(
                             'body',
                             'bench.body_tokens_bm25_idx'::regclass,
                             %(query)s::text,
                             1.0
                         )
-                    ]::public.ii42_result_fusion_field_query[],
+                    ]::public.evoke_result_fusion_field_query[],
                     {args.k},
                     {args.candidate_k},
                     NULL::real[]
@@ -308,7 +308,7 @@ def main() -> None:
         'search_indexes_named': f"""
             WITH hits AS (
                 SELECT *
-                FROM public.ii42_fusion_query(
+                FROM public.evoke_fusion_query(
                     ARRAY['title', 'body']::text[],
                     ARRAY[
                         'bench.title_tokens_bm25_idx'::regclass,
@@ -335,7 +335,7 @@ def main() -> None:
         'search_indexes_short': f"""
             WITH hits AS (
                 SELECT *
-                FROM public.ii42_fusion_query(
+                FROM public.evoke_fusion_query(
                     ARRAY[
                         'bench.title_tokens_bm25_idx'::regclass,
                         'bench.body_tokens_bm25_idx'::regclass
@@ -373,12 +373,12 @@ def main() -> None:
     admin_dsn = conninfo.make_conninfo(
         args.dsn,
         dbname='postgres',
-        application_name='ii42_field_helper_admin',
+        application_name='evoke_field_helper_admin',
     )
     benchmark_dsn = conninfo.make_conninfo(
         args.dsn,
         dbname=BENCHMARK_DB,
-        application_name='ii42_field_helper_bench',
+        application_name='evoke_field_helper_bench',
     )
 
     with psycopg.connect(admin_dsn, autocommit=True) as conn:

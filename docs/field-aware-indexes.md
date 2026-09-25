@@ -1,13 +1,13 @@
 # Field-Aware Indexes
 
-`ii42` provides two field-aware product shapes:
+`evoke` provides two field-aware product shapes:
 
 - public fusion of separate single-column indexes
 - one multicolumn index with `field_aware = true`
 
 The second shape preserves field identity inside one physical index without
 building one index per field. Applications query it through
-`ii42_query(...)` with equal or explicit field weights. It supports exact
+`evoke_query(...)` with equal or explicit field weights. It supports exact
 BM25 and semantic-enabled unified postings through the same public API.
 
 ## When To Use This
@@ -47,7 +47,7 @@ Pretokenized fields:
 
 ```sql
 CREATE INDEX docs_field_bm25_idx
-    ON docs USING ii42 (title_tokens, body_tokens)
+    ON docs USING evoke (title_tokens, body_tokens)
     WITH (field_aware = true);
 ```
 
@@ -55,7 +55,7 @@ Scalar text fields:
 
 ```sql
 CREATE INDEX docs_text_field_bm25_idx
-    ON docs USING ii42 (title, body)
+    ON docs USING evoke (title, body)
     WITH (
         field_aware = true,
         text_lowercase = true,
@@ -67,7 +67,7 @@ Semantic-enabled field-aware index:
 
 ```sql
 CREATE INDEX docs_text_field_semantic_idx
-    ON docs USING ii42 (title, body)
+    ON docs USING evoke (title, body)
     WITH (
         sae = true,
         field_aware = true
@@ -89,7 +89,7 @@ Applications use the same product entrypoint as every other index:
 
 ```sql
 SELECT d.id, h.score
-FROM ii42_query(
+FROM evoke_query(
     'docs_field_bm25_idx'::regclass,
     'bird migration',
     10
@@ -105,7 +105,7 @@ field-aware overload:
 
 ```sql
 SELECT d.id, h.score
-FROM ii42_query(
+FROM evoke_query(
     'docs_text_field_semantic_idx'::regclass,
     'bird migration',
     ARRAY['title', 'body'],
@@ -135,12 +135,12 @@ or retain a private index snapshot in each backend when shared runtime exists.
 
 ## Owner-Only Token Diagnostics
 
-Extension owners may use `ii42_field_aware_query_tokens(...)` for token-array
+Extension owners may use `evoke_field_aware_query_tokens(...)` for token-array
 diagnostics:
 
 ```sql
 SELECT d.id, h.score
-FROM ii42_field_aware_query_tokens(
+FROM evoke_field_aware_query_tokens(
     'docs_field_bm25_idx'::regclass,
     ARRAY['bird'],
     ARRAY['title_tokens', 'body_tokens'],
@@ -152,12 +152,12 @@ ORDER BY h.score DESC, d.id;
 ```
 
 For scalar `text` or `varchar` diagnostics, use
-`ii42_field_aware_query(...)` so the query text is tokenized with
+`evoke_field_aware_query(...)` so the query text is tokenized with
 the index text options before field-aware retrieval:
 
 ```sql
 SELECT d.id, h.score
-FROM ii42_field_aware_query(
+FROM evoke_field_aware_query(
     'docs_text_field_bm25_idx'::regclass,
     'bird migration',
     ARRAY['title', 'body'],
@@ -172,11 +172,11 @@ Pass `NULL` for weights, or omit the argument, to use equal weights.
 
 ## Generic Query Behavior
 
-The public `ii42_query(...)` family searches all indexed fields with equal
+The public `evoke_query(...)` family searches all indexed fields with equal
 weight by default. Its field-aware overload selects a field subset and optional
 weights for either BM25 or SSR indexes.
 
-The owner-only `ii42_query_tokens(...)` diagnostic also searches every indexed
+The owner-only `evoke_query_tokens(...)` diagnostic also searches every indexed
 field with equal weight on BM25 indexes. Explicit field-aware diagnostics can
 select fields and weights; they are not the public semantic query route.
 

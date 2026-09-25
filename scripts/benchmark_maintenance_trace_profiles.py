@@ -53,7 +53,7 @@ class TraceProfile:
 TRACE_PROFILES = [
     TraceProfile(
         name='read_heavy_microbatch',
-        db_name='ii42_maintenance_trace_read_heavy',
+        db_name='evoke_maintenance_trace_read_heavy',
         doc_count=12000,
         query_count=180,
         steps=(
@@ -69,7 +69,7 @@ TRACE_PROFILES = [
     ),
     TraceProfile(
         name='bursty_ingest',
-        db_name='ii42_maintenance_trace_bursty_ingest',
+        db_name='evoke_maintenance_trace_bursty_ingest',
         doc_count=15000,
         query_count=160,
         steps=(
@@ -101,7 +101,7 @@ TRACE_PROFILES = [
     ),
     TraceProfile(
         name='hotset_mutation',
-        db_name='ii42_maintenance_trace_hotset',
+        db_name='evoke_maintenance_trace_hotset',
         doc_count=10000,
         query_count=140,
         steps=(
@@ -117,7 +117,7 @@ TRACE_PROFILES = [
     ),
     TraceProfile(
         name='retention_cleanup',
-        db_name='ii42_maintenance_trace_retention',
+        db_name='evoke_maintenance_trace_retention',
         doc_count=14000,
         query_count=150,
         steps=(
@@ -337,7 +337,7 @@ def run_profile_once(
 
     with psycopg.connect(f'dbname={cfg.db_name}') as conn:
         with conn.cursor() as cur:
-            cur.execute('CREATE EXTENSION ii42')
+            cur.execute('CREATE EXTENSION evoke')
             for policy in POLICIES:
                 setup_table(
                     cur,
@@ -433,7 +433,7 @@ def main() -> None:
     }
 
     with tempfile.TemporaryDirectory(
-        prefix='ii42_maintenance_trace_profiles_'
+        prefix='evoke_maintenance_trace_profiles_'
     ):
         for profile in profiles:
             repeats: list[dict[str, object]] = []

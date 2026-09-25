@@ -14,8 +14,8 @@ entry points for checking both against the code.
 
 | Concern | BM25 | `sae = true` / Sparse Semantic Retrieval (SSR) |
 | --- | --- | --- |
-| Access method | `USING ii42` | `USING ii42` |
-| Application search | `ii42_query(...)` | `ii42_query(...)` |
+| Access method | `USING evoke` | `USING evoke` |
+| Application search | `evoke_query(...)` | `evoke_query(...)` |
 | Durable authority | Index relation | Index relation |
 | Scoring input | Lexical terms | Lexical and semantic atoms |
 | Mutation policy | Realtime, eventual, manual | Eventual-only |
@@ -186,12 +186,12 @@ urgent sealing wins and the accelerator retries. The publication check retains
 the latest compatible L0 frontiers.
 
 Small debt is eligible for periodic work through
-`ii42.maintenance_low_debt_interval_ms` (one hour by default); capacity pressure
+`evoke.maintenance_low_debt_interval_ms` (one hour by default); capacity pressure
 and missing required artifacts have immediate paths. This interval is a
 scheduling policy, not a baseline TTL. Retry cooldown prevents repeated optional
 build failures from monopolizing worker capacity. Explicit maintenance can also
 advance low debt without waiting for the timer. Automatic maintenance and
-automatic preload are disabled when `ii42.maintenance_worker_limit = 0`.
+automatic preload are disabled when `evoke.maintenance_worker_limit = 0`.
 
 Query visibility, semantic completeness, accelerator freshness, and shared
 residency are separate progress axes. Foreground commits depend only on the
@@ -205,7 +205,7 @@ of every pending mutation into each foreground query.
 
 ## Query Lifecycle
 
-The explicit-hit `ii42_query(..., k, ...)` route:
+The explicit-hit `evoke_query(..., k, ...)` route:
 
 1. verifies access to the indexed table and rejects unsupported RLS or
    partitioned-parent shapes;
@@ -219,9 +219,9 @@ The explicit-hit `ii42_query(..., k, ...)` route:
 5. returns `(ctid, doc_id, score)` in the index's exact or declared
    bounded-approximate scoring profile.
 
-Scalar `ii42_query(...)` markers are different SQL syntax for planner-native SSR
+Scalar `evoke_query(...)` markers are different SQL syntax for planner-native SSR
 retrieval. A supported `ORDER BY score DESC LIMIT k` shape becomes
-`Custom Scan (II42 Search)`; the marker is not an ordinary per-row scorer.
+`Custom Scan (Evoke Search)`; the marker is not an ordinary per-row scorer.
 
 ### Filtering And Fallbacks
 
@@ -315,12 +315,12 @@ DDL and repair operations have their own stronger locking requirements.
 | Accelerator construction workspace | Maintenance backend; can be corpus-sized and has separate admission checks |
 
 BM25 can run without the semantic runtime. Semantic-enabled indexes require
-`shared_preload_libraries = 'ii42'` and a positive
-`ii42.shared_runtime_size`; they fail closed rather than loading model
+`shared_preload_libraries = 'evoke'` and a positive
+`evoke.shared_runtime_size`; they fail closed rather than loading model
 state in an application backend.
 
 Model runtime workers and durable semantic accelerators are different things.
-`ii42.runtime_accelerators` configures optional remote inference services for
+`evoke.runtime_accelerators` configures optional remote inference services for
 document build and maintenance throughput. It does not name the on-index
 forward/transpose/scope objects used for search. Removing those services after
 their batches finish does not remove published query accelerators; local
@@ -359,12 +359,12 @@ shared arena, and increasing a workspace budget does not shrink on-disk data.
 
 The product surface is intentionally narrow:
 
-- scalar `ii42_query(...)` for planner-native semantic table retrieval and
-  `ii42_query(..., k, ...)` for explicit hit retrieval;
-- `ii42_index_options(...)` and `ii42_index_status(...)` for configuration and
+- scalar `evoke_query(...)` for planner-native semantic table retrieval and
+  `evoke_query(..., k, ...)` for explicit hit retrieval;
+- `evoke_index_options(...)` and `evoke_index_status(...)` for configuration and
   readiness;
-- `ii42_index_maintain(...)`, `ii42_index_try_maintain(...)`, and
-  `ii42_index_maintain_due(...)` for convergence;
+- `evoke_index_maintain(...)`, `evoke_index_try_maintain(...)`, and
+  `evoke_index_maintain_due(...)` for convergence;
 - PostgreSQL `DROP INDEX` for relation-owned teardown.
 
 Detailed diagnostic functions are privileged and do not create alternate
@@ -373,24 +373,24 @@ storage or query authority.
 ## Implementation Map
 
 These are implementation entry points, not additional public APIs. Orchestration
-still lives substantially in `ii42_am.c`; the narrower files contain reusable
+still lives substantially in `evoke_am.c`; the narrower files contain reusable
 codecs, selection, locking, and execution components.
 
 | Concern | Source | Entry point |
 | --- | --- | --- |
-| Installed overloads and SQL dispatch | [Extension SQL](../sql/ii42--0.2.5.sql) | `ii42_query` |
-| PostgreSQL build and mutation callbacks | [AM orchestration](../src/ii42_am.c) | `ii42_ambuild`, `ii42_aminsert` |
-| Immutable manifest and accelerator eligibility | [Segment contract](../src/ii42_segments.c) | `ii42_segment_manifest_validate`, `ii42_segment_manifest_semantic_accelerator_eligible` |
-| Relation-backed COW object writes | [Page storage](../src/ii42_segment_pages.c) | `ii42_segment_pages_write_lexicon_cow_objects` |
-| Transaction-tagged L0 handling | [Mutation primitives](../src/ii42_am_mutation.c) | `ii42_am_delta_record_states` |
-| Work hints, fairness, and retry cooldown | [Scheduler](../src/ii42_am_scheduler.c) | `ii42_am_scheduler_work_hint_mark`, `ii42_am_scheduler_work_hint_defer_accelerator` |
-| Separate accelerator build locking | [Maintenance locks](../src/ii42_am_maintenance.c) | `ii42_am_try_accelerator_build_lock` |
-| Corpus-sized accelerator preparation | [Accelerator builder](../src/ii42_am_accelerator.c) | `ii42_am_prepare_accelerator_baseline` |
-| Bounded scope snapshots and TOAST reads | [Scope builder](../src/ii42_scope_pg.c) | `ii42_scope_build_for_index` |
-| Planner scope probe and fallback | [Planner integration](../src/ii42_planner.c) | `ii42_planner_build_scope_filter`, `ii42_planner_collect_allowed_tid_keys` |
-| Structured scope recheck and warm identity | [AM orchestration](../src/ii42_am.c) | `ii42_am_try_structured_scope_filter`, `ii42_am_read_unified_warm_marker` |
-| SQL membership probes and full fallback | [Filter resolver](../src/ii42_filter.c) | `ii42_filter_collect_tid_keys` |
-| Retired-page reader fence | [Reclamation](../src/ii42_am_reclamation.c) | `ii42_am_acquire_convergent_reader_fence` |
+| Installed overloads and SQL dispatch | [Extension SQL](../sql/evoke--0.2.5.sql) | `evoke_query` |
+| PostgreSQL build and mutation callbacks | [AM orchestration](../src/evoke_am.c) | `evoke_ambuild`, `evoke_aminsert` |
+| Immutable manifest and accelerator eligibility | [Segment contract](../src/evoke_segments.c) | `evoke_segment_manifest_validate`, `evoke_segment_manifest_semantic_accelerator_eligible` |
+| Relation-backed COW object writes | [Page storage](../src/evoke_segment_pages.c) | `evoke_segment_pages_write_lexicon_cow_objects` |
+| Transaction-tagged L0 handling | [Mutation primitives](../src/evoke_am_mutation.c) | `evoke_am_delta_record_states` |
+| Work hints, fairness, and retry cooldown | [Scheduler](../src/evoke_am_scheduler.c) | `evoke_am_scheduler_work_hint_mark`, `evoke_am_scheduler_work_hint_defer_accelerator` |
+| Separate accelerator build locking | [Maintenance locks](../src/evoke_am_maintenance.c) | `evoke_am_try_accelerator_build_lock` |
+| Corpus-sized accelerator preparation | [Accelerator builder](../src/evoke_am_accelerator.c) | `evoke_am_prepare_accelerator_baseline` |
+| Bounded scope snapshots and TOAST reads | [Scope builder](../src/evoke_scope_pg.c) | `evoke_scope_build_for_index` |
+| Planner scope probe and fallback | [Planner integration](../src/evoke_planner.c) | `evoke_planner_build_scope_filter`, `evoke_planner_collect_allowed_tid_keys` |
+| Structured scope recheck and warm identity | [AM orchestration](../src/evoke_am.c) | `evoke_am_try_structured_scope_filter`, `evoke_am_read_unified_warm_marker` |
+| SQL membership probes and full fallback | [Filter resolver](../src/evoke_filter.c) | `evoke_filter_collect_tid_keys` |
+| Retired-page reader fence | [Reclamation](../src/evoke_am_reclamation.c) | `evoke_am_acquire_convergent_reader_fence` |
 
 ## Further Reading
 

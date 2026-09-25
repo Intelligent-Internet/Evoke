@@ -13,7 +13,7 @@ from typing import Any
 
 import psycopg
 
-from ii42_test_support import (
+from evoke_test_support import (
     create_short_socket_root,
     extension_control_root,
 )
@@ -109,7 +109,7 @@ def create_index(
         started_at = time.perf_counter()
         cursor.execute(
             f'CREATE INDEX docs_{vocabulary_size}_idx '
-            f'ON {table_name} USING ii42 (body) '
+            f'ON {table_name} USING evoke (body) '
             'WITH (sae=false, consistency=realtime)'
         )
         build_seconds = time.perf_counter() - started_at
@@ -126,7 +126,7 @@ def append_pending_row(
 
     with connection.cursor() as cursor:
         cursor.execute(
-            "SET ii42.test_convergent_l0_rotation_records = '1'"
+            "SET evoke.test_convergent_l0_rotation_records = '1'"
         )
         cursor.execute(
             f'INSERT INTO {table_name} VALUES (%s, %s)',
@@ -135,7 +135,7 @@ def append_pending_row(
                 f'v{1:09d} {new_term}',
             ),
         )
-        cursor.execute('RESET ii42.test_convergent_l0_rotation_records')
+        cursor.execute('RESET evoke.test_convergent_l0_rotation_records')
     return new_term
 
 
@@ -150,13 +150,13 @@ def maintain_until_sealed(
         started_at = time.perf_counter()
         with connection.cursor() as cursor:
             cursor.execute(
-                'SELECT ii42_index_try_maintain(%s::regclass)',
+                'SELECT evoke_index_try_maintain(%s::regclass)',
                 (index_name,),
             )
             row = cursor.fetchone()
         elapsed = time.perf_counter() - started_at
         if row is None or not isinstance(row[0], str):
-            raise AssertionError('invalid ii42 maintenance result')
+            raise AssertionError('invalid evoke maintenance result')
         fields = maintenance_result_fields(row[0])
         fields['elapsed_seconds'] = f'{elapsed:.9f}'
         results.append(fields)
@@ -182,7 +182,7 @@ def assert_term_visible(
 ) -> None:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT count(*) FROM ii42_query(%s::regclass, %s, 10)',
+            'SELECT count(*) FROM evoke_query(%s::regclass, %s, 10)',
             (index_name, term),
         )
         row = cursor.fetchone()
@@ -199,12 +199,12 @@ def capture_storage(
             'SELECT pg_relation_size(%s::regclass)::bigint, '
             'details.index_bytes::bigint, details.pages::bigint, '
             'pg_current_wal_insert_lsn()::text '
-            'FROM ii42_index_details(%s::regclass) AS details',
+            'FROM evoke_index_details(%s::regclass) AS details',
             (index_name, index_name),
         )
         row = cursor.fetchone()
     if row is None:
-        raise AssertionError('missing ii42 storage measurement')
+        raise AssertionError('missing evoke storage measurement')
     return {
         'relation_bytes': int(row[0]),
         'logical_index_bytes': int(row[1]),
@@ -225,7 +225,7 @@ def wal_bytes_between(
         )
         row = cursor.fetchone()
     if row is None:
-        raise AssertionError('missing ii42 WAL measurement')
+        raise AssertionError('missing evoke WAL measurement')
     return int(row[0])
 
 
@@ -246,13 +246,13 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
     )
     if not any(
         (extension_libdir / name).is_file()
-        for name in ('ii42.so', 'ii42.dylib')
+        for name in ('evoke.so', 'evoke.dylib')
     ):
         raise FileNotFoundError(
-            f'ii42 library is missing from {extension_libdir}'
+            f'evoke library is missing from {extension_libdir}'
         )
 
-    root = create_short_socket_root('ii42-cold-text-seal-')
+    root = create_short_socket_root('evoke-cold-text-seal-')
     data_dir = root / 'data'
     socket_dir = root / 's'
     log_path = root / 'postgres.log'
@@ -291,13 +291,13 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
             handle.write("\nshared_preload_libraries = ''\n")
             handle.write('max_worker_processes = 0\n')
             handle.write(
-                'ii42.maintenance_timer_interval_ms = 2147483647\n'
+                'evoke.maintenance_timer_interval_ms = 2147483647\n'
             )
         start_cluster(pg_ctl, data_dir, log_path)
         started = True
         connection = connect(socket_dir, port)
         with connection.cursor() as cursor:
-            cursor.execute('CREATE EXTENSION ii42')
+            cursor.execute('CREATE EXTENSION evoke')
             cursor.execute('CREATE SCHEMA bench')
 
         for vocabulary_size in args.vocab_sizes:
@@ -383,7 +383,7 @@ def run_benchmark(args: argparse.Namespace) -> dict[str, Any]:
         shutil.rmtree(root, ignore_errors=True)
 
     return {
-        'api_version': 'ii42_benchmark_v1',
+        'api_version': 'evoke_benchmark_v1',
         'benchmark': 'convergent cold text pending seal',
         'vocabulary_sizes': args.vocab_sizes,
         'repeats': args.repeats,

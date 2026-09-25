@@ -15,7 +15,7 @@ Representative maintenance checkpoint:
 - 100 deletes
 - 200 measured exact BM25 queries
 - measured owner-diagnostic query path (not the current application API):
-  `ii42_query_ids(...)`
+  `evoke_query_ids(...)`
 
 Primary source report:
 

@@ -34,12 +34,12 @@ This report describes Beta 1; `0.2.5` and P2.2 remain engineering identifiers. T
 
 ## 2. System Architecture and Product Surface
 
-Evoke exposes one PostgreSQL access method, `USING ii42`. The default `sae = false` mode provides exact BM25. With `sae = true`, a qualified model adds semantic atoms to the same index. This report calls the product path Sparse Semantic Retrieval (SSR). The `sae` reloption remains the current SQL/catalog name; SAE is otherwise reserved for encoder or vocabulary mechanisms and historical experiment labels.
+Evoke exposes one PostgreSQL access method, `USING evoke`. The default `sae = false` mode provides exact BM25. With `sae = true`, a qualified model adds semantic atoms to the same index. This report calls the product path Sparse Semantic Retrieval (SSR). The `sae` reloption remains the current SQL/catalog name; SAE is otherwise reserved for encoder or vocabulary mechanisms and historical experiment labels.
 
 ```text
                          PostgreSQL application
                                    |
-                     SQL / ii42_query / predicates
+                     SQL / evoke_query / predicates
                                    |
                     +--------------+--------------+
                     |                             |
@@ -61,17 +61,17 @@ Evoke exposes one PostgreSQL access method, `USING ii42`. The default `sae = fal
       + pending semantic work          + shared model runtime
 ```
 
-`ii42_query` has explicit-hit overloads for both modes. SSR additionally supports planner-native scalar markers: the planner turns an eligible ranked table query into a custom scan rather than calling a model once per row. BM25 also retains its native operator and ordered index-scan surfaces. `ctid` and index-local `doc_id` are execution identities, not durable application keys.
+`evoke_query` has explicit-hit overloads for both modes. SSR additionally supports planner-native scalar markers: the planner turns an eligible ranked table query into a custom scan rather than calling a model once per row. BM25 also retains its native operator and ordered index-scan surfaces. `ctid` and index-local `doc_id` are execution identities, not durable application keys.
 
 For a table `docs(id, title, body)`, after installing the extension and configuring the shared runtime and qualified model checkout:
 
 ```sql
 CREATE INDEX docs_retrieval_idx
-    ON docs USING ii42 (title, body)
+    ON docs USING evoke (title, body)
     WITH (sae = true, field_aware = true);
 
 SELECT d.id, hit.score
-FROM ii42_query(
+FROM evoke_query(
     'docs_retrieval_idx'::regclass,
     'transaction-safe semantic retrieval',
     ARRAY['title', 'body']::text[],
@@ -167,7 +167,7 @@ The packaged model is bound by [the model lock](../packaging/milestone-model.jso
 | Bundle | `evoke-p2.2-nfcorpus-v2` |
 | Model ID | `evoke_p2_p22_nfcorpus_v2_smoke` |
 | Runtime ABI | `evoke_p2_unified_text_atoms_v2` |
-| Manifest SHA-256 | `b61060a3958ee56209de47a34ee5cbe08351bfeb3fcbbfdcbf477403210764f7` |
+| Manifest SHA-256 | `dd0993f0638a3f683fbb6475a8509c228d8f6547aab90a0b762b1ff6fd7d0041` |
 | ONNX Runtime | `1.29.0` |
 
 The identical frozen checkout is available as [Evoke Model (Beta 1)](https://huggingface.co/Intelligent-Internet/Evoke-Model-Beta-1). The [download guide](examples/semantic-model-checkout.md#download-the-default-model) pins its revision and archive checksum; distribution does not change the model or the historical evaluation identity.
@@ -265,7 +265,7 @@ Each external reference carries physical location, object identity, ownership, l
 
 The implementation preserves ancestor-owned references when descendants share an object. It does not recursively copy a complete historical closure simply to assign a new owner. For $m$ changed leaves in a tree of height $h$, newly written metadata follows affected paths, conceptually $O(mh)$ before shared-path deduplication, rather than a mandatory $O(|\mathcal{V}|)$ full-vocabulary rewrite. This is a metadata bound, not a bound on the posting payloads being changed or on an entire accelerator rebuild.
 
-Implementation anchors are [term COW](../src/ii42_term_cow.c), [document COW](../src/ii42_document_cow.c), [lexicon COW](../src/ii42_lexicon_cow.c), and the bottom-up writers in [segment pages](../src/ii42_segment_pages.c). The full storage design is in [Convergent Segmented Index](convergent-segmented-index.md).
+Implementation anchors are [term COW](../src/evoke_term_cow.c), [document COW](../src/evoke_document_cow.c), [lexicon COW](../src/evoke_lexicon_cow.c), and the bottom-up writers in [segment pages](../src/evoke_segment_pages.c). The full storage design is in [Convergent Segmented Index](convergent-segmented-index.md).
 
 ### 5.3 Checked Publication and Reclamation
 
@@ -555,10 +555,10 @@ For code-oriented review, start with the following map:
 | Area | Primary references |
 | --- | --- |
 | Lineage and model results | [Lexical report](technical-report-psql_bm25s.md), [model report](technical-report-evoke-model.md) |
-| Index layout and COW | [Storage design](convergent-segmented-index.md), [term COW header](../src/ii42_term_cow.h), [segment pages](../src/ii42_segment_pages.c) |
-| Query and filters | [Query contract](query-semantics.md), [page query](../src/ii42_page_query.c), [scope](../src/ii42_scope.c), [filter](../src/ii42_filter.c) |
+| Index layout and COW | [Storage design](convergent-segmented-index.md), [term COW header](../src/evoke_term_cow.h), [segment pages](../src/evoke_segment_pages.c) |
+| Query and filters | [Query contract](query-semantics.md), [page query](../src/evoke_page_query.c), [scope](../src/evoke_scope.c), [filter](../src/evoke_filter.c) |
 | Model execution | P2 runtime implementation, [runtime contract](shared-runtime-and-residency.md), [model lock](../packaging/milestone-model.json) |
-| Acceleration | [Builder](../src/ii42_am_accelerator.c), [directory](../src/ii42_semantic_accelerator_directory.c), [forward format](../src/ii42_semantic_forward.c), [execution evidence](performance/reports/semantic-accelerator-bounded-execution.md) |
-| Concurrency and qualification | [Lifecycle](maintenance-lifecycle.md), [scheduler](../src/ii42_am_scheduler.c), [validation](testing-and-validation.md) |
+| Acceleration | [Builder](../src/evoke_am_accelerator.c), [directory](../src/evoke_semantic_accelerator_directory.c), [forward format](../src/evoke_semantic_forward.c), [execution evidence](performance/reports/semantic-accelerator-bounded-execution.md) |
+| Concurrency and qualification | [Lifecycle](maintenance-lifecycle.md), [scheduler](../src/evoke_am_scheduler.c), [validation](testing-and-validation.md) |
 
 External foundations: [BM25S](https://arxiv.org/abs/2407.03618), [Granite Embedding Models](https://arxiv.org/abs/2502.20204), and the PostgreSQL [index access-method](https://www.postgresql.org/docs/18/indexam.html) and [extension WAL](https://www.postgresql.org/docs/18/wal-for-extensions.html) documentation. External work is credited for its own contributions; the Evoke performance figures above come from the linked repository evidence, not from those papers.

@@ -16,7 +16,7 @@ RSS_PATTERN = re.compile(r'^VmRSS:\s+(\d+)\s+kB$', re.MULTILINE)
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            'Cancel a filtered II42 query repeatedly in the same backend '
+            'Cancel a filtered Evoke query repeatedly in the same backend '
             'and verify that its RSS reaches a bounded plateau.'
         ),
     )

@@ -21,10 +21,10 @@ DATASET_URL = (
 )
 DATASET_ZIP = Path('/tmp/scifact.zip')
 DATASET_DIR = Path('/tmp/scifact')
-DB_NAME = 'ii42_beir_scifact'
+DB_NAME = 'evoke_beir_scifact'
 TOP_K = 10
 WARMUP = 50
-PG_DSN = os.environ.get('II42_BENCH_DSN', 'dbname=postgres')
+PG_DSN = os.environ.get('EVOKE_BENCH_DSN', 'dbname=postgres')
 
 
 @dataclass
@@ -141,7 +141,7 @@ def benchmark_postgres(
 
     with psycopg.connect(db_dsn, autocommit=True) as conn:
         with conn.cursor() as cur:
-            cur.execute('CREATE EXTENSION ii42')
+            cur.execute('CREATE EXTENSION evoke')
             cur.execute('CREATE SCHEMA bench')
             cur.execute('SET search_path = bench, public')
             cur.execute(
@@ -174,7 +174,7 @@ def benchmark_postgres(
             cur.execute(
                 """
                 CREATE INDEX docs_tokens_bm25_idx
-                ON bench.docs_tokens USING ii42 (tokens)
+                ON bench.docs_tokens USING evoke (tokens)
                 WITH (
                     method = 'lucene',
                     idf_method = 'lucene',
@@ -194,7 +194,7 @@ def benchmark_postgres(
             cur.execute(
                 """
                 CREATE INDEX docs_ids_bm25_idx
-                ON bench.docs_ids USING ii42 (token_ids)
+                ON bench.docs_ids USING evoke (token_ids)
                 WITH (
                     method = 'lucene',
                     idf_method = 'lucene',
@@ -217,7 +217,7 @@ def benchmark_postgres(
                 cur.execute(
                     """
                     SELECT doc_id, score
-                    FROM public.ii42_query_tokens(
+                    FROM public.evoke_query_tokens(
                         'bench.docs_tokens_bm25_idx'::regclass,
                         %s,
                         %s,
@@ -236,7 +236,7 @@ def benchmark_postgres(
                 cur.execute(
                     """
                     SELECT doc_id, score
-                    FROM public.ii42_query_ids(
+                    FROM public.evoke_query_ids(
                         'bench.docs_ids_bm25_idx'::regclass,
                         %s,
                         %s,
@@ -319,12 +319,12 @@ def main() -> None:
             'build_ms': upstream_build_ms,
             'query': upstream_stats.__dict__,
         },
-        'ii42_text': {
+        'evoke_text': {
             'build_ms': pg_results['text']['build_ms'],
             'build_bytes': pg_results['text']['build_bytes'],
             'query': pg_results['text']['query'].__dict__,
         },
-        'ii42_ids': {
+        'evoke_ids': {
             'build_ms': pg_results['ids']['build_ms'],
             'build_bytes': pg_results['ids']['build_bytes'],
             'query': pg_results['ids']['query'].__dict__,

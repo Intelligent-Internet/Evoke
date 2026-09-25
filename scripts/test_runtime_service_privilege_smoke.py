@@ -9,7 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -35,7 +35,7 @@ def parse_args() -> argparse.Namespace:
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share directory containing extension/ii42.control, '
+            'PostgreSQL share directory containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -85,9 +85,9 @@ def psql(psql_bin: Path, socket_dir: Path, port: int, sql: str) -> str:
 def privilege_sql(model_path: Path) -> str:
     escaped_path = str(model_path).replace("'", "''")
     return f'''
-    CREATE EXTENSION ii42;
-    CREATE ROLE ii42_product_app LOGIN;
-    CREATE ROLE ii42_no_table_access LOGIN;
+    CREATE EXTENSION evoke;
+    CREATE ROLE evoke_product_app LOGIN;
+    CREATE ROLE evoke_no_table_access LOGIN;
 
     CREATE TABLE docs (
         id int PRIMARY KEY,
@@ -100,7 +100,7 @@ def privilege_sql(model_path: Path) -> str:
 
     CREATE INDEX docs_body_idx
     ON docs
-    USING ii42 (body)
+    USING evoke (body)
     WITH (
         sae = true,
         model_path = '{escaped_path}'
@@ -114,7 +114,7 @@ def privilege_sql(model_path: Path) -> str:
         (1, 'visible alpha token'),
         (2, 'hidden omega sentinel');
     CREATE INDEX rls_bm25_docs_idx
-    ON rls_bm25_docs USING ii42 (body);
+    ON rls_bm25_docs USING evoke (body);
 
     CREATE TABLE rls_model_docs (
         id int PRIMARY KEY,
@@ -125,7 +125,7 @@ def privilege_sql(model_path: Path) -> str:
         (2, 'hidden omega sentinel');
     CREATE INDEX rls_model_docs_idx
     ON rls_model_docs
-    USING ii42 (body)
+    USING evoke (body)
     WITH (
         sae = true,
         model_path = '{escaped_path}'
@@ -141,7 +141,7 @@ def privilege_sql(model_path: Path) -> str:
         (1, 'partition visible alpha token'),
         (2, 'partition hidden omega sentinel');
     CREATE INDEX partitioned_docs_idx
-        ON partitioned_docs USING ii42 (body);
+        ON partitioned_docs USING evoke (body);
 
     CREATE TABLE rls_partitioned_docs (
         id int NOT NULL,
@@ -153,32 +153,32 @@ def privilege_sql(model_path: Path) -> str:
         (1, 'partition visible alpha token'),
         (2, 'partition hidden omega sentinel');
     CREATE INDEX rls_partitioned_docs_idx
-        ON rls_partitioned_docs USING ii42 (body);
+        ON rls_partitioned_docs USING evoke (body);
 
     ALTER TABLE rls_bm25_docs ENABLE ROW LEVEL SECURITY;
     ALTER TABLE rls_model_docs ENABLE ROW LEVEL SECURITY;
     ALTER TABLE rls_partitioned_docs ENABLE ROW LEVEL SECURITY;
     CREATE POLICY rls_bm25_visible ON rls_bm25_docs
-        FOR SELECT TO ii42_product_app USING (id = 1);
+        FOR SELECT TO evoke_product_app USING (id = 1);
     CREATE POLICY rls_model_visible ON rls_model_docs
-        FOR SELECT TO ii42_product_app USING (id = 1);
+        FOR SELECT TO evoke_product_app USING (id = 1);
     CREATE POLICY rls_partitioned_visible ON rls_partitioned_docs
-        FOR SELECT TO ii42_product_app USING (id = 1);
+        FOR SELECT TO evoke_product_app USING (id = 1);
 
-    GRANT SELECT ON docs TO ii42_product_app;
+    GRANT SELECT ON docs TO evoke_product_app;
     GRANT SELECT ON
         rls_bm25_docs,
         rls_model_docs,
         partitioned_docs,
         rls_partitioned_docs
-    TO ii42_product_app;
-    CREATE SCHEMA app_owned AUTHORIZATION ii42_product_app;
+    TO evoke_product_app;
+    CREATE SCHEMA app_owned AUTHORIZATION evoke_product_app;
 
     DO $$
     DECLARE
         service_status jsonb;
     BEGIN
-        SELECT ii42_runtime_service_status() INTO service_status;
+        SELECT evoke_runtime_service_status() INTO service_status;
         IF (
             service_status->>'ready_for_text_encoding'
         )::boolean IS DISTINCT FROM true THEN
@@ -203,11 +203,11 @@ def privilege_sql(model_path: Path) -> str:
     END;
     $$;
 
-    SET ROLE ii42_no_table_access;
+    SET ROLE evoke_no_table_access;
 
     DO $$
     BEGIN
-        PERFORM ii42_index_options('docs_body_idx'::regclass);
+        PERFORM evoke_index_options('docs_body_idx'::regclass);
         RAISE EXCEPTION
             'index options should require source table SELECT privilege';
     EXCEPTION WHEN insufficient_privilege THEN
@@ -217,7 +217,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM ii42_index_status('docs_body_idx'::regclass);
+        PERFORM evoke_index_status('docs_body_idx'::regclass);
         RAISE EXCEPTION
             'index status should require source table SELECT privilege';
     EXCEPTION WHEN insufficient_privilege THEN
@@ -228,7 +228,7 @@ def privilege_sql(model_path: Path) -> str:
     DO $$
     BEGIN
         PERFORM *
-        FROM ii42_fusion_query(
+        FROM evoke_fusion_query(
             ARRAY['docs_body_idx'::regclass],
             'fusion without source table access',
             ARRAY[1.0]::real[],
@@ -243,7 +243,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM ii42_index_options('partitioned_docs_idx'::regclass);
+        PERFORM evoke_index_options('partitioned_docs_idx'::regclass);
         RAISE EXCEPTION
             'partition options should require source table SELECT privilege';
     EXCEPTION WHEN insufficient_privilege THEN
@@ -253,7 +253,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM ii42_index_status('partitioned_docs_idx'::regclass);
+        PERFORM evoke_index_status('partitioned_docs_idx'::regclass);
         RAISE EXCEPTION
             'partition status should require source table SELECT privilege';
     EXCEPTION WHEN insufficient_privilege THEN
@@ -263,7 +263,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM ii42_encode_text_internal(
+        PERFORM evoke_encode_text_internal(
             'docs_body_idx'::regclass,
             'direct encoder without source table access'
         );
@@ -277,7 +277,7 @@ def privilege_sql(model_path: Path) -> str:
     DO $$
     BEGIN
         PERFORM *
-        FROM ii42_encode_document_batch_internal(
+        FROM evoke_encode_document_batch_internal(
             'docs_body_idx'::regclass,
             ARRAY['batch encoder without source table access']
         );
@@ -290,7 +290,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM ii42_index_runtime_state('docs_body_idx'::regclass);
+        PERFORM evoke_index_runtime_state('docs_body_idx'::regclass);
         RAISE EXCEPTION
             'cache state should require source table SELECT privilege';
     EXCEPTION WHEN insufficient_privilege THEN
@@ -300,7 +300,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM ii42_index_shared_preload_resident(
+        PERFORM evoke_index_shared_preload_resident(
             'docs_body_idx'::regclass
         );
         RAISE EXCEPTION
@@ -312,7 +312,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM * FROM ii42_index_details('docs_body_idx'::regclass);
+        PERFORM * FROM evoke_index_details('docs_body_idx'::regclass);
         RAISE EXCEPTION
             'index details should require source table SELECT privilege';
     EXCEPTION WHEN insufficient_privilege THEN
@@ -323,7 +323,7 @@ def privilege_sql(model_path: Path) -> str:
     DO $$
     BEGIN
         PERFORM *
-        FROM ii42_index_policy_recommend(
+        FROM evoke_index_policy_recommend(
             'docs_body_idx'::regclass,
             'balanced'
         );
@@ -337,7 +337,7 @@ def privilege_sql(model_path: Path) -> str:
     DO $$
     BEGIN
         PERFORM *
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_body_idx'::regclass,
             'query without source table access',
             3
@@ -352,7 +352,7 @@ def privilege_sql(model_path: Path) -> str:
     DO $$
     BEGIN
         PERFORM *
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_body_idx'::regclass,
             'direct BM25 query without source table access',
             3
@@ -367,7 +367,7 @@ def privilege_sql(model_path: Path) -> str:
     DO $$
     BEGIN
         PERFORM *
-        FROM ii42_index_semantic_query_native_internal(
+        FROM evoke_index_semantic_query_native_internal(
             'docs_body_idx'::regclass,
             ARRAY[0]::int4[],
             ARRAY[1.0]::real[],
@@ -385,7 +385,7 @@ def privilege_sql(model_path: Path) -> str:
 
     RESET ROLE;
 
-    SET ROLE ii42_product_app;
+    SET ROLE evoke_product_app;
 
     DO $$
     DECLARE
@@ -393,7 +393,7 @@ def privilege_sql(model_path: Path) -> str:
         oracle_requested_rows jsonb;
     BEGIN
         PERFORM set_config(
-            'ii42.test_unified_overlay_oracle',
+            'evoke.test_unified_overlay_oracle',
             'off',
             true
         );
@@ -408,14 +408,14 @@ def privilege_sql(model_path: Path) -> str:
             '[]'::jsonb
         )
         INTO normal_rows
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_body_idx'::regclass,
             'application role oracle isolation',
             3
         ) WITH ORDINALITY AS hit(ctid, doc_id, score, ordinality);
 
         PERFORM set_config(
-            'ii42.test_unified_overlay_oracle',
+            'evoke.test_unified_overlay_oracle',
             'on',
             true
         );
@@ -430,7 +430,7 @@ def privilege_sql(model_path: Path) -> str:
             '[]'::jsonb
         )
         INTO oracle_requested_rows
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_body_idx'::regclass,
             'application role oracle isolation',
             3
@@ -449,67 +449,67 @@ def privilege_sql(model_path: Path) -> str:
     DECLARE
         function_signature text;
         restricted_functions text[] := ARRAY[
-            'ii42_runtime_cache_clear()',
-            'ii42_index_touch_maintenance()',
-            'ii42_index_maintain_due(integer)',
-            'ii42_index_try_maintenance_lock(regclass)',
-            'ii42_index_maintenance_unlock(regclass)',
-            'ii42_index_maintenance_lock_held(regclass)',
-            'ii42_runtime_service_query_atoms(text,text)',
-            'ii42_runtime_service_query_atoms(text,text,text)',
-            'ii42_runtime_service_query_atoms_batch(text,text[])',
-            'ii42_runtime_service_query_atoms_batch(text,text,text[])',
-            'ii42_runtime_service_document_atoms_batch(text,text[])',
-            'ii42_runtime_service_document_atoms_batch(text,text,text[])',
-            'ii42_runtime_service_atoms_batch_internal(text,text,text[])',
-            'ii42_runtime_service_atoms_batch_internal(text,text,text,text[])',
-            'ii42_runtime_service_status()',
-            'ii42_index_runtime_plan_internal(text,jsonb)',
-            'ii42_index_options_internal(regclass)',
-            'ii42_index_runtime_signature_internal(regclass)',
-            'ii42_index_generation_signature_internal(regclass)',
-            'ii42_index_generation_status_internal(regclass)',
-            'ii42_index_generation_audit_internal(regclass)',
-            'ii42_encode_text_internal(regclass,text)',
-            'ii42_encode_document_batch_internal(regclass,text[])',
-            'ii42_index_semantic_query_native_internal('
+            'evoke_runtime_cache_clear()',
+            'evoke_index_touch_maintenance()',
+            'evoke_index_maintain_due(integer)',
+            'evoke_index_try_maintenance_lock(regclass)',
+            'evoke_index_maintenance_unlock(regclass)',
+            'evoke_index_maintenance_lock_held(regclass)',
+            'evoke_runtime_service_query_atoms(text,text)',
+            'evoke_runtime_service_query_atoms(text,text,text)',
+            'evoke_runtime_service_query_atoms_batch(text,text[])',
+            'evoke_runtime_service_query_atoms_batch(text,text,text[])',
+            'evoke_runtime_service_document_atoms_batch(text,text[])',
+            'evoke_runtime_service_document_atoms_batch(text,text,text[])',
+            'evoke_runtime_service_atoms_batch_internal(text,text,text[])',
+            'evoke_runtime_service_atoms_batch_internal(text,text,text,text[])',
+            'evoke_runtime_service_status()',
+            'evoke_index_runtime_plan_internal(text,jsonb)',
+            'evoke_index_options_internal(regclass)',
+            'evoke_index_runtime_signature_internal(regclass)',
+            'evoke_index_generation_signature_internal(regclass)',
+            'evoke_index_generation_status_internal(regclass)',
+            'evoke_index_generation_audit_internal(regclass)',
+            'evoke_encode_text_internal(regclass,text)',
+            'evoke_encode_document_batch_internal(regclass,text[])',
+            'evoke_index_semantic_query_native_internal('
                 || 'regclass,integer[],real[],text[],real[],integer,text,'
                 || 'integer[],tid[],jsonb)',
-            'ii42_query_semantic_internal('
+            'evoke_query_semantic_internal('
                 || 'regclass,text,integer,text[],real[],integer[],tid[],'
                 || 'jsonb)',
-            'ii42_query_internal('
+            'evoke_query_internal('
                 || 'regclass,text,text[],real[],integer,real[],boolean,'
                 || 'text[],boolean,boolean,integer[],tid[],jsonb)',
-            'ii42_query_bm25_internal('
+            'evoke_query_bm25_internal('
                 || 'regclass,text,integer,real[],boolean,text[],boolean,'
                 || 'boolean)',
-            'ii42_query_ids(regclass,integer[],integer,real[])',
-            'ii42_prepared_query(regclass,text,boolean,text[],boolean,boolean)'
+            'evoke_query_ids(regclass,integer[],integer,real[])',
+            'evoke_prepared_query(regclass,text,boolean,text[],boolean,boolean)'
         ];
     BEGIN
         IF NOT has_function_privilege(
             current_user,
-            'ii42_query(regclass,text,integer,real[],boolean,text[],boolean,boolean)',
+            'evoke_query(regclass,text,integer,real[],boolean,text[],boolean,boolean)',
             'EXECUTE'
         ) THEN
-            RAISE EXCEPTION 'application role cannot execute ii42_query';
+            RAISE EXCEPTION 'application role cannot execute evoke_query';
         END IF;
         IF NOT has_function_privilege(
             current_user,
-            'ii42_query(regclass,text,text[],real[],integer)',
+            'evoke_query(regclass,text,text[],real[],integer)',
             'EXECUTE'
         ) THEN
             RAISE EXCEPTION
-                'application role cannot execute weighted ii42_query';
+                'application role cannot execute weighted evoke_query';
         END IF;
         IF NOT has_function_privilege(
             current_user,
-            'ii42_query(regclass,text,jsonb,integer)',
+            'evoke_query(regclass,text,jsonb,integer)',
             'EXECUTE'
         ) THEN
             RAISE EXCEPTION
-                'application role cannot execute filtered ii42_query';
+                'application role cannot execute filtered evoke_query';
         END IF;
         FOREACH function_signature IN ARRAY restricted_functions
         LOOP
@@ -539,20 +539,20 @@ def privilege_sql(model_path: Path) -> str:
         FROM pg_catalog.pg_proc AS procedure
         JOIN pg_catalog.pg_extension AS extension
           ON extension.extnamespace = procedure.pronamespace
-        WHERE extension.extname = 'ii42'
+        WHERE extension.extname = 'evoke'
           AND procedure.proname = ANY (ARRAY[
-              'ii42_query_ids',
-              'ii42_query_tokens',
-              'ii42_field_aware_query_tokens',
-              'ii42_field_aware_query',
-              'ii42_prepared_query',
-              'ii42_order_tokens',
-              'ii42_op_match_prepared_query',
-              'ii42_op_match_prepared_query_scalar',
-              'ii42_match_prepared_query',
-              'ii42_match_query',
-              'ii42_score_prepared_query',
-              'ii42_score_query'
+              'evoke_query_ids',
+              'evoke_query_tokens',
+              'evoke_field_aware_query_tokens',
+              'evoke_field_aware_query',
+              'evoke_prepared_query',
+              'evoke_order_tokens',
+              'evoke_op_match_prepared_query',
+              'evoke_op_match_prepared_query_scalar',
+              'evoke_match_prepared_query',
+              'evoke_match_query',
+              'evoke_score_prepared_query',
+              'evoke_score_query'
           ])
           AND pg_catalog.has_function_privilege(
               current_user,
@@ -575,22 +575,22 @@ def privilege_sql(model_path: Path) -> str:
           ON extension.extnamespace = procedure.pronamespace
         JOIN pg_catalog.pg_type AS result_type
           ON result_type.oid = procedure.prorettype
-        WHERE extension.extname = 'ii42'
+        WHERE extension.extname = 'evoke'
           AND procedure.proretset
           AND result_type.typnamespace = procedure.pronamespace
           AND result_type.typname = ANY (ARRAY[
-              'ii42_result_hit',
-              'ii42_result_hybrid_candidate',
-              'ii42_result_hybrid_hit'
+              'evoke_result_hit',
+              'evoke_result_hybrid_candidate',
+              'evoke_result_hybrid_hit'
           ])
           AND procedure.proname <> ALL (ARRAY[
-              'ii42_query',
-              'ii42_fusion',
-              'ii42_fusion_query',
-              'ii42_fusion_query_fields',
-              'ii42_fusion_query_weighted',
-              'ii42_hybrid_bm25_candidates',
-              'ii42_hybrid_fuse_candidates'
+              'evoke_query',
+              'evoke_fusion',
+              'evoke_fusion_query',
+              'evoke_fusion_query_fields',
+              'evoke_fusion_query_weighted',
+              'evoke_hybrid_bm25_candidates',
+              'evoke_hybrid_fuse_candidates'
           ])
           AND pg_catalog.has_function_privilege(
               current_user,
@@ -617,21 +617,21 @@ def privilege_sql(model_path: Path) -> str:
         FROM pg_catalog.pg_proc AS procedure
         JOIN pg_catalog.pg_extension AS extension
           ON extension.extnamespace = procedure.pronamespace
-        WHERE extension.extname = 'ii42'
+        WHERE extension.extname = 'evoke'
           AND procedure.proname = ANY (ARRAY[
-              'ii42_fusion_weighted_query',
-              'ii42_fusion_weighted_queries',
-              'ii42_fusion_field_query',
-              'ii42_fusion_field_queries',
-              'ii42_fusion',
-              'ii42_fusion_query',
-              'ii42_fusion_query_fields',
-              'ii42_fusion_query_weighted',
-              'ii42_hybrid_candidate',
-              'ii42_hybrid_bm25_candidate',
-              'ii42_hybrid_vector_candidate',
-              'ii42_hybrid_bm25_candidates',
-              'ii42_hybrid_fuse_candidates'
+              'evoke_fusion_weighted_query',
+              'evoke_fusion_weighted_queries',
+              'evoke_fusion_field_query',
+              'evoke_fusion_field_queries',
+              'evoke_fusion',
+              'evoke_fusion_query',
+              'evoke_fusion_query_fields',
+              'evoke_fusion_query_weighted',
+              'evoke_hybrid_candidate',
+              'evoke_hybrid_bm25_candidate',
+              'evoke_hybrid_vector_candidate',
+              'evoke_hybrid_bm25_candidates',
+              'evoke_hybrid_fuse_candidates'
           ])
           AND NOT pg_catalog.has_function_privilege(
               current_user,
@@ -648,7 +648,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM ii42_index_preload(
+        PERFORM evoke_index_preload(
             'docs_body_idx'::regclass
         );
         RAISE EXCEPTION
@@ -660,7 +660,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM ii42_runtime_service_query_atoms(
+        PERFORM evoke_runtime_service_query_atoms(
             '{escaped_path}',
             'direct model path should stay privileged'
         );
@@ -679,9 +679,9 @@ def privilege_sql(model_path: Path) -> str:
         index_options jsonb;
         index_status jsonb;
     BEGIN
-        SELECT ii42_index_options('docs_body_idx'::regclass)
+        SELECT evoke_index_options('docs_body_idx'::regclass)
         INTO index_options;
-        SELECT ii42_index_status('docs_body_idx'::regclass)
+        SELECT evoke_index_status('docs_body_idx'::regclass)
         INTO index_status;
         IF index_options->>'index_type' <> 'semantic'
             OR (index_status->>'query_ready')::boolean IS DISTINCT FROM true
@@ -696,7 +696,7 @@ def privilege_sql(model_path: Path) -> str:
 
         SELECT count(*)
         INTO hit_count
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_body_idx'::regclass,
             'ordinary product query uses runtime worker',
             3
@@ -709,7 +709,7 @@ def privilege_sql(model_path: Path) -> str:
 
         SELECT count(*)
         INTO filtered_hit_count
-        FROM ii42_query(
+        FROM evoke_query(
             'docs_body_idx'::regclass,
             'ordinary product query uses runtime worker',
             '{{"id":{{"eq":1}}}}'::jsonb,
@@ -723,7 +723,7 @@ def privilege_sql(model_path: Path) -> str:
 
         SELECT count(*)
         INTO fusion_hit_count
-        FROM ii42_fusion_query(
+        FROM evoke_fusion_query(
             ARRAY[
                 'docs_body_idx'::regclass,
                 'docs_body_idx'::regclass
@@ -739,7 +739,7 @@ def privilege_sql(model_path: Path) -> str:
 
         WITH candidates AS (
             SELECT array_agg(candidate) AS items
-            FROM ii42_hybrid_bm25_candidates(
+            FROM evoke_hybrid_bm25_candidates(
                 'unified',
                 'docs_body_idx'::regclass,
                 'ordinary product hybrid query',
@@ -750,7 +750,7 @@ def privilege_sql(model_path: Path) -> str:
         SELECT count(*)
         INTO hybrid_hit_count
         FROM candidates
-        CROSS JOIN LATERAL ii42_hybrid_fuse_candidates(
+        CROSS JOIN LATERAL evoke_hybrid_fuse_candidates(
             candidates.items,
             3
         );
@@ -763,7 +763,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM ii42_index_refresh('docs_body_idx'::regclass);
+        PERFORM evoke_index_refresh('docs_body_idx'::regclass);
         RAISE EXCEPTION
             'non-owner application role unexpectedly refreshed index';
     EXCEPTION WHEN insufficient_privilege THEN
@@ -773,7 +773,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM ii42_index_maintain('docs_body_idx'::regclass);
+        PERFORM evoke_index_maintain('docs_body_idx'::regclass);
         RAISE EXCEPTION
             'non-owner application role unexpectedly maintained index';
     EXCEPTION WHEN insufficient_privilege THEN
@@ -783,7 +783,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM ii42_index_try_maintain('docs_body_idx'::regclass);
+        PERFORM evoke_index_try_maintain('docs_body_idx'::regclass);
         RAISE EXCEPTION
             'non-owner application role unexpectedly try-maintained index';
     EXCEPTION WHEN insufficient_privilege THEN
@@ -804,7 +804,7 @@ def privilege_sql(model_path: Path) -> str:
     DO $$
     BEGIN
         PERFORM *
-        FROM ii42_query(
+        FROM evoke_query(
             'rls_bm25_docs_idx'::regclass,
             'hidden omega sentinel',
             10
@@ -821,7 +821,7 @@ def privilege_sql(model_path: Path) -> str:
     DO $$
     BEGIN
         PERFORM *
-        FROM ii42_query_bm25_internal(
+        FROM evoke_query_bm25_internal(
             'rls_bm25_docs_idx'::regclass,
             'hidden omega sentinel',
             10
@@ -836,7 +836,7 @@ def privilege_sql(model_path: Path) -> str:
     DO $$
     BEGIN
         PERFORM *
-        FROM ii42_query(
+        FROM evoke_query(
             'rls_model_docs_idx'::regclass,
             'hidden omega sentinel',
             10
@@ -853,7 +853,7 @@ def privilege_sql(model_path: Path) -> str:
     DO $$
     BEGIN
         PERFORM *
-        FROM ii42_index_semantic_query_native_internal(
+        FROM evoke_index_semantic_query_native_internal(
             'rls_model_docs_idx'::regclass,
             ARRAY[0]::int4[],
             ARRAY[1.0]::real[],
@@ -871,7 +871,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM ii42_index_status('rls_model_docs_idx'::regclass);
+        PERFORM evoke_index_status('rls_model_docs_idx'::regclass);
         RAISE EXCEPTION
             'model status should reject row-level security';
     EXCEPTION WHEN feature_not_supported THEN
@@ -883,7 +883,7 @@ def privilege_sql(model_path: Path) -> str:
     DECLARE
         partition_status jsonb;
     BEGIN
-        SELECT ii42_index_status('partitioned_docs_idx'::regclass)
+        SELECT evoke_index_status('partitioned_docs_idx'::regclass)
         INTO partition_status;
         IF partition_status->>'blocker'
                 <> 'partitioned_parent_not_supported'
@@ -898,7 +898,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM ii42_index_options('partitioned_docs_idx'::regclass);
+        PERFORM evoke_index_options('partitioned_docs_idx'::regclass);
         RAISE EXCEPTION
             'partition parent options should fail closed';
     EXCEPTION WHEN feature_not_supported THEN
@@ -908,7 +908,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM ii42_index_status('rls_partitioned_docs_idx'::regclass);
+        PERFORM evoke_index_status('rls_partitioned_docs_idx'::regclass);
         RAISE EXCEPTION
             'partition status should reject row-level security';
     EXCEPTION WHEN feature_not_supported THEN
@@ -922,7 +922,7 @@ def privilege_sql(model_path: Path) -> str:
 
     DO $$
     BEGIN
-        PERFORM ii42_index_options('rls_partitioned_docs_idx'::regclass);
+        PERFORM evoke_index_options('rls_partitioned_docs_idx'::regclass);
         RAISE EXCEPTION
             'partition options should reject row-level security';
     EXCEPTION WHEN feature_not_supported THEN
@@ -937,7 +937,7 @@ def privilege_sql(model_path: Path) -> str:
     DO $$
     BEGIN
         PERFORM *
-        FROM ii42_encode_document_batch_internal(
+        FROM evoke_encode_document_batch_internal(
             'docs_body_idx'::regclass,
             ARRAY['application role bulk runtime attempt']
         );
@@ -957,15 +957,15 @@ def privilege_sql(model_path: Path) -> str:
         (2, 'semantic gpu');
 
     CREATE INDEX docs_bm25_idx
-    ON app_owned.docs USING ii42 (body);
+    ON app_owned.docs USING evoke (body);
 
-    SELECT ii42_index_refresh(
+    SELECT evoke_index_refresh(
         'app_owned.docs_bm25_idx'::regclass
     );
-    SELECT ii42_index_maintain(
+    SELECT evoke_index_maintain(
         'app_owned.docs_bm25_idx'::regclass
     );
-    SELECT ii42_index_try_maintain(
+    SELECT evoke_index_try_maintain(
         'app_owned.docs_bm25_idx'::regclass
     );
 
@@ -975,7 +975,7 @@ def privilege_sql(model_path: Path) -> str:
     BEGIN
         SELECT count(*)
         INTO hit_count
-        FROM ii42_query(
+        FROM evoke_query(
             'app_owned.docs_bm25_idx'::regclass,
             'alpha',
             2
@@ -996,7 +996,7 @@ def privilege_sql(model_path: Path) -> str:
     BEGIN
         EXECUTE format(
             'CREATE INDEX docs_body_idx ON app_owned.docs '
-            || 'USING ii42 (body) '
+            || 'USING evoke (body) '
             || 'WITH (sae = true, model_path = %L)',
             '{escaped_path}'
         );
@@ -1044,11 +1044,11 @@ def main() -> None:
         args.extension_libdir = args.extension_libdir.resolve()
         extension_libraries = [
             args.extension_libdir / name
-            for name in ('ii42.so', 'ii42.dylib')
+            for name in ('evoke.so', 'evoke.dylib')
         ]
         if not any(path.is_file() for path in extension_libraries):
             raise FileNotFoundError(
-                'ii42 extension library is missing from '
+                'evoke extension library is missing from '
                 f'{args.extension_libdir}'
             )
     if args.extension_control_dir is not None:
@@ -1056,7 +1056,7 @@ def main() -> None:
             args.extension_control_dir
         )
 
-    with tempfile.TemporaryDirectory(prefix='ii42_product_priv_') as tmp:
+    with tempfile.TemporaryDirectory(prefix='evoke_product_priv_') as tmp:
         root = Path(tmp)
         data_dir = root / 'data'
         socket_dir = root / 'socket'
@@ -1083,8 +1083,8 @@ def main() -> None:
 
         run([str(initdb), '-D', str(data_dir), '-A', 'trust'])
         with (data_dir / 'postgresql.conf').open('a', encoding='utf-8') as f:
-            f.write("\nshared_preload_libraries = 'ii42'\n")
-            f.write("ii42.shared_runtime_size = '64MB'\n")
+            f.write("\nshared_preload_libraries = 'evoke'\n")
+            f.write("evoke.shared_runtime_size = '64MB'\n")
             if args.extension_libdir is not None:
                 libdir = str(args.extension_libdir).replace("'", "''")
                 f.write(

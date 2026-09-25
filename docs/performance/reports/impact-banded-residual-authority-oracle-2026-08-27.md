@@ -190,7 +190,7 @@ The product control is an immutable per-index reloption:
 
 ```sql
 CREATE INDEX documents_search_idx
-ON documents USING ii42 (content)
+ON documents USING evoke (content)
 WITH (
     sae = true,
     semantic_impact_precision = 'u8'
@@ -205,7 +205,7 @@ replication must all use the precision recorded in the root. Query execution
 does not accept a precision override: it reads the root authority and cannot
 mix generations.
 
-`ii42_index_options(...)` and `ii42_index_status(...)` expose configured and
+`evoke_index_options(...)` and `evoke_index_status(...)` expose configured and
 effective precision. Publication fails closed if a worker, root or forward
 projection disagrees. The installed reloption is backed by the sole-authority
 writer and reader; it is not an inert query-only override.
@@ -392,5 +392,5 @@ PYTHONPATH=scripts python3 \
 Raw outputs are retained outside the repository under:
 
 ```text
-/Volumes/Betty/Tmp/ii42-impact-banded-*.json
+/Volumes/Betty/Tmp/evoke-impact-banded-*.json
 ```

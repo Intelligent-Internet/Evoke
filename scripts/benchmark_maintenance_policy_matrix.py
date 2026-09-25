@@ -16,7 +16,7 @@ from benchmark_maintenance_policy_sweep import summarize_scenario
 MATRIX_SCENARIOS = [
     ScenarioConfig(
         name='small_mixed',
-        db_name='ii42_maintenance_policy_matrix_small_mixed',
+        db_name='evoke_maintenance_policy_matrix_small_mixed',
         doc_count=5000,
         query_count=100,
         cycle_count=6,
@@ -26,7 +26,7 @@ MATRIX_SCENARIOS = [
     ),
     ScenarioConfig(
         name='heavy_mixed',
-        db_name='ii42_maintenance_policy_matrix_heavy_mixed',
+        db_name='evoke_maintenance_policy_matrix_heavy_mixed',
         doc_count=10000,
         query_count=150,
         cycle_count=8,
@@ -36,7 +36,7 @@ MATRIX_SCENARIOS = [
     ),
     ScenarioConfig(
         name='heavy_insert_skew',
-        db_name='ii42_maintenance_policy_matrix_heavy_insert_skew',
+        db_name='evoke_maintenance_policy_matrix_heavy_insert_skew',
         doc_count=10000,
         query_count=120,
         cycle_count=8,
@@ -46,7 +46,7 @@ MATRIX_SCENARIOS = [
     ),
     ScenarioConfig(
         name='heavy_update_skew',
-        db_name='ii42_maintenance_policy_matrix_heavy_update_skew',
+        db_name='evoke_maintenance_policy_matrix_heavy_update_skew',
         doc_count=10000,
         query_count=120,
         cycle_count=8,
@@ -56,7 +56,7 @@ MATRIX_SCENARIOS = [
     ),
     ScenarioConfig(
         name='heavy_delete_skew',
-        db_name='ii42_maintenance_policy_matrix_heavy_delete_skew',
+        db_name='evoke_maintenance_policy_matrix_heavy_delete_skew',
         doc_count=10000,
         query_count=120,
         cycle_count=8,
@@ -262,7 +262,7 @@ def main() -> None:
     }
 
     with tempfile.TemporaryDirectory(
-        prefix='ii42_maintenance_policy_matrix_'
+        prefix='evoke_maintenance_policy_matrix_'
     ) as td:
         tmpdir = Path(td)
         for scenario in scenarios:

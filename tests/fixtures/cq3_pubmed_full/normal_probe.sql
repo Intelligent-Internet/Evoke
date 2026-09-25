@@ -1,9 +1,9 @@
 \set ON_ERROR_STOP on
 SET statement_timeout = '60s';
-SET ii42.test_disable_semantic_accelerator = off;
-SET ii42.test_force_semantic_bmp = off;
+SET evoke.test_disable_semantic_accelerator = off;
+SET evoke.test_force_semantic_bmp = off;
 SELECT set_config(
-    'ii42.test_filtered_forward_route',
+    'evoke.test_filtered_forward_route',
     :'forward_route',
     false
 );
@@ -121,7 +121,7 @@ WITH route_summary AS (
 SELECT json_build_object(
     'suite', 'cq3_normal_route_probe',
     'route', current_setting('application_name'),
-    'forward_route', current_setting('ii42.test_filtered_forward_route'),
+    'forward_route', current_setting('evoke.test_filtered_forward_route'),
     'candidate_route', :'candidate_route',
     'summaries', (
         SELECT json_agg(route_summary ORDER BY filter_name)

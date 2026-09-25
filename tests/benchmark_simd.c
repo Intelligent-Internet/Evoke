@@ -1,6 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "ii42_core.h"
+#include "evoke_core.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -78,9 +78,9 @@ lcg_next_u32(uint64_t *state)
     return (uint32_t) (*state >> 32);
 }
 
-static ii42_status
+static evoke_status
 run_benchmark(
-    const ii42_index *index,
+    const evoke_index *index,
     const uint32_t *query_ids,
     size_t query_len,
     const float *weight_mask,
@@ -101,20 +101,20 @@ run_benchmark(
         uint64_t finished_ns;
         uint64_t elapsed_ns;
         float *scores = NULL;
-        ii42_status status;
+        evoke_status status;
 
         if (!mono_now_ns(&started_ns))
         {
-            return II42_ERR_INVALID;
+            return EVOKE_ERR_INVALID;
         }
-        status = ii42_scores_from_ids(
+        status = evoke_scores_from_ids(
             index,
             query_ids,
             query_len,
             weight_mask,
             &scores
         );
-        if (status != II42_OK)
+        if (status != EVOKE_OK)
         {
             free(scores);
             return status;
@@ -122,7 +122,7 @@ run_benchmark(
         if (!mono_now_ns(&finished_ns) || finished_ns < started_ns)
         {
             free(scores);
-            return II42_ERR_INVALID;
+            return EVOKE_ERR_INVALID;
         }
         elapsed_ns = finished_ns - started_ns;
 
@@ -146,19 +146,19 @@ run_benchmark(
     }
     *checksum_out = checksum;
 
-    return II42_OK;
+    return EVOKE_OK;
 }
 
 int
 main(int argc, char **argv)
 {
     const char *simd_env = NULL;
-    ii42_doc_ids *docs = NULL;
+    evoke_doc_ids *docs = NULL;
     uint32_t *all_tokens = NULL;
     uint32_t *query_ids = NULL;
     float *weight_mask = NULL;
-    ii42_index index;
-    ii42_params params;
+    evoke_index index;
+    evoke_params params;
     size_t num_docs = 250000;
     size_t terms_per_doc = 24;
     size_t vocab_size = 4096;
@@ -171,7 +171,7 @@ main(int argc, char **argv)
     double avg_ms = 0.0;
     double qps = 0.0;
     double checksum = 0.0;
-    ii42_status status;
+    evoke_status status;
 
     if (argc > 1 && !parse_size_arg(argv[1], &num_docs))
     {
@@ -241,23 +241,23 @@ main(int argc, char **argv)
     params.k1 = 1.5f;
     params.b = 0.75f;
     params.delta = 0.5f;
-    params.method = II42_METHOD_BM25PLUS;
-    params.idf_method = II42_METHOD_LUCENE;
+    params.method = EVOKE_METHOD_BM25PLUS;
+    params.idf_method = EVOKE_METHOD_LUCENE;
 
-    ii42_index_init(&index);
-    status = ii42_build_index_from_ids(
+    evoke_index_init(&index);
+    status = evoke_build_index_from_ids(
         docs,
         num_docs,
         &params,
         false,
         &index
     );
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
         fprintf(
             stderr,
             "failed to build benchmark index: %s\n",
-            ii42_strerror(status)
+            evoke_strerror(status)
         );
         free(docs);
         free(all_tokens);
@@ -277,10 +277,10 @@ main(int argc, char **argv)
         &qps,
         &checksum
     );
-    if (status != II42_OK)
+    if (status != EVOKE_OK)
     {
-        fprintf(stderr, "benchmark failed: %s\n", ii42_strerror(status));
-        ii42_index_free(&index);
+        fprintf(stderr, "benchmark failed: %s\n", evoke_strerror(status));
+        evoke_index_free(&index);
         free(docs);
         free(all_tokens);
         free(query_ids);
@@ -288,14 +288,14 @@ main(int argc, char **argv)
         return 1;
     }
 
-    simd_env = getenv("II42_SIMD_MODE");
+    simd_env = getenv("EVOKE_SIMD_MODE");
     if (simd_env == NULL || simd_env[0] == '\0')
     {
         simd_env = "auto";
     }
 
     printf("simd_env=%s\n", simd_env);
-    printf("simd_active=%s\n", ii42_active_simd_path());
+    printf("simd_active=%s\n", evoke_active_simd_path());
     printf(
         "docs=%zu terms_per_doc=%zu vocab_size=%zu query_len=%zu "
         "timed_iters=%zu warmup_iters=%zu\n",
@@ -313,7 +313,7 @@ main(int argc, char **argv)
         checksum
     );
 
-    ii42_index_free(&index);
+    evoke_index_free(&index);
     free(docs);
     free(all_tokens);
     free(query_ids);

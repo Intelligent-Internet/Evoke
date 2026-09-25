@@ -20,9 +20,9 @@ From the Evoke repository root, download the immutable archive and validate it:
 
 ```bash
 model_repo='Intelligent-Internet/Evoke-Model-Beta-1'
-model_revision='ee17e24a5f8eede1c9ac098b1f8bf637c32d9f07'
+model_revision='1bcccd7bb028a09b1c5897fc361e7a54ad01c965'
 model_archive='evoke-p2.2-nfcorpus-v2.zip'
-model_sha256='ab5cd4b2a1fec10c70113d2997c6ce070caa34cf7a74c114b7ab48d81643cd98'
+model_sha256='b202ca7e80b219a2540bf75365a3df8b81cf638b6c8c2207ed4ea8ba93f212d1'
 model_url="https://huggingface.co/${model_repo}/resolve/${model_revision}/${model_archive}"
 
 python3 scripts/fetch_milestone_model.py \
@@ -43,13 +43,10 @@ Do not overwrite a model checkout used by a running PostgreSQL instance.
 This path is the default input to `scripts/build_release_zip.sh` and
 `scripts/build_release_docker_image.sh`. An alternate validated location can
 be selected using `--model-checkout` or `EVOKE_MILESTONE_MODEL_CHECKOUT`.
-The legacy `II42_MILESTONE_MODEL_CHECKOUT` variable is still accepted during
-the transition.
 See [Contributing](../../CONTRIBUTING.md#release-automation) for release builds.
 For GitHub Actions, use the value of `model_url` above for
 `EVOKE_MILESTONE_MODEL_URL` and `model_sha256` for
-`EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256`; neither is a secret. The old `II42_*`
-repository variables remain fallback inputs until all jobs are migrated.
+`EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256`; neither is a secret.
 
 The Hub also exposes individual files under `checkout/` and an `hf download`
 example in its model card. Do not pass the entire Hub repository, or a local
@@ -103,13 +100,13 @@ must not choose or modify server-local paths.
 does not install this checkout automatically. Exact BM25 indexes do not need
 model inference. A source-installed Sparse Semantic Retrieval (SSR) deployment
 must install the validated checkout at the compiled default shared-data path,
-normally `$(pg_config --sharedir)/ii42/models/default`, or configure an
+normally `$(pg_config --sharedir)/evoke/models/default`, or configure an
 administrator-owned absolute path before creating SSR indexes:
 
 ```conf
-shared_preload_libraries = 'ii42'
-ii42.shared_runtime_size = '64MB'
-ii42.sae_model_path = '/absolute/path/to/evoke-milestone-model'
+shared_preload_libraries = 'evoke'
+evoke.shared_runtime_size = '64MB'
+evoke.sae_model_path = '/absolute/path/to/evoke-milestone-model'
 ```
 
 The directory must be readable by PostgreSQL and not writable by application
@@ -124,7 +121,7 @@ Use the deployment default:
 
 ```sql
 CREATE INDEX docs_search_idx
-ON docs USING ii42 (body)
+ON docs USING evoke (body)
 WITH (sae = true);
 ```
 
@@ -132,10 +129,10 @@ Or set a per-index override:
 
 ```sql
 CREATE INDEX docs_search_idx
-ON docs USING ii42 (body)
+ON docs USING evoke (body)
 WITH (
     sae = true,
-    model_path = '/opt/ii42/models/search_model'
+    model_path = '/opt/evoke/models/search_model'
 );
 ```
 
@@ -143,23 +140,23 @@ WITH (
 against the manifest. They do not register independent components.
 
 Resolution order is per-index `model_path`, server-wide
-`ii42.sae_model_path`, then the package checkout. Because the path is
+`evoke.sae_model_path`, then the package checkout. Because the path is
 server-local, install an identical checkout on every primary and standby.
 
 ## Validate
 
 ```sql
-SELECT ii42_index_options('docs_search_idx'::regclass);
-SELECT ii42_index_status('docs_search_idx'::regclass);
-SELECT ii42_index_audit('docs_search_idx'::regclass);
-SELECT * FROM ii42_query('docs_search_idx'::regclass, 'query text', 20);
+SELECT evoke_index_options('docs_search_idx'::regclass);
+SELECT evoke_index_status('docs_search_idx'::regclass);
+SELECT evoke_index_audit('docs_search_idx'::regclass);
+SELECT * FROM evoke_query('docs_search_idx'::regclass, 'query text', 20);
 ```
 
 Status performs bounded readiness and runtime-identity checks after enforcing
 the caller's table access boundary. It deliberately reports
 `model_artifacts_valid = null` with
 `model_artifact_validation = 'explicit_audit_required'`. Run
-`ii42_index_audit(...)` explicitly for a complete generation walk and SHA-256
+`evoke_index_audit(...)` explicitly for a complete generation walk and SHA-256
 validation of every server-local model artifact; do not put that heavy audit in
 readiness polling or request paths.
 

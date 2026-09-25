@@ -16,7 +16,7 @@ from typing import Any, Callable
 import psycopg
 from psycopg import sql
 
-from ii42_test_support import create_short_socket_root
+from evoke_test_support import create_short_socket_root
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -28,7 +28,7 @@ MAINTENANCE_WAKEUP_COOLDOWN_SECONDS = 1.1
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            'Measure authoritative ii42 maintenance discovery at increasing '
+            'Measure authoritative evoke maintenance discovery at increasing '
             'catalog sizes.'
         ),
     )
@@ -36,7 +36,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         '--levels',
         default='100,1000,10000',
-        help='comma-separated cumulative ii42 index counts',
+        help='comma-separated cumulative evoke index counts',
     )
     parser.add_argument('--batch-size', type=int, default=250)
     parser.add_argument('--timeout-seconds', type=float, default=180.0)
@@ -79,15 +79,15 @@ def configure_cluster(
     port: int,
 ) -> None:
     with (data_dir / 'postgresql.conf').open('a', encoding='utf-8') as handle:
-        handle.write("\nshared_preload_libraries = 'ii42'\n")
+        handle.write("\nshared_preload_libraries = 'evoke'\n")
         handle.write("listen_addresses = ''\n")
         handle.write(f"unix_socket_directories = '{socket_dir}'\n")
         handle.write(f'port = {port}\n')
         handle.write('max_worker_processes = 24\n')
         handle.write('max_locks_per_transaction = 1024\n')
-        handle.write("ii42.maintenance_timer_interval_ms = '1s'\n")
-        handle.write("ii42.preload_timer_interval_ms = '1h'\n")
-        handle.write("ii42.shared_runtime_size = '256MB'\n")
+        handle.write("evoke.maintenance_timer_interval_ms = '1s'\n")
+        handle.write("evoke.preload_timer_interval_ms = '1h'\n")
+        handle.write("evoke.shared_runtime_size = '256MB'\n")
         handle.write('autovacuum = off\n')
         handle.write('fsync = off\n')
         handle.write('full_page_writes = off\n')
@@ -132,7 +132,7 @@ def setup_tables(
     with connection.cursor() as cursor:
         cursor.execute(
             '''
-            CREATE EXTENSION ii42;
+            CREATE EXTENSION evoke;
             CREATE SCHEMA maintenance_scale;
             '''
         )
@@ -179,9 +179,9 @@ def create_indexes(
                         table_ordinal :=
                             (index_ordinal - 1) / {};
                         EXECUTE format(
-                            'CREATE INDEX ii42_scale_%s '
+                            'CREATE INDEX evoke_scale_%s '
                             'ON maintenance_scale.docs_%s '
-                            'USING ii42 (body) '
+                            'USING evoke (body) '
                             'WITH (consistency = manual)',
                             index_ordinal,
                             table_ordinal
@@ -218,7 +218,7 @@ def mark_indexes_eventual(
                 BEGIN
                     FOR index_ordinal IN {}..{} LOOP
                         EXECUTE format(
-                            'ALTER INDEX maintenance_scale.ii42_scale_%s '
+                            'ALTER INDEX maintenance_scale.evoke_scale_%s '
                             'SET (consistency = eventual)',
                             index_ordinal
                         );
@@ -239,8 +239,8 @@ def cache_state(
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT ii42_index_runtime_state_json("
-            "'maintenance_scale.ii42_scale_1'::regclass)"
+            "SELECT evoke_index_runtime_state_json("
+            "'maintenance_scale.evoke_scale_1'::regclass)"
         )
         row = cursor.fetchone()
     if row is None or not isinstance(row[0], dict):
@@ -297,7 +297,7 @@ def catalog_index_count(
             JOIN pg_catalog.pg_index AS index_catalog
                 ON index_catalog.indexrelid = relation.oid
             WHERE relation.relkind = 'i'
-              AND access_method.amname = 'ii42'
+              AND access_method.amname = 'evoke'
               AND index_catalog.indisvalid
               AND index_catalog.indisready
               AND COALESCE(relation.reloptions, ARRAY[]::text[])
@@ -322,7 +322,7 @@ def measure_reconciliation(
 
     started_at = time.monotonic()
     with connection.cursor() as cursor:
-        cursor.execute('SELECT ii42_index_touch_maintenance()')
+        cursor.execute('SELECT evoke_index_touch_maintenance()')
         touch_result = str(cursor.fetchone()[0])
 
     reconciled = wait_until(
@@ -453,11 +453,11 @@ def main() -> None:
                 f'missing PostgreSQL executable: {executable}'
             )
 
-    socket_root = create_short_socket_root('ii42-maint-scale-')
+    socket_root = create_short_socket_root('evoke-maint-scale-')
     evidence: dict[str, Any]
     try:
         with tempfile.TemporaryDirectory(
-            prefix='ii42-maint-scale-data-',
+            prefix='evoke-maint-scale-data-',
         ) as temp:
             root = Path(temp)
             data_dir = root / 'data'

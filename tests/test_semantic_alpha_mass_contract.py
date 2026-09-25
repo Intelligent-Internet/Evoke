@@ -2,19 +2,19 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTROL_SOURCE = (ROOT / 'ii42.control').read_text(encoding='utf-8')
+CONTROL_SOURCE = (ROOT / 'evoke.control').read_text(encoding='utf-8')
 VERSION = CONTROL_SOURCE.split("default_version = '", 1)[1].split("'", 1)[0]
-AM_SOURCE = (ROOT / 'src' / 'ii42_am.c').read_text(encoding='utf-8')
-OPTIONS_SOURCE = (ROOT / 'src' / 'ii42_am_options.c').read_text(
+AM_SOURCE = (ROOT / 'src' / 'evoke_am.c').read_text(encoding='utf-8')
+OPTIONS_SOURCE = (ROOT / 'src' / 'evoke_am_options.c').read_text(
     encoding='utf-8',
 )
-OPTIONS_HEADER = (ROOT / 'src' / 'ii42_am_options.h').read_text(
+OPTIONS_HEADER = (ROOT / 'src' / 'evoke_am_options.h').read_text(
     encoding='utf-8',
 )
-SQL_SOURCE = (ROOT / 'sql' / f'ii42--{VERSION}.sql').read_text(
+SQL_SOURCE = (ROOT / 'sql' / f'evoke--{VERSION}.sql').read_text(
     encoding='utf-8',
 )
-REBUILD_SOURCE = (ROOT / 'scripts' / 'rebuild_ii42_indexes.py').read_text(
+REBUILD_SOURCE = (ROOT / 'scripts' / 'rebuild_evoke_indexes.py').read_text(
     encoding='utf-8',
 )
 LIFECYCLE_SOURCE = (
@@ -30,27 +30,27 @@ def test_alpha_mass_is_an_explicit_sae_reloption() -> None:
         1,
     )[1].split('};', 1)[0]
     assert '"semantic_alpha_mass"' in sae_options
-    assert 'ii42_am_semantic_alpha_mass(Relation index_relation)' in (
+    assert 'evoke_am_semantic_alpha_mass(Relation index_relation)' in (
         OPTIONS_SOURCE
     )
-    assert 'double ii42_am_semantic_alpha_mass(' in OPTIONS_HEADER
+    assert 'double evoke_am_semantic_alpha_mass(' in OPTIONS_HEADER
     assert '0.01,\n        1.0,' in OPTIONS_SOURCE
 
 
 def test_alpha_mass_covers_initial_and_eventual_publication() -> None:
-    assert 'ii42_am_semantic_pair_alpha_mass_keep_count(' in AM_SOURCE
-    assert 'ii42_am_convergent_semantic_alpha_mass_keep_count(' in AM_SOURCE
-    assert AM_SOURCE.count('ii42_am_semantic_alpha_mass(') >= 3
+    assert 'evoke_am_semantic_pair_alpha_mass_keep_count(' in AM_SOURCE
+    assert 'evoke_am_convergent_semantic_alpha_mass_keep_count(' in AM_SOURCE
+    assert AM_SOURCE.count('evoke_am_semantic_alpha_mass(') >= 3
 
 
 def test_nondefault_alpha_mass_is_generation_bound() -> None:
     contract = AM_SOURCE.split(
-        'ii42_am_runtime_signature_for_contract(',
+        'evoke_am_runtime_signature_for_contract(',
         1,
-    )[1].split('static void\nii42_am_runtime_signature(', 1)[0]
+    )[1].split('static void\nevoke_am_runtime_signature(', 1)[0]
     assert 'if (semantic_alpha_mass < 1.0)' in contract
     assert '"semantic_alpha_mass=%016llx;"' in contract
-    assert 'ii42_am_semantic_alpha_mass(indexRelation)' in contract
+    assert 'evoke_am_semantic_alpha_mass(indexRelation)' in contract
 
 
 def test_alpha_mass_is_reported_and_preserved_by_rebuilds() -> None:

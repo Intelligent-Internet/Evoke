@@ -10,7 +10,7 @@
 \endif
 
 SET statement_timeout = '30min';
-SET ii42.test_disable_semantic_accelerator = on;
+SET evoke.test_disable_semantic_accelerator = on;
 
 CREATE TEMP TABLE cq3e_queries(query text PRIMARY KEY);
 INSERT INTO cq3e_queries(query) VALUES
@@ -36,7 +36,7 @@ CROSS JOIN (
         ('new'::text, 1, :'candidate_index'::regclass),
         ('new'::text, 2, :'candidate_index'::regclass)
 ) AS variants(root, replay, index_name)
-CROSS JOIN LATERAL ii42_query(
+CROSS JOIN LATERAL evoke_query(
     variants.index_name,
     queries.query,
     100

@@ -406,7 +406,7 @@ def main() -> int:
         }
 
     output = {
-        'schema': 'ii42_document_block_candidate_oracle_v1',
+        'schema': 'evoke_document_block_candidate_oracle_v1',
         'dataset': args.dataset_root.name,
         'documents': documents.shape[0],
         'queries': queries.shape[0],

@@ -19,7 +19,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from ii42_plain_query import plain_text_to_raw_terms  # noqa: E402
+from evoke_plain_query import plain_text_to_raw_terms  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:

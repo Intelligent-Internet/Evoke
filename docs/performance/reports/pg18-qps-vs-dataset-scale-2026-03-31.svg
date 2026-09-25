@@ -158,10 +158,10 @@
 <text x="1348.00" y="119.00" font-size="14" font-weight="400" fill="#333" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif">upstream bm25s</text>
 <line x1="1310.00" y1="142.00" x2="1336.00" y2="142.00" stroke="#d62728" stroke-width="3.00"/>
 <polygon points="1323.00,135.00 1330.00,148.00 1316.00,148.00" fill="#d62728" stroke="white" stroke-width="1.5"/>
-<text x="1348.00" y="147.00" font-size="14" font-weight="400" fill="#333" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif">ii42 ids</text>
+<text x="1348.00" y="147.00" font-size="14" font-weight="400" fill="#333" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif">evoke ids</text>
 <line x1="1310.00" y1="170.00" x2="1336.00" y2="170.00" stroke="#ff7f0e" stroke-width="3.00"/>
 <polygon points="1323.00,177.00 1330.00,164.00 1316.00,164.00" fill="#ff7f0e" stroke="white" stroke-width="1.5"/>
-<text x="1348.00" y="175.00" font-size="14" font-weight="400" fill="#333" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif">ii42 text[]</text>
+<text x="1348.00" y="175.00" font-size="14" font-weight="400" fill="#333" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif">evoke text[]</text>
 <line x1="1310.00" y1="198.00" x2="1336.00" y2="198.00" stroke="#2ca02c" stroke-width="3.00"/>
 <rect x="1318.00" y="193.00" width="10" height="10" fill="#2ca02c" stroke="white" stroke-width="1.5"/>
 <text x="1348.00" y="203.00" font-size="14" font-weight="400" fill="#333" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif">pg_search</text>

@@ -24,7 +24,7 @@ RSS_PATTERN = re.compile(r'^VmRSS:\s+(\d+)\s+kB$', re.MULTILINE)
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            'Clear one isolated II42 shared runtime, wait for worker-driven '
+            'Clear one isolated Evoke shared runtime, wait for worker-driven '
             're-admission, and qualify exact concurrent first/warm queries.'
         ),
     )
@@ -88,12 +88,12 @@ def extension_schema(
             FROM pg_extension AS extension
             JOIN pg_namespace AS namespace
               ON namespace.oid = extension.extnamespace
-            WHERE extension.extname = 'ii42'
+            WHERE extension.extname = 'evoke'
             """
         )
         row = cursor.fetchone()
     if row is None:
-        raise RuntimeError('ii42 is not installed')
+        raise RuntimeError('evoke is not installed')
     return str(row[0])
 
 
@@ -124,7 +124,7 @@ def generation_status(
     return call_json(
         connection,
         schema,
-        'ii42_index_generation_status_internal',
+        'evoke_index_generation_status_internal',
         index_name,
     )
 
@@ -137,7 +137,7 @@ def runtime_state(
     return call_json(
         connection,
         schema,
-        'ii42_index_runtime_state_json',
+        'evoke_index_runtime_state_json',
         index_name,
     )
 
@@ -261,7 +261,7 @@ def query_once(
                     AS hit(ctid, doc_id, score, rank_position)
                 ORDER BY hit.rank_position
                 """
-            ).format(sql.Identifier(schema, 'ii42_query')),
+            ).format(sql.Identifier(schema, 'evoke_query')),
             (index_name, query_text, k),
         )
         hits = [(int(row[0]), str(row[1])) for row in cursor.fetchall()]
@@ -269,12 +269,12 @@ def query_once(
     with connection.cursor() as cursor:
         cursor.execute(
             sql.SQL('SELECT {}()::jsonb').format(
-                sql.Identifier(schema, 'ii42_query_trace_internal')
+                sql.Identifier(schema, 'evoke_query_trace_internal')
             )
         )
         trace = cursor.fetchone()[0]
     if require_trace and not isinstance(trace, dict):
-        raise RuntimeError('ii42 query trace is unavailable')
+        raise RuntimeError('evoke query trace is unavailable')
     if not isinstance(trace, dict):
         trace = None
     pid = connection.info.backend_pid
@@ -400,7 +400,7 @@ def clear_runtime(
     with connection.cursor() as cursor:
         cursor.execute(
             sql.SQL('SELECT {}()').format(
-                sql.Identifier(schema, 'ii42_runtime_cache_clear')
+                sql.Identifier(schema, 'evoke_runtime_cache_clear')
             )
         )
         return int(cursor.fetchone()[0])
@@ -525,7 +525,7 @@ def main() -> int:
         and all(plateau['passed'] for plateau in plateaus)
     )
     output = {
-        'schema': 'ii42_shared_preload_recovery_v1',
+        'schema': 'evoke_shared_preload_recovery_v1',
         'started_at_epoch': started_at,
         'finished_at_epoch': time.time(),
         'guard': guard,

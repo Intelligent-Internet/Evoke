@@ -1,0 +1,4 @@
+comment = 'evoke unified sparse search extension for PostgreSQL'
+default_version = '0.2.5'
+module_pathname = '$libdir/evoke'
+relocatable = false

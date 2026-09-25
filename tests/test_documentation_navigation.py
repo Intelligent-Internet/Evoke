@@ -71,9 +71,9 @@ def test_main_document_links_and_fragments(path: Path) -> None:
 
 def test_heading_fragment_parser_handles_code_duplicates_and_unicode() -> None:
     assert anchors(
-        '# `ii42_query` & SQL\n## 模型設計\n## Repeat\n## Repeat\n'
+        '# `evoke_query` & SQL\n## 模型設計\n## Repeat\n## Repeat\n'
         '```text\n# Not A Heading\n```\n'
-    ) == {'ii42_query--sql', '模型設計', 'repeat', 'repeat-1'}
+    ) == {'evoke_query--sql', '模型設計', 'repeat', 'repeat-1'}
 
 
 def test_document_map_reaches_every_main_guide() -> None:

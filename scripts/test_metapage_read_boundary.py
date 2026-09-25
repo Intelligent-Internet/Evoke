@@ -10,7 +10,7 @@ import struct
 import tempfile
 from pathlib import Path
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 from test_convergent_segment_read_smoke import pg_config_value
 from test_storage_layout_boundary import (
     BLCKSZ,
@@ -88,7 +88,7 @@ def truncate_file(path: Path, size: int) -> None:
 def query_sql(index_name: str) -> str:
     return f'''
         SELECT count(*)
-        FROM ii42_query_tokens(
+        FROM evoke_query_tokens(
             '{index_name}'::regclass,
             ARRAY['boundary'],
             10,
@@ -140,7 +140,7 @@ def run_boundary(
         socket_dir,
         port,
         '''
-        CREATE EXTENSION ii42;
+        CREATE EXTENSION evoke;
         CREATE TABLE docs (
             id integer PRIMARY KEY,
             tokens text[] NOT NULL
@@ -148,12 +148,12 @@ def run_boundary(
         INSERT INTO docs
         SELECT id, ARRAY['metapage', 'boundary', id::text]
         FROM generate_series(1, 128) AS id;
-        CREATE INDEX docs_control_idx ON docs USING ii42 (tokens);
-        CREATE INDEX docs_header_idx ON docs USING ii42 (tokens);
-        CREATE INDEX docs_retired_idx ON docs USING ii42 (tokens);
-        CREATE INDEX docs_root_idx ON docs USING ii42 (tokens);
-        CREATE INDEX docs_bounds_idx ON docs USING ii42 (tokens);
-        CREATE INDEX docs_empty_idx ON docs USING ii42 (tokens);
+        CREATE INDEX docs_control_idx ON docs USING evoke (tokens);
+        CREATE INDEX docs_header_idx ON docs USING evoke (tokens);
+        CREATE INDEX docs_retired_idx ON docs USING evoke (tokens);
+        CREATE INDEX docs_root_idx ON docs USING evoke (tokens);
+        CREATE INDEX docs_bounds_idx ON docs USING evoke (tokens);
+        CREATE INDEX docs_empty_idx ON docs USING evoke (tokens);
         CHECKPOINT;
         ''',
     )
@@ -190,7 +190,7 @@ def run_boundary(
             socket_dir,
             port,
             'docs_header_idx',
-            ('invalid ii42 index metapage',),
+            ('invalid evoke index metapage',),
         ),
         'retired_field': assert_rejected(
             pg_bin,
@@ -198,7 +198,7 @@ def run_boundary(
             port,
             'docs_retired_idx',
             (
-                'invalid ii42 convergent segment payload',
+                'invalid evoke convergent segment payload',
                 'Validation failed: marked_corrupt.',
             ),
         ),
@@ -208,7 +208,7 @@ def run_boundary(
             port,
             'docs_root_idx',
             (
-                'invalid ii42 convergent segment payload',
+                'invalid evoke convergent segment payload',
                 'Validation failed: invalid_segment_read_root.',
             ),
         ),
@@ -218,7 +218,7 @@ def run_boundary(
             port,
             'docs_bounds_idx',
             (
-                'invalid ii42 convergent segment payload',
+                'invalid evoke convergent segment payload',
                 'Validation failed: segment_root_out_of_bounds.',
             ),
         ),
@@ -227,7 +227,7 @@ def run_boundary(
             socket_dir,
             port,
             'docs_empty_idx',
-            ('ii42 index relation', 'is empty'),
+            ('evoke index relation', 'is empty'),
         ),
     }
 

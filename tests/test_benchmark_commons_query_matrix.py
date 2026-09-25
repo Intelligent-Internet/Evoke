@@ -155,7 +155,7 @@ def test_result_validation_treats_null_predicates_as_violations() -> None:
     module = load_module()
     case = module.timed_search_case(
         name='null_safe_filter',
-        search_sql='ii42_query(1::regclass, \'query\', 10)',
+        search_sql='evoke_query(1::regclass, \'query\', 10)',
         table_name='commons.data_pubmed',
         violation_sql='source.publish_date < 20240101',
         expected_max_ms=100.0,
@@ -256,7 +256,7 @@ def test_filter_oracle_rejects_native_membership_mismatch() -> None:
             'status': 'completed',
             'elapsed_ms': 80.0,
             'violations': 0,
-            'ii42_trace': {'allowed_documents': '1'},
+            'evoke_trace': {'allowed_documents': '1'},
             'filter_oracle': {'allowed_documents': 2},
         }],
     )
@@ -442,7 +442,7 @@ def test_runner_records_backend_local_query_trace(monkeypatch) -> None:
         returncode=0,
         stdout=(
             '{"elapsed_ms":12,"violations":0}\n'
-            '{"ii42_trace":{"query_route":"forward_rows",'
+            '{"evoke_trace":{"query_route":"forward_rows",'
             '"memory_bytes":"1048576"}}\n'
         ),
         stderr='',
@@ -451,7 +451,7 @@ def test_runner_records_backend_local_query_trace(monkeypatch) -> None:
     monkeypatch.setattr(module, 'run_psql', lambda *args, **kwargs: completed)
     result = module.run_case(args, case)
 
-    assert result['attempts'][0]['ii42_trace'] == {
+    assert result['attempts'][0]['evoke_trace'] == {
         'query_route': 'forward_rows',
         'memory_bytes': '1048576',
     }
@@ -469,7 +469,7 @@ def test_runner_groups_concurrent_sessions_into_waves(monkeypatch) -> None:
         returncode=0,
         stdout=(
             '{"elapsed_ms":12,"violations":0}\n'
-            '{"ii42_trace":{"query_route":"forward_rows"}}\n'
+            '{"evoke_trace":{"query_route":"forward_rows"}}\n'
         ),
         stderr='',
     )
@@ -562,7 +562,7 @@ def test_environment_records_planner_health(monkeypatch) -> None:
         captured.setdefault('sql', []).append(sql_text)
         if "json_build_object('value'," in sql_text:
             return {'value': module.CATALOG_CONTRACT}
-        if 'ii42_onnxruntime_build_info' in sql_text:
+        if 'evoke_onnxruntime_build_info' in sql_text:
             return {
                 'build_info': 'enabled:api=29',
                 'probe': 'available:linked:version=1.29.0',
@@ -593,9 +593,9 @@ def test_environment_records_planner_health(monkeypatch) -> None:
             'postmaster_age_seconds': 50.0,
             'settings': {
                 'autovacuum': 'on',
-                'ii42.maintenance_worker_limit': '4',
-                'ii42.test_disable_semantic_accelerator': 'off',
-                'ii42.test_filtered_forward_route': 'auto',
+                'evoke.maintenance_worker_limit': '4',
+                'evoke.test_disable_semantic_accelerator': 'off',
+                'evoke.test_filtered_forward_route': 'auto',
                 'track_counts': 'on',
             },
             'table_stats': {
@@ -615,9 +615,9 @@ def test_environment_records_planner_health(monkeypatch) -> None:
             'catalog_contract': {
                 'installed_version': '0.2.4',
                 'available_version': '0.2.4',
-                'extension_schema': 'ii42_ext',
+                'extension_schema': 'evoke_ext',
                 'versions_match': True,
-                'c_module_paths': ['$libdir/ii42'],
+                'c_module_paths': ['$libdir/evoke'],
                 'c_module_path_current': True,
                 'required_functions': {
                     signature: True
@@ -662,11 +662,11 @@ def test_environment_records_planner_health(monkeypatch) -> None:
     assert "'autovacuum'" in environment_sql
     assert 'pg_postmaster_start_time()' in environment_sql
     assert "'default_statistics_target'" in environment_sql
-    assert "'ii42.test_filtered_forward_route'" in environment_sql
+    assert "'evoke.test_filtered_forward_route'" in environment_sql
     assert "'track_counts'" in environment_sql
     assert "'reltuples'" in environment_sql
     assert "'filter_stats'" in environment_sql
-    assert "'$libdir/ii42'" in environment_sql
+    assert "'$libdir/evoke'" in environment_sql
     assert 'installed_procedure.probin' in environment_sql
     assert "'generated_columns'" in environment_sql
     assert 'attribute.attgenerated' in environment_sql
@@ -676,18 +676,18 @@ def test_environment_records_planner_health(monkeypatch) -> None:
     assert "'nlm_ta'" in environment_sql
     assert "'policy_ca_doc_id'" in environment_sql
     assert 'pg_available_extensions' in environment_sql
-    assert 'ii42_index_runtime_state_json(regclass)' in environment_sql
-    assert 'ii42_query_trace_internal()' in environment_sql
+    assert 'evoke_index_runtime_state_json(regclass)' in environment_sql
+    assert 'evoke_query_trace_internal()' in environment_sql
     runtime_sql = next(
         sql for sql in captured['sql']
-        if 'ii42_onnxruntime_build_info' in sql
+        if 'evoke_onnxruntime_build_info' in sql
     )
-    assert '"ii42_ext"."ii42_onnxruntime_probe"' in runtime_sql
+    assert '"evoke_ext"."evoke_onnxruntime_probe"' in runtime_sql
     index_status_sql = next(
         sql for sql in captured['sql']
         if 'WITH source AS (' in sql
     )
-    assert 'ii42_index_runtime_state_json' in index_status_sql
+    assert 'evoke_index_runtime_state_json' in index_status_sql
     assert "'{semantic_accelerator,scope_present}'" in index_status_sql
     assert "'{semantic_accelerator,scope_version}'" in index_status_sql
     assert "'{semantic_accelerator,scope_current}'" in index_status_sql
@@ -737,14 +737,14 @@ def test_runtime_health_rejects_diagnostic_or_stalled_routes() -> None:
 
     assert module.evaluate_runtime_health({
         'settings': {
-            'ii42.maintenance_worker_limit': '0',
-            'ii42.test_disable_semantic_accelerator': 'on',
-            'ii42.test_filtered_forward_route': 'transpose',
+            'evoke.maintenance_worker_limit': '0',
+            'evoke.test_disable_semantic_accelerator': 'on',
+            'evoke.test_filtered_forward_route': 'transpose',
         },
     }) == {
         'qualified': False,
         'reasons': [
-            'II42 maintenance workers are disabled',
+            'Evoke maintenance workers are disabled',
             'semantic accelerator test override is active',
             'filtered forward-route test override is active',
         ],
@@ -752,15 +752,15 @@ def test_runtime_health_rejects_diagnostic_or_stalled_routes() -> None:
 
     assert module.evaluate_runtime_health({
         'settings': {
-            'ii42.maintenance_worker_limit': '4',
-            'ii42.test_disable_semantic_accelerator': 'off',
-            'ii42.test_filtered_forward_route': 'auto',
+            'evoke.maintenance_worker_limit': '4',
+            'evoke.test_disable_semantic_accelerator': 'off',
+            'evoke.test_filtered_forward_route': 'auto',
         },
     }) == {'qualified': True, 'reasons': []}
 
     assert module.evaluate_runtime_health({
         'settings': {
-            'ii42.maintenance_worker_limit': '4',
+            'evoke.maintenance_worker_limit': '4',
         },
     }) == {
         'qualified': False,
@@ -843,7 +843,7 @@ def test_environment_requires_query_metadata_readiness(monkeypatch) -> None:
     def fake_query_json(args, sql_text):
         if "json_build_object('value'," in sql_text:
             return {'value': module.CATALOG_CONTRACT}
-        if 'ii42_onnxruntime_build_info' in sql_text:
+        if 'evoke_onnxruntime_build_info' in sql_text:
             return {
                 'build_info': 'enabled:api=29',
                 'probe': 'available:linked:version=1.29.0',
@@ -870,9 +870,9 @@ def test_environment_requires_query_metadata_readiness(monkeypatch) -> None:
         return {
             'settings': {
                 'autovacuum': 'on',
-                'ii42.maintenance_worker_limit': '4',
-                'ii42.test_disable_semantic_accelerator': 'off',
-                'ii42.test_filtered_forward_route': 'auto',
+                'evoke.maintenance_worker_limit': '4',
+                'evoke.test_disable_semantic_accelerator': 'off',
+                'evoke.test_filtered_forward_route': 'auto',
                 'track_counts': 'on',
             },
             'table_stats': {
@@ -892,9 +892,9 @@ def test_environment_requires_query_metadata_readiness(monkeypatch) -> None:
             'catalog_contract': {
                 'installed_version': '0.2.4',
                 'available_version': '0.2.4',
-                'extension_schema': 'ii42_ext',
+                'extension_schema': 'evoke_ext',
                 'versions_match': True,
-                'c_module_paths': ['$libdir/ii42'],
+                'c_module_paths': ['$libdir/evoke'],
                 'c_module_path_current': True,
                 'required_functions': {
                     signature: True
@@ -993,14 +993,14 @@ def test_environment_rejects_incomplete_catalog_contract(monkeypatch) -> None:
             'catalog_contract': {
                 'installed_version': '0.2.4',
                 'available_version': '0.2.4',
-                'extension_schema': 'ii42_ext',
+                'extension_schema': 'evoke_ext',
                 'versions_match': True,
-                'c_module_paths': ['$libdir/ii42'],
+                'c_module_paths': ['$libdir/evoke'],
                 'c_module_path_current': True,
                 'required_functions': {
-                    'ii42_index_generation_status_internal(regclass)': True,
-                    'ii42_index_runtime_state_json(regclass)': True,
-                    'ii42_query_trace_internal()': False,
+                    'evoke_index_generation_status_internal(regclass)': True,
+                    'evoke_index_runtime_state_json(regclass)': True,
+                    'evoke_query_trace_internal()': False,
                 },
             },
         }
@@ -1019,9 +1019,9 @@ def test_environment_rejects_incomplete_catalog_contract(monkeypatch) -> None:
 @pytest.mark.parametrize(
     ('paths', 'current'),
     [
-        (['/opt/ii42-old/lib/ii42.so'], False),
-        (['$libdir/ii42', '/opt/ii42-old/lib/ii42.so'], False),
-        (['/opt/ii42-old/lib/ii42.so'], True),
+        (['/opt/evoke-old/lib/evoke.so'], False),
+        (['$libdir/evoke', '/opt/evoke-old/lib/evoke.so'], False),
+        (['/opt/evoke-old/lib/evoke.so'], True),
     ],
 )
 def test_catalog_contract_rejects_stale_c_module_binding(
@@ -1032,7 +1032,7 @@ def test_catalog_contract_rejects_stale_c_module_binding(
     contract = {
         'installed_version': '0.2.4',
         'available_version': '0.2.4',
-        'extension_schema': 'ii42_ext',
+        'extension_schema': 'evoke_ext',
         'versions_match': True,
         'c_module_paths': paths,
         'c_module_path_current': current,
@@ -1051,11 +1051,11 @@ def test_catalog_contract_rejects_stale_sql_identity() -> None:
     contract = {
         'installed_version': '0.2.4',
         'available_version': '0.2.4',
-        'extension_schema': 'ii42_ext',
+        'extension_schema': 'evoke_ext',
         'versions_match': True,
-        'c_module_paths': ['$libdir/ii42'],
+        'c_module_paths': ['$libdir/evoke'],
         'c_module_path_current': True,
-        'catalog_identity': 'ii42_catalog_stale',
+        'catalog_identity': 'evoke_catalog_stale',
         'required_functions': {
             signature: True
             for signature in module.REQUIRED_CATALOG_SIGNATURES
@@ -1075,7 +1075,7 @@ def test_environment_records_stale_index_without_hiding_failure(
         nonlocal status_calls
         if "json_build_object('value'," in sql_text:
             return {'value': module.CATALOG_CONTRACT}
-        if 'ii42_onnxruntime_build_info' in sql_text:
+        if 'evoke_onnxruntime_build_info' in sql_text:
             return {
                 'build_info': 'enabled:api=29',
                 'probe': 'available:linked:version=1.29.0',
@@ -1085,9 +1085,9 @@ def test_environment_records_stale_index_without_hiding_failure(
                 'catalog_contract': {
                     'installed_version': '0.2.4',
                     'available_version': '0.2.4',
-                    'extension_schema': 'ii42_ext',
+                    'extension_schema': 'evoke_ext',
                     'versions_match': True,
-                    'c_module_paths': ['$libdir/ii42'],
+                    'c_module_paths': ['$libdir/evoke'],
                     'c_module_path_current': True,
                     'required_functions': {
                         signature: True
@@ -1136,13 +1136,13 @@ def test_onnxruntime_contract_rejects_unpinned_runtime(monkeypatch) -> None:
     monkeypatch.setattr(module, 'query_json', fake_query_json)
     result = module.collect_onnxruntime_contract(
         SimpleNamespace(),
-        {'extension_schema': 'ii42_ext'},
+        {'extension_schema': 'evoke_ext'},
     )
 
     assert result['qualified'] is False
     assert result['expected_version'] == '1.29.0'
     assert result['expected_build_info'] == 'enabled:api=29'
-    assert '"ii42_ext"."ii42_onnxruntime_build_info"' in captured['sql']
+    assert '"evoke_ext"."evoke_onnxruntime_build_info"' in captured['sql']
 
 
 def test_main_skips_queries_when_catalog_contract_is_incomplete(

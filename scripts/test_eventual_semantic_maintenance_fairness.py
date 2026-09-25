@@ -84,12 +84,12 @@ def fetch_status(
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_status(%s::regclass)',
+            'SELECT evoke_index_status(%s::regclass)',
             (name,),
         )
         row = cursor.fetchone()
     if row is None or not isinstance(row[0], dict):
-        raise RuntimeError(f'ii42_index_status failed for {name}')
+        raise RuntimeError(f'evoke_index_status failed for {name}')
     return dict(row[0])
 
 
@@ -99,13 +99,13 @@ def fetch_cache_state(
 ) -> dict[str, Any]:
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT ii42_index_runtime_state_json(%s::regclass)',
+            'SELECT evoke_index_runtime_state_json(%s::regclass)',
             (name,),
         )
         row = cursor.fetchone()
     if row is None or not isinstance(row[0], dict):
         raise RuntimeError(
-            f'ii42_index_runtime_state_json failed for {name}'
+            f'evoke_index_runtime_state_json failed for {name}'
         )
     return dict(row[0])
 
@@ -120,54 +120,54 @@ def maintenance_metrics(cache: dict[str, Any]) -> dict[str, Any]:
 def completion_state(status: dict[str, Any]) -> dict[str, Any]:
     generation = status.get('generation')
     if not isinstance(generation, dict):
-        raise RuntimeError('ii42 status omitted generation')
+        raise RuntimeError('evoke status omitted generation')
     delta = generation.get('delta')
     if not isinstance(delta, dict):
-        raise RuntimeError('ii42 generation status omitted delta')
+        raise RuntimeError('evoke generation status omitted delta')
     completion = delta.get('semantic_completion')
     if not isinstance(completion, dict):
-        raise RuntimeError('ii42 status omitted semantic completion')
+        raise RuntimeError('evoke status omitted semantic completion')
     return dict(completion)
 
 
 def completion_total(status: dict[str, Any]) -> int:
     telemetry = completion_state(status).get('telemetry')
     if not isinstance(telemetry, dict):
-        raise RuntimeError('ii42 status omitted completion telemetry')
+        raise RuntimeError('evoke status omitted completion telemetry')
     return int(telemetry.get('completed') or 0)
 
 
 def generation_number(status: dict[str, Any]) -> int:
     generation = status.get('generation')
     if not isinstance(generation, dict):
-        raise RuntimeError('ii42 status omitted generation')
+        raise RuntimeError('evoke status omitted generation')
     return int(generation.get('generation') or 0)
 
 
 def segment_count(status: dict[str, Any]) -> int:
     generation = status.get('generation')
     if not isinstance(generation, dict):
-        raise RuntimeError('ii42 status omitted generation')
+        raise RuntimeError('evoke status omitted generation')
     primary = generation.get('primary')
     if not isinstance(primary, dict):
-        raise RuntimeError('ii42 status omitted primary generation')
+        raise RuntimeError('evoke status omitted primary generation')
     return int(primary.get('segment_count') or 0)
 
 
 def delta_records(status: dict[str, Any]) -> int:
     details = status.get('details')
     if not isinstance(details, dict):
-        raise RuntimeError('ii42 status omitted index details')
+        raise RuntimeError('evoke status omitted index details')
     return int(details.get('delta_records') or 0)
 
 
 def semantic_accelerator_ready(status: dict[str, Any]) -> bool:
     generation = status.get('generation')
     if not isinstance(generation, dict):
-        raise RuntimeError('ii42 status omitted generation')
+        raise RuntimeError('evoke status omitted generation')
     accelerator = generation.get('semantic_accelerator')
     if not isinstance(accelerator, dict):
-        raise RuntimeError('ii42 status omitted semantic accelerator')
+        raise RuntimeError('evoke status omitted semantic accelerator')
     return bool(
         accelerator.get('present')
         and accelerator.get('eligible')
@@ -189,10 +189,10 @@ def active_accelerator_horizons(
                 query
             FROM pg_stat_activity
             WHERE datname = current_database()
-              AND application_name = 'ii42 maintenance'
+              AND application_name = 'evoke maintenance'
               AND state = 'active'
               AND query LIKE
-                  'ii42 maintenance:%semantic query accelerator%'
+                  'evoke maintenance:%semantic query accelerator%'
             ORDER BY pid
             """
         )
@@ -265,7 +265,7 @@ def acquire_guard(
     while True:
         with connection.cursor() as cursor:
             cursor.execute(
-                'SELECT ii42_index_try_maintenance_lock(%s::regclass)',
+                'SELECT evoke_index_try_maintenance_lock(%s::regclass)',
                 (name,),
             )
             acquired = bool(cursor.fetchone()[0])
@@ -284,7 +284,7 @@ def release_guard(
     try:
         with connection.cursor() as cursor:
             cursor.execute(
-                'SELECT ii42_index_maintenance_unlock(%s::regclass)',
+                'SELECT evoke_index_maintenance_unlock(%s::regclass)',
                 (name,),
             )
     finally:
@@ -297,14 +297,14 @@ def configure_worker_limit(
 ) -> None:
     with connection.cursor() as cursor:
         cursor.execute(
-            'ALTER SYSTEM SET ii42.maintenance_worker_limit = '
+            'ALTER SYSTEM SET evoke.maintenance_worker_limit = '
             f"'{int(worker_limit)}'",
         )
         cursor.execute('SELECT pg_reload_conf()')
     deadline = time.monotonic() + 10.0
     while True:
         with connection.cursor() as cursor:
-            cursor.execute('SHOW ii42.maintenance_worker_limit')
+            cursor.execute('SHOW evoke.maintenance_worker_limit')
             observed = int(cursor.fetchone()[0])
         if observed == worker_limit:
             return
@@ -324,12 +324,12 @@ def configure_maintenance_budget(
         if value is None:
             cursor.execute(
                 'ALTER SYSTEM RESET '
-                'ii42.maintenance_rebuild_memory_budget'
+                'evoke.maintenance_rebuild_memory_budget'
             )
         else:
             cursor.execute(
                 'ALTER SYSTEM SET '
-                'ii42.maintenance_rebuild_memory_budget = '
+                'evoke.maintenance_rebuild_memory_budget = '
                 f'{sql_literal(value)}'
             )
         cursor.execute('SELECT pg_reload_conf()')
@@ -340,7 +340,7 @@ def configure_maintenance_budget(
     observed = ''
     while time.monotonic() < deadline:
         with connection.cursor() as cursor:
-            cursor.execute('SHOW ii42.maintenance_rebuild_memory_budget')
+            cursor.execute('SHOW evoke.maintenance_rebuild_memory_budget')
             observed = str(cursor.fetchone()[0])
         if (value is None and observed != '1MB') or observed == value:
             return observed
@@ -391,7 +391,7 @@ def setup_scenario(
                 );
                 CREATE INDEX docs_{ordinal}_idx
                 ON {table}
-                USING ii42 (body)
+                USING evoke (body)
                 INCLUDE (scope)
                 WITH (
                     sae = true,
@@ -436,13 +436,13 @@ def query_rows(
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT set_config("
-            "'ii42.test_unified_overlay_oracle', %s, false)",
+            "'evoke.test_unified_overlay_oracle', %s, false)",
             ('on' if oracle else 'off',),
         )
         cursor.execute(
             f"""
             SELECT source.id, hit.score::float8
-            FROM ii42_query(
+            FROM evoke_query(
                 %s::regclass,
                 %s,
                 20
@@ -921,7 +921,7 @@ def run_accelerator_fairness_scenario(
 
         restored_budget = configure_maintenance_budget(connection, None)
         with connection.cursor() as cursor:
-            cursor.execute('SELECT ii42_index_touch_maintenance()')
+            cursor.execute('SELECT evoke_index_touch_maintenance()')
             maintenance_touch = str(cursor.fetchone()[0])
         accelerator_started = time.monotonic()
         cold_status = blocked_statuses[cold_name]
@@ -940,7 +940,7 @@ def run_accelerator_fairness_scenario(
             if lock_samples and accelerator_maintenance_probe is None:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        'SELECT ii42_index_try_maintain(%s::regclass)',
+                        'SELECT evoke_index_try_maintain(%s::regclass)',
                         (cold_name,),
                     )
                     accelerator_maintenance_probe = str(
@@ -958,7 +958,7 @@ def run_accelerator_fairness_scenario(
                         """
                     )
                     cursor.execute(
-                        'SELECT ii42_index_try_maintain(%s::regclass)',
+                        'SELECT evoke_index_try_maintain(%s::regclass)',
                         (cold_name,),
                     )
                     same_root_ingress_maintenance = str(
@@ -1114,7 +1114,7 @@ def run_restart_reconciliation(
             VALUES (-1, 'realtime lexical restart baseline');
             CREATE INDEX realtime_bm25_docs_idx
             ON {realtime_bm25_table}
-            USING ii42 (body)
+            USING evoke (body)
             WITH (
                 consistency = realtime,
                 auto_preload = 0
@@ -1298,8 +1298,8 @@ def main() -> None:
         'a',
         encoding='utf-8',
     ) as handle:
-        handle.write('ii42.runtime_worker_count = 4\n')
-        handle.write('ii42.maintenance_worker_limit = 1\n')
+        handle.write('evoke.runtime_worker_count = 4\n')
+        handle.write('evoke.maintenance_worker_limit = 1\n')
     start_cluster(pg_ctl, data_dir, log_path)
 
     connection = connect(socket_dir, args.port)
@@ -1308,7 +1308,7 @@ def main() -> None:
     accelerator_result: dict[str, Any] = {}
     try:
         with connection.cursor() as cursor:
-            cursor.execute('CREATE EXTENSION ii42')
+            cursor.execute('CREATE EXTENSION evoke')
         if args.accelerator_only:
             accelerator_result = run_accelerator_fairness_scenario(
                 connection,

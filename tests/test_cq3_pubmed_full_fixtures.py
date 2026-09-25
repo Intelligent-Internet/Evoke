@@ -3,7 +3,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / 'tests' / 'fixtures' / 'cq3_pubmed_full'
-TRACE_SOURCE = (ROOT / 'src' / 'ii42_am.c').read_text(encoding='utf-8')
+TRACE_SOURCE = (ROOT / 'src' / 'evoke_am.c').read_text(encoding='utf-8')
 
 
 def fixture(name: str) -> str:
@@ -27,7 +27,7 @@ def test_run_fixture_records_complete_hits_and_memory() -> None:
     assert 'FROM pg_backend_memory_contexts' in setup
     assert "pg_read_file('/proc/self/status')" in setup
     assert "'VmRSS:[[:space:]]+([0-9]+) kB'" in setup
-    assert 'ii42_query_trace_internal()' in setup
+    assert 'evoke_query_trace_internal()' in setup
     assert (
         "trace->>'accelerator_forward_postings_examined'" in normal_probe
     )
@@ -114,9 +114,9 @@ def test_compare_requires_bounded_filtered_exact_work() -> None:
 def test_normal_probe_is_bounded_and_diagnostic_only() -> None:
     source = fixture('normal_probe.sql')
 
-    assert 'SET ii42.test_disable_semantic_accelerator = off;' in source
-    assert 'SET ii42.test_force_semantic_bmp = off;' in source
-    assert "'ii42.test_filtered_forward_route'" in source
+    assert 'SET evoke.test_disable_semantic_accelerator = off;' in source
+    assert 'SET evoke.test_force_semantic_bmp = off;' in source
+    assert "'evoke.test_filtered_forward_route'" in source
     assert ":'forward_route'" in source
     assert 'FROM bench.cq3_full_filter_sets' in source
     assert 'WHERE name IN' not in source

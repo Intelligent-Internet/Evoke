@@ -102,8 +102,8 @@ def compare(
     signature = input_signature(baseline)
     if signature != input_signature(variant):
         raise ValueError('baseline and variant evaluation surfaces differ')
-    if signature['route'] != 'ii42_query':
-        raise ValueError('canary must use the native ii42_query route')
+    if signature['route'] != 'evoke_query':
+        raise ValueError('canary must use the native evoke_query route')
 
     baseline_method = one_method(baseline, source=baseline_path)
     variant_method = one_method(variant, source=variant_path)
@@ -167,7 +167,7 @@ def compare(
         },
         'quality_delta': quality_delta,
         'resource_improvement_percent': resource_improvement,
-        'route': 'ii42_query',
+        'route': 'evoke_query',
         'surface_signature': signature,
         'variant': {
             'label': variant_method.get('label'),

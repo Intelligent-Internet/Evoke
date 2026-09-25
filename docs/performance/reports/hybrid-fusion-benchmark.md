@@ -2,7 +2,7 @@
 
 > **Owner-only diagnostic benchmark.** The measured fusion helpers are not
 > granted to `PUBLIC` and are not an application query route. Applications use
-> `ii42_query(...)`.
+> `evoke_query(...)`.
 
 This benchmark validates the first hybrid BM25/vector late-fusion layer on a
 local PostgreSQL 18 instance. The vector side uses synthetic vector-like
@@ -90,7 +90,7 @@ For the API boundary and execution model behind these measurements, see
 [Hybrid Fusion Engine](../../hybrid-fusion-engine.md).
 
 The existing BM25 weighted-query diagnostic remains much faster for BM25-only
-comparisons. Applications use `ii42_query(...)` regardless of whether the
+comparisons. Applications use `evoke_query(...)` regardless of whether the
 index is exact BM25 or semantic-enabled unified posting.
 
 If hybrid search becomes a very high-QPS primary path with candidate pools far

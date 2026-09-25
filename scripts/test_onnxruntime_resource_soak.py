@@ -15,7 +15,7 @@ from typing import Any
 
 import psycopg
 
-from ii42_test_support import extension_control_root
+from evoke_test_support import extension_control_root
 
 
 PG_BIN_DEFAULT = Path('/opt/homebrew/opt/postgresql@18/bin')
@@ -66,7 +66,7 @@ def parse_args() -> argparse.Namespace:
         '--extension-control-dir',
         type=Path,
         help=(
-            'PostgreSQL share directory containing extension/ii42.control, '
+            'PostgreSQL share directory containing extension/evoke.control, '
             'or the extension directory itself.'
         ),
     )
@@ -127,7 +127,7 @@ def pool_rss_sample(
 def runtime_status(dsn: str) -> dict[str, Any]:
     with psycopg.connect(dsn, autocommit=True) as connection:
         with connection.cursor() as cursor:
-            cursor.execute('SELECT ii42_runtime_service_status()')
+            cursor.execute('SELECT evoke_runtime_service_status()')
             return cursor.fetchone()[0]
 
 
@@ -264,13 +264,13 @@ def run_phase(
                     ]
                     cursor.execute(
                         'SELECT '
-                        'ii42_runtime_service_document_atoms_batch'
+                        'evoke_runtime_service_document_atoms_batch'
                         '(%s, %s)',
                         (str(model_path), texts),
                     )
                 else:
                     cursor.execute(
-                        'SELECT ii42_runtime_service_query_atoms(%s, %s)',
+                        'SELECT evoke_runtime_service_query_atoms(%s, %s)',
                         (
                             str(model_path),
                             (
@@ -448,7 +448,7 @@ def main() -> None:
             '--client-counts must contain unique integers from 1 through 256'
         )
 
-    with tempfile.TemporaryDirectory(prefix='ii42_ort_soak_') as tmp:
+    with tempfile.TemporaryDirectory(prefix='evoke_ort_soak_') as tmp:
         root = Path(tmp)
         data_dir = root / 'data'
         socket_dir = root / 'socket'
@@ -461,7 +461,7 @@ def main() -> None:
             'a',
             encoding='utf-8',
         ) as config:
-            config.write("\nshared_preload_libraries = 'ii42'\n")
+            config.write("\nshared_preload_libraries = 'evoke'\n")
             if args.extension_libdir is not None:
                 libdir = str(args.extension_libdir).replace("'", "''")
                 config.write(
@@ -478,12 +478,12 @@ def main() -> None:
                     f'{control_dir}:$system'
                     "'\n"
                 )
-            config.write("ii42.shared_runtime_size = '64MB'\n")
+            config.write("evoke.shared_runtime_size = '64MB'\n")
             config.write(
-                f'ii42.runtime_worker_count = {args.worker_count}\n'
+                f'evoke.runtime_worker_count = {args.worker_count}\n'
             )
             config.write(
-                'ii42.onnxruntime_intra_op_threads = '
+                'evoke.onnxruntime_intra_op_threads = '
                 f'{args.intra_op_threads}\n'
             )
             config.write("listen_addresses = ''\n")
@@ -514,7 +514,7 @@ def main() -> None:
                     'dbname=postgres'
                 )
                 with connection.cursor() as cursor:
-                    cursor.execute('CREATE EXTENSION ii42')
+                    cursor.execute('CREATE EXTENSION evoke')
 
                     def warm_pool(
                         workload: str,
@@ -553,7 +553,7 @@ def main() -> None:
                                 for row in range(row_count)
                             ]
                             function_name = (
-                                'ii42_runtime_service_'
+                                'evoke_runtime_service_'
                                 f'{request_kind}_atoms_batch'
                             )
                             with psycopg.connect(
@@ -648,7 +648,7 @@ def main() -> None:
                         'mixed',
                     )
                 with connection.cursor() as cursor:
-                    cursor.execute('SELECT ii42_runtime_service_status()')
+                    cursor.execute('SELECT evoke_runtime_service_status()')
                     after = cursor.fetchone()[0]
 
             gates = {
