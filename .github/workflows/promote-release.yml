@@ -82,7 +82,7 @@ jobs:
                       .config.Labels["org.opencontainers.image.version"] == $version and
                       .config.Labels["org.opencontainers.image.revision"] == $sha and
                       .config.Labels["org.opencontainers.image.source"] == $repo and
-                      .config.Labels["io.ii42.git-tree-state"] == "clean"
+                      .config.Labels["io.evoke.git-tree-state"] == "clean"
                     ' image.json
 
             - name: Point moving image aliases at the verified manifest

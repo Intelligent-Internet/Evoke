@@ -31,9 +31,9 @@ def test_promotion_rejects_incomplete_or_invalid_release_assets() -> None:
     predicate = match.group(1)
     tag = 'v0.2.5'
     archives = [
-        f'ii42-{tag}-linux-x86_64-pg17.zip',
-        f'ii42-{tag}-linux-x86_64-pg18.zip',
-        f'ii42-{tag}-docker-pg18-linux-x86_64.tar.gz',
+        f'evoke-{tag}-linux-x86_64-pg17.zip',
+        f'evoke-{tag}-linux-x86_64-pg18.zip',
+        f'evoke-{tag}-docker-pg18-linux-x86_64.tar.gz',
     ]
     release = {
         'draft': False,
