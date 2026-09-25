@@ -5,8 +5,8 @@ This page is the default performance entry point for `ii42`.
 ## Current Guides And Dated Evidence
 
 - [Testing and Validation](../testing-and-validation.md): current release gates and reproduction commands.
-- [II-42 System Technical Report (Beta 1)](../technical-report-ii42-system.md): current architecture and engineering evidence.
-- [II-42 Model Technical Report (Beta 1)](../technical-report-ii42-model.md): semantic relevance experiments and their scope.
+- [Evoke System Technical Report (Beta 1)](../technical-report-ii42-system.md): current architecture and engineering evidence.
+- [Evoke Model Technical Report (Beta 1)](../technical-report-ii42-model.md): semantic relevance experiments and their scope.
 - [Maintenance Policy Tuning](maintenance-policy-tuning.md): supported policy choices and current scheduling behavior.
 - [BM25 Page-Native Regression](reports/bm25-page-native-regression-2026-08-18.md): dated lexical regression evidence for the page-native transition.
 - [Mutable Maintenance Benchmarks](mutable-maintenance-benchmarks.md): historical lexical maintenance checkpoint.
@@ -24,7 +24,7 @@ from these different hardware, version, and workload surfaces into one
 like-for-like performance claim.
 
 The 2026-08-26 planner-native Commons qualification snapshot is documented in the
-[Shadow II42 0.2.5 report](reports/csg-beta-natural-search-shadow-2026-08-26.md).
+[Shadow Evoke 0.2.5 report](reports/csg-beta-natural-search-shadow-2026-08-26.md).
 It records an API/exactness/no-regression gate on that deployment, not a replacement
 for the frozen cross-engine matrix below.
 
@@ -40,7 +40,7 @@ The PG18 `15 x 5` BEIR matrix compares:
 
 The `ii42` labels below are normalized names for the earlier `psql_bm25s`
 implementation; raw archives preserve the original engine names and run
-provenance. Renaming a label does not rerun a benchmark against II-42.
+provenance. Renaming a label does not rerun a benchmark against Evoke.
 
 The corresponding current owner-only exact BM25 diagnostic APIs are regression
 anchors, not recommended application entrypoints:

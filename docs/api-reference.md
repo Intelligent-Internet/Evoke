@@ -1,6 +1,6 @@
 # API Reference
 
-II-42 has one index lifecycle and one overloaded `ii42_query(...)` product
+Evoke has one index lifecycle and one overloaded `ii42_query(...)` product
 family. Scalar overloads compose semantic ranking with ordinary table SQL;
 overloads with an explicit `k` return hit rows. Index options select exact BM25
 or the Sparse Semantic Retrieval (SSR) unified-posting path internally.
@@ -79,7 +79,7 @@ LIMIT 20;
 The current path rejects joins, row-dependent marker arguments, ascending or
 secondary ordering, unbounded ranking, row locking, `WITH TIES`, RLS, and
 partitioned-parent global ranking. The marker fails closed if PostgreSQL cannot
-use the II42 custom executor.
+use the Evoke custom executor.
 
 ### Explicit Hit Search
 
@@ -158,7 +158,7 @@ patterns; on a string-array column they match individual elements.
 An eligible same-root scope may rank a bounded published baseline and recheck
 every returned row against the active snapshot. Returned membership is current,
 but the matching universe may omit post-baseline rows and a fully scope-backed
-request may return fewer than `k`. Without an eligible scope, II42 may use a
+request may return fewer than `k`. Without an eligible scope, Evoke may use a
 bounded ranked-prefix probe; if that probe is insufficient, PostgreSQL resolves
 the complete current predicate set and can use ordinary B-tree, GIN, BRIN, or
 suitable trigram/expression indexes. For a nonempty `overlap` operand, the SQL
@@ -329,7 +329,7 @@ page-native v3 root and linked L0.
 DROP INDEX index_name;
 ```
 
-PostgreSQL relation lifecycle is authoritative for both modes. All II-42
+PostgreSQL relation lifecycle is authoritative for both modes. All Evoke
 payloads are owned by the index relation, so there is no semantic side object
 or external cleanup step.
 
@@ -374,14 +374,14 @@ These functions are revoked from `PUBLIC`. Exact BM25 rowset and scoring
 helpers reject `sae = true` indexes. None may become an alternate application
 API.
 Use PostgreSQL `EXPLAIN (FORMAT JSON)` directly when validating planner paths.
-II-42 does not wrap or execute caller-supplied SQL text.
+Evoke does not wrap or execute caller-supplied SQL text.
 
 ## Public Composition APIs
 
 The `ii42_fusion_*` family combines top-k results from multiple independently
-maintained `ii42` indexes. The `ii42_hybrid_*` family combines II-42 candidates
+maintained `ii42` indexes. The `ii42_hybrid_*` family combines Evoke candidates
 with externally retrieved candidates such as vector-index distances. These
-families are granted to `PUBLIC`; each II-42 source still enforces source-table
+families are granted to `PUBLIC`; each Evoke source still enforces source-table
 `SELECT` through `ii42_query(...)`.
 
 Fusion hit rows are keyed by `ctid`, so both `ii42_fusion_*` and `ii42_hybrid_*`

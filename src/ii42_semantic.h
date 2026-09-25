@@ -6,7 +6,7 @@
 #define II42_CHECKOUT_SIGNATURE_HEX_LEN 64
 #define II42_AM_SEMANTIC_SIGNATURE_LEN 32
 /*
- * The persisted checkout manifest still uses the ii42_model_v1 format label.
+ * The persisted checkout manifest still uses the evoke_model_v1 format label.
  * That label is data-format identity, not an internal or public SQL API.
  */
 

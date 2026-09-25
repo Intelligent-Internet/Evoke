@@ -1,17 +1,17 @@
-# II-42
+# Evoke
 
 **The fastest PostgreSQL BM25 engine, now with Sparse Semantic Retrieval
 (SSR) postings in the same index.**
 
 <img width="1500" height="600" alt="commons-banner-github" src="docs/banner.png" />
 
-II-42 leads the measured PostgreSQL BM25 engines in the project's published,
+Evoke leads the measured PostgreSQL BM25 engines in the project's published,
 like-for-like PostgreSQL 18 BEIR comparison. Its default path is an exact,
 high-throughput, PostgreSQL-native BM25 access method. See the
 [PG18 15 x 5 benchmark](docs/performance/README.md) for the measured engines,
 datasets, query shapes, and reproducibility boundary behind this claim.
 
-On top of that BM25 foundation, II-42 fuses Sparse Semantic Retrieval (SSR)
+On top of that BM25 foundation, Evoke fuses Sparse Semantic Retrieval (SSR)
 postings with lexical evidence inside one page-native PostgreSQL index. For
 AI-era RAG, this provides a more convenient, precise, and integrated retrieval
 solution: exact lexical ranking and semantic recall through one SQL interface,
@@ -110,7 +110,7 @@ Project support, contribution, conduct, and security policies are defined in
   run document inference.
 - Shared-runtime model execution; application backends do not own model
   sessions or index-sized semantic state.
-- Public multi-index fusion and II-42/vector hybrid composition above the
+- Public multi-index fusion and Evoke/vector hybrid composition above the
   single-index product path.
 
 ## Semantic Retrieval Model
@@ -131,7 +131,7 @@ P2.1 BEIR15/MTEB10 single-index evidence and documents the known limitations:
 [English](docs/technical-report-ii42-model.md) and
 [Traditional Chinese](docs/technical-report-ii42-model-zh.md).
 
-The frozen [II-42 Model (Beta 1)](https://huggingface.co/Intelligent-Internet/II-42-Model-Beta-1)
+The frozen [Evoke Model (Beta 1)](https://huggingface.co/Intelligent-Internet/Evoke-Model-Beta-1)
 is publicly available on Hugging Face, including the ONNX artifacts, model
 card, license, and checksum-locked build archive. Model weights are not stored
 in this Git repository. Follow the
@@ -143,7 +143,7 @@ is required.
 
 ### Release package
 
-Download the [v0.2.5 Beta release](https://github.com/Intelligent-Internet/II-42/releases/tag/v0.2.5).
+Download the [v0.2.5 Beta release](https://github.com/Intelligent-Internet/Evoke/releases/tag/v0.2.5).
 Linux x86-64 ZIPs are available for PostgreSQL 17 and 18, each with a SHA-256
 checksum file. They include ONNX Runtime 1.29.0 and the frozen default model;
 no separate model checkout is needed to install a release package.
@@ -153,19 +153,19 @@ PostgreSQL major, and dependency ABI. Verify the checksum and compare
 `BUILD-INFO.txt` with the target `pg_config` directories before copying files.
 For a fresh installation, copy the package before starting PostgreSQL. When
 replacing an installation loaded through `shared_preload_libraries`, first
-quiesce II-42 maintenance and stop PostgreSQL; never overwrite `ii42` or its
+quiesce Evoke maintenance and stop PostgreSQL; never overwrite `ii42` or its
 bundled ONNX Runtime beneath a running postmaster. Follow the complete
 [deployment boundary](docs/upgrading.md#deployment-boundary), including the
 required restart and installed-package validation.
 
 ```bash
-shasum -a 256 -c ii42-*.zip.sha256
-unzip ii42-*.zip
-sudo rsync -a ii42-*/ /
+shasum -a 256 -c evoke-*.zip.sha256
+unzip evoke-*.zip
+sudo rsync -a evoke-*/ /
 ```
 
 On Linux, use `sha256sum -c`. Then create the extension in each database that
-will own II-42 indexes:
+will own Evoke indexes:
 
 ```sql
 CREATE EXTENSION ii42;
@@ -173,33 +173,33 @@ CREATE EXTENSION ii42;
 
 This ordinary installation is sufficient. A separate extension schema is
 optional and is mainly useful for custom schema placement or a side-by-side
-[`psql_bm25s` migration](docs/upgrading.md). II-42 is intentionally not
+[`psql_bm25s` migration](docs/upgrading.md). Evoke is intentionally not
 relocatable after creation.
 
 ### Docker
 
-The public PostgreSQL 18 image includes II-42, ONNX Runtime 1.29.0, and the
+The public PostgreSQL 18 image includes Evoke, ONNX Runtime 1.29.0, and the
 frozen default model. No registry login or separate model download is required.
 The published platform is `linux/amd64`; other architectures need emulation
 or a source build. Pin the versioned tag for reproducible deployment;
-`ghcr.io/intelligent-internet/ii-42:pg18` and
-`ghcr.io/intelligent-internet/ii-42:latest` are moving aliases for the same
+`ghcr.io/intelligent-internet/evoke:pg18` and
+`ghcr.io/intelligent-internet/evoke:latest` are moving aliases for the same
 published PostgreSQL 18 image. GitHub Latest points to this release as well;
 the Beta 1 designation describes its product maturity, not a separate GitHub
 pre-release channel.
 
 ```bash
-docker pull ghcr.io/intelligent-internet/ii-42:pg18-v0.2.5
+docker pull ghcr.io/intelligent-internet/evoke:pg18-v0.2.5
 
 read -r -s -p 'PostgreSQL password: ' POSTGRES_PASSWORD
 printf '\n'
 export POSTGRES_PASSWORD
 docker run -d \
-    --name ii42-pg18 \
+    --name evoke-pg18 \
     -e POSTGRES_PASSWORD \
     -p 127.0.0.1:5432:5432 \
-    -v ii42-pg18-data:/var/lib/postgresql \
-    ghcr.io/intelligent-internet/ii-42:pg18-v0.2.5
+    -v evoke-pg18-data:/var/lib/postgresql \
+    ghcr.io/intelligent-internet/evoke:pg18-v0.2.5
 unset POSTGRES_PASSWORD
 ```
 
@@ -211,13 +211,13 @@ offline loading with `docker load`.
 
 To build the image from source instead, first
 [download the default model](docs/examples/semantic-model-checkout.md#download-the-default-model)
-to `.artifacts/ii42-milestone-model`, or pass `--model-checkout` with a validated
+to `.artifacts/evoke-milestone-model`, or pass `--model-checkout` with a validated
 checkout path:
 
 ```bash
 scripts/build_release_docker_image.sh \
     --version 0.2.5 \
-    --image-tag ii42:local-pg18
+    --image-tag evoke:local-pg18
 ```
 
 ### Source build
@@ -305,7 +305,7 @@ semantic-pending document version without running model inference. Shared
 workers later add semantic atoms in bounded batches. Both states are read by
 the same page-native scorer.
 
-See the [II42 quickstart](docs/examples/semantic-index-quickstart.md),
+See the [SSR quickstart](docs/examples/semantic-index-quickstart.md),
 [index parameters](docs/index-parameters.md), and
 [operations guide](docs/examples/semantic-index-operations.md) for advanced
 runtime, model, field, filter, preload, and lifecycle configuration.
@@ -323,8 +323,8 @@ runtime, model, field, filter, preload, and lifecycle configuration.
 | Maintain | `ii42_index_maintain(index)` |
 | Maintain if not busy | `ii42_index_try_maintain(index)` |
 | Maintain due indexes | `ii42_index_maintain_due(max_indexes)` |
-| Compose II-42 indexes | `ii42_fusion_query(...)` |
-| Compose II-42 and vector candidates | `ii42_hybrid_fuse_candidates(...)` |
+| Compose Evoke indexes | `ii42_fusion_query(...)` |
+| Compose Evoke and vector candidates | `ii42_hybrid_fuse_candidates(...)` |
 
 Exact-BM25 rowset and token-level diagnostic helpers remain extension-owner
 surfaces. Runtime inspection and control have separate privileges described in
@@ -405,5 +405,5 @@ and current data, not a documentation-only refresh.
 
 ## License
 
-II-42 is licensed under the [Apache License 2.0](LICENSE). Release packages
+Evoke is licensed under the [Apache License 2.0](LICENSE). Release packages
 also include required third-party notices under `LICENSES/`.

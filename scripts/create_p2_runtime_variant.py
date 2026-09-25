@@ -12,9 +12,9 @@ from pathlib import Path
 from typing import Any
 
 
-MODEL_API_VERSION = 'ii42_model_v1'
+MODEL_API_VERSION = 'evoke_model_v1'
 MODEL_SCHEMA_VERSION = 1
-RUNTIME_ABI = 'ii42_p2_unified_text_atoms_v2'
+RUNTIME_ABI = 'evoke_p2_unified_text_atoms_v2'
 
 
 def parse_args() -> argparse.Namespace:
@@ -103,7 +103,7 @@ def validate_source(source: Path) -> dict[str, Any]:
         or manifest.get('runtime_abi') != RUNTIME_ABI
     ):
         raise ValueError(
-            'source checkout must use the current II-42 model contract',
+            'source checkout must use the current Evoke model contract',
         )
     runtime_output = manifest.get('runtime_output')
     if not isinstance(runtime_output, dict):

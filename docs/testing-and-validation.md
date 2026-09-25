@@ -1,6 +1,6 @@
 # Testing And Validation
 
-II-42 validation is layered so a scorer unit test cannot hide an invalid
+Evoke validation is layered so a scorer unit test cannot hide an invalid
 PostgreSQL lifecycle. Product acceptance uses the installed or explicitly
 staged extension, one page-native index path, the public explicit-hit
 `ii42_query(..., k, ...)` route, and planner-native scalar `ii42_query(...)`
@@ -237,7 +237,7 @@ python3 scripts/test_runtime_service_restart_smoke.py
 These gates require semantic operation to fail closed without the shared
 runtime, enforce privilege boundaries, validate worker restart/liveness, warm
 relation pages through PostgreSQL shared buffers, and retain only bounded
-markers or derived residency in the II-42 arena.
+markers or derived residency in the Evoke arena.
 
 ## Schema And Package Boundaries
 
@@ -274,7 +274,7 @@ python3 scripts/test_psql_bm25s_source_migration_smoke.py \
 
 It keeps both products queryable during side-by-side validation, exercises
 CRUD, and removes the old extension only after result and dependency checks.
-Intermediate II-42 experiment catalogs are not a compatibility target.
+Intermediate Evoke experiment catalogs are not a compatibility target.
 
 ## Restart And Replication
 

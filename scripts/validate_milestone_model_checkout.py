@@ -147,7 +147,7 @@ def validate_checkout(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description='Validate the frozen II-42 milestone model checkout.',
+        description='Validate the frozen Evoke milestone model checkout.',
     )
     parser.add_argument('--checkout', type=Path, required=True)
     parser.add_argument('--lock', type=Path, default=DEFAULT_LOCK)

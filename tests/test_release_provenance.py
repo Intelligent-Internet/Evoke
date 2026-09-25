@@ -32,7 +32,7 @@ def test_release_zip_carries_project_and_runtime_licenses() -> None:
     ).read_text(encoding='utf-8')
 
     assert (REPO_ROOT / 'LICENSE').is_file()
-    assert 'II42-LICENSE' in script
+    assert 'EVOKE-LICENSE' in script
     assert 'ONNXRUNTIME-LICENSE' in script
     assert 'MODEL-LICENSE' in script
     assert 'MILESTONE-MODEL-NOTICE' in script
@@ -177,7 +177,7 @@ def test_docker_release_records_git_provenance() -> None:
         in dockerfile
     )
     assert (
-        'io.ii42.git-tree-state="${II42_GIT_TREE_STATE}"'
+        'io.evoke.git-tree-state="${II42_GIT_TREE_STATE}"'
         in dockerfile
     )
 
@@ -190,7 +190,10 @@ def test_ci_runs_complete_source_syntax_and_python_tests() -> None:
     assert 'python3 -m compileall -q scripts tests' in workflow
     assert "-type f -name '*.sh' -print0" in workflow
     assert 'xargs -0 -n1 bash -n' in workflow
-    assert 'run: python3 -m pytest -q' in workflow
+    assert 'python3 -m pytest -q $(' in workflow
+    assert "! -name 'test_ng*.py'" in workflow
+    assert "! -name 'test_prepare_ng*.py'" in workflow
+    assert "! -name 'test_review_ng*.py'" in workflow
     assert 'workflow_dispatch:' in workflow
 
 

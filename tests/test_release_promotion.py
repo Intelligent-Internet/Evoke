@@ -91,7 +91,7 @@ def test_public_promotion_only_moves_aliases_after_identity_checks() -> None:
     assert 'test "${digest}" = "${EXPECTED_DIGEST}"' in workflow
     assert 'org.opencontainers.image.revision' in workflow
     assert 'org.opencontainers.image.source' in workflow
-    assert 'io.ii42.git-tree-state' in workflow
+    assert 'io.evoke.git-tree-state' in workflow
     assert '--prefer-index=false' in workflow
     assert 'for tag in "pg18-${TAG_NAME}" pg18 latest;' in workflow
     assert '--prerelease=false --latest' in workflow
@@ -103,4 +103,3 @@ def test_public_promotion_only_moves_aliases_after_identity_checks() -> None:
     for forbidden in ('docker build ', 'gh release upload', 'git push',
                       'build_release_zip.sh', 'build_release_docker_image.sh'):
         assert forbidden not in workflow
-

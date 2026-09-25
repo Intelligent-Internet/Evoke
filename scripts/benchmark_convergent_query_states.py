@@ -58,7 +58,7 @@ QUERY_SQL = (
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            'Benchmark exact native II-42 queries across static, '
+            'Benchmark exact native Evoke queries across static, '
             'fragmented, workload-folded, impact-specialized, and '
             'page-native static-reference index states.'
         ),

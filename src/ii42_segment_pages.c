@@ -248,7 +248,7 @@ ii42_segment_recyclable_block_matches(
     return matches;
 }
 
-/* Caller serializes every II-42 FSM claim with the extension lock. */
+/* Caller serializes every Evoke FSM claim with the extension lock. */
 static bool
 ii42_segment_claim_fsm_range(
     Relation index_relation,

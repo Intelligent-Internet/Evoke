@@ -3,11 +3,11 @@
 
 This script keeps the baseline side inside the existing product database:
 
-- BM25 uses the II-42 index through ii42_query.
+- BM25 uses the Evoke index through ii42_query.
 - Dense uses the stored halfvec embeddings and VectorChord/halfvec KNN SQL.
 
 Its output uses the common native retrieval-matrix metric contract so current
-II-42, BM25, and dense rows can be compared without a research evaluator.
+Evoke, BM25, and dense rows can be compared without a research evaluator.
 """
 
 from __future__ import annotations

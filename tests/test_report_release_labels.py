@@ -7,9 +7,9 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 REPORT_HEADINGS = {
     'docs/technical-report-ii42-model.md':
-        '# II-42 Model Technical Report (Beta 1)',
+        '# Evoke Model Technical Report (Beta 1)',
     'docs/technical-report-ii42-model-zh.md':
-        '# II-42 模型技術報告 (Beta 1)',
+        '# Evoke 模型技術報告 (Beta 1)',
     'docs/technical-report-ii42-system.md':
         '## System Technical Report (Beta 1)',
     'docs/technical-report-ii42-system-zh.md':

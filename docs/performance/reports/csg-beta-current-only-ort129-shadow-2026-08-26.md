@@ -20,11 +20,11 @@ recorded as `source-archive`; the build did not depend on an untracked checkout.
 | ONNX Runtime 1.29.0 | `5715f06d8992ca8eeeddcce43df3a7d38f97d537052126f558e912cb312460ca` |
 | `ii42.control` | `ca157ce9a4c1f597137975635928998264ea22fa5d9fa05d2119010eda7ab99b` |
 | Install SQL | `a755eb5d40bd87360a26a2a3c913b74cd9d6e393e540eb76a387a23c51eccdee` |
-| Model manifest | `419e3521eff91bdca149d7014dc71a5cd9538d6904854849056f4f327dd30364` |
+| Model manifest | `b61060a3958ee56209de47a34ee5cbe08351bfeb3fcbbfdcbf477403210764f7` |
 | Document compiler | `9e04d78c9cb14a73dbda4dba66d0e14ce0840d76ff6ab2ff6bdee8e4671cb79f` |
 | Query compiler | `d93d38d1e9d34e26a08b9b87ccf4013a2d7357002c09e797abbe4aea7349f9b3` |
 
-The staged model contained 13 manifest-authorized artifacts and 400,908,109
+The staged model contained 13 manifest-authorized artifacts and 400,908,113
 bytes. An obsolete installed manifest backup was moved into the deployment
 backup. The installed model checkout then matched the package byte-for-byte and
 passed milestone-model validation.

@@ -384,7 +384,7 @@ based on touched-page density, not dataset identity.
 Neighbor expansion is a quality recovery mechanism, not a parallel index.
 The adjacent evidence is
 [SeismicWave](https://arxiv.org/abs/2408.04443), which combines ordered block
-traversal with graph expansion. In II-42, neighbor IDs may only repair a
+traversal with graph expansion. In Evoke, neighbor IDs may only repair a
 measured candidate-coverage loss; they cannot become score authority.
 
 The graph cannot be represented by status counters alone: query-time neighbor

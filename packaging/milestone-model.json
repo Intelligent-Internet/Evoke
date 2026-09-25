@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
-  "bundle_name": "ii42-p2.2-nfcorpus-v2",
+  "bundle_name": "evoke-p2.2-nfcorpus-v2",
   "upstream": {
     "model": "ibm-granite/granite-embedding-30m-sparse",
     "revision": "ad82b1fd09541c998c8d45045d601c51fdb8a9b7",
     "license": "Apache-2.0"
   },
-  "manifest_sha256": "419e3521eff91bdca149d7014dc71a5cd9538d6904854849056f4f327dd30364",
+  "manifest_sha256": "b61060a3958ee56209de47a34ee5cbe08351bfeb3fcbbfdcbf477403210764f7",
   "manifest_contract": {
-    "api_version": "ii42_model_v1",
-    "model_id": "ii42_p2_p22_nfcorpus_v2_smoke",
+    "api_version": "evoke_model_v1",
+    "model_id": "evoke_p2_p22_nfcorpus_v2_smoke",
     "runtime": "onnxruntime",
-    "runtime_abi": "ii42_p2_unified_text_atoms_v2",
+    "runtime_abi": "evoke_p2_unified_text_atoms_v2",
     "model_format": "onnx",
     "encoder_type": "granite_sparse_exact_lexical_unified_postings",
     "latent_dims": 79787
@@ -51,7 +51,7 @@
     },
     "semantic_runtime": {
       "path": "encoder/semantic_runtime.json",
-      "sha256": "fbb34a7b5d86d283eda50f827f747959d27500a61454e9e56debe35827b2dfec"
+      "sha256": "06ee9eb930df77aa87ffd3565803176d0bca163510e4f4aae10a0c2117dc9a6e"
     },
     "tokenizer": {
       "path": "encoder/tokenizer.json",

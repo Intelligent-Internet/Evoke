@@ -1,11 +1,16 @@
-# Migrate From `psql_bm25s`
+# Migrate To Evoke
 
-II42 supports one historical product migration: preserve the source table and
-rebuild a `psql_bm25s` index as a current II42 index.
+Evoke supports one historical product migration: preserve the source table and
+rebuild a `psql_bm25s` index as a current Evoke index.
 
-II42 does not ship beta-to-beta `ALTER EXTENSION` scripts, retired physical
+The public package and repository names are Evoke. The installed SQL extension,
+access method, function namespace, GUC namespace, and on-disk compatibility
+identity remain `ii42` for this release, so migration SQL still creates
+`CREATE EXTENSION ii42` and `USING ii42` indexes.
+
+Evoke does not ship beta-to-beta `ALTER EXTENSION` scripts, retired physical
 format readers, or a chain of intermediate catalog transitions. A current
-package installs one current catalog. An unsupported II42 beta deployment must
+package installs one current catalog. An unsupported Evoke beta deployment must
 preserve its source tables, remove its old indexes and extension catalog, then
 create current indexes from the current package.
 
@@ -15,12 +20,12 @@ Migrate side by side so the old index remains available until the new index is
 validated:
 
 1. Keep the source table, `psql_bm25s` extension, and old index online.
-2. Install the current II42 package on the primary and every physical standby.
-3. Create II42 in a separate schema. The two extensions define some
-   same-signature operators and cannot coexist in one schema.
+2. Install the current Evoke package on the primary and every physical standby.
+3. Create the `ii42` extension in a separate schema. The two extensions define
+   some same-signature operators and cannot coexist in one schema.
 4. Build a new `USING ii42` index over the same source columns.
 5. Compare representative results, CRUD behavior, and operational readiness.
-6. Switch application queries to II42.
+6. Switch application queries to Evoke.
 7. Drop `psql_bm25s` only after the rollback window closes.
 
 ## Install Beside `psql_bm25s`
@@ -91,7 +96,7 @@ cutover semantics and installing a coherent package/runtime on every node.
 
 ## Validate Before Cutover
 
-Check the new index through the II42 schema:
+Check the new index through the Evoke schema:
 
 ```sql
 SELECT ii42_ext.ii42_index_status(
@@ -125,25 +130,25 @@ DROP INDEX old_docs_body_psql_bm25s_idx;
 DROP EXTENSION psql_bm25s;
 ```
 
-Dropping the old extension must not alter source rows or the current II42
+Dropping the old extension must not alter source rows or the current Evoke
 index.
 
-When removing a current II42 index directly, use the ordinary PostgreSQL
+When removing a current Evoke index directly, use the ordinary PostgreSQL
 lifecycle:
 
 ```sql
 DROP INDEX docs_body_ii42_idx;
 ```
 
-## Current-Only II42 Boundary
+## Current-Only Evoke Boundary
 
-There is no supported in-place migration between experimental II42 catalogs or
+There is no supported in-place migration between experimental Evoke catalogs or
 physical generations. Matching `extversion` values do not prove that a binary,
-catalog, and root belong to one package. For an unsupported II42 beta state:
+catalog, and root belong to one package. For an unsupported Evoke beta state:
 
 1. inventory the live source/index topology;
 2. retain the source tables and reviewed creation options;
-3. remove the unsupported II42 indexes and catalog;
+3. remove the unsupported Evoke indexes and catalog;
 4. install one coherent current package; and
 5. recreate and qualify the indexes with the current writer.
 
@@ -176,7 +181,7 @@ Package files, ONNX Runtime, model checkout, and PostgreSQL major must match on
 the primary and every physical standby. WAL replicates relation and catalog
 changes; it does not install host files.
 
-When replacing an II42 binary loaded through `shared_preload_libraries`:
+When replacing an Evoke binary loaded through `shared_preload_libraries`:
 
 1. stop new maintenance admission and allow active work to drain;
 2. stop PostgreSQL;

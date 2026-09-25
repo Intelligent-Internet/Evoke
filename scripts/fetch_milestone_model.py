@@ -69,7 +69,7 @@ def find_checkout(extracted: Path) -> Path:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description='Fetch and validate the frozen II-42 milestone model.',
+        description='Fetch and validate the frozen Evoke milestone model.',
     )
     parser.add_argument('--url', required=True)
     parser.add_argument('--output', type=Path, required=True)

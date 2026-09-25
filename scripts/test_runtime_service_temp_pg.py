@@ -1199,11 +1199,11 @@ def runtime_identity(model_path: Path) -> tuple[str, str, str]:
     )
     if (
         manifest.get('schema_version') != 1
-        or manifest.get('api_version') != 'ii42_model_v1'
-        or manifest.get('runtime_abi') != 'ii42_p2_unified_text_atoms_v2'
+        or manifest.get('api_version') != 'evoke_model_v1'
+        or manifest.get('runtime_abi') != 'evoke_p2_unified_text_atoms_v2'
     ):
         raise ValueError(
-            'runtime service smoke requires the current II-42 model contract'
+            'runtime service smoke requires the current Evoke model contract'
         )
     artifacts = manifest.get('artifacts')
     if not isinstance(artifacts, dict):

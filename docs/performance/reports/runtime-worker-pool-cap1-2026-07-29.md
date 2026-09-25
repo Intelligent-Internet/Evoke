@@ -21,7 +21,7 @@ used as a substitute for inference capacity.
 - PostgreSQL: 18.4.
 - ONNX Runtime: CPU provider, 1.28.0.
 - Checkout:
-  `ii42_p2_p22_nfcorpus_v2_smoke`, 382 MiB on disk.
+  `evoke_p2_p22_nfcorpus_v2_smoke`, 382 MiB on disk.
 - Runtime response slots: 8.
 - Runtime queue slots: 64.
 - Requests per client-count phase: 20 rounds.

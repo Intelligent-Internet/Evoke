@@ -1,4 +1,4 @@
-# II42 v0.2.5 Current-Only Three-Environment Rollout
+# Evoke v0.2.5 Current-Only Three-Environment Rollout
 
 Date: 2026-08-30
 
@@ -139,7 +139,7 @@ user's retain-or-delete decision.
   fp16/U8/A0.50 reloptions, keys, INCLUDE columns, predicates, field-aware
   choices, and preload priorities. All report `query_metadata_warm=true` and
   accelerator `refresh_due=false`; there are no invalid, old-format,
-  candidate, or temporary II42 indexes.
+  candidate, or temporary Evoke indexes.
 - Before this deployment, the warm PubMed production-shaped query averaged
   approximately 5.76 seconds and foreground-merged 33,957 posting blocks,
   245,585 postings, and 51,462 documents from a stale baseline. The new path
@@ -179,7 +179,7 @@ user's retain-or-delete decision.
   runtime accelerators remain disabled. Maintenance limit is restored to 4,
   timer interval to one minute, and periodic low-debt interval to one hour.
   Post-deployment warning logs contain no crash, corruption, replication, or
-  II42 runtime error.
+  Evoke runtime error.
 
 ### Elm
 

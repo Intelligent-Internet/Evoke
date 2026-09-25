@@ -22,7 +22,7 @@ compatible older serving baseline and omit newer additions until convergence.
 Returned rows are still revalidated under the current statement snapshot.
 
 The two- and four-argument scalar `ii42_query(...)` overloads are planner
-markers. They are never evaluated once per row. One II42 `CustomScan` evaluates
+markers. They are never evaluated once per row. One Evoke `CustomScan` evaluates
 ordinary PostgreSQL predicates under the statement snapshot, encodes the query
 once, and returns subset top-k from the same root and scorer used by the
 explicit-hit overloads.
@@ -103,7 +103,7 @@ publishes a new descendant. A later statement sees the then-current committed
 root and visible L0 frontier. Query execution never mixes roots within one
 statement.
 
-II-42 does not retain a historical ranking root for every transaction
+Evoke does not retain a historical ranking root for every transaction
 snapshot. Two statements in one long `REPEATABLE READ` transaction therefore
 keep identical heap visibility but may use different current index roots and
 corpus statistics after concurrent commits. That can change scores or top-k
@@ -132,7 +132,7 @@ or `REINDEX`.
 For `text[]` and `varchar[]`, `document @@ 'query text'` is a boolean
 document-match predicate. It does not carry the corpus-level top-k score.
 
-PostgreSQL already defines `text @@ text`; II-42 does not overload that raw
+PostgreSQL already defines `text @@ text`; Evoke does not overload that raw
 scalar shape. Owner diagnostics can use the prepared-query `@@@` surface.
 
 ### `<=>`
@@ -159,8 +159,8 @@ index's page-native scorer or lifecycle.
 
 Application code should prefer planner-native SQL for one semantic index and
 use `ii42_query(...)` when it explicitly needs hit rows. Use fusion or hybrid
-composition only when the application deliberately combines multiple II-42
-indexes or an II-42 source with another retrieval engine.
+composition only when the application deliberately combines multiple Evoke
+indexes or an Evoke source with another retrieval engine.
 
 ## Weight Masks
 
@@ -189,9 +189,9 @@ LIMIT 20;
 
 PostgreSQL owns predicate parsing, permissions, types, MVCC, and final predicate
 evaluation. When every ANDed predicate is a built-in `=`, `&&`, `>`, `>=`, `<`,
-`<=`, or direct scalar `ILIKE` operation on an II42 `INCLUDE` column, the planner
+`<=`, or direct scalar `ILIKE` operation on an Evoke index `INCLUDE` column, the planner
 can translate it to the scope-posting format stored with the published semantic
-baseline. II42 then runs one same-root filtered request for up to four times
+baseline. Evoke then runs one same-root filtered request for up to four times
 `k`, fetches those rows under the statement snapshot, and evaluates the original
 PostgreSQL qual before returning any row. This avoids materializing a
 corpus-scale visible-TID set for broad supported filters.
@@ -208,7 +208,7 @@ published baseline.
 
 If an expression is unsupported, a predicate column is not in `INCLUDE`, the
 scope artifact is unavailable, or the rechecked probe cannot fill the requested
-limit, II42 discards the probe and falls back to complete visible-TID subset
+limit, Evoke discards the probe and falls back to complete visible-TID subset
 scoring. `EXPLAIN (ANALYZE)` reports scope eligibility, one probe count,
 candidate and matching counts, completion, and fallback. The explicit
 structured-predicate API below uses the same serving-baseline contract.
@@ -247,11 +247,11 @@ route returns the remaining verified rows rather than materializing the complete
 current matching universe. Scope and accelerator refresh improve recall in the
 background without becoming a foreground latency barrier.
 
-When no eligible scope posting is available, II42 first probes the SQL
+When no eligible scope posting is available, Evoke first probes the SQL
 membership resolver with a 65,536-match limit plus one overflow witness. If
 the probe completes within the limit, its TIDs supply the scoring subset. The
 limit bounds collected matches, not scanned heap rows or execution time.
-If the probe overflows, II42 may test a bounded prefix of the ordinary ranked
+If the probe overflows, Evoke may test a bounded prefix of the ordinary ranked
 query when the physical route supports it. A successful prefix has current
 predicate membership; an insufficient or unavailable prefix leads to full SQL
 membership resolution. The prefix is a bounded candidate source, not an exact
@@ -263,17 +263,17 @@ through PostgreSQL under the same statement snapshot. Add ordinary metadata
 indexes where selectivity warrants them, for example B-tree on
 `document_id`/date, GIN on exact category arrays, and trigram/expression indexes
 for selective ILIKE predicates. Those indexes remain PostgreSQL-owned and do
-not create a second II42 generation or worker.
+not create a second Evoke generation or worker.
 For a nonempty `overlap` operand, the resolver also emits the logically implied
 `cardinality(column) > 0` predicate. This preserves membership exactly and lets
 PostgreSQL use a partial array GIN index declared with the same predicate.
 The resolver stores one compact 64-bit key per match; it does not build a SQL
 `tid[]` value. Unknown or broad predicates use a bounded SPI cursor. When a
-same-root scope bitmap supplies a `work_mem`-bounded result ceiling, II42 uses
+same-root scope bitmap supplies a `work_mem`-bounded result ceiling, Evoke uses
 one materialized SPI execution so PostgreSQL can retain a parallel predicate
 plan, then intersects the exact TIDs with the scope bitmap.
 
-An SSR index can place frequently used exact dimensions in the same II42 root:
+An SSR index can place frequently used exact dimensions in the same Evoke root:
 
 ```sql
 CREATE INDEX docs_search_idx
@@ -314,12 +314,12 @@ For the Commons access patterns, use the following physical metadata indexes:
 | publication window | `publish_date` `range` | B-tree or BRIN |
 | partial-date interval overlap | `date_start` `lte` plus `date_end` `gte` | B-tree on both normalized bounds |
 | exact category membership | `categories` `overlap` | GIN array index |
-| fuzzy journal or organization | scalar `ilike` / `ilike_any` | converged II42 scope; `pg_trgm` is the mutable/fallback path |
+| fuzzy journal or organization | scalar `ilike` / `ilike_any` | converged Evoke scope; `pg_trgm` is the mutable/fallback path |
 
 Fuzzy matching over array elements is exact but cannot use an ordinary array
 GIN index. Prefer exact `overlap`; if fuzzy array matching is a frequent
 requirement, expose a normalized scalar/generated metadata column with a
-trigram index. This remains table metadata, not an II42 side index.
+trigram index. This remains table metadata, not an Evoke side index.
 Likewise, expression-heavy partial dates should be normalized into start/end
 metadata columns so two ordinary range predicates remain planner-visible.
 
@@ -358,7 +358,7 @@ index access precedes that step. Each key is resolved through the shared
 projection or durable root child in `O(log N)`, then represented by a compact
 document-slot bitmap. This avoids an `O(N)` corpus scan per filtered query.
 
-When the current semantic forward accelerator is eligible, II42 scores only the
+When the current semantic forward accelerator is eligible, Evoke scores only the
 allowed rows from its bounded int8 forward stream. This preserves exact
 predicate membership and computes top-k inside the subset, but scores follow the
 same bounded-approximate contract as the ordinary default accelerator. Disabling
@@ -488,7 +488,7 @@ RLS, or partitioned-parent use. It never falls back from semantic scoring to a
 different BM25-only route.
 
 PostgreSQL `DROP INDEX` removes the same relation-owned index authority queried
-above, including every II-42 payload.
+above, including every Evoke payload.
 
 See [API Reference](api-reference.md), [Index Policy](index-policy.md), and
 [Semantic Query API](examples/semantic-query-api.md).

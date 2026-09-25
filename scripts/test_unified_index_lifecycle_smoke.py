@@ -39,7 +39,7 @@ def make_owner_writable(path: Path) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            'Validate the unified II-42 index through CREATE, CRUD, VACUUM, '
+            'Validate the unified Evoke index through CREATE, CRUD, VACUUM, '
             'REINDEX, restart, and DROP.'
         ),
     )
@@ -109,11 +109,11 @@ def load_manifest(model_path: Path) -> dict[str, Any]:
     manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
     if (
         manifest.get('schema_version') != 1
-        or manifest.get('api_version') != 'ii42_model_v1'
-        or manifest.get('runtime_abi') != 'ii42_p2_unified_text_atoms_v2'
+        or manifest.get('api_version') != 'evoke_model_v1'
+        or manifest.get('runtime_abi') != 'evoke_p2_unified_text_atoms_v2'
     ):
         raise ValueError(
-            'model is not a current II-42 model contract'
+            'model is not a current Evoke model contract'
         )
     return manifest
 
@@ -4345,7 +4345,7 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
                 and corrupt_status.get('query_ready') is True
                 and corrupt_audit.get('passed') is False
                 and corrupt_audit.get('model_artifacts_valid') is False
-                and 'invalid II-42 runtime model artifact' in (
+                and 'invalid Evoke runtime model artifact' in (
                     corrupt_audit.get('model_artifact_error') or ''
                 )
                 and 'sha256 mismatch' in corrupt_query_error

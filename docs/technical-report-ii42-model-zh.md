@@ -1,9 +1,9 @@
-# II-42 模型技術報告 (Beta 1)
+# Evoke 模型技術報告 (Beta 1)
 
 - 報告修訂日期：2026-09-03
 - 評估快照日期：2026-07-15
 - 狀態：Beta 1
-- 當前套件契約：II-42 v0.2.5 / P2.2 / ABI-v2
+- 當前套件契約：Evoke v0.2.5 / P2.2 / ABI-v2
 - 評估形態：原生單一 unified posting index
 - 對照：BM25、PPLX dense（VectorChord）
 - 固定評估版本：P2.1 / b1.125
@@ -11,7 +11,7 @@
 
 ## 摘要
 
-II-42 模型 Beta 1 建立在 P2.1 learned sparse retrieval 路線及其
+Evoke 模型 Beta 1 建立在 P2.1 learned sparse retrieval 路線及其
 套件化後繼版本 P2.2 之上。它不是把 BM25
 與 ANN 結果做 RRF 或後期 fusion，而是由一個約 30.3M 參數的 sparse
 encoder 生成語義 posting，並把 lexical posting 與 semantic posting
@@ -42,7 +42,7 @@ P2.1 已具備適用於 RAG first-stage retrieval 的強候選生成能力。以
 基礎為起點，下一步品質方向是提升 NDCG、MAP 與 MRR，向 dense 級頭部
 排序品質前進。
 
-本技術報告介紹 II-42 模型 Beta 1，記錄模型設計、
+本技術報告介紹 Evoke 模型 Beta 1，記錄模型設計、
 已測得的檢索品質與評估範圍。P2.1 矩陣提供模型路線固定的品質與延遲基線；
 當前 P2.2 的全矩陣評估及面向工作負載的效能目標是後續方向。具體工作另存於
 [Model Planning](model-planning.md)。
@@ -80,14 +80,14 @@ Beta 1 保留 P2.2 工程識別與 extension 版本 v0.2.5。
 
 | 項目 | Beta 1 套件契約 |
 | --- | --- |
-| Bundle | `ii42-p2.2-nfcorpus-v2` |
-| Model ID | `ii42_p2_p22_nfcorpus_v2_smoke` |
-| Manifest SHA-256 | `419e3521eff91bdca149d7014dc71a5cd9538d6904854849056f4f327dd30364` |
-| Runtime ABI | `ii42_p2_unified_text_atoms_v2` |
+| Bundle | `evoke-p2.2-nfcorpus-v2` |
+| Model ID | `evoke_p2_p22_nfcorpus_v2_smoke` |
+| Manifest SHA-256 | `b61060a3958ee56209de47a34ee5cbe08351bfeb3fcbbfdcbf477403210764f7` |
+| Runtime ABI | `evoke_p2_unified_text_atoms_v2` |
 | ONNX Runtime | 1.29.0，由[依賴鎖定檔](../packaging/onnxruntime.version)指定 |
 
 完全相同的凍結 checkout 已以
-[II-42 Model (Beta 1)](https://huggingface.co/Intelligent-Internet/II-42-Model-Beta-1)
+[Evoke Model (Beta 1)](https://huggingface.co/Intelligent-Internet/Evoke-Model-Beta-1)
 發布於 Hugging Face；取得方式見[固定版本下載與校驗說明](examples/semantic-model-checkout.md#download-the-default-model)。
 此次分發不改變模型身份或實驗證據邊界。
 
@@ -336,7 +336,7 @@ TREC-COVID 三個未見 rows 上通過 transfer 驗證。
 | Query support | top-50 semantic atoms |
 | Document support | top-192 semantic atoms |
 | Candidate depth | 1,000 |
-| Native ABI | `ii42_p2_unified_text_atoms_v1` |
+| Native ABI | `evoke_p2_unified_text_atoms_v1` |
 
 P2.1 原生 runtime parity 已在 1,623 queries 上驗證：atom IDs 全部精確
 一致，impact 使用 absolute tolerance `2e-4`、relative tolerance `2e-2`。
@@ -596,7 +596,7 @@ atoms 仍可能觸及大量 postings，因此 traversal 成本是擴展效能的
 
 ## 12. 結論
 
-II-42 模型 Beta 1 提供原生單索引的 first-stage retriever。
+Evoke 模型 Beta 1 提供原生單索引的 first-stage retriever。
 在固定 P2.1 評估中，約 30.3M 參數 CPU sparse encoder 在兩個完整工程
 評估面上幾乎保留 PPLX dense 的 Recall@100，並取得更高 CUB@1000；
 相對 BM25 的品質改善也廣泛且一致。套件化後繼版本 P2.2 提供當前模型

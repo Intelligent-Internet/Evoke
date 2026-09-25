@@ -1,6 +1,6 @@
 # Getting Started
 
-This is the canonical first-use path for II-42. It starts with the default
+This is the canonical first-use path for Evoke. It starts with the default
 exact BM25 mode, then shows the optional semantic mode. Multicolumn,
 field-aware, filtered, and model-specific choices are linked at the end rather
 than mixed into the basic lifecycle.
@@ -16,7 +16,7 @@ CREATE EXTENSION IF NOT EXISTS ii42;
 
 No separate schema is required for ordinary use. Custom schema placement is
 optional; it is required only for specific deployment layouts such as the
-side-by-side [`psql_bm25s` migration](upgrading.md). II-42 is intentionally
+side-by-side [`psql_bm25s` migration](upgrading.md). Evoke is intentionally
 not relocatable after creation.
 
 ## 2. Create A Table And BM25 Index
@@ -154,7 +154,7 @@ an explicit whole-corpus rebuild:
 REINDEX INDEX docs_semantic_idx;
 ```
 
-PostgreSQL owns teardown. Every II-42 payload is relation-owned, so ordinary
+PostgreSQL owns teardown. Every Evoke payload is relation-owned, so ordinary
 `DROP INDEX` removes the complete index without sidecar cleanup:
 
 ```sql

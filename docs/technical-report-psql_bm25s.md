@@ -7,7 +7,7 @@ current semantic-performance claim. A revised report requires a deliberately
 rerun experiment matrix and current raw artifacts.
 
 For the independent Beta 1 successor covering the complete BM25 plus Sparse Semantic Retrieval (SSR) system, read the
-[II-42 System Technical Report](technical-report-ii42-system.md). Historical
+[Evoke System Technical Report](technical-report-ii42-system.md). Historical
 measurements and implementation descriptions below retain their original scope;
 they are not current operating instructions.
 
@@ -113,9 +113,9 @@ These two ideas are central to the lexical foundation described in this report:
 - BM25 retrieval preserves exact score and top-k semantics;
 - the hot path uses sparse access rather than SQL/SPI scoring.
 
-The later II-42 semantic accelerator is a different, bounded-candidate execution
+The later Evoke semantic accelerator is a different, bounded-candidate execution
 contract. Its design and separately dated qualification evidence belong to the
-[II-42 system report](technical-report-ii42-system.md), not to the lexical
+[Evoke system report](technical-report-ii42-system.md), not to the lexical
 benchmark results in this historical report.
 
 ### 2.3 Variant support and non-occurrence adjustments

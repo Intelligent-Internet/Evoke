@@ -20,10 +20,10 @@ product path.
 | `ii42_index_maintain(regclass)` | Perform one blocking maintenance attempt. |
 | `ii42_index_try_maintain(regclass)` | Skip a busy maintenance lock; an admitted maintenance action can still take time. |
 | `ii42_index_maintain_due(integer)` | Maintain a bounded set of due owned indexes. |
-| `ii42_fusion_query(...)` | Search and weight multiple independent II-42 indexes. |
-| `ii42_fusion_query_fields(...)` | Compose named, weighted II-42 sources. |
-| `ii42_hybrid_bm25_candidates(...)` | Adapt an II-42 source to hybrid candidates. |
-| `ii42_hybrid_fuse_candidates(...)` | Fuse II-42 and external candidate sets. |
+| `ii42_fusion_query(...)` | Search and weight multiple independent Evoke indexes. |
+| `ii42_fusion_query_fields(...)` | Compose named, weighted Evoke sources. |
+| `ii42_hybrid_bm25_candidates(...)` | Adapt an Evoke source to hybrid candidates. |
+| `ii42_hybrid_fuse_candidates(...)` | Fuse Evoke and external candidate sets. |
 
 SSR is eventual-only. Single-index functions act on one page-native v3 index
 relation; composition functions combine independently maintained sources above

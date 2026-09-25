@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-# ORT 1.29 can emit POSIX telemetry when its build enables that feature. II42
+# ORT 1.29 can emit POSIX telemetry when its build enables that feature. Evoke
 # runtime workers disable it unless the operator explicitly opted in.
 export ORT_DISABLE_TELEMETRY=${ORT_DISABLE_TELEMETRY:-1}
 

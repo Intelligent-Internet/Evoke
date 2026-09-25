@@ -3456,7 +3456,7 @@ AS $$
 $$;
 
 COMMENT ON FUNCTION ii42_catalog_contract_internal() IS
-'Return the current-only II-42 extension catalog contract.';
+'Return the current-only Evoke extension catalog contract.';
 
 CREATE FUNCTION ii42_query_trace_internal()
 RETURNS jsonb

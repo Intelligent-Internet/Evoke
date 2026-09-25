@@ -1,6 +1,6 @@
 # Connection Memory And Prewarming
 
-II-42 separates durable index state, shared execution state, and query-local
+Evoke separates durable index state, shared execution state, and query-local
 scratch:
 
 ```text
@@ -45,7 +45,7 @@ and private dirty/anonymous memory when diagnosing connection growth.
 | Setting | Default | Meaning |
 | --- | ---: | --- |
 | `ii42.workspace_cache_bytes` | `32MB` | Maximum completed-query workspace retained by one backend and admission bound for the no-shared-runtime BM25 fallback or explicit BM25 `weight_mask` snapshot. |
-| `ii42.workspace_idle_timeout` | `60s` | Idle interval before retained workspace is released on the backend's next II-42 use. |
+| `ii42.workspace_idle_timeout` | `60s` | Idle interval before retained workspace is released on the backend's next Evoke use. |
 
 `workspace_cache_bytes = 0` releases workspace after every query and disables
 both snapshot paths. `-1` removes the general workspace-retention cap but does
@@ -78,7 +78,7 @@ The relevant postmaster settings are:
 | `ii42.runtime_reserve_query_lane` | `on` | Reserve one runtime lane for foreground queries; disable only for controlled offline rebuilds. |
 | `ii42.runtime_max_batch_size` | `128` | Local runtime text batch limit and default remote service batch cap. This is a deployment throughput knob, not model identity. |
 | `ii42.runtime_document_pipeline_depth` | `16` | Builder-level active document runtime batches per backend, from 1 through 4096. Effective depth is capped by the sum of the local runtime outstanding window and configured remote accelerator `weight` windows. Completed batches may retire out of order into a bounded reorder buffer before the builder applies them to the index in original sequence order. |
-| `ii42.runtime_accelerators` | `[]` | JSON array of optional remote II-42 runtime services. Service objects accept optional positive integer `weight` as a per-service outstanding request window hint from 1 through 4096 and optional positive integer `max_batch_size` as that service's request cap; a service without `weight` starts as one schedulable slot, and shared accelerator metrics are capped at 64 services. |
+| `ii42.runtime_accelerators` | `[]` | JSON array of optional remote Evoke runtime services. Service objects accept optional positive integer `weight` as a per-service outstanding request window hint from 1 through 4096 and optional positive integer `max_batch_size` as that service's request cap; a service without `weight` starts as one schedulable slot, and shared accelerator metrics are capped at 64 services. |
 | `ii42.runtime_liveness_timeout` | `5min` | Per-run liveness guard for local runtime execution and already-submitted remote accelerator requests; `0` disables it. Remote connect/send I/O still uses short transport timeouts. |
 | `ii42.control_database` | `postgres` | Optional override for the stable, connectable database used for runtime initialization and cluster maintenance discovery. |
 | `ii42.onnxruntime_session_cache_size` | `1` | Sessions retained per worker; `0` releases after each request. |

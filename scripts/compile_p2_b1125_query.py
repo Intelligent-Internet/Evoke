@@ -83,15 +83,15 @@ def load_contract(checkout: Path) -> dict[str, Any]:
     manifest = read_json(checkout / 'manifest.json')
     if (
         manifest.get('schema_version') != 1
-        or manifest.get('api_version') != 'ii42_model_v1'
+        or manifest.get('api_version') != 'evoke_model_v1'
     ):
-        raise ValueError('checkout is not a current II-42 model contract')
+        raise ValueError('checkout is not a current Evoke model contract')
     supported_checkout = (
         manifest.get('model_format') == 'offline_p2_m1934_compiler'
         or (
             manifest.get('model_format') == 'onnx'
             and manifest.get('runtime_abi')
-            == 'ii42_p2_unified_text_atoms_v2'
+            == 'evoke_p2_unified_text_atoms_v2'
         )
     )
     if not supported_checkout:

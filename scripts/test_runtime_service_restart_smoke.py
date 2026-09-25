@@ -21,7 +21,7 @@ from test_runtime_service_temp_pg import runtime_service_sql, run
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description='Run the II-42 shared runtime-service restart smoke.',
+        description='Run the Evoke shared runtime-service restart smoke.',
     )
     parser.add_argument(
         '--pg-bin',
@@ -287,12 +287,12 @@ def main() -> None:
         )
         if (
             manifest.get('schema_version') != 1
-            or manifest.get('api_version') != 'ii42_model_v1'
+            or manifest.get('api_version') != 'evoke_model_v1'
             or manifest.get('runtime_abi')
-            != 'ii42_p2_unified_text_atoms_v2'
+            != 'evoke_p2_unified_text_atoms_v2'
         ):
             raise ValueError(
-                '--model-path must use the current II-42 model contract'
+                '--model-path must use the current Evoke model contract'
             )
 
         started = False

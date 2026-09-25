@@ -9,32 +9,32 @@ same contract and can be selected per index without replacing package files.
 ## Download The Default Model
 
 The current checkout is published as
-[II-42 Model (Beta 1)](https://huggingface.co/Intelligent-Internet/II-42-Model-Beta-1)
+[Evoke Model (Beta 1)](https://huggingface.co/Intelligent-Internet/Evoke-Model-Beta-1)
 under the Intelligent Internet organization on Hugging Face. It is the same
 P2.2 ABI-v2 content pinned by
 [`packaging/milestone-model.json`](../../packaging/milestone-model.json), not a
 new model revision. The model weights are intentionally excluded from Git.
 Public downloads do not require an account, token, or model-access approval.
 
-From the II-42 repository root, download the immutable archive and validate it:
+From the Evoke repository root, download the immutable archive and validate it:
 
 ```bash
-model_repo='Intelligent-Internet/II-42-Model-Beta-1'
-model_revision='acb98f0109157366d7a57e4f38eb254d605a165a'
-model_archive='ii42-p2.2-nfcorpus-v2.zip'
-model_sha256='eae9bb2d03af12aea45b3de126c24db59abb81365edb77c4211d6a0717c79965'
+model_repo='Intelligent-Internet/Evoke-Model-Beta-1'
+model_revision='ee17e24a5f8eede1c9ac098b1f8bf637c32d9f07'
+model_archive='evoke-p2.2-nfcorpus-v2.zip'
+model_sha256='ab5cd4b2a1fec10c70113d2997c6ce070caa34cf7a74c114b7ab48d81643cd98'
 model_url="https://huggingface.co/${model_repo}/resolve/${model_revision}/${model_archive}"
 
 python3 scripts/fetch_milestone_model.py \
     --url "$model_url" \
     --archive-sha256 "$model_sha256" \
-    --output .artifacts/ii42-milestone-model
+    --output .artifacts/evoke-milestone-model
 python3 scripts/validate_milestone_model_checkout.py \
-    --checkout .artifacts/ii42-milestone-model
+    --checkout .artifacts/evoke-milestone-model
 ```
 
-The archive is 187,596,025 bytes (about 179 MiB); the extracted checkout is
-400,908,109 bytes (about 382 MiB). Validation checks the ZIP SHA-256, manifest
+The archive is 187,596,050 bytes (about 179 MiB); the extracted checkout is
+400,908,113 bytes (about 382 MiB). Validation checks the ZIP SHA-256, manifest
 SHA-256, all 13 artifact digests, model/runtime contract, and exact file
 inventory before publishing the local directory. The fetcher refuses an
 existing output by default: validate it instead, or use a new output path.
@@ -42,11 +42,14 @@ Do not overwrite a model checkout used by a running PostgreSQL instance.
 
 This path is the default input to `scripts/build_release_zip.sh` and
 `scripts/build_release_docker_image.sh`. An alternate validated location can
-be selected using `--model-checkout` or `II42_MILESTONE_MODEL_CHECKOUT`.
+be selected using `--model-checkout` or `EVOKE_MILESTONE_MODEL_CHECKOUT`.
+The legacy `II42_MILESTONE_MODEL_CHECKOUT` variable is still accepted during
+the transition.
 See [Contributing](../../CONTRIBUTING.md#release-automation) for release builds.
 For GitHub Actions, use the value of `model_url` above for
-`II42_MILESTONE_MODEL_URL` and `model_sha256` for
-`II42_MILESTONE_MODEL_ARCHIVE_SHA256`; neither is a secret.
+`EVOKE_MILESTONE_MODEL_URL` and `model_sha256` for
+`EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256`; neither is a secret. The old `II42_*`
+repository variables remain fallback inputs until all jobs are migrated.
 
 The Hub also exposes individual files under `checkout/` and an `hf download`
 example in its model card. Do not pass the entire Hub repository, or a local
@@ -59,7 +62,7 @@ inventory. Use the archive fetcher above to obtain a clean directory.
 The default checkout contains:
 
 ```text
-ii42-milestone-model/
+evoke-milestone-model/
   manifest.json
   encoder/
     semantic_document_compiler.onnx
@@ -106,7 +109,7 @@ administrator-owned absolute path before creating SSR indexes:
 ```conf
 shared_preload_libraries = 'ii42'
 ii42.shared_runtime_size = '64MB'
-ii42.sae_model_path = '/absolute/path/to/ii42-milestone-model'
+ii42.sae_model_path = '/absolute/path/to/evoke-milestone-model'
 ```
 
 The directory must be readable by PostgreSQL and not writable by application

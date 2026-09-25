@@ -65,7 +65,7 @@ offline SDK, pass `--onnxruntime-prefix`; the script validates that prefix
 against the repository pin before compiling.
 
 `II42_ENABLE_ONNXRUNTIME=0` is reserved for explicit lexical-only diagnostics
-and CI coverage; such a binary cannot serve SAE query encoding and must not be
+and CI coverage; such a binary cannot serve SSR query encoding and must not be
 deployed to a query-serving PostgreSQL instance.
 
 For Homebrew PostgreSQL 18 on macOS, that often looks like:
@@ -144,19 +144,23 @@ For query/API changes, also run the relevant isolated PostgreSQL regressions.
 ## Release Automation
 
 Release ZIPs and Docker images always carry the frozen milestone checkout.
-Download [II-42 Model (Beta 1)](https://huggingface.co/Intelligent-Internet/II-42-Model-Beta-1)
+Download [Evoke Model (Beta 1)](https://huggingface.co/Intelligent-Internet/Evoke-Model-Beta-1)
 using the [pinned public archive instructions](docs/examples/semantic-model-checkout.md#download-the-default-model).
 Public downloads require no Hugging Face login or token. The model is not
 needed for C compilation, but it is required for these complete release
-artifacts and for running SAE indexes after a source-only install.
+artifacts and for running SSR indexes after a source-only install.
 
-Provide it with `--model-checkout`, `II42_MILESTONE_MODEL_CHECKOUT`, or the
-ignored local path `.artifacts/ii42-milestone-model`. The builder validates
+Provide it with `--model-checkout`, `EVOKE_MILESTONE_MODEL_CHECKOUT`, or the
+ignored local path `.artifacts/evoke-milestone-model`. The legacy
+`II42_MILESTONE_MODEL_CHECKOUT` variable is still accepted during the
+transition. The builder validates
 `packaging/milestone-model.json`, every artifact digest, runtime ABI,
 and exact file inventory before staging it under PostgreSQL's shared-data
 directory. GitHub release workflows fetch the same archive from the protected
-`II42_MILESTONE_MODEL_URL` repository variable and optionally verify
-`II42_MILESTONE_MODEL_ARCHIVE_SHA256` before the content-level validation.
+`EVOKE_MILESTONE_MODEL_URL` repository variable and optionally verify
+`EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256` before the content-level validation.
+The legacy `II42_*` variable names remain fallback inputs while external
+repository settings are migrated.
 
 The 382 MiB checkout is deliberately not stored in ordinary Git history.
 Changing the milestone requires a reviewed lock update, full native lifecycle
@@ -170,13 +174,14 @@ python3 scripts/validate_milestone_model_checkout.py \
     --checkout /path/to/milestone-checkout
 python3 scripts/build_milestone_model_archive.py \
     --checkout /path/to/milestone-checkout \
-    --output dist/ii42-p2.2-nfcorpus-v2.zip
+    --output dist/evoke-p2.2-nfcorpus-v2.zip
 ```
 
-For the current milestone, set `II42_MILESTONE_MODEL_URL` to the commit-pinned
-Hugging Face ZIP URL and `II42_MILESTONE_MODEL_ARCHIVE_SHA256` to the archive
+For the current milestone, set `EVOKE_MILESTONE_MODEL_URL` to the commit-pinned
+Hugging Face ZIP URL and `EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256` to the archive
 digest in the [download instructions](docs/examples/semantic-model-checkout.md#download-the-default-model).
-These are public repository variables, not credentials. For a future
+These are public repository variables, not credentials. Keep the legacy
+`II42_*` variables in sync until all active workflows have migrated. For a future
 milestone, publish and validate its immutable ZIP before changing these
 variables. Release jobs fail closed if the archive digest or its content-level
 lock does not match. A fork must set its own release-workflow variables; the
@@ -192,7 +197,7 @@ Current release line:
 - validated artifact formats:
   - `.zip`
   - a PostgreSQL 18 Docker archive and the container image
-    `ghcr.io/intelligent-internet/ii-42`
+    `ghcr.io/intelligent-internet/evoke`
 
 Automation model in this development repository:
 
@@ -202,7 +207,7 @@ Automation model in this development repository:
   18 Docker image as a dry run
 - tag pushes or manual dispatches repeat the same release dry run
 - a successful release-branch dry run can sync the validated source tree to
-  the public [Intelligent-Internet/II-42](https://github.com/Intelligent-Internet/II-42) repository
+  the public [Intelligent-Internet/Evoke](https://github.com/Intelligent-Internet/Evoke) repository
 - this development repository does not publish release artifacts; the public
   repository builds and publishes them using its separately maintained workflows
 
@@ -222,7 +227,7 @@ Current workflows:
   - validates the same package and Docker surfaces before public sync
 - `Sync Public Repository`
   - runs only after a successful release-branch dry run and matching CI
-  - targets `Intelligent-Internet/II-42` (renamed from `psql_bm25s`) and requires
+  - targets `Intelligent-Internet/Evoke` and requires
     `PUBLIC_REPO_SYNC_TOKEN` with write access to that repository
   - remains disabled unless the repository variable
     `PUBLIC_REPO_SYNC_ENABLED` is exactly `true`
@@ -235,7 +240,7 @@ The current release practice is:
 1. Merge validated changes to `main`.
 2. Review the complete current install catalog, then bump its version with
    `scripts/bump_extension_version.py`. The package contains only that current
-   install SQL; it does not carry transitions between II-42 beta versions.
+   install SQL; it does not carry transitions between Evoke beta versions.
 3. Fast-forward or merge `main` into `release` and require CI plus the
    release-branch dry run to pass.
 4. Validate public-repository access and the sync enable variable before source
@@ -255,7 +260,7 @@ The current release practice is:
 6. Public `Release` repeats CI for the tag, builds PostgreSQL 17/18 Linux ZIPs
    with the pinned ORT SDK and model, smoke-tests the PostgreSQL 18 Docker image,
    and publishes ZIPs, the Docker archive, and checksums as GitHub Release assets.
-   The image is first pushed to `ghcr.io/intelligent-internet/ii-42` with the
+   The image is first pushed to `ghcr.io/intelligent-internet/evoke` with the
    versioned tag `pg18-v<version>`. Only after all assets are published does
    `Promote Release` verify the complete asset inventory, source commit, and
    image digest, then point `pg18` and `latest` at the same manifest and set

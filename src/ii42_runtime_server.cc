@@ -53,7 +53,7 @@ constexpr int LISTEN_BACKLOG = 1024;
 constexpr size_t DEFAULT_MAX_REQUEST_BYTES = 8U << 20;
 constexpr size_t RUNTIME_TRANSPORT_MAX_BYTES = 1U << 20;
 constexpr const char *JSON_CONTENT_TYPE = "application/json";
-constexpr const char *RUNTIME_ABI = "ii42_p2_unified_text_atoms_v2";
+constexpr const char *RUNTIME_ABI = "evoke_p2_unified_text_atoms_v2";
 constexpr const char *BPE_PATTERN =
     "'s|'t|'re|'ve|'m|'ll|'d| ?\\p{L}+| ?\\p{N}+|"
     " ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+";

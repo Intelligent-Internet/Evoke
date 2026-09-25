@@ -28,7 +28,7 @@ MILESTONE_MODEL_LOCK = REPO_ROOT / 'packaging/milestone-model.json'
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description='Run the II-42 unified-index product maturity suite.',
+        description='Run the Evoke unified-index product maturity suite.',
     )
     parser.add_argument('--pg-bin', type=Path, default=DEFAULT_PG_BIN)
     parser.add_argument('--output', type=Path, default=DEFAULT_OUTPUT)
@@ -187,7 +187,7 @@ def inspect_package_metadata(
 ) -> tuple[list[dict[str, Any]], list[str]]:
     paths = {
         'README.md': package_root / 'README.md',
-        'II42-LICENSE': package_root / 'LICENSES/II42-LICENSE',
+        'EVOKE-LICENSE': package_root / 'LICENSES/EVOKE-LICENSE',
         'ONNXRUNTIME-LICENSE': (
             package_root / 'LICENSES/ONNXRUNTIME-LICENSE'
         ),
@@ -208,7 +208,7 @@ def inspect_package_metadata(
 
     expected = {
         'README.md': REPO_ROOT / 'README.md',
-        'II42-LICENSE': REPO_ROOT / 'LICENSE',
+        'EVOKE-LICENSE': REPO_ROOT / 'LICENSE',
     }
     for artifact in artifacts:
         expected_path = expected.get(str(artifact['name']))
@@ -410,7 +410,7 @@ def extension_sql_artifacts(
     if actual_sql != expected_sql:
         raise ValueError(
             'staged extension directory must contain exactly one current '
-            'install SQL and no II42 beta upgrade scripts; expected '
+            'install SQL and no Evoke beta upgrade scripts; expected '
             f'{[path.name for path in expected_sql]}, found '
             f'{[path.name for path in actual_sql]}'
         )

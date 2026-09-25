@@ -1,4 +1,4 @@
-# II-42 aarch64 GPU direct runtime image
+# Evoke aarch64 GPU direct runtime image
 
 This image is the Spark accelerator shape: it runs only the direct
 `ii42-runtime-server` process. It does not start PostgreSQL, does not install
@@ -39,8 +39,8 @@ docker build \
     -f packaging/docker/runtime-gpu-aarch64/Dockerfile \
     --build-context ii42_gpu_rootfs=/tmp/ii42-gpu-rootfs \
     --build-context ii42_onnxruntime_headers=/path/to/onnxruntime-1.29.0 \
-    --build-context ii42_milestone_model=/path/to/ii42-milestone-model \
-    -t ii42-runtime-gpu:direct-cuda13 \
+    --build-context ii42_milestone_model=/path/to/evoke-milestone-model \
+    -t evoke-runtime-gpu:direct-cuda13 \
     .
 ```
 
@@ -51,7 +51,7 @@ the runtime libraries in `ii42_gpu_rootfs`.
 Run the image with NVIDIA container runtime:
 
 ```bash
-docker run -d --name ii42-runtime-gpu --gpus all --ipc=host \
+docker run -d --name evoke-runtime-gpu --gpus all --ipc=host \
     -p 18042:8042 \
     -e II42_CHECKOUT_SIGNATURE="$CHECKOUT_SIGNATURE" \
     -e II42_HTTP_WORKER_COUNT=8 \
@@ -59,7 +59,7 @@ docker run -d --name ii42-runtime-gpu --gpus all --ipc=host \
     -e II42_MAX_BATCH_SIZE=128 \
     -e II42_MAX_DELAY_MS=5 \
     -e II42_MAX_REQUEST_BYTES=67108864 \
-    ii42-runtime-gpu:direct-cuda13
+    evoke-runtime-gpu:direct-cuda13
 ```
 
 `II42_CHECKOUT_SIGNATURE` is required. The direct service intentionally has no

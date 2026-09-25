@@ -348,7 +348,7 @@ def main() -> int:
             )
 
     manifest = {
-        'abi': 'ii42_p2_semantic_onnx_v2',
+        'abi': 'evoke_p2_semantic_onnx_v2',
         'artifacts': {
             name: {
                 'path': name,

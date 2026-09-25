@@ -107,11 +107,11 @@ def load_manifest(model_path: Path) -> dict[str, Any]:
     manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
     if (
         manifest.get('schema_version') != 1
-        or manifest.get('api_version') != 'ii42_model_v1'
+        or manifest.get('api_version') != 'evoke_model_v1'
         or manifest.get('runtime_abi')
-        != 'ii42_p2_unified_text_atoms_v2'
+        != 'evoke_p2_unified_text_atoms_v2'
     ):
-        raise ValueError('model is not a current II-42 model contract')
+        raise ValueError('model is not a current Evoke model contract')
     return manifest
 
 

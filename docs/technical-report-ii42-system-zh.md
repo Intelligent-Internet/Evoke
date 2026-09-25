@@ -1,4 +1,4 @@
-# II-42：PostgreSQL 中的統一稀疏檢索與收斂式索引
+# Evoke：PostgreSQL 中的統一稀疏檢索與收斂式索引
 
 ## 系統技術報告 (Beta 1)
 
@@ -8,9 +8,9 @@
 
 ### 摘要
 
-II-42 是 PostgreSQL 檢索引擎，在 `psql_bm25s` 的詞法檢索基礎上加入模型產生的稀疏語意證據。它不是把 BM25、向量資料庫與融合服務放在各自獨立的更新管線後面，而是將詞法與語意 atom 表示在同一個由資料庫 relation 擁有的倒排索引中。PostgreSQL 繼續負責交易、資料列可見性、故障恢復與索引生命週期；模型將文字編譯為稀疏貢獻值，索引則讓這些貢獻值可被查詢及持續維護。
+Evoke 是 PostgreSQL 檢索引擎，在 `psql_bm25s` 的詞法檢索基礎上加入模型產生的稀疏語意證據。它不是把 BM25、向量資料庫與融合服務放在各自獨立的更新管線後面，而是將詞法與語意 atom 表示在同一個由資料庫 relation 擁有的倒排索引中。PostgreSQL 繼續負責交易、資料列可見性、故障恢復與索引生命週期；模型將文字編譯為稀疏貢獻值，索引則讓這些貢獻值可被查詢及持續維護。
 
-系統的核心問題是：當文件、語料統計與衍生查詢結構不斷變化時，如何維持高效讀取。II-42 使用不可變 posting 物件、寫入時複製（copy-on-write，COW）中繼資料、經驗證的根節點發布、有界的變更前沿、可重用的 term fold，以及獨立更新的語意加速器。背景 worker 處理新證據時，相容且已發布的加速器仍可繼續服務。這讓前台服務的連續性與背景收斂分離，同時明確區分近似排名的新鮮度與當前資料列的可見性。
+系統的核心問題是：當文件、語料統計與衍生查詢結構不斷變化時，如何維持高效讀取。Evoke 使用不可變 posting 物件、寫入時複製（copy-on-write，COW）中繼資料、經驗證的根節點發布、有界的變更前沿、可重用的 term fold，以及獨立更新的語意加速器。背景 worker 處理新證據時，相容且已發布的加速器仍可繼續服務。這讓前台服務的連續性與背景收斂分離，同時明確區分近似排名的新鮮度與當前資料列的可見性。
 
 本報告將架構、算分模型、儲存協定、執行路徑與實驗證據整理為完整系統敘事。凍結的 P2.1 品質評估在 BEIR15 與 MTEB10 上分別達到 0.666885 與 0.703125 的 macro Recall@100，接近對應 dense 參考值 0.670880 與 0.707213。歷史詞法回歸研究將 5,183 篇文件的 SciFact 平均查詢時間恢復至 0.448 ms，原始 `psql_bm25s` 記錄為 0.454 ms。這些是版本與口徑分開的實驗，不是對目前 P2.2 套件所有功能重新執行的一次綜合基準測試。
 
@@ -18,9 +18,9 @@ II-42 是 PostgreSQL 檢索引擎，在 `psql_bm25s` 的詞法檢索基礎上加
 
 ## 1. 範圍、沿革與主要貢獻
 
-原有的[詞法技術報告](technical-report-psql_bm25s.md)記錄 BM25 基礎與早期可變索引工程；獨立的[模型技術報告](technical-report-ii42-model-zh.md)說明模型編譯、校準與詳細品質結果。本報告將兩者連接到目前的 II-42 系統，不覆蓋其中任何一份文件。
+原有的[詞法技術報告](technical-report-psql_bm25s.md)記錄 BM25 基礎與早期可變索引工程；獨立的[模型技術報告](technical-report-ii42-model-zh.md)說明模型編譯、校準與詳細品質結果。本報告將兩者連接到目前的 Evoke 系統，不覆蓋其中任何一份文件。
 
-BM25 基礎承接 eager sparse scoring 的思路：預先準備 term 貢獻值，再使用稀疏累加，減少重複的查詢時計算。[BM25S](https://arxiv.org/abs/2407.03618) 將此方法用於 Python 稀疏矩陣。交易型 PostgreSQL 引擎還必須處理語料統計變化、tuple 版本消失、讀寫競爭與崩潰恢復。因此，II-42 將預計算視為可重用的證據表示，而不是永遠不再變動的整體語料矩陣。
+BM25 基礎承接 eager sparse scoring 的思路：預先準備 term 貢獻值，再使用稀疏累加，減少重複的查詢時計算。[BM25S](https://arxiv.org/abs/2407.03618) 將此方法用於 Python 稀疏矩陣。交易型 PostgreSQL 引擎還必須處理語料統計變化、tuple 版本消失、讀寫競爭與崩潰恢復。因此，Evoke 將預計算視為可重用的證據表示，而不是永遠不再變動的整體語料矩陣。
 
 目前實作的主要貢獻包括：
 
@@ -34,7 +34,7 @@ BM25 基礎承接 eager sparse scoring 的思路：預先準備 term 貢獻值�
 
 ## 2. 系統架構與產品介面
 
-II-42 提供單一 PostgreSQL access method：`USING ii42`。預設 `sae = false` 模式提供精確 BM25；設為 `sae = true` 時，合格模型將語意 atom 加入同一索引。本文以 Sparse Semantic Retrieval（SSR）指稱產品層的稀疏語意檢索路徑；`sae` reloption 保留為目前 SQL/catalog 名稱，SAE 則保留給 encoder／vocabulary 機制與歷史實驗名稱。
+Evoke 提供單一 PostgreSQL access method：`USING ii42`。預設 `sae = false` 模式提供精確 BM25；設為 `sae = true` 時，合格模型將語意 atom 加入同一索引。本文以 Sparse Semantic Retrieval（SSR）指稱產品層的稀疏語意檢索路徑；`sae` reloption 保留為目前 SQL/catalog 名稱，SAE 則保留給 encoder／vocabulary 機制與歷史實驗名稱。
 
 ```text
                          PostgreSQL application
@@ -51,7 +51,7 @@ II-42 提供單一 PostgreSQL access method：`USING ii42`。預設 `sae = false
                                |
                          ranked table rows
 
-  +------------------- one II42 index relation -------------------+
+  +------------------- one Evoke index relation -------------------+
   | checked root -> COW manifest / term / document / lexicon trees |
   | lexical + semantic postings | linked L0 | folds | accelerators |
   +--------------------------------------------------------------+
@@ -100,7 +100,7 @@ L_t(d)=\mathrm{idf}_t\,
 
 省略的全域 $(k_1+1)$ 乘數不會改變固定參數下的詞法排名，但在校準詞法與語意的相對尺度時仍有意義，因此模型／索引契約必須固定此慣例。歷史模型評估採用 $k_1=1.5$ 與 $b=0.75$；其他支援的 BM25 變體見原始報告。
 
-II-42 區分詞頻等**中性證據**與**依統計特化的 impact**。中性 fold 可以跨越語料統計變化繼續使用；特化的 impact fold 則必須匹配其 statistics epoch。如此保留 eager scoring 的收益，又不必在每次 $N$、 $df_t$ 或平均長度改變時重寫全部 posting。
+Evoke 區分詞頻等**中性證據**與**依統計特化的 impact**。中性 fold 可以跨越語料統計變化繼續使用；特化的 impact fold 則必須匹配其 statistics epoch。如此保留 eager scoring 的收益，又不必在每次 $N$、 $df_t$ 或平均長度改變時重寫全部 posting。
 
 ### 3.2 語意 Atom 與統一算分
 
@@ -164,15 +164,15 @@ S_{fields}(q,d)=\sum_f a_f S_f(q,d).
 
 | 身分 | 數值 |
 | --- | --- |
-| Bundle | `ii42-p2.2-nfcorpus-v2` |
-| Model ID | `ii42_p2_p22_nfcorpus_v2_smoke` |
-| Runtime ABI | `ii42_p2_unified_text_atoms_v2` |
-| Manifest SHA-256 | `419e3521eff91bdca149d7014dc71a5cd9538d6904854849056f4f327dd30364` |
+| Bundle | `evoke-p2.2-nfcorpus-v2` |
+| Model ID | `evoke_p2_p22_nfcorpus_v2_smoke` |
+| Runtime ABI | `evoke_p2_unified_text_atoms_v2` |
+| Manifest SHA-256 | `b61060a3958ee56209de47a34ee5cbe08351bfeb3fcbbfdcbf477403210764f7` |
 | ONNX Runtime | `1.29.0` |
 
-完全相同的凍結 checkout 已發布為 [II-42 Model (Beta 1)](https://huggingface.co/Intelligent-Internet/II-42-Model-Beta-1)。[下載指南](examples/semantic-model-checkout.md#download-the-default-model)固定 revision 與 archive checksum；此次分發不改變模型或歷史評估身分。
+完全相同的凍結 checkout 已發布為 [Evoke Model (Beta 1)](https://huggingface.co/Intelligent-Internet/Evoke-Model-Beta-1)。[下載指南](examples/semantic-model-checkout.md#download-the-default-model)固定 revision 與 archive checksum；此次分發不改變模型或歷史評估身分。
 
-上游 checkpoint 為 `ibm-granite/granite-embedding-30m-sparse`，revision 為 `ad82b1fd09541c998c8d45045d601c51fdb8a9b7`。約 30.3M 參數提供了緊湊的稀疏檢索基礎；上游模型家族與訓練方法見 [Granite Embedding Models](https://arxiv.org/abs/2502.20204)。II-42 的本地工作集中在編譯、校準、發布與系統整合，不應與從零訓練基礎模型混為一談。
+上游 checkpoint 為 `ibm-granite/granite-embedding-30m-sparse`，revision 為 `ad82b1fd09541c998c8d45045d601c51fdb8a9b7`。約 30.3M 參數提供了緊湊的稀疏檢索基礎；上游模型家族與訓練方法見 [Granite Embedding Models](https://arxiv.org/abs/2502.20204)。Evoke 的本地工作集中在編譯、校準、發布與系統整合，不應與從零訓練基礎模型混為一談。
 
 P2.2 採用確定性的 ABI-v2 分窗，編譯完整 query 與 document 文字。套件中的詞法詞彙表與校準以 NFCorpus 凍結。這使工程文字路徑超出歷史 P2.1 單序列評估的範圍，但本身不等於已取得新的長文件或跨領域基準結果。
 
@@ -394,7 +394,7 @@ A\cap\mathrm{TopK}\{S(q,d):d\in D\}.
 
 即使 overfetch，差異仍可能存在，尤其當 scorer 或候選策略依賴選定 scope。只檢查每個返回結果都符合 predicate，並沒有驗證過濾後的排名品質。
 
-II-42 由合格的 `INCLUDE` 欄位建構 same-root scope metadata。支援的 planner predicate 包括直接 AND 組合的相等、overlap、range 與可准入的 `ILIKE` 形狀。Structured JSON filter 也可重用相容且已發布的 scope baseline。兩者均重新檢查當前資料列 membership，並可依近似契約暫時漏掉 baseline 之後的新命中。
+Evoke 由合格的 `INCLUDE` 欄位建構 same-root scope metadata。支援的 planner predicate 包括直接 AND 組合的相等、overlap、range 與可准入的 `ILIKE` 形狀。Structured JSON filter 也可重用相容且已發布的 scope baseline。兩者均重新檢查當前資料列 membership，並可依近似契約暫時漏掉 baseline 之後的新命中。
 
 Fallback 契約明確區分不同路線：planner-native 在 scope 路徑不可用或不合適時，可以使用完整的 visible TID 集；完全由 scope 支援的 structured 請求，在收斂期間可以返回少於 k 筆，而不自動建立完整 matching universe。其他 structured 請求先執行上限 65,536 筆匹配加一筆溢出見證的 SQL membership probe；若完整取得匹配集合，便使用該 TID 集。若溢出，可嘗試有界 global rank-prefix 准入，再回退完整 SQL resolution。匹配數上限並不限制掃描列數或執行時間。因此，「所有 filter 都必須 exact-current 列舉」與「所有 filter 都不需列舉」都不能代表目前產品。完整 overload 規則見 [Query Semantics](query-semantics.md)。
 
@@ -471,10 +471,10 @@ Shared runtime 容量、page prewarm I/O budget 與 exact resident-fold 准入�
 | --- | --- | ---: | ---: | ---: |
 | BEIR15 | BM25 | 0.374297 | 0.562964 | 0.735619 |
 | BEIR15 | PPLX dense / VectorChord | 0.544873 | 0.670880 | 0.810525 |
-| BEIR15 | II42 P2.1 | 0.490809 | 0.666885 | 0.839658 |
+| BEIR15 | Evoke P2.1 | 0.490809 | 0.666885 | 0.839658 |
 | MTEB10 | BM25 | 0.383554 | 0.595367 | 0.777387 |
 | MTEB10 | PPLX dense / VectorChord | 0.544127 | 0.707213 | 0.841063 |
-| MTEB10 | II42 P2.1 | 0.503440 | 0.703125 | 0.875910 |
+| MTEB10 | Evoke P2.1 | 0.503440 | 0.703125 | 0.875910 |
 
 相對於 BM25 到 dense 的 Recall@100 提升，P2.1 在兩組評估上都取得約 96.3% 的增益：
 
@@ -530,7 +530,7 @@ O@100 衡量與 exact top-100 的重疊，不是 qrels recall。對應 artifact 
 
 可重現的混合負載實驗應記錄暖查唯讀基線、平行 reader 控制組、持續寫入加維護，以及寫入停止後的排空階段。需一起取樣 query p50／p95／最大值、結果及分數品質、source／serving generation、L0／semantic debt、worker action、已處理 byte、I/O、記憶體與磁碟增長。健康系統可以有受控抖動及短暫較舊的排名；只有 readiness 無法證明 worker 持續前進，也不能證明查詢工作量穩定。
 
-PostgreSQL 負責 `DROP INDEX` 清理與索引 page 的實體複寫；standby 仍需配置匹配的外部模型／runtime artifact。Logical replication 傳遞資料列，不傳遞實體 II42 索引。目前支援範圍不含 RLS-backed search 與全域排名的 partitioned-parent index；parallel heap build、parallel AM scan 與 parallel VACUUM discovery 也是後續工程方向。當前邊界與安裝細節見 [README](../README.md) 及 [Migration](upgrading.md)。
+PostgreSQL 負責 `DROP INDEX` 清理與索引 page 的實體複寫；standby 仍需配置匹配的外部模型／runtime artifact。Logical replication 傳遞資料列，不傳遞實體 Evoke 索引。目前支援範圍不含 RLS-backed search 與全域排名的 partitioned-parent index；parallel heap build、parallel AM scan 與 parallel VACUUM discovery 也是後續工程方向。當前邊界與安裝細節見 [README](../README.md) 及 [Migration](upgrading.md)。
 
 ## 11. 改進方向
 
@@ -546,7 +546,7 @@ PostgreSQL 負責 `DROP INDEX` 清理與索引 page 的實體複寫；standby �
 
 ## 12. 結論與審閱索引
 
-II-42 的工程主張是：詞法與學習式稀疏檢索不只可以共用分數累加器，也可以共用交易型儲存與維護設計。COW 讓不可變證據得以重用，有界前沿局部化一般變更工作；worker 獨立編譯語意證據及準備衍生讀取結構；經驗證的發布讓新結構上線，而不必先拆除舊的服務路徑。
+Evoke 的工程主張是：詞法與學習式稀疏檢索不只可以共用分數累加器，也可以共用交易型儲存與維護設計。COW 讓不可變證據得以重用，有界前沿局部化一般變更工作；worker 獨立編譯語意證據及準備衍生讀取結構；經驗證的發布讓新結構上線，而不必先拆除舊的服務路徑。
 
 既有實驗建立了具體階段成果：受控回歸 fixture 上的詞法效率、良好的稀疏語意候選召回、衍生執行器的延遲改善，以及降低的中繼資料放大。下一個評估重點是目前套件模型在真實混合負載下的整體行為。適當的成功標準，是收斂過程中持續提供有用排名與可預測的資源使用，而不只是一個快速的唯讀快照，或所有狀態欄位都顯示正常。
 
@@ -561,4 +561,4 @@ II-42 的工程主張是：詞法與學習式稀疏檢索不只可以共用分�
 | 加速器 | [Builder](../src/ii42_am_accelerator.c)、[directory](../src/ii42_semantic_accelerator_directory.c)、[forward format](../src/ii42_semantic_forward.c)、[執行證據](performance/reports/semantic-accelerator-bounded-execution.md) |
 | 並發與准入 | [Lifecycle](maintenance-lifecycle.md)、[scheduler](../src/ii42_am_scheduler.c)、[validation](testing-and-validation.md) |
 
-外部基礎文獻：[BM25S](https://arxiv.org/abs/2407.03618)、[Granite Embedding Models](https://arxiv.org/abs/2502.20204)，以及 PostgreSQL 的 [index access-method](https://www.postgresql.org/docs/18/indexam.html) 和 [extension WAL](https://www.postgresql.org/docs/18/wal-for-extensions.html) 文件。外部工作的貢獻各自歸屬於原作者；上述 II-42 性能數字來自連結的專案實驗證據，而不是這些論文。
+外部基礎文獻：[BM25S](https://arxiv.org/abs/2407.03618)、[Granite Embedding Models](https://arxiv.org/abs/2502.20204)，以及 PostgreSQL 的 [index access-method](https://www.postgresql.org/docs/18/indexam.html) 和 [extension WAL](https://www.postgresql.org/docs/18/wal-for-extensions.html) 文件。外部工作的貢獻各自歸屬於原作者；上述 Evoke 性能數字來自連結的專案實驗證據，而不是這些論文。

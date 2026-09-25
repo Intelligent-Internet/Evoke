@@ -74,14 +74,17 @@ fi
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [ -z "$model_checkout" ]; then
-    model_checkout="${II42_MILESTONE_MODEL_CHECKOUT:-}"
+    model_checkout="$(
+        printf '%s' \
+            "${EVOKE_MILESTONE_MODEL_CHECKOUT:-${II42_MILESTONE_MODEL_CHECKOUT:-}}"
+    )"
 fi
 if [ -z "$model_checkout" ]; then
-    model_checkout="${repo_root}/.artifacts/ii42-milestone-model"
+    model_checkout="${repo_root}/.artifacts/evoke-milestone-model"
 fi
 if [ ! -d "$model_checkout" ]; then
     echo "milestone model checkout not found: ${model_checkout}" >&2
-    echo 'pass --model-checkout or set II42_MILESTONE_MODEL_CHECKOUT' >&2
+    echo 'pass --model-checkout or set EVOKE_MILESTONE_MODEL_CHECKOUT' >&2
     exit 1
 fi
 model_checkout="$(cd "$model_checkout" && pwd)"
@@ -174,7 +177,7 @@ pg_version="$("$pg_config" --version | awk '{print $2}')"
 pg_major="${pg_version%%.*}"
 pg_version_text="$("$pg_config" --version)"
 pg_sharedir="$("$pg_config" --sharedir)"
-package_name="ii42-v${version}-${os_name}-${arch}-pg${pg_major}"
+package_name="evoke-v${version}-${os_name}-${arch}-pg${pg_major}"
 dist_dir="${repo_root}/dist"
 stage_dir="${dist_dir}/${package_name}"
 zip_path="${dist_dir}/${package_name}.zip"
@@ -283,7 +286,7 @@ if [ -z "$runtime_license" ]; then
     exit 1
 fi
 cp "$runtime_license" "${stage_dir}/LICENSES/ONNXRUNTIME-LICENSE"
-cp "$project_license" "${stage_dir}/LICENSES/II42-LICENSE"
+cp "$project_license" "${stage_dir}/LICENSES/EVOKE-LICENSE"
 cp "$project_license" "${stage_dir}/LICENSES/MODEL-LICENSE"
 cp "${repo_root}/packaging/MILESTONE-MODEL-NOTICE" \
     "${stage_dir}/LICENSES/MILESTONE-MODEL-NOTICE"

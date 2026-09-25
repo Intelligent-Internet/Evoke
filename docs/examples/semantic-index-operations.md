@@ -1,6 +1,6 @@
 # Semantic Index Operations
 
-An `sae = true` index is one page-native II-42 relation. Lexical and semantic
+An `sae = true` index is one page-native Evoke relation. Lexical and semantic
 atoms share one checked root, linked L0, scorer, mutation lifecycle, and
 maintenance authority.
 

@@ -2,7 +2,7 @@
 
 ## Our Standards
 
-II-42 contributors, maintainers, and users must participate in a respectful,
+Evoke contributors, maintainers, and users must participate in a respectful,
 professional, and inclusive manner. Constructive technical disagreement is
 welcome. Harassment, discrimination, threats, personal attacks, doxxing, and
 deliberate disruption are not acceptable.

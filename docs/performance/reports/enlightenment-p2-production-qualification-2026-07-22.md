@@ -205,9 +205,9 @@ concurrent writer plus `REINDEX INDEX CONCURRENTLY` test passed all 8 gates in
 5.65 seconds.
 
 Controlled restarts of the system PostgreSQL service took 111 to 136 seconds.
-Most of each interval was existing `psql_bm25s` preload work rather than II-42
+Most of each interval was existing `psql_bm25s` preload work rather than Evoke
 startup. The PostgreSQL service journal has no warning-or-higher entries after
-the final restart. In the accepted final-v2 stable window, the II-42 runtime
+the final restart. In the accepted final-v2 stable window, the Evoke runtime
 completed 1,487 of 1,487 requests with zero failures, zero worker recoveries,
 and queue depth no higher than 7.
 

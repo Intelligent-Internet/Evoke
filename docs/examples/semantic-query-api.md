@@ -11,7 +11,7 @@ ORDER BY score DESC
 LIMIT 20;
 ```
 
-The scalar `ii42_query(...)` overload above is a planner marker. One II42
+The scalar `ii42_query(...)` overload above is a planner marker. One Evoke
 `CustomScan` evaluates the
 ordinary relation predicate, encodes once, and ranks only the matching rows
 through the same unified root and scorer. It does not evaluate the model once
@@ -93,7 +93,7 @@ cannot attach stale model output to a replaced document version.
 - Internal semantic encoder/scorer functions remain revoked from `PUBLIC`.
 - Exact-BM25 operators and diagnostics do not dispatch to semantic scoring.
 
-Teardown uses PostgreSQL `DROP INDEX`; all II-42 payloads are relation-owned.
+Teardown uses PostgreSQL `DROP INDEX`; all Evoke payloads are relation-owned.
 
 See [API Reference](../api-reference.md) and
 [Query Semantics](../query-semantics.md).

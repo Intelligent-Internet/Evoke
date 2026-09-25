@@ -1,6 +1,6 @@
 # Architecture
 
-II-42 is one PostgreSQL access method with one relation-owned lifecycle. It can
+Evoke is one PostgreSQL access method with one relation-owned lifecycle. It can
 store exact BM25 postings or a unified lexical/semantic posting space, but it
 does not split those modes into separate services, indexes, or APIs.
 
@@ -329,7 +329,7 @@ The default reserved query lane keeps document work from taking every runtime
 lane when multiple workers are available, but does not isolate host CPU or I/O.
 
 Shared-arena admission, page warming, and per-backend workspace limits are
-separate budgets. Warming a relation does not copy all its pages into II-42's
+separate budgets. Warming a relation does not copy all its pages into Evoke's
 shared arena, and increasing a workspace budget does not shrink on-disk data.
 
 ## Correctness Boundaries

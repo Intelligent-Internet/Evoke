@@ -85,4 +85,4 @@ DROP INDEX docs_semantic_idx;
 - [Query Semantics](../query-semantics.md) covers natural ranked SQL,
   filtering, explicit-hit search, and current query limits.
 - [Migration](../upgrading.md) covers the only historical product migration:
-  `psql_bm25s` to current II42.
+  `psql_bm25s` to current Evoke.

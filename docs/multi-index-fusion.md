@@ -14,7 +14,7 @@ Each source contributes only its retrieved candidate prefix. Increasing
 a document below every source's cutoff can still have a high combined score.
 
 The public `ii42_fusion_*` APIs combine candidates from multiple independent
-II-42 indexes. This is a product composition layer above single-index search;
+Evoke indexes. This is a product composition layer above single-index search;
 it does not change the storage, mutation, maintenance, or scorer of any source
 index.
 

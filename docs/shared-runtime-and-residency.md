@@ -1,6 +1,6 @@
 # Shared Runtime And Residency
 
-II-42 keeps durable index authority in PostgreSQL relation pages. Shared memory
+Evoke keeps durable index authority in PostgreSQL relation pages. Shared memory
 owns bounded execution and acceleration state only.
 
 ## Ownership
@@ -42,7 +42,7 @@ weights are flattened into one native accumulation, so selecting or weighting
 fields does not create a second cache or a per-field backend snapshot.
 
 The BM25-only `weight_mask` compatibility argument is intentionally outside the
-ordinary dispatcher: the mask itself spans every document slot. II-42 admits
+ordinary dispatcher: the mask itself spans every document slot. Evoke admits
 that explicit operation only when the physical index fits the finite positive
 `ii42.workspace_cache_bytes` budget together with any other active fallback
 snapshot; otherwise it fails instead of silently materializing unbounded
@@ -77,7 +77,7 @@ Every runtime worker can retain its own bounded session cache.
 By default, `ii42.runtime_reserve_query_lane = on` keeps one worker/response
 lane available for foreground query execution. Controlled offline rebuilds may
 turn it off to let document encoding fill the configured worker pool.
-`ii42.runtime_accelerators` accepts a JSON array of optional remote II-42
+`ii42.runtime_accelerators` accepts a JSON array of optional remote Evoke
 runtime services. An empty array uses only the local runtime. Non-empty arrays
 declare additive services for document build and maintenance batches: the
 existing async build pipeline sends compatible batches to the currently best
@@ -252,7 +252,7 @@ SELECT ii42_index_preload('docs_search_idx'::regclass);
 GUC accepts GB-scale arenas. A deployment can use `1GB`, `8GB`, or more when
 selected resident indexes and host RAM justify it. Shared memory is reserved at
 postmaster start, so size from measured resident-fold bytes plus runtime state
-and leave explicit PostgreSQL and operating-system headroom. II-42 does not
+and leave explicit PostgreSQL and operating-system headroom. Evoke does not
 silently admit every small index: `auto_preload > 0` is the operator's durable
 selection and priority policy; an explicit preload is the one-shot equivalent.
 When all selected folds do not fit, a relation may evict only a lower-priority
@@ -373,7 +373,7 @@ Restart and standby replay reconstruct all warm state from relation pages.
 Standbys may warm replayed pages but perform no primary-side durable
 maintenance while in recovery.
 
-Every node serving semantic queries needs a compatible II-42 package, the
+Every node serving semantic queries needs a compatible Evoke package, the
 pinned ONNX Runtime contract, and the same effective immutable model checkout.
 Verify installed binaries for each platform. Node-local provider and capacity
 settings may differ with hardware; the model/format contract must not.

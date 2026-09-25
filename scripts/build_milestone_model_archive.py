@@ -94,7 +94,7 @@ def archive_checkout(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description='Build the deterministic II-42 milestone model asset.',
+        description='Build the deterministic Evoke milestone model asset.',
     )
     parser.add_argument('--checkout', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)

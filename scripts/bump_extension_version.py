@@ -11,7 +11,7 @@ import sys
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description='Version the single current II-42 install catalog.',
+        description='Version the single current Evoke install catalog.',
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--version')

@@ -5750,8 +5750,8 @@ ii42_am_init_gucs(void)
     );
     DefineCustomStringVariable(
         "ii42.runtime_accelerators",
-        "Configures optional II-42 remote inference accelerator services.",
-        "JSON array of service objects. Each service must expose the II-42 "
+        "Configures optional Evoke remote inference accelerator services.",
+        "JSON array of service objects. Each service must expose the Evoke "
         "runtime server API and reject requests whose checkout signature does "
         "not match the configured model. Optional per-service max_batch_size "
         "sets that service's request batch cap; optional weight sets its "
@@ -7451,7 +7451,7 @@ ii42_am_semantic_builder_load_contract(
         runtime_signature = computed_runtime_signature;
     }
     if (runtime_abi == NULL ||
-        strcmp(runtime_abi, "ii42_p2_unified_text_atoms_v2") != 0)
+        strcmp(runtime_abi, "evoke_p2_unified_text_atoms_v2") != 0)
     {
         ereport(
             ERROR,

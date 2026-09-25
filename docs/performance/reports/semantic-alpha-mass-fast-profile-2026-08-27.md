@@ -2,7 +2,7 @@
 
 ## Decision
 
-II-42 retains `semantic_alpha_mass = 1.0` as the exact default and exposes
+Evoke retains `semantic_alpha_mass = 1.0` as the exact default and exposes
 values below `1.0` only as an explicit approximate index profile. The current
 qualified fast candidate is `0.50`.
 

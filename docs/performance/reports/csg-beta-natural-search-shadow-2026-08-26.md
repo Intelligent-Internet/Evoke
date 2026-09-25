@@ -28,7 +28,7 @@ inputs to the existing unified scorer.
 | Linux PG18 package | `95ec8d3e8b0638fade6633957d056bdb1565851d9dd65117f6f7fe2d42ebe7b6` |
 | `ii42.so` | `2962ab00227737dcaeead42dffd7642d07fec51aa221b16c085b93bc9dec6eae` |
 | ONNX Runtime 1.29.0 | `5715f06d8992ca8eeeddcce43df3a7d38f97d537052126f558e912cb312460ca` |
-| Model manifest | `419e3521eff91bdca149d7014dc71a5cd9538d6904854849056f4f327dd30364` |
+| Model manifest | `b61060a3958ee56209de47a34ee5cbe08351bfeb3fcbbfdcbf477403210764f7` |
 | Installed 0.2.5 SQL | `229a6db7538a1b359764fe4f7960a2e04ab77350309572a3c9b08daa1abd67d0` |
 
 The package is based on commit

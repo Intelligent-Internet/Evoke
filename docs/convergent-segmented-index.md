@@ -4,7 +4,7 @@ Status: current Beta 1 implementation design.
 
 Design version: 1.60. Reviewed against the source tree on 2026-09-04.
 
-This document is the current design authority for II-42 storage, mutation,
+This document is the current design authority for Evoke storage, mutation,
 query, and maintenance. It describes one PostgreSQL index relation containing
 BM25 evidence and optional Sparse Semantic Retrieval (SSR) semantic postings,
 with one checked publication lineage. It is not a deployment inventory or a
@@ -594,7 +594,7 @@ leave orphan physical pages, but must not expose a partially checked closure.
 Prepared transactions, aborts, and heap visibility remain PostgreSQL concerns.
 
 Readers pin an accepted read root for their operation. That is not a promise
-that a repeatable-read transaction keeps a historical II-42 physical root for
+that a repeatable-read transaction keeps a historical Evoke physical root for
 its entire lifetime. Visible tuple versions and current root compatibility
 must still satisfy the supported snapshot contract.
 
@@ -669,7 +669,7 @@ volatile state but does not remove compatible durable acceleration.
 
 ## Migration And Beta Boundaries
 
-- The historical product migration is `psql_bm25s` to a current II-42 index
+- The historical product migration is `psql_bm25s` to a current Evoke index
   built from source data. Experimental intermediate beta formats are not a
   general compatibility target.
 - An SQL/API-only deployment with a compatible native root need not rebuild
@@ -693,7 +693,7 @@ establish its currently loaded binary, catalog, model, or root state.
 ### Design Rationale And Research Context
 
 The earlier design's research context remains useful. These references explain
-mechanisms considered by II-42, not adoption of another complete engine or
+mechanisms considered by Evoke, not adoption of another complete engine or
 transfer of its benchmark guarantees:
 
 | Reference | Design connection |
@@ -701,12 +701,12 @@ transfer of its benchmark guarantees:
 | [Fast, Incremental Inverted Indexing](https://arxiv.org/abs/1305.0699) | Grouped posting fragments and locality instead of continual whole-index replacement |
 | [Efficient Immediate-Access Dynamic Indexing](https://arxiv.org/abs/2211.06030) | Separate immediate searchable ingestion from later read-shape collation |
 | [Immediate-Access Indexing for LSR](https://jmmackenzie.io/pdf/rm26-ecir.pdf) | Dynamic learned-sparse postings and the importance of pruning/read optimization |
-| [Block-Max Pruning for Learned Sparse Retrieval](https://arxiv.org/abs/2405.01117) | Representation-aware block bounds; II-42 retains its own visibility and storage contract |
+| [Block-Max Pruning for Learned Sparse Retrieval](https://arxiv.org/abs/2405.01117) | Representation-aware block bounds; Evoke retains its own visibility and storage contract |
 | [Geometric Partitioning](https://doi.org/10.1145/1099554.1099739) | Geometrically sized merge work rather than rewriting a large prefix for every small update |
 | [Tantivy](https://github.com/quickwit-oss/tantivy) and [Lucene TieredMergePolicy](https://lucene.apache.org/core/10_4_0/core/org/apache/lucene/index/TieredMergePolicy.html) | Immutable publication and selected segment merging, not per-segment result fusion |
 | [dLSM](https://arxiv.org/abs/1606.02015) and [HotRAP](https://www.usenix.org/conference/atc25/presentation/qiu) | Stable read surfaces and finer-grained hotness, distinct from volatile cache residency |
 | [LSM Compaction Design Space](https://arxiv.org/abs/2202.04522) | Separate trigger, layout, granularity, and movement policy |
-| [SILK](https://www.usenix.org/conference/atc19/presentation/balmau) | Foreground latency depends on background scheduling; its preemption model is not an implemented II-42 resource-isolation guarantee |
+| [SILK](https://www.usenix.org/conference/atc19/presentation/balmau) | Foreground latency depends on background scheduling; its preemption model is not an implemented Evoke resource-isolation guarantee |
 | [REMIX](https://www.usenix.org/conference/fast21/presentation/zhong) | Logical order across immutable fragments rather than one physical contiguous array |
 
 ### Preserved Design Evidence

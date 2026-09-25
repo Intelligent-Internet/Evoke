@@ -1,19 +1,19 @@
 # Changelog
 
 This changelog records the public product lineage, not every
-internal research milestone or intermediate II-42 tag.
+internal research milestone or intermediate Evoke tag.
 
 The product has two generations in this release lineage:
 
 1. `psql_bm25s` `v0.4.11` is the first public prerelease baseline.
-2. II-42 `0.2.5` is the second generation, documented as **Beta 1**.
+2. Evoke `0.2.5` is the second generation, documented as **Beta 1**.
 
 The version number was reset when the extension, access method, package,
 library, SQL namespace, and configuration namespace changed from
-`psql_bm25s` to `ii42`. Intermediate II-42 tags belong to the development of
+`psql_bm25s` to `ii42`. Intermediate Evoke tags belong to the development of
 the second generation; they are not separate product baselines in this file.
 
-## [II-42 0.2.5] - 2026-09-04
+## [Evoke 0.2.5] - 2026-09-04
 
 Status: published as Beta 1 under the `v0.2.5` tag and promoted to the default
 GitHub Latest release on 2026-09-08. Beta 1 describes product maturity; the
@@ -22,6 +22,10 @@ The public release includes PostgreSQL 17 and 18
 Linux x86-64 packages and a PostgreSQL 18 Docker image, with ONNX Runtime
 1.29.0 and the frozen default model. The `v0.2.5-rc1` tag is an earlier
 candidate snapshot, not the published Beta 1 package.
+As part of the public brand transition, current release ZIPs, Docker image
+names, repository names, and model-card references use Evoke. The SQL
+extension, access method, shared library, function namespace, GUC namespace,
+and on-disk compatibility identity remain `ii42` for this release.
 
 Comparison baseline: [`psql_bm25s` `v0.4.11`], released on 2026-05-11.
 This section describes user-visible differences from that baseline.
@@ -42,7 +46,7 @@ This section describes user-visible differences from that baseline.
   `ii42_query_ids(...)` and `ii42_query_tokens(...)`, as BM25 regression and
   benchmark anchors.
 - Kept the BM25 `@@` and `<=>` operator surfaces for supported index shapes,
-  with II-42 types and operator classes replacing the old prefixed objects.
+  with Evoke types and operator classes replacing the old prefixed objects.
 - Kept transactional `INSERT`, indexed-column `UPDATE`, `DELETE`, rollback,
   crash recovery, and PostgreSQL physical-replication requirements.
 - Kept `realtime`, `eventual`, and `manual` BM25 consistency policies and
@@ -52,14 +56,14 @@ This section describes user-visible differences from that baseline.
 
 - Renamed the product and every installation boundary from `psql_bm25s` to
   `ii42`: extension, access method, shared library, SQL types and functions,
-  operator classes, package names, and GUCs. II-42 does not install aliases in
-  the old namespace.
+  operator classes, and GUCs. Evoke does not install aliases in the old
+  namespace.
 - Made the overloaded `ii42_query(...)` family the recommended application
   retrieval surface. Explicit-`k` overloads return hit rows; scalar overloads
   support planner-native ranked SQL. Owner-only exact BM25 diagnostic
   functions remain available for regression and benchmark isolation.
 - Added scope-posting admission for planner-native and structured semantic
-  queries with simple predicates on II42 `INCLUDE` columns, including direct
+  queries with simple predicates on Evoke index `INCLUDE` columns, including direct
   scalar `ILIKE`. One same-root, overfetched filtered request is rechecked under
   the statement snapshot. Planner-native requests retain their complete
   visible-TID fallback when a scope probe cannot fill the SQL limit. Structured
@@ -237,7 +241,7 @@ This section describes user-visible differences from that baseline.
   state to the same linked L0.
 - Added planner-native filtered semantic top-k through scalar
   `ii42_query(...)` markers and a PostgreSQL `CustomScan`. Ordinary SQL
-  predicates define the visible subset before II-42 ranks it.
+  predicates define the visible subset before Evoke ranks it.
 - Added explicit filtered-hit overloads and same-root scope postings for
   declared `INCLUDE` metadata. Compatible serving scopes remain eligible with
   unsealed L0. Unsupported or unavailable scopes use bounded SQL membership
@@ -263,18 +267,18 @@ This section describes user-visible differences from that baseline.
   migration, BM25 and semantic CRUD, two-phase commit, `VACUUM`, restart and
   crash recovery, physical replication, concurrent DDL, runtime ownership,
   storage convergence, cancellation, and backend-memory stability.
-- Published the frozen [II-42 Model Beta 1 checkout](https://huggingface.co/Intelligent-Internet/II-42-Model-Beta-1)
+- Published the frozen [Evoke Model Beta 1 checkout](https://huggingface.co/Intelligent-Internet/Evoke-Model-Beta-1)
   with an immutable download revision and checksums. The documentation now
   separates model and plugin-system technical reports, current application
   contracts, future planning, and dated historical evidence.
 
 ### Removed From The Public Surface
 
-- Removed the installed `psql_bm25s_*` namespace from the II-42 package. An
+- Removed the installed `psql_bm25s_*` namespace from the Evoke package. An
   old `psql_bm25s` installation may remain online separately during migration,
-  but II-42 does not provide cross-name aliases.
+  but Evoke does not provide cross-name aliases.
 - Removed the old SQL-text fast-path advice, plan, and explain wrappers.
-  PostgreSQL planning and the native II-42 scan paths own route selection.
+  PostgreSQL planning and the native Evoke scan paths own route selection.
 - Removed the old public `filter_query`, `query_prepared`, and
   `ranked_query` convenience layers. Their supported use cases are covered by
   `ii42_query(...)`, ordinary SQL predicates, or owner-only exact BM25
@@ -283,12 +287,12 @@ This section describes user-visible differences from that baseline.
   `generation_cache_preload` with the current runtime-state, cache-clear, and
   index-preload surfaces.
 - Removed readers and upgrade shims for old `psql_bm25s` relation pages and
-  experimental II-42 physical generations.
+  experimental Evoke physical generations.
 
 ### Migration Boundary
 
 - There is no in-place `ALTER EXTENSION` or relation-page conversion from
-  `psql_bm25s` to II-42. The extension identities and physical formats differ.
+  `psql_bm25s` to Evoke. The extension identities and physical formats differ.
 - Preserve the source table and build a new `USING ii42` index. Keep the old
   index online until result parity, CRUD, readiness, restart, and replication
   checks pass and the rollback window closes.
@@ -319,14 +323,14 @@ The baseline shipped a PostgreSQL-native exact BM25 access method with five
 input types, multicolumn and field-aware retrieval, SQL operators, canonical
 token-ID and token-stream APIs, scalar-text helpers, mutable-index maintenance,
 shared generation caching, crash recovery, and physical-replication support.
-It did not include model-backed semantic postings or the II-42 page-native
+It did not include model-backed semantic postings or the Evoke page-native
 unified lifecycle.
 
 The upstream `v0.4.11` release is the authoritative baseline. The generated
 `0.4.10 -> 0.4.11` SQL upgrade stated that the SQL surface was unchanged; the
-tagged package is the source-package baseline used by the II-42 migration
+tagged package is the source-package baseline used by the Evoke migration
 smoke.
 
-[II-42 0.2.5]: https://github.com/Intelligent-Internet/II-42/releases/tag/v0.2.5
-[`psql_bm25s` 0.4.11]: https://github.com/Intelligent-Internet/II-42/releases/tag/v0.4.11
-[`psql_bm25s` `v0.4.11`]: https://github.com/Intelligent-Internet/II-42/releases/tag/v0.4.11
+[Evoke 0.2.5]: https://github.com/Intelligent-Internet/Evoke/releases/tag/v0.2.5
+[`psql_bm25s` 0.4.11]: https://github.com/Intelligent-Internet/Evoke/releases/tag/v0.4.11
+[`psql_bm25s` `v0.4.11`]: https://github.com/Intelligent-Internet/Evoke/releases/tag/v0.4.11

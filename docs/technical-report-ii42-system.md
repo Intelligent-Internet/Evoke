@@ -1,4 +1,4 @@
-# II-42: Unified Sparse Retrieval and Convergent Indexing in PostgreSQL
+# Evoke: Unified Sparse Retrieval and Convergent Indexing in PostgreSQL
 
 ## System Technical Report (Beta 1)
 
@@ -8,9 +8,9 @@
 
 ### Abstract
 
-II-42 is a PostgreSQL retrieval engine that extends the lexical foundation of `psql_bm25s` with model-generated sparse semantic evidence. Rather than placing BM25, a vector database, and a fusion service behind separate update pipelines, it represents lexical and semantic atoms in one relation-owned inverted index. PostgreSQL remains responsible for transactions, row visibility, recovery, and index lifecycle. The model compiles text into sparse contributions; the index makes those contributions searchable and maintainable.
+Evoke is a PostgreSQL retrieval engine that extends the lexical foundation of `psql_bm25s` with model-generated sparse semantic evidence. Rather than placing BM25, a vector database, and a fusion service behind separate update pipelines, it represents lexical and semantic atoms in one relation-owned inverted index. PostgreSQL remains responsible for transactions, row visibility, recovery, and index lifecycle. The model compiles text into sparse contributions; the index makes those contributions searchable and maintainable.
 
-The central systems problem is preserving efficient reads as documents, corpus statistics, and derived query structures change. II-42 addresses it through immutable posting objects, copy-on-write (COW) metadata, checked-root publication, bounded mutation frontiers, reusable term folds, and independently refreshed semantic accelerators. A compatible published accelerator remains usable while workers process newer evidence. This separates serving continuity from background convergence without confusing approximate ranking freshness with current-row visibility.
+The central systems problem is preserving efficient reads as documents, corpus statistics, and derived query structures change. Evoke addresses it through immutable posting objects, copy-on-write (COW) metadata, checked-root publication, bounded mutation frontiers, reusable term folds, and independently refreshed semantic accelerators. A compatible published accelerator remains usable while workers process newer evidence. This separates serving continuity from background convergence without confusing approximate ranking freshness with current-row visibility.
 
 This report presents the architecture, scoring model, storage protocol, execution paths, and experimental evidence as one system. The frozen P2.1 quality evaluation reaches macro Recall@100 of 0.666885 on BEIR15 and 0.703125 on MTEB10, close to the corresponding dense references of 0.670880 and 0.707213. A historical lexical regression study restores the 5,183-document SciFact mean to 0.448 ms, compared with 0.454 ms for the original recorded `psql_bm25s` baseline. These are separate, versioned experiments, not a new benchmark of every feature in the current P2.2 package.
 
@@ -18,9 +18,9 @@ This report presents the architecture, scoring model, storage protocol, executio
 
 ## 1. Scope, Lineage, and Contributions
 
-The original [lexical technical report](technical-report-psql_bm25s.md) records the BM25 foundation and earlier mutable-index engineering. The separate [model technical report](technical-report-ii42-model.md) documents model compilation, calibration, and detailed quality results. This new report connects those subjects to the current II-42 system; it replaces neither document.
+The original [lexical technical report](technical-report-psql_bm25s.md) records the BM25 foundation and earlier mutable-index engineering. The separate [model technical report](technical-report-ii42-model.md) documents model compilation, calibration, and detailed quality results. This new report connects those subjects to the current Evoke system; it replaces neither document.
 
-The BM25 foundation draws on eager sparse scoring: repeated query-time work can be reduced by preparing term contributions and using sparse accumulation. [BM25S](https://arxiv.org/abs/2407.03618) develops this approach for Python sparse matrices. A transactional PostgreSQL engine faces additional requirements: corpus statistics change, tuple versions disappear, writes race with readers, and an index must survive crash recovery. II-42 therefore treats precomputation as a reusable representation of evidence, not as a permanently frozen corpus matrix.
+The BM25 foundation draws on eager sparse scoring: repeated query-time work can be reduced by preparing term contributions and using sparse accumulation. [BM25S](https://arxiv.org/abs/2407.03618) develops this approach for Python sparse matrices. A transactional PostgreSQL engine faces additional requirements: corpus statistics change, tuple versions disappear, writes race with readers, and an index must survive crash recovery. Evoke therefore treats precomputation as a reusable representation of evidence, not as a permanently frozen corpus matrix.
 
 The main contributions of this implementation are:
 
@@ -34,7 +34,7 @@ This report describes Beta 1; `0.2.5` and P2.2 remain engineering identifiers. T
 
 ## 2. System Architecture and Product Surface
 
-II-42 exposes one PostgreSQL access method, `USING ii42`. The default `sae = false` mode provides exact BM25. With `sae = true`, a qualified model adds semantic atoms to the same index. This report calls the product path Sparse Semantic Retrieval (SSR). The `sae` reloption remains the current SQL/catalog name; SAE is otherwise reserved for encoder or vocabulary mechanisms and historical experiment labels.
+Evoke exposes one PostgreSQL access method, `USING ii42`. The default `sae = false` mode provides exact BM25. With `sae = true`, a qualified model adds semantic atoms to the same index. This report calls the product path Sparse Semantic Retrieval (SSR). The `sae` reloption remains the current SQL/catalog name; SAE is otherwise reserved for encoder or vocabulary mechanisms and historical experiment labels.
 
 ```text
                          PostgreSQL application
@@ -51,7 +51,7 @@ II-42 exposes one PostgreSQL access method, `USING ii42`. The default `sae = fal
                                |
                          ranked table rows
 
-  +------------------- one II42 index relation -------------------+
+  +------------------- one Evoke index relation -------------------+
   | checked root -> COW manifest / term / document / lexicon trees |
   | lexical + semantic postings | linked L0 | folds | accelerators |
   +--------------------------------------------------------------+
@@ -100,7 +100,7 @@ L_t(d)=\mathrm{idf}_t\,
 
 The omitted global $(k_1+1)$ multiplier does not change a lexical ranking with fixed parameters. It does matter when calibrating relative lexical/semantic scale, so a model/index contract must fix the convention. The historical model evaluation uses $k_1=1.5$ and $b=0.75$; other supported BM25 variants are described in the original report.
 
-II-42 distinguishes **neutral evidence**, such as term frequency, from **statistics-specialized impacts**. A neutral fold can survive a corpus-statistics change. A specialized impact fold is reusable only with its matching statistics epoch. This preserves the benefit of eager scoring without forcing a full posting rewrite on every change in $N$, $df_t$, or average length.
+Evoke distinguishes **neutral evidence**, such as term frequency, from **statistics-specialized impacts**. A neutral fold can survive a corpus-statistics change. A specialized impact fold is reusable only with its matching statistics epoch. This preserves the benefit of eager scoring without forcing a full posting rewrite on every change in $N$, $df_t$, or average length.
 
 ### 3.2 Semantic Atoms and Unified Scoring
 
@@ -164,15 +164,15 @@ The packaged model is bound by [the model lock](../packaging/milestone-model.jso
 
 | Identity | Value |
 | --- | --- |
-| Bundle | `ii42-p2.2-nfcorpus-v2` |
-| Model ID | `ii42_p2_p22_nfcorpus_v2_smoke` |
-| Runtime ABI | `ii42_p2_unified_text_atoms_v2` |
-| Manifest SHA-256 | `419e3521eff91bdca149d7014dc71a5cd9538d6904854849056f4f327dd30364` |
+| Bundle | `evoke-p2.2-nfcorpus-v2` |
+| Model ID | `evoke_p2_p22_nfcorpus_v2_smoke` |
+| Runtime ABI | `evoke_p2_unified_text_atoms_v2` |
+| Manifest SHA-256 | `b61060a3958ee56209de47a34ee5cbe08351bfeb3fcbbfdcbf477403210764f7` |
 | ONNX Runtime | `1.29.0` |
 
-The identical frozen checkout is available as [II-42 Model (Beta 1)](https://huggingface.co/Intelligent-Internet/II-42-Model-Beta-1). The [download guide](examples/semantic-model-checkout.md#download-the-default-model) pins its revision and archive checksum; distribution does not change the model or the historical evaluation identity.
+The identical frozen checkout is available as [Evoke Model (Beta 1)](https://huggingface.co/Intelligent-Internet/Evoke-Model-Beta-1). The [download guide](examples/semantic-model-checkout.md#download-the-default-model) pins its revision and archive checksum; distribution does not change the model or the historical evaluation identity.
 
-The upstream checkpoint is `ibm-granite/granite-embedding-30m-sparse`, revision `ad82b1fd09541c998c8d45045d601c51fdb8a9b7`. Its approximately 30.3M parameters provide a compact sparse retrieval foundation. The upstream model family and training approach are described in [Granite Embedding Models](https://arxiv.org/abs/2502.20204). II-42's local work concerns compilation, calibration, publication, and systems integration; these should not be confused with training the foundation from scratch.
+The upstream checkpoint is `ibm-granite/granite-embedding-30m-sparse`, revision `ad82b1fd09541c998c8d45045d601c51fdb8a9b7`. Its approximately 30.3M parameters provide a compact sparse retrieval foundation. The upstream model family and training approach are described in [Granite Embedding Models](https://arxiv.org/abs/2502.20204). Evoke's local work concerns compilation, calibration, publication, and systems integration; these should not be confused with training the foundation from scratch.
 
 P2.2 uses deterministic ABI-v2 windows for full-text query and document compilation. The packaged lexical vocabulary and calibration are frozen from NFCorpus. This extends the engineering text path beyond the historical P2.1 single-sequence evaluation, but does not itself establish new long-document or cross-domain benchmark results.
 
@@ -394,7 +394,7 @@ A\cap\mathrm{TopK}\{S(q,d):d\in D\}.
 
 The mismatch can persist after overfetch, especially if the scorer or candidate policy depends on the selected scope. Testing only that every returned row satisfies the predicate does not test filtered ranking quality.
 
-II-42 builds same-root scope metadata from eligible `INCLUDE` columns. Supported planner predicates include direct conjunctions of equality, overlap, ranges, and admitted `ILIKE` shapes. Structured JSON filters can also reuse a compatible published scope baseline. Both recheck current-row membership and may omit post-baseline matches under the documented approximate contract.
+Evoke builds same-root scope metadata from eligible `INCLUDE` columns. Supported planner predicates include direct conjunctions of equality, overlap, ranges, and admitted `ILIKE` shapes. Structured JSON filters can also reuse a compatible published scope baseline. Both recheck current-row membership and may omit post-baseline matches under the documented approximate contract.
 
 The fallback contracts are intentionally explicit. Planner-native execution can use complete visible TIDs when a scope-backed path is unavailable or unsuitable. Fully scope-backed structured requests can return fewer than k while converging instead of automatically materializing the complete matching universe. Other structured requests first probe SQL membership with a 65,536-match limit and an overflow witness. A complete probe supplies the TID set; overflow may admit a bounded global rank prefix before full SQL resolution. The match limit does not bound rows scanned or elapsed time. Therefore neither “all filters are exact-current enumeration” nor “all filters avoid enumeration” describes the product. The complete overload-specific rules are in [Query Semantics](query-semantics.md).
 
@@ -471,10 +471,10 @@ The frozen 2026-07-15 P2.1/b1.125 evaluation covers BEIR15 with 46,417 queries a
 | --- | --- | ---: | ---: | ---: |
 | BEIR15 | BM25 | 0.374297 | 0.562964 | 0.735619 |
 | BEIR15 | PPLX dense / VectorChord | 0.544873 | 0.670880 | 0.810525 |
-| BEIR15 | II42 P2.1 | 0.490809 | 0.666885 | 0.839658 |
+| BEIR15 | Evoke P2.1 | 0.490809 | 0.666885 | 0.839658 |
 | MTEB10 | BM25 | 0.383554 | 0.595367 | 0.777387 |
 | MTEB10 | PPLX dense / VectorChord | 0.544127 | 0.707213 | 0.841063 |
-| MTEB10 | II42 P2.1 | 0.503440 | 0.703125 | 0.875910 |
+| MTEB10 | Evoke P2.1 | 0.503440 | 0.703125 | 0.875910 |
 
 Measured relative to the BM25-to-dense Recall@100 improvement, P2.1 recovers about 96.3% on each suite:
 
@@ -530,7 +530,7 @@ The [validation guide](testing-and-validation.md) maps these obligations to isol
 
 A reproducible mixed-load experiment records a warm read-only baseline, parallel-reader control, sustained writes plus maintenance, and a post-drain phase. Sample query p50/p95/maximum, rows/score quality, source and serving generations, L0/semantic debt, worker actions, processed bytes, I/O, memory, and disk growth together. A healthy system may show bounded jitter and temporarily older rankings; readiness alone cannot prove that workers are making progress or that query work remains stable.
 
-PostgreSQL owns `DROP INDEX` teardown and physical replication of index pages. External model/runtime artifacts still need matching provisioning on standbys. Logical replication transfers rows rather than the physical II42 index. RLS-backed search and globally ranked partitioned-parent indexes remain outside the current supported surface; parallel heap build, parallel AM scan, and parallel VACUUM discovery are further engineering directions. Current boundaries and installation details are in [the README](../README.md) and [Migration](upgrading.md).
+PostgreSQL owns `DROP INDEX` teardown and physical replication of index pages. External model/runtime artifacts still need matching provisioning on standbys. Logical replication transfers rows rather than the physical Evoke index. RLS-backed search and globally ranked partitioned-parent indexes remain outside the current supported surface; parallel heap build, parallel AM scan, and parallel VACUUM discovery are further engineering directions. Current boundaries and installation details are in [the README](../README.md) and [Migration](upgrading.md).
 
 ## 11. Improvement Directions
 
@@ -546,7 +546,7 @@ Detailed proposals, experiment matrices, and promotion gates belong in [Product 
 
 ## 12. Conclusion and Review Map
 
-II-42's engineering proposition is that lexical and learned sparse retrieval can share not only a score accumulator, but a transactional storage and maintenance design. COW makes immutable evidence reusable; bounded frontiers localize ordinary mutation work; workers compile semantic evidence and prepare derived read structures independently; checked publication makes new structures visible without dismantling the old serving path first.
+Evoke's engineering proposition is that lexical and learned sparse retrieval can share not only a score accumulator, but a transactional storage and maintenance design. COW makes immutable evidence reusable; bounded frontiers localize ordinary mutation work; workers compile semantic evidence and prepare derived read structures independently; checked publication makes new structures visible without dismantling the old serving path first.
 
 The existing experiments establish meaningful milestones: preserved lexical efficiency on a controlled regression fixture, strong sparse semantic candidate recall, useful derived-executor latency reductions, and reduced metadata amplification. The next evaluation priority is their joint behavior on the current packaged model under realistic mixed workloads. The appropriate success criterion is sustained useful ranking and predictable resource use throughout convergence, not merely a fast read-only snapshot or an all-green status page.
 
@@ -561,4 +561,4 @@ For code-oriented review, start with the following map:
 | Acceleration | [Builder](../src/ii42_am_accelerator.c), [directory](../src/ii42_semantic_accelerator_directory.c), [forward format](../src/ii42_semantic_forward.c), [execution evidence](performance/reports/semantic-accelerator-bounded-execution.md) |
 | Concurrency and qualification | [Lifecycle](maintenance-lifecycle.md), [scheduler](../src/ii42_am_scheduler.c), [validation](testing-and-validation.md) |
 
-External foundations: [BM25S](https://arxiv.org/abs/2407.03618), [Granite Embedding Models](https://arxiv.org/abs/2502.20204), and the PostgreSQL [index access-method](https://www.postgresql.org/docs/18/indexam.html) and [extension WAL](https://www.postgresql.org/docs/18/wal-for-extensions.html) documentation. External work is credited for its own contributions; the II-42 performance figures above come from the linked repository evidence, not from those papers.
+External foundations: [BM25S](https://arxiv.org/abs/2407.03618), [Granite Embedding Models](https://arxiv.org/abs/2502.20204), and the PostgreSQL [index access-method](https://www.postgresql.org/docs/18/indexam.html) and [extension WAL](https://www.postgresql.org/docs/18/wal-for-extensions.html) documentation. External work is credited for its own contributions; the Evoke performance figures above come from the linked repository evidence, not from those papers.

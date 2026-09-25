@@ -1,6 +1,6 @@
 # Index Parameters
 
-II-42 reloptions are set on `CREATE INDEX ... WITH (...)` or `ALTER INDEX`.
+Evoke reloptions are set on `CREATE INDEX ... WITH (...)` or `ALTER INDEX`.
 Changing an option that affects physical postings requires `REINDEX` before
 `ii42_query(...)` becomes query-ready again.
 
@@ -43,7 +43,7 @@ These options apply only to `sae = false`.
 application-owned integer token stream. See [Supported Input Types](input-types.md).
 
 `field_aware = true` requires more than one homogeneous text-like column. In
-In SSR mode it expands both lexical and semantic namespaces per field. The query
+SSR mode it expands both lexical and semantic namespaces per field. The query
 weight for a field scales both contributions in the one native scorer. Model
 normalization and atom generation still come from the checkout.
 
@@ -113,7 +113,7 @@ ON docs USING ii42 (body)
 WITH (
     sae = true,
     runtime_precision = fp16,
-    model_path = '/opt/ii42/models/search-v1',
+    model_path = '/opt/evoke/models/search-v1',
     auto_preload = 10
 );
 ```
@@ -170,13 +170,13 @@ These settings are meaningful only when `ii42` is loaded through
 | GUC | Default | Context | Meaning |
 | --- | ---: | --- | --- |
 | `ii42.shared_runtime_size` | `0` | Postmaster | Global shared runtime/residency arena. A positive value is mandatory for SSR; GB-scale values may also hold exact-root folds for selected converged BM25 or SSR indexes. |
-| `ii42.control_database` | `postgres` | Postmaster | Optional override for the stable, connectable database used by cluster-level II-42 workers. |
+| `ii42.control_database` | `postgres` | Postmaster | Optional override for the stable, connectable database used by cluster-level Evoke workers. |
 | `ii42.sae_model_path` | empty | SIGHUP | Optional server-wide override for the bundled milestone checkout. |
 | `ii42.runtime_worker_count` | `2` | Postmaster | Shared inference worker count. |
 | `ii42.runtime_reserve_query_lane` | `on` | Postmaster | Reserve one runtime worker/response lane for foreground queries; turn off only for controlled offline rebuilds. |
 | `ii42.runtime_max_batch_size` | `128` | SIGHUP | Maximum local runtime text batch size, from `1` through `512`. This is also the default remote batch cap for services that do not set their own `max_batch_size`; it is a deployment throughput knob, not part of the model checkout identity. |
 | `ii42.runtime_document_pipeline_depth` | `16` | SIGHUP | Maximum builder-level in-flight document runtime batches per PostgreSQL backend, from `1` through `4096`. The effective depth is capped by the sum of the local runtime window and all configured remote accelerator `weight` windows. Raise it for controlled offline rebuilds when local and remote accelerators have enough capacity. |
-| `ii42.runtime_accelerators` | `[]` | SIGHUP | JSON array of optional remote II-42 runtime services. Empty means local runtime only. Service objects accept `url`, optional positive integer `weight`, and optional positive integer `max_batch_size`. `weight` is a per-service outstanding request window hint, from `1` through `4096`; a service without `weight` starts as one schedulable slot. `max_batch_size` is that service's per-request batch cap. Without `max_batch_size`, the service uses `ii42.runtime_max_batch_size`. |
+| `ii42.runtime_accelerators` | `[]` | SIGHUP | JSON array of optional remote Evoke runtime services. Empty means local runtime only. Service objects accept `url`, optional positive integer `weight`, and optional positive integer `max_batch_size`. `weight` is a per-service outstanding request window hint, from `1` through `4096`; a service without `weight` starts as one schedulable slot. `max_batch_size` is that service's per-request batch cap. Without `max_batch_size`, the service uses `ii42.runtime_max_batch_size`. |
 | `ii42.onnxruntime_session_cache_size` | `1` | Postmaster | Per-worker bounded model-session LRU, from `0` through `16`. |
 | `ii42.runtime_liveness_timeout` | `5min` | Postmaster | Runtime liveness guard for one local ONNX execution or one already-submitted remote accelerator request; `0` disables the execution timer. Remote connect/send I/O still uses short transport timeouts, and an async request without a usable connection retains a separate 60-second failover bound. |
 | `ii42.onnxruntime_intra_op_threads` | `0` | Postmaster | Per-worker ONNX CPU thread cap; `0` uses the product auto policy. |

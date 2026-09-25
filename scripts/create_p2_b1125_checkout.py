@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Package the frozen M1934 b1.125 route as an II-42 P2 checkout."""
+"""Package the frozen M1934 b1.125 route as an Evoke P2 checkout."""
 
 from __future__ import annotations
 
@@ -480,7 +480,7 @@ def main() -> int:
         semantic_runtime = read_json(
             encoder_dir / 'semantic_runtime.json',
         )
-        if semantic_runtime.get('abi') != 'ii42_p2_semantic_onnx_v2':
+        if semantic_runtime.get('abi') != 'evoke_p2_semantic_onnx_v2':
             raise ValueError('unsupported P2 semantic runtime artifact')
         validated_provider = semantic_runtime.get('validation', {}).get(
             'provider',
@@ -498,7 +498,7 @@ def main() -> int:
             )
     has_runtime = args.semantic_runtime_dir is not None
     manifest = {
-        'api_version': 'ii42_model_v1',
+        'api_version': 'evoke_model_v1',
         'artifacts': artifacts,
         'doc_active': 0,
         'encoder_type': 'granite_sparse_exact_lexical_unified_postings',
@@ -519,7 +519,7 @@ def main() -> int:
     }
     if has_runtime:
         manifest.update({
-            'runtime_abi': 'ii42_p2_unified_text_atoms_v2',
+            'runtime_abi': 'evoke_p2_unified_text_atoms_v2',
             'runtime_io': {
                 'attention_mask': 'attention_mask',
                 'input_ids': 'input_ids',

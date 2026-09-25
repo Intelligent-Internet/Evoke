@@ -1,9 +1,9 @@
-# Hybrid Vector/II-42 Search
+# Hybrid Vector/Evoke Search
 
-The public `ii42_hybrid_*` APIs combine candidates from II-42 and external
+The public `ii42_hybrid_*` APIs combine candidates from Evoke and external
 retrieval engines such as pgvector or VectorChord. This composition layer is a
 product capability above the unified single-index design; it does not split or
-modify an II-42 index internally.
+modify an Evoke index internally.
 
 Hybrid search combines BM25 or unified Sparse Semantic Retrieval (SSR)
 candidates with external vector candidates inside PostgreSQL. A single SSR
@@ -11,7 +11,7 @@ index already combines lexical and sparse semantic evidence; this API is only
 for additional independent sources.
 The implementation is intentionally a late
 fusion layer: each source keeps its own best index access path, and
-`ii42` only combines already-retrieved candidates.
+Evoke only combines already-retrieved candidates.
 
 This keeps the core extension independent from `pgvector`, VectorChord, and
 other vector extensions. Vector candidates are supplied as ordinary SQL rows
@@ -64,7 +64,7 @@ when the final order can be inspected and tuned.
 
 `ii42_hybrid_fuse_candidates(...)` uses a C fast path for normalization,
 de-duplication, grouping, and final ordering. Use `ii42_query(...)` for each
-II-42 source and hybrid fusion only when independent retrieval engines are
+Evoke source and hybrid fusion only when independent retrieval engines are
 intentionally combined.
 
 For implementation boundaries, performance expectations, and validation

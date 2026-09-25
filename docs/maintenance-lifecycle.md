@@ -1,6 +1,6 @@
 # Maintenance Lifecycle
 
-Every II-42 index has one relation-owned search and mutation authority. BM25
+Every Evoke index has one relation-owned search and mutation authority. BM25
 and semantic-enabled indexes share the same page-native root, linked L0,
 maintenance selector, COW publication, and reclamation rules.
 
@@ -162,7 +162,7 @@ It follows the same exactness rule.
 ## `VACUUM` And Reclamation
 
 Heap MVCC hides superseded and deleted rows immediately. PostgreSQL `VACUUM`
-later supplies exact dead-TID decisions to the access method. II-42 records
+later supplies exact dead-TID decisions to the access method. Evoke records
 logical retirement in the same document COW and posting lifecycle.
 
 PostgreSQL may skip an index access method during `VACUUM` when
@@ -349,7 +349,7 @@ Physical standbys query replayed page-native roots and may prewarm relation
 pages. They do not perform primary-side durable maintenance while in recovery.
 Promotion resumes normal maintenance from the replayed root and linked L0.
 
-Logical replication copies table rows, not index relations. Build the II-42
+Logical replication copies table rows, not index relations. Build the Evoke
 index independently on the subscriber.
 
 ## Operator Surface

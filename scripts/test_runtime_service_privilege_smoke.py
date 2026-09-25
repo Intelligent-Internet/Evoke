@@ -1073,12 +1073,12 @@ def main() -> None:
         )
         if (
             manifest.get('schema_version') != 1
-            or manifest.get('api_version') != 'ii42_model_v1'
+            or manifest.get('api_version') != 'evoke_model_v1'
             or manifest.get('runtime_abi')
-            != 'ii42_p2_unified_text_atoms_v2'
+            != 'evoke_p2_unified_text_atoms_v2'
         ):
             raise ValueError(
-                '--model-path must use the current II-42 model contract'
+                '--model-path must use the current Evoke model contract'
             )
 
         run([str(initdb), '-D', str(data_dir), '-A', 'trust'])

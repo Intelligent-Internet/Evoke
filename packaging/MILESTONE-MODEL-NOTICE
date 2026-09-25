@@ -1,6 +1,6 @@
-II-42 milestone model notice
+Evoke milestone model notice
 
-The bundled II-42 P2.2 checkout is derived from
+The bundled Evoke P2.2 checkout is derived from
 ibm-granite/granite-embedding-30m-sparse revision
 ad82b1fd09541c998c8d45045d601c51fdb8a9b7.
 
@@ -11,7 +11,7 @@ upstream project information are available at:
 https://huggingface.co/ibm-granite/granite-embedding-30m-sparse
 https://github.com/ibm-granite/granite-embedding-models
 
-The II-42 checkout adds exported ONNX graphs, a unified lexical vocabulary,
+The Evoke checkout adds exported ONNX graphs, a unified lexical vocabulary,
 query calibration, atom-space metadata, and a scoring profile. Its frozen
 identity and every shipped artifact digest are recorded in
 packaging/milestone-model.json.

@@ -37,7 +37,7 @@ def make_checkout(root: Path) -> None:
     write_json(
         root / 'manifest.json',
         {
-            'api_version': 'ii42_model_v1',
+            'api_version': 'evoke_model_v1',
             'artifacts': {
                 'p2_contract': {
                     'path': 'provenance/p2_contract.json',
@@ -49,7 +49,7 @@ def make_checkout(root: Path) -> None:
                 },
             },
             'model_id': 'source',
-            'runtime_abi': 'ii42_p2_unified_text_atoms_v2',
+            'runtime_abi': 'evoke_p2_unified_text_atoms_v2',
             'schema_version': 1,
             'runtime_output': {
                 'document_semantic_budget_ratio': 1.125,

@@ -156,5 +156,5 @@ def test_performance_guide_separates_frozen_evidence_from_public_api() -> None:
     source = (DOCS / 'performance/README.md').read_text(encoding='utf-8')
     assert '## Frozen Lexical Cross-Engine Reference' in source
     assert 'not recommended application entrypoints' in source
-    assert 'does not rerun a benchmark against II-42' in source
+    assert 'does not rerun a benchmark against Evoke' in source
     assert 'per-dataset query win' in source

@@ -6,13 +6,13 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-HUB_URL = 'https://huggingface.co/Intelligent-Internet/II-42-Model-Beta-1'
+HUB_URL = 'https://huggingface.co/Intelligent-Internet/Evoke-Model-Beta-1'
 DOWNLOAD_DOC = REPO_ROOT / 'docs/examples/semantic-model-checkout.md'
 
 
 def test_model_card_links_to_public_project_repository() -> None:
     card = (REPO_ROOT / 'packaging/huggingface/README.md').read_text()
-    project_url = 'https://github.com/Intelligent-Internet/II-42'
+    project_url = 'https://github.com/Intelligent-Internet/Evoke'
     github_links = re.findall(r'https://github\.com/[^\s)]+', card)
     assert set(github_links) == {
         project_url,
@@ -62,7 +62,7 @@ def test_download_instructions_pin_revision_checksum_and_validator() -> None:
     assert f'`{values["model_sha256"]}`' in card
     assert '/resolve/${model_revision}/${model_archive}' in doc
     assert '--archive-sha256 "$model_sha256"' in doc
-    assert '--output .artifacts/ii42-milestone-model' in doc
+    assert '--output .artifacts/evoke-milestone-model' in doc
     assert 'scripts/validate_milestone_model_checkout.py' in doc
     assert '.cache/huggingface' in doc
 

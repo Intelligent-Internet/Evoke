@@ -106,7 +106,7 @@ def test_create_p2_b1125_native_runtime_checkout(tmp_path: Path) -> None:
     )
     (runtime / 'semantic_query_compiler.onnx').write_bytes(b'onnx-fixture')
     (runtime / 'semantic_runtime.json').write_text(json.dumps({
-        'abi': 'ii42_p2_semantic_onnx_v2',
+        'abi': 'evoke_p2_semantic_onnx_v2',
     }) + '\n')
     for name in (
         'merges.txt',
@@ -155,10 +155,10 @@ def test_create_p2_b1125_native_runtime_checkout(tmp_path: Path) -> None:
 
     manifest = read_json(output / 'manifest.json')
     assert manifest['schema_version'] == 1
-    assert manifest['api_version'] == 'ii42_model_v1'
+    assert manifest['api_version'] == 'evoke_model_v1'
     assert manifest['model_format'] == 'onnx'
     assert manifest['runtime'] == 'onnxruntime'
-    assert manifest['runtime_abi'] == 'ii42_p2_unified_text_atoms_v2'
+    assert manifest['runtime_abi'] == 'evoke_p2_unified_text_atoms_v2'
     assert 'runtime_parameters' not in manifest
     assert manifest['runtime_io'] == {
         'attention_mask': 'attention_mask',
@@ -219,7 +219,7 @@ def test_create_p2_b1125_runtime_requires_calibration(tmp_path: Path) -> None:
         'tokenizer_config.json',
         'vocab.json',
     ):
-        payload = {'abi': 'ii42_p2_semantic_onnx_v2'} if (
+        payload = {'abi': 'evoke_p2_semantic_onnx_v2'} if (
             name == 'semantic_runtime.json'
         ) else {}
         (runtime / name).write_text(json.dumps(payload) + '\n')

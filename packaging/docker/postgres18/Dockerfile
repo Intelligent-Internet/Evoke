@@ -36,7 +36,7 @@ COPY packaging/MILESTONE-MODEL-NOTICE \
     ./packaging/MILESTONE-MODEL-NOTICE
 COPY scripts/validate_milestone_model_checkout.py \
     ./scripts/validate_milestone_model_checkout.py
-COPY --from=ii42_milestone_model . /tmp/ii42-milestone-model
+COPY --from=ii42_milestone_model . /tmp/evoke-milestone-model
 
 RUN make clean PG_CONFIG=/usr/bin/pg_config \
     && PKG_CONFIG_PATH=/usr/local/lib/pkgconfig \
@@ -47,12 +47,12 @@ RUN make clean PG_CONFIG=/usr/bin/pg_config \
         DESTDIR=/tmp/ii42-stage \
         PG_CONFIG=/usr/bin/pg_config \
     && python3 scripts/validate_milestone_model_checkout.py \
-        --checkout /tmp/ii42-milestone-model \
+        --checkout /tmp/evoke-milestone-model \
         --quiet \
     && model_dir="$(pg_config --sharedir)/ii42/models/default" \
     && mkdir -p "/tmp/ii42-stage${model_dir}" \
         /tmp/ii42-stage/usr/local/share/licenses/ii42-model \
-    && cp -a /tmp/ii42-milestone-model/. \
+    && cp -a /tmp/evoke-milestone-model/. \
         "/tmp/ii42-stage${model_dir}/" \
     && cp LICENSE \
         /tmp/ii42-stage/usr/local/share/licenses/ii42-model/LICENSE \
@@ -70,15 +70,15 @@ ARG II42_GIT_TREE_STATE
 ARG II42_MODEL_ID
 ARG II42_MODEL_MANIFEST_SHA256
 
-LABEL org.opencontainers.image.title='ii42 PostgreSQL 18'
-LABEL org.opencontainers.image.description='PostgreSQL 18 image with ii42 preinstalled'
+LABEL org.opencontainers.image.title='Evoke PostgreSQL 18'
+LABEL org.opencontainers.image.description='PostgreSQL 18 image with Evoke preinstalled'
 LABEL org.opencontainers.image.version="${II42_VERSION}"
-LABEL org.opencontainers.image.source='https://github.com/Intelligent-Internet/II-42'
+LABEL org.opencontainers.image.source='https://github.com/Intelligent-Internet/Evoke'
 LABEL org.opencontainers.image.revision="${II42_GIT_COMMIT}"
 LABEL org.opencontainers.image.onnxruntime.version="${ONNXRUNTIME_VERSION}"
-LABEL io.ii42.git-tree-state="${II42_GIT_TREE_STATE}"
-LABEL io.ii42.milestone-model.id="${II42_MODEL_ID}"
-LABEL io.ii42.milestone-model.manifest-sha256="${II42_MODEL_MANIFEST_SHA256}"
+LABEL io.evoke.git-tree-state="${II42_GIT_TREE_STATE}"
+LABEL io.evoke.milestone-model.id="${II42_MODEL_ID}"
+LABEL io.evoke.milestone-model.manifest-sha256="${II42_MODEL_MANIFEST_SHA256}"
 
 COPY --from=build /tmp/ii42-stage/ /
 COPY --from=build /usr/local/lib/ /usr/local/lib/

@@ -1,9 +1,9 @@
-# II-42 Model Technical Report (Beta 1)
+# Evoke Model Technical Report (Beta 1)
 
 - Report edition: 2026-09-03
 - Evaluation snapshot: 2026-07-15
 - Status: Beta 1
-- Current package contract: II-42 v0.2.5 / P2.2 / ABI-v2
+- Current package contract: Evoke v0.2.5 / P2.2 / ABI-v2
 - Evaluation form: Native single unified posting index
 - Comparisons: BM25 and PPLX dense (VectorChord)
 - Frozen evaluation version: P2.1 / b1.125
@@ -11,7 +11,7 @@
 
 ## Executive Summary
 
-II-42 Model Beta 1 builds on the P2.1 learned sparse
+Evoke Model Beta 1 builds on the P2.1 learned sparse
 retrieval route and its packaged P2.2 successor.
 It does not combine BM25 and ANN results through RRF or late fusion. Instead,
 an approximately 30.3M-parameter sparse encoder generates semantic postings,
@@ -45,7 +45,7 @@ strong candidate generator for RAG first-stage retrieval. Building on this
 recall foundation, the next quality direction is to improve NDCG, MAP, and MRR
 toward dense-level head ranking.
 
-This technical report describes II-42 Model Beta 1. It documents the model
+This technical report describes Evoke Model Beta 1. It documents the model
 design, measured retrieval quality, and evaluation scope. The P2.1 matrices
 provide the model family's frozen quality
 and latency baseline; current-P2.2 full-matrix evaluation and workload-specific
@@ -94,14 +94,14 @@ extension version v0.2.5. The current package is bound by
 
 | Item | Beta 1 package contract |
 | --- | --- |
-| Bundle | `ii42-p2.2-nfcorpus-v2` |
-| Model ID | `ii42_p2_p22_nfcorpus_v2_smoke` |
-| Manifest SHA-256 | `419e3521eff91bdca149d7014dc71a5cd9538d6904854849056f4f327dd30364` |
-| Runtime ABI | `ii42_p2_unified_text_atoms_v2` |
+| Bundle | `evoke-p2.2-nfcorpus-v2` |
+| Model ID | `evoke_p2_p22_nfcorpus_v2_smoke` |
+| Manifest SHA-256 | `b61060a3958ee56209de47a34ee5cbe08351bfeb3fcbbfdcbf477403210764f7` |
+| Runtime ABI | `evoke_p2_unified_text_atoms_v2` |
 | ONNX Runtime | 1.29.0, pinned by [the dependency lock](../packaging/onnxruntime.version) |
 
 The identical frozen checkout is published as
-[II-42 Model (Beta 1)](https://huggingface.co/Intelligent-Internet/II-42-Model-Beta-1)
+[Evoke Model (Beta 1)](https://huggingface.co/Intelligent-Internet/Evoke-Model-Beta-1)
 on Hugging Face. See the [pinned download and validation instructions](examples/semantic-model-checkout.md#download-the-default-model);
 publishing this distribution does not change the model identity or evidence boundary.
 
@@ -367,7 +367,7 @@ Quora, and TREC-COVID rows.
 | Query support | Top-50 semantic atoms |
 | Document support | Top-192 semantic atoms |
 | Candidate depth | 1,000 |
-| Native ABI | `ii42_p2_unified_text_atoms_v1` |
+| Native ABI | `evoke_p2_unified_text_atoms_v1` |
 
 Native P2.1 runtime parity has been verified across 1,623 queries: atom IDs
 match exactly, and impacts use an absolute tolerance of `2e-4` and a relative
@@ -652,7 +652,7 @@ maintained in [Model Planning](model-planning.md).
 
 ## 12. Conclusion
 
-II-42 Model Beta 1 provides a native, single-index
+Evoke Model Beta 1 provides a native, single-index
 first-stage retriever. In the frozen P2.1 evaluations, an approximately
 30.3M-parameter CPU sparse encoder nearly preserves PPLX dense Recall@100
 across two complete engineering evaluation surfaces while achieving higher

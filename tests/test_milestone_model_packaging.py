@@ -40,11 +40,11 @@ def write_checkout(root: Path) -> tuple[Path, Path]:
         },
     }
     manifest = {
-        'api_version': 'ii42_model_v1',
+        'api_version': 'evoke_model_v1',
         'artifacts': artifacts,
         'model_id': 'test_milestone',
         'runtime': 'onnxruntime',
-        'runtime_abi': 'ii42_p2_unified_text_atoms_v2',
+        'runtime_abi': 'evoke_p2_unified_text_atoms_v2',
         'model_format': 'onnx',
         'encoder_type': 'test_unified_postings',
         'latent_dims': 8,
@@ -59,10 +59,10 @@ def write_checkout(root: Path) -> tuple[Path, Path]:
         'bundle_name': 'test-bundle',
         'manifest_sha256': sha256_file(manifest_path),
         'manifest_contract': {
-            'api_version': 'ii42_model_v1',
+            'api_version': 'evoke_model_v1',
             'model_id': 'test_milestone',
             'runtime': 'onnxruntime',
-            'runtime_abi': 'ii42_p2_unified_text_atoms_v2',
+            'runtime_abi': 'evoke_p2_unified_text_atoms_v2',
             'model_format': 'onnx',
             'encoder_type': 'test_unified_postings',
             'latent_dims': 8,

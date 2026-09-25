@@ -2,10 +2,10 @@
 
 Status: current engineering planning authority.
 
-II-42 v0.2.5 has completed the bounded current-only qualification on Shadow,
+Evoke v0.2.5 has completed the bounded current-only qualification on Shadow,
 Elm, and Mac. The package, catalog, runtime, index-root, query, restart,
 resource, and replication evidence is recorded in the
-[three-environment rollout report](performance/reports/ii42-v0.2.5-current-only-three-environment-rollout-2026-08-30.md).
+[three-environment rollout report](performance/reports/evoke-v0.2.5-current-only-three-environment-rollout-2026-08-30.md).
 That report is dated qualification evidence, not a live deployment inventory.
 Closed implementation and rollout ledgers are indexed separately in the
 [engineering archive](archive/engineering/README.md).
@@ -64,7 +64,7 @@ checked publication authority and exact page-native scoring.
 
 ## Invariants And Non-Goals
 
-- PostgreSQL owns relation lifecycle; ordinary `DROP INDEX` removes every II-42
+- PostgreSQL owns relation lifecycle; ordinary `DROP INDEX` removes every Evoke
   payload owned by that relation.
 - Sparse Semantic Retrieval (SSR) remains lexical-first and eventual-only, with
   one unified posting index and no sidecar mutation lifecycle.

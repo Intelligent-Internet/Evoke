@@ -39,14 +39,17 @@ fi
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [ -z "$model_checkout" ]; then
-    model_checkout="${II42_MILESTONE_MODEL_CHECKOUT:-}"
+    model_checkout="$(
+        printf '%s' \
+            "${EVOKE_MILESTONE_MODEL_CHECKOUT:-${II42_MILESTONE_MODEL_CHECKOUT:-}}"
+    )"
 fi
 if [ -z "$model_checkout" ]; then
-    model_checkout="${repo_root}/.artifacts/ii42-milestone-model"
+    model_checkout="${repo_root}/.artifacts/evoke-milestone-model"
 fi
 if [ ! -d "$model_checkout" ]; then
     echo "milestone model checkout not found: ${model_checkout}" >&2
-    echo 'pass --model-checkout or set II42_MILESTONE_MODEL_CHECKOUT' >&2
+    echo 'pass --model-checkout or set EVOKE_MILESTONE_MODEL_CHECKOUT' >&2
     exit 1
 fi
 model_checkout="$(cd "$model_checkout" && pwd)"
@@ -93,10 +96,10 @@ arch="$(uname -m)"
 os_name="$(uname -s | tr '[:upper:]' '[:lower:]')"
 
 if [ -z "$image_tag" ]; then
-    image_tag="ii42:pg18-v${version}"
+    image_tag="evoke:pg18-v${version}"
 fi
 
-package_name="ii42-v${version}-docker-pg18-${os_name}-${arch}"
+package_name="evoke-v${version}-docker-pg18-${os_name}-${arch}"
 dist_dir="${repo_root}/dist"
 archive_path="${dist_dir}/${package_name}.tar.gz"
 checksum_path="${archive_path}.sha256"

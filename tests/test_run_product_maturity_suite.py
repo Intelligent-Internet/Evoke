@@ -300,7 +300,7 @@ def test_inspect_package_metadata_rejects_missing_or_changed_files(
     package = tmp_path / 'package'
     (package / 'LICENSES').mkdir(parents=True)
     (package / 'README.md').write_text('stale readme', encoding='utf-8')
-    (package / 'LICENSES/II42-LICENSE').write_text(
+    (package / 'LICENSES/EVOKE-LICENSE').write_text(
         'current license',
         encoding='utf-8',
     )
@@ -311,7 +311,7 @@ def test_inspect_package_metadata_rejects_missing_or_changed_files(
 
     assert [artifact['name'] for artifact in artifacts] == [
         'README.md',
-        'II42-LICENSE',
+        'EVOKE-LICENSE',
         'ONNXRUNTIME-LICENSE',
     ]
     assert errors == [

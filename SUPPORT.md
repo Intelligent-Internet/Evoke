@@ -4,7 +4,7 @@
 
 Start with the [documentation map](docs/README.md),
 [getting-started guide](docs/getting-started.md), and
-[API reference](docs/api-reference.md). When asking for help, include the II-42
+[API reference](docs/api-reference.md). When asking for help, include the Evoke
 version, PostgreSQL major, operating system and architecture, relevant SQL,
 and the complete error text.
 
@@ -15,7 +15,7 @@ the issue tracker.
 ## Bug Reports
 
 Before reporting a bug, reproduce it on a supported PostgreSQL version and a
-current II-42 package or source checkout. Include a minimal schema and query,
+current Evoke package or source checkout. Include a minimal schema and query,
 `SELECT extversion FROM pg_extension WHERE extname = 'ii42'`, and whether the
 index is BM25 or `sae = true`. Remove credentials, private data, model assets,
 and infrastructure addresses.

@@ -1,6 +1,6 @@
-# II-42 Documentation
+# Evoke Documentation
 
-II-42 exposes one PostgreSQL access method and one product lifecycle. The index
+Evoke exposes one PostgreSQL access method and one product lifecycle. The index
 contract is selected at `CREATE INDEX` time:
 
 - `sae = false` (default): exact BM25;
@@ -29,7 +29,7 @@ postings without creating a second index or mutation lifecycle.
 - [Supported input types](input-types.md): scalar, token-array, and multicolumn
   choices.
 - [Model checkout](examples/semantic-model-checkout.md): pinned
-  [Beta 1 model download](https://huggingface.co/Intelligent-Internet/II-42-Model-Beta-1),
+  [Beta 1 model download](https://huggingface.co/Intelligent-Internet/Evoke-Model-Beta-1),
   integrity checks, source installation, and release packaging.
 
 ## Understand
@@ -62,8 +62,8 @@ postings without creating a second index or mutation lifecycle.
 - [Semantic query API](examples/semantic-query-api.md): how the
   unified application route dispatches.
 - [Multi-index fusion](multi-index-fusion.md): public composition of separate
-  II-42 indexes.
-- [Hybrid search](hybrid-search.md): public composition of II-42 and external
+  Evoke indexes.
+- [Hybrid search](hybrid-search.md): public composition of Evoke and external
   vector candidates.
 - [Hybrid fusion engine](hybrid-fusion-engine.md): normalization, fusion, and
   execution contract.
@@ -82,7 +82,7 @@ postings without creating a second index or mutation lifecycle.
   L0, COW publication, compaction, fold, and reclamation.
 - [Connection memory](connection-memory.md): build, query, worker, and backend
   memory controls.
-- [Migration](upgrading.md): `psql_bm25s` to II-42 and BM25 to semantic mode.
+- [Migration](upgrading.md): `psql_bm25s` to Evoke and BM25 to semantic mode.
 
 ## Develop
 

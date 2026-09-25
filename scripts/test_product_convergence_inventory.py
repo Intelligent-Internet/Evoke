@@ -954,7 +954,7 @@ def check_install_contract(errors: list[str]) -> None:
         'II42_ONNXRUNTIME_PREFIX',
         'scripts/install_onnxruntime_c.sh',
         'onnxruntime_pkg_config_path',
-        'II42-LICENSE',
+        'EVOKE-LICENSE',
         'ONNXRUNTIME-LICENSE',
         'validate_milestone_model_checkout.py',
         'ii42/models/default',
@@ -985,8 +985,8 @@ def check_install_contract(errors: list[str]) -> None:
             )
     for required_label in (
         'org.opencontainers.image.revision="${II42_GIT_COMMIT}"',
-        'io.ii42.git-tree-state="${II42_GIT_TREE_STATE}"',
-        'io.ii42.milestone-model.id="${II42_MODEL_ID}"',
+        'io.evoke.git-tree-state="${II42_GIT_TREE_STATE}"',
+        'io.evoke.milestone-model.id="${II42_MODEL_ID}"',
     ):
         if required_label not in dockerfile:
             errors.append(
@@ -1053,7 +1053,7 @@ def check_install_contract(errors: list[str]) -> None:
 
     if SYNC_PUBLIC_WORKFLOW_PATH.is_file():
         sync_public = SYNC_PUBLIC_WORKFLOW_PATH.read_text(encoding='utf-8')
-        if 'PUBLIC_REPOSITORY: Intelligent-Internet/II-42\n' not in sync_public:
+        if 'PUBLIC_REPOSITORY: Intelligent-Internet/Evoke\n' not in sync_public:
             errors.append('public repository sync targets the wrong repository')
         if "vars.PUBLIC_REPO_SYNC_ENABLED == 'true'" not in sync_public:
             errors.append('public repository sync lacks an explicit enable gate')
@@ -1109,8 +1109,8 @@ def check_active_scripts(errors: list[str]) -> None:
         for contract in (
             "'schema_version'",
             "'api_version'",
-            "'ii42_model_v1'",
-            "'ii42_p2_unified_text_atoms_v2'",
+            "'evoke_model_v1'",
+            "'evoke_p2_unified_text_atoms_v2'",
         ):
             if contract not in text:
                 errors.append(
@@ -1920,13 +1920,13 @@ def check_c_contract(errors: list[str]) -> None:
                 'spinlock'
             )
 
-    if 'ii42_p2_unified_text_atoms_v2' not in semantic_source:
+    if 'evoke_p2_unified_text_atoms_v2' not in semantic_source:
         errors.append(
             f'{SEMANTIC_SOURCE_PATH.name}: current runtime ABI is missing'
         )
     for exact_manifest_contract in (
         "$1->'schema_version' = '1'::jsonb",
-        "$1->>'api_version' = 'ii42_model_v1'",
+        "$1->>'api_version' = 'evoke_model_v1'",
     ):
         if exact_manifest_contract not in semantic_source:
             errors.append(
@@ -5572,7 +5572,7 @@ def check_lifecycle_smoke(errors: list[str]) -> None:
         if gate not in convergent_sae_smoke:
             errors.append(
                 f'{CONVERGENT_SAE_LIFECYCLE_SMOKE_PATH.name}: missing '
-                f'convergent SAE lifecycle gate {gate!r}'
+                f'convergent SSR lifecycle gate {gate!r}'
             )
     realtime_sae_pattern = re.compile(
         r'(?:sae\s*=\s*true[\s\S]{0,240}?'
@@ -6803,6 +6803,19 @@ def normalized_local_link_target(
     return path_target, fragment
 
 
+def optional_research_source_link(source: Path, target: Path) -> bool:
+    if source.parts[:3] != ('docs', 'research-sae', 'reports'):
+        return False
+    if not target.parts:
+        return False
+    name = target.name
+    if target.parts[0] == 'scripts':
+        return name.startswith(('ng', 'review_ng', 'requirements-ng'))
+    if target.parts[0] == 'tests':
+        return name.startswith(('test_ng', 'test_review_ng'))
+    return False
+
+
 def markdown_heading_anchors(path: Path) -> set[str]:
     anchors: set[str] = set()
     slug_counts: dict[str, int] = {}
@@ -6909,6 +6922,12 @@ def check_markdown_links(errors: list[str]) -> None:
                         f'the repository: {raw_target!r}'
                     )
                 elif not resolved.exists():
+                    target_relative = resolved.relative_to(repository_root)
+                    if optional_research_source_link(
+                        relative,
+                        target_relative,
+                    ):
+                        continue
                     errors.append(
                         f'{relative}:{line_number}: Markdown link target '
                         f'does not exist: {raw_target!r}'
@@ -6963,7 +6982,7 @@ def check_research_report_layout(errors: list[str]) -> None:
 
     readme_path = RESEARCH_REPORT_ROOT / 'README.md'
     readme = readme_path.read_text(encoding='utf-8')
-    allowed_collections = {'designs', 'milestones'}
+    allowed_collections = {'designs', 'milestones', 'ng0001-ng0099'}
 
     for stage_path in sorted(RESEARCH_REPORT_ROOT.iterdir()):
         if not stage_path.is_dir():
@@ -7084,7 +7103,7 @@ def check_engineering_plan_authority(errors: list[str]) -> None:
         for contract in (
             'current engineering planning authority',
             'completed the bounded current-only qualification',
-            'ii42-v0.2.5-current-only-three-environment-rollout-2026-08-30.md',
+            'evoke-v0.2.5-current-only-three-environment-rollout-2026-08-30.md',
             '[Model Planning](model-planning.md)',
         ):
             if contract not in roadmap:

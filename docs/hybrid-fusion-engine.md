@@ -1,11 +1,11 @@
 # Hybrid Fusion Engine
 
 The public hybrid fusion engine is a composition layer above independent
-retrieval sources. Applications use `ii42_query(...)` for each II-42 source
+retrieval sources. Applications use `ii42_query(...)` for each Evoke source
 and use this engine only when they intentionally combine sources.
 
 The hybrid fusion engine is the implementation layer behind
-[Hybrid Vector/II-42 Search](hybrid-search.md). It lets PostgreSQL combine
+[Hybrid Vector/Evoke Search](hybrid-search.md). It lets PostgreSQL combine
 BM25 or unified Sparse Semantic Retrieval (SSR) candidates, vector candidates,
 and other ranked candidate sources into one weighted top-k result set.
 
@@ -17,7 +17,7 @@ its own best access path:
   candidates.
 - Ordinary SQL can produce any additional ranked candidate source.
 
-`ii42` only owns the final candidate normalization, weighting,
+Evoke only owns the final candidate normalization, weighting,
 de-duplication, fusion, and ordering step.
 
 ## What Is Complete
@@ -214,7 +214,7 @@ Recommended defaults:
 - Start with weights that express source importance, not raw score scale.
 - Use `score` only after selecting and benchmarking a normalizer.
 - Keep vector retrieval in the vector extension's own indexed SQL path.
-- Keep II-42 retrieval in `ii42_query(...)` or its public candidate adapters.
+- Keep Evoke retrieval in `ii42_query(...)` or its public candidate adapters.
 - Use the debug arrays to inspect why a document won.
 
 ## Validation
@@ -233,7 +233,7 @@ Current validation covers:
 
 See also:
 
-- [Hybrid Vector/II-42 Search](hybrid-search.md)
+- [Hybrid Vector/Evoke Search](hybrid-search.md)
 - [API Reference](api-reference.md#public-composition-apis)
 - [Query Semantics](query-semantics.md#prepared-diagnostics-and-product-composition)
 - [Testing and Validation](testing-and-validation.md)

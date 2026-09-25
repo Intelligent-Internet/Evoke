@@ -367,13 +367,13 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
         if (
             manifest.get('schema_version') != 1
-            or manifest.get('api_version') != 'ii42_model_v1'
+            or manifest.get('api_version') != 'evoke_model_v1'
             or manifest.get('runtime_abi')
-            != 'ii42_p2_unified_text_atoms_v2'
+            != 'evoke_p2_unified_text_atoms_v2'
         ):
             raise ValueError(
                 'empty/unlogged lifecycle smoke requires the current '
-                'II-42 model contract: '
+                'Evoke model contract: '
                 f'{manifest_path}'
             )
         system_libdir = pg_config_value(args.pg_bin, '--pkglibdir')

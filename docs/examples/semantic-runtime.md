@@ -48,7 +48,7 @@ the product of worker count and model-session RSS.
 
 ## CPU Threading
 
-With multiple workers and `ii42.onnxruntime_intra_op_threads = 0`, II-42
+With multiple workers and `ii42.onnxruntime_intra_op_threads = 0`, Evoke
 reserves CPU capacity for PostgreSQL and divides an inference budget across
 workers. A positive value explicitly caps each worker's ONNX intra-op pool.
 

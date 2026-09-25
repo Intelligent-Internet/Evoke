@@ -350,7 +350,7 @@ ii42_checkout_read_artifact_text(
             ERROR,
             (
                 errcode_for_file_access(),
-                errmsg("could not stat II-42 runtime model artifact \"%s\": %m", path)
+                errmsg("could not stat Evoke runtime model artifact \"%s\": %m", path)
             )
         );
     }
@@ -359,7 +359,7 @@ ii42_checkout_read_artifact_text(
         ereport(
             ERROR,
             (
-                errmsg("invalid II-42 runtime model artifact"),
+                errmsg("invalid Evoke runtime model artifact"),
                 errdetail("artifact \"%s\" must be a regular file.",
                           artifact_key)
             )
@@ -371,7 +371,7 @@ ii42_checkout_read_artifact_text(
         ereport(
             ERROR,
             (
-                errmsg("invalid II-42 runtime model artifact"),
+                errmsg("invalid Evoke runtime model artifact"),
                 errdetail(
                     "artifact \"%s\" size must be between 1 byte and 64 MiB.",
                     artifact_key)
@@ -386,7 +386,7 @@ ii42_checkout_read_artifact_text(
             ERROR,
             (
                 errcode_for_file_access(),
-                errmsg("could not open II-42 runtime model artifact \"%s\": %m", path)
+                errmsg("could not open Evoke runtime model artifact \"%s\": %m", path)
             )
         );
     }
@@ -407,7 +407,7 @@ ii42_checkout_read_artifact_text(
                 ERROR,
                 (
                     errcode_for_file_access(),
-                    errmsg("could not read II-42 runtime model artifact \"%s\": %m",
+                    errmsg("could not read Evoke runtime model artifact \"%s\": %m",
                            path)
                 )
             );
@@ -418,7 +418,7 @@ ii42_checkout_read_artifact_text(
             ereport(
                 ERROR,
                 (
-                    errmsg("short read from II-42 runtime model artifact \"%s\"", path)
+                    errmsg("short read from Evoke runtime model artifact \"%s\"", path)
                 )
             );
         }
@@ -469,7 +469,7 @@ ii42_checkout_validate_artifact_relpath(
         ereport(
             ERROR,
             (
-                errmsg("invalid II-42 runtime model artifact"),
+                errmsg("invalid Evoke runtime model artifact"),
                 errdetail("artifact \"%s\" path must not be empty.",
                           artifact_key)
             )
@@ -480,7 +480,7 @@ ii42_checkout_validate_artifact_relpath(
         ereport(
             ERROR,
             (
-                errmsg("invalid II-42 runtime model artifact"),
+                errmsg("invalid Evoke runtime model artifact"),
                 errdetail("artifact \"%s\" path must be relative.",
                           artifact_key)
             )
@@ -491,7 +491,7 @@ ii42_checkout_validate_artifact_relpath(
         ereport(
             ERROR,
             (
-                errmsg("invalid II-42 runtime model artifact"),
+                errmsg("invalid Evoke runtime model artifact"),
                 errdetail("artifact \"%s\" path must not contain newlines.",
                           artifact_key)
             )
@@ -512,7 +512,7 @@ ii42_checkout_validate_artifact_relpath(
             ereport(
                 ERROR,
                 (
-                    errmsg("invalid II-42 runtime model artifact"),
+                    errmsg("invalid Evoke runtime model artifact"),
                     errdetail(
                         "artifact \"%s\" path must stay inside the checkout.",
                         artifact_key)
@@ -543,7 +543,7 @@ ii42_checkout_artifact_path(
         ereport(
             ERROR,
             (
-                errmsg("invalid II-42 runtime model artifact"),
+                errmsg("invalid Evoke runtime model artifact"),
                 errdetail("artifact \"%s\" path is too long.", artifact_key)
             )
         );
@@ -568,7 +568,7 @@ ii42_checkout_sha256_file(const char *path)
             ERROR,
             (
                 errcode_for_file_access(),
-                errmsg("could not open II-42 runtime model artifact \"%s\": %m", path)
+                errmsg("could not open Evoke runtime model artifact \"%s\": %m", path)
             )
         );
     }
@@ -600,7 +600,7 @@ ii42_checkout_sha256_file(const char *path)
                 ERROR,
                 (
                     errcode_for_file_access(),
-                    errmsg("could not read II-42 runtime model artifact \"%s\": %m",
+                    errmsg("could not read Evoke runtime model artifact \"%s\": %m",
                            path)
                 )
             );
@@ -760,7 +760,7 @@ ii42_checkout_validate_artifact_file(
         ereport(
             ERROR,
             (
-                errmsg("invalid II-42 runtime model artifact"),
+                errmsg("invalid Evoke runtime model artifact"),
                 errdetail("artifact \"%s\" sha256 must be 64 hex chars.",
                           artifact_key)
             )
@@ -774,7 +774,7 @@ ii42_checkout_validate_artifact_file(
             ERROR,
             (
                 errcode_for_file_access(),
-                errmsg("could not stat II-42 runtime model artifact \"%s\": %m", path)
+                errmsg("could not stat Evoke runtime model artifact \"%s\": %m", path)
             )
         );
     }
@@ -783,7 +783,7 @@ ii42_checkout_validate_artifact_file(
         ereport(
             ERROR,
             (
-                errmsg("invalid II-42 runtime model artifact"),
+                errmsg("invalid Evoke runtime model artifact"),
                 errdetail("artifact \"%s\" must be a regular file.",
                           artifact_key)
             )
@@ -799,7 +799,7 @@ ii42_checkout_validate_artifact_file(
             (
                 errcode_for_file_access(),
                 errmsg(
-                    "could not restat II-42 runtime model artifact \"%s\": %m",
+                    "could not restat Evoke runtime model artifact \"%s\": %m",
                     path)
             )
         );
@@ -813,7 +813,7 @@ ii42_checkout_validate_artifact_file(
         ereport(
             ERROR,
             (
-                errmsg("II-42 runtime model artifact changed during validation"),
+                errmsg("Evoke runtime model artifact changed during validation"),
                 errdetail("artifact \"%s\" was modified while hashing.",
                           artifact_key),
                 errhint("Publish model checkouts atomically, then REINDEX.")
@@ -825,7 +825,7 @@ ii42_checkout_validate_artifact_file(
         ereport(
             ERROR,
             (
-                errmsg("invalid II-42 runtime model artifact"),
+                errmsg("invalid Evoke runtime model artifact"),
                 errdetail(
                     "artifact \"%s\" sha256 mismatch: expected %s got %s.",
                     artifact_key,
@@ -919,7 +919,7 @@ ii42_checkout_validate_manifest_artifacts(
     if (spi_result < 0)
     {
         SPI_finish();
-        ereport(ERROR, (errmsg("could not validate II-42 runtime model artifacts")));
+        ereport(ERROR, (errmsg("could not validate Evoke runtime model artifacts")));
     }
 
     validated_artifact_count = SPI_processed;
@@ -930,7 +930,7 @@ ii42_checkout_validate_manifest_artifacts(
         SPI_finish();
         ereport(
             ERROR,
-            (errmsg("II-42 runtime model manifest has invalid artifacts"))
+            (errmsg("Evoke runtime model manifest has invalid artifacts"))
         );
     }
     validated_artifacts = MemoryContextAllocZero(
@@ -956,7 +956,7 @@ ii42_checkout_validate_manifest_artifacts(
         if (isnull)
         {
             SPI_finish();
-            ereport(ERROR, (errmsg("II-42 runtime artifact key must not be null")));
+            ereport(ERROR, (errmsg("Evoke runtime artifact key must not be null")));
         }
         artifact_key = TextDatumGetCString(key_datum);
 
@@ -971,7 +971,7 @@ ii42_checkout_validate_manifest_artifacts(
             ereport(
                 ERROR,
                 (
-                    errmsg("invalid II-42 runtime model artifact"),
+                    errmsg("invalid Evoke runtime model artifact"),
                     errdetail("artifact \"%s\" path is required.",
                               artifact_key)
                 )
@@ -990,7 +990,7 @@ ii42_checkout_validate_manifest_artifacts(
             ereport(
                 ERROR,
                 (
-                    errmsg("invalid II-42 runtime model artifact"),
+                    errmsg("invalid Evoke runtime model artifact"),
                     errdetail("artifact \"%s\" sha256 is required.",
                               artifact_key)
                 )
@@ -1116,7 +1116,7 @@ ii42_checkout_manifest_artifact_relpath(
     if (spi_result < 0 || SPI_processed != 1)
     {
         SPI_finish();
-        ereport(ERROR, (errmsg("could not inspect II-42 runtime model artifact")));
+        ereport(ERROR, (errmsg("could not inspect Evoke runtime model artifact")));
     }
     path_datum = SPI_getbinval(
         SPI_tuptable->vals[0],
@@ -1129,7 +1129,7 @@ ii42_checkout_manifest_artifact_relpath(
         ereport(
             ERROR,
             (
-                errmsg("invalid II-42 runtime model artifact"),
+                errmsg("invalid Evoke runtime model artifact"),
                 errdetail("artifact \"%s\" is not declared.", artifact_key)
             )
         );
@@ -1181,7 +1181,7 @@ ii42_checkout_manifest_text_path(
     if (spi_result < 0 || SPI_processed != 1)
     {
         SPI_finish();
-        ereport(ERROR, (errmsg("could not inspect II-42 runtime model manifest")));
+        ereport(ERROR, (errmsg("could not inspect Evoke runtime model manifest")));
     }
 
     value_datum = SPI_getbinval(
@@ -1199,7 +1199,7 @@ ii42_checkout_manifest_text_path(
         ereport(
             ERROR,
             (
-                errmsg("invalid II-42 runtime model manifest"),
+                errmsg("invalid Evoke runtime model manifest"),
                 errdetail("manifest path \"%s.%s\" is required.", path0, path1)
             )
         );
@@ -1216,7 +1216,7 @@ ii42_checkout_manifest_text_path(
         ereport(
             ERROR,
             (
-                errmsg("invalid II-42 runtime model manifest"),
+                errmsg("invalid Evoke runtime model manifest"),
                 errdetail(
                     "manifest path \"%s.%s\" must not be empty.",
                     path0,
@@ -1266,7 +1266,7 @@ ii42_checkout_jsonb_text_key(
     if (spi_result < 0 || SPI_processed != 1)
     {
         SPI_finish();
-        ereport(ERROR, (errmsg("could not inspect II-42 runtime JSON artifact")));
+        ereport(ERROR, (errmsg("could not inspect Evoke runtime JSON artifact")));
     }
 
     value_datum = SPI_getbinval(
@@ -1334,7 +1334,7 @@ ii42_checkout_parse_int32_setting(
         ereport(
             ERROR,
             (
-                errmsg("invalid II-42 runtime setting"),
+                errmsg("invalid Evoke runtime setting"),
                 errdetail(
                     "%s must be an integer between %d and %d.",
                     setting,
@@ -1414,7 +1414,7 @@ ii42_checkout_parse_double_setting(
         ereport(
             ERROR,
             (
-                errmsg("missing II-42 runtime setting"),
+                errmsg("missing Evoke runtime setting"),
                 errdetail("%s is required.", setting)
             )
         );
@@ -1427,7 +1427,7 @@ ii42_checkout_parse_double_setting(
         ereport(
             ERROR,
             (
-                errmsg("invalid II-42 runtime setting"),
+                errmsg("invalid Evoke runtime setting"),
                 errdetail(
                     "%s must be a finite number between %.9g and %.9g.",
                     setting,
@@ -1505,11 +1505,11 @@ ii42_checkout_validate_manifest_shape(
         "AND $1->'schema_version' = '1'::jsonb "
         "AND NULLIF($1->>'model_id', '') IS NOT NULL "
         "AND ($2 IS NULL OR $1->>'model_id' = $2) "
-        "AND $1->>'api_version' = 'ii42_model_v1' "
+        "AND $1->>'api_version' = 'evoke_model_v1' "
         "AND NOT ($1 ? 'runtime_parameters') "
         "AND NULLIF($1->>'encoder_type', '') IS NOT NULL "
         "AND $1->>'runtime' = 'onnxruntime' "
-        "AND $1->>'runtime_abi' = 'ii42_p2_unified_text_atoms_v2' "
+        "AND $1->>'runtime_abi' = 'evoke_p2_unified_text_atoms_v2' "
         "AND $1->>'model_format' = 'onnx' "
         "AND jsonb_typeof($1->'latent_dims') = 'number' "
         "AND jsonb_typeof($1->'index_compatibility') = 'object' "
@@ -1597,12 +1597,12 @@ ii42_checkout_validate_manifest_shape(
                 errmsg("invalid ii42 model manifest"),
                 errdetail(
                     "manifest.json must use schema_version=1, "
-                    "api_version=ii42_model_v1, and contain model_id, "
+                    "api_version=evoke_model_v1, and contain model_id, "
                     "encoder_type, runtime, latent_dims, and no "
                     "runtime_parameters field. It must contain "
                     "index_compatibility.atom_space/scoring. Manifests must "
                     "use runtime=onnxruntime, "
-                    "runtime_abi=ii42_p2_unified_text_atoms_v2, "
+                    "runtime_abi=evoke_p2_unified_text_atoms_v2, "
                     "model_format=onnx, provide the current runtime IO, "
                     "tokenizer/compiler artifacts, query and document "
                     "encoder artifacts, and "
@@ -4869,15 +4869,15 @@ ii42_p2_query_atoms_json(
         "runtime_abi",
         ""
     );
-    if (strcmp(runtime_abi, "ii42_p2_unified_text_atoms_v2") != 0)
+    if (strcmp(runtime_abi, "evoke_p2_unified_text_atoms_v2") != 0)
     {
         ereport(
             ERROR,
             (
-                errmsg("unsupported II-42 ONNX runtime ABI"),
+                errmsg("unsupported Evoke ONNX runtime ABI"),
                 errdetail(
                     "runtime_abi=%s; expected "
-                    "ii42_p2_unified_text_atoms_v2",
+                    "evoke_p2_unified_text_atoms_v2",
                     runtime_abi
                 )
             )
@@ -4898,7 +4898,7 @@ ii42_p2_query_atoms_json(
         runtime_precision,
         manifest,
         encoder_path,
-        "ii42_p2_unified_text_atoms_v2"
+        "evoke_p2_unified_text_atoms_v2"
     );
 }
 
@@ -4962,15 +4962,15 @@ ii42_onnxruntime_atoms_batch_json(
         "runtime_abi",
         ""
     );
-    if (strcmp(runtime_abi, "ii42_p2_unified_text_atoms_v2") != 0)
+    if (strcmp(runtime_abi, "evoke_p2_unified_text_atoms_v2") != 0)
     {
         ereport(
             ERROR,
             (
-                errmsg("unsupported II-42 ONNX runtime ABI"),
+                errmsg("unsupported Evoke ONNX runtime ABI"),
                 errdetail(
                     "runtime_abi=%s; expected "
-                    "ii42_p2_unified_text_atoms_v2",
+                    "evoke_p2_unified_text_atoms_v2",
                     runtime_abi
                 )
             )
@@ -4997,7 +4997,7 @@ ii42_onnxruntime_atoms_batch_json(
         runtime_precision,
         manifest,
         encoder_path,
-        "ii42_p2_unified_text_atoms_v2",
+        "evoke_p2_unified_text_atoms_v2",
         document_mode
     );
 }
