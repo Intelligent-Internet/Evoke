@@ -277,7 +277,7 @@ jobs:
                       gh release upload "${TAG_NAME}" "${assets[@]}" --clobber
                   else
                       gh release create "${TAG_NAME}" "${assets[@]}" \
-                        --title "II-42 ${TAG_NAME} (Beta)" \
+                        --title "Evoke ${TAG_NAME} (Beta)" \
                         --generate-notes --verify-tag --latest=false
                   fi
 
