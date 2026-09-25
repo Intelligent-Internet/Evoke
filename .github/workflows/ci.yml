@@ -18,8 +18,6 @@ env:
     FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     EVOKE_MILESTONE_MODEL_URL: ${{ vars.EVOKE_MILESTONE_MODEL_URL }}
     EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256: ${{ vars.EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256 }}
-    II42_MILESTONE_MODEL_URL: ${{ vars.II42_MILESTONE_MODEL_URL }}
-    II42_MILESTONE_MODEL_ARCHIVE_SHA256: ${{ vars.II42_MILESTONE_MODEL_ARCHIVE_SHA256 }}
 
 permissions:
     contents: read
@@ -43,7 +41,7 @@ jobs:
               id: version
               run: |
                   version="$(sed -n "s/^default_version = '\\(.*\\)'$/\\1/p" \
-                    ii42.control)"
+                    evoke.control)"
                   echo "version=${version}" >> "${GITHUB_OUTPUT}"
 
             - name: Install PostgreSQL toolchain
@@ -108,14 +106,14 @@ jobs:
             - name: Build extension without ONNX Runtime
               run: |
                   make clean
-                  make II42_ENABLE_ONNXRUNTIME=0 \
+                  make EVOKE_ENABLE_ONNXRUNTIME=0 \
                     PG_CONFIG=/usr/lib/postgresql/${{ matrix.pg_major }}/bin/pg_config
                   make clean
 
             - name: Build extension
               run: |
                   make clean
-                  make II42_ENABLE_ONNXRUNTIME=1 \
+                  make EVOKE_ENABLE_ONNXRUNTIME=1 \
                     PG_CONFIG=/usr/lib/postgresql/${{ matrix.pg_major }}/bin/pg_config
 
             - name: Start temporary PostgreSQL
@@ -144,10 +142,10 @@ jobs:
             - name: Run integration tests
               run: |
                   sudo --preserve-env=PKG_CONFIG_PATH make install \
-                    II42_ENABLE_ONNXRUNTIME=1 \
+                    EVOKE_ENABLE_ONNXRUNTIME=1 \
                     PG_CONFIG=/usr/lib/postgresql/${{ matrix.pg_major }}/bin/pg_config
                   if ! make installcheck \
-                    II42_ENABLE_ONNXRUNTIME=1 \
+                    EVOKE_ENABLE_ONNXRUNTIME=1 \
                     PG_CONFIG=/usr/lib/postgresql/${{ matrix.pg_major }}/bin/pg_config; then
                       if [ -f regression.diffs ]; then
                           cat regression.diffs
@@ -173,10 +171,7 @@ jobs:
             - name: Fetch frozen milestone model
               if: >-
                   matrix.pg_major == 18 &&
-                  (
-                    env.EVOKE_MILESTONE_MODEL_URL != '' ||
-                    env.II42_MILESTONE_MODEL_URL != ''
-                  )
+                  env.EVOKE_MILESTONE_MODEL_URL != ''
               run: |
                   ./scripts/fetch_milestone_model_for_ci.sh \
                     "${RUNNER_TEMP}/evoke-milestone-model"
@@ -184,10 +179,7 @@ jobs:
             - name: Build and verify release archive
               if: >-
                   matrix.pg_major == 18 &&
-                  (
-                    env.EVOKE_MILESTONE_MODEL_URL != '' ||
-                    env.II42_MILESTONE_MODEL_URL != ''
-                  )
+                  env.EVOKE_MILESTONE_MODEL_URL != ''
               run: |
                   ./scripts/build_release_zip.sh \
                     --version "${{ steps.version.outputs.version }}" \
@@ -213,7 +205,7 @@ jobs:
                   grep -F 'Git tree: clean' \
                     "${extract_root}"/*/BUILD-INFO.txt
                   find "${extract_root}" -path \
-                    '*/ii42/models/default/manifest.json' -print -quit \
+                    '*/evoke/models/default/manifest.json' -print -quit \
                     | grep -q .
 
             - name: Stop temporary PostgreSQL
@@ -225,9 +217,7 @@ jobs:
                   fi
 
     docker-pg18:
-        if: >-
-            vars.EVOKE_MILESTONE_MODEL_URL != '' ||
-            vars.II42_MILESTONE_MODEL_URL != ''
+        if: vars.EVOKE_MILESTONE_MODEL_URL != ''
         runs-on: ubuntu-24.04
 
         steps:
@@ -241,7 +231,7 @@ jobs:
               id: version
               run: |
                   version="$(sed -n "s/^default_version = '\\(.*\\)'$/\\1/p" \
-                    ii42.control)"
+                    evoke.control)"
                   echo "version=${version}" >> "${GITHUB_OUTPUT}"
 
             - name: Fetch frozen milestone model
@@ -274,20 +264,20 @@ jobs:
                   done
                   docker exec "${container_name}" \
                     psql -U postgres -d postgres -Atqc \
-                    "SELECT extname FROM pg_extension WHERE extname = 'ii42';" \
-                    | grep -x 'ii42'
+                    "SELECT extname FROM pg_extension WHERE extname = 'evoke';" \
+                    | grep -x 'evoke'
                   docker exec "${container_name}" \
                     psql -U postgres -d postgres -Atqc \
-                    "SELECT ii42_onnxruntime_build_info();" \
+                    "SELECT evoke_onnxruntime_build_info();" \
                     | grep -q '^enabled:'
                   docker exec "${container_name}" \
                     psql -U postgres -d postgres -Atqc \
-                    "SELECT ii42_onnxruntime_probe();" \
+                    "SELECT evoke_onnxruntime_probe();" \
                     | grep -q '^available:'
                   docker exec "${container_name}" \
                     test -s \
-                    /usr/share/postgresql/18/ii42/models/default/manifest.json
+                    /usr/share/postgresql/18/evoke/models/default/manifest.json
                   docker exec "${container_name}" \
                     psql -U postgres -d postgres -Atqc \
-                    "SELECT ii42_runtime_service_status()->>'shared_memory_available';" \
+                    "SELECT evoke_runtime_service_status()->>'shared_memory_available';" \
                     | grep -x 'true'

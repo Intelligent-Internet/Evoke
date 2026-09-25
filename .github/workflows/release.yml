@@ -16,8 +16,6 @@ env:
     FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     EVOKE_MILESTONE_MODEL_URL: ${{ vars.EVOKE_MILESTONE_MODEL_URL }}
     EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256: ${{ vars.EVOKE_MILESTONE_MODEL_ARCHIVE_SHA256 }}
-    II42_MILESTONE_MODEL_URL: ${{ vars.II42_MILESTONE_MODEL_URL }}
-    II42_MILESTONE_MODEL_ARCHIVE_SHA256: ${{ vars.II42_MILESTONE_MODEL_ARCHIVE_SHA256 }}
 
 permissions:
     contents: read
@@ -59,7 +57,7 @@ jobs:
                   fi
                   control_version="$(sed -n \
                     "s/^default_version = '\\(.*\\)'$/\\1/p" \
-                    ii42.control)"
+                    evoke.control)"
                   if [ -n "${tag_version}" ] &&
                      [ "${tag_version}" != "${control_version}" ]; then
                       echo "tag version ${tag_version} does not match control version ${control_version}" >&2
@@ -113,7 +111,7 @@ jobs:
                   unzip -l "${files[0]}" \
                     | grep -q 'LICENSES/EVOKE-LICENSE'
                   unzip -l "${files[0]}" \
-                    | grep -q 'ii42/models/default/manifest\.json'
+                    | grep -q 'evoke/models/default/manifest\.json'
                   unzip -l "${files[0]}" \
                     | grep -q 'LICENSES/MILESTONE-MODEL-NOTICE'
                   (
@@ -151,7 +149,7 @@ jobs:
               run: |
                   control_version="$(sed -n \
                     "s/^default_version = '\\(.*\\)'$/\\1/p" \
-                    ii42.control)"
+                    evoke.control)"
                   echo "version=${control_version}" >> "${GITHUB_OUTPUT}"
 
             - name: Fetch frozen milestone model
@@ -184,23 +182,23 @@ jobs:
                   done
                   docker exec "${container_name}" \
                     psql -U postgres -d postgres -Atqc \
-                    "SELECT extname FROM pg_extension WHERE extname = 'ii42';" \
-                    | grep -x 'ii42'
+                    "SELECT extname FROM pg_extension WHERE extname = 'evoke';" \
+                    | grep -x 'evoke'
                   docker exec "${container_name}" \
                     psql -U postgres -d postgres -Atqc \
-                    "SELECT ii42_onnxruntime_build_info();" \
+                    "SELECT evoke_onnxruntime_build_info();" \
                     | grep -q '^enabled:'
                   docker exec "${container_name}" \
                     psql -U postgres -d postgres -Atqc \
-                    "SELECT ii42_onnxruntime_probe();" \
+                    "SELECT evoke_onnxruntime_probe();" \
                     | grep -q '^available:'
                   docker exec "${container_name}" \
                     psql -U postgres -d postgres -Atqc \
-                    "SELECT ii42_runtime_service_status()->>'shared_memory_available';" \
+                    "SELECT evoke_runtime_service_status()->>'shared_memory_available';" \
                     | grep -x 'true'
                   docker exec "${container_name}" \
                     test -s \
-                    /usr/share/postgresql/18/ii42/models/default/manifest.json
+                    /usr/share/postgresql/18/evoke/models/default/manifest.json
 
             - name: Verify portable Docker archive checksum
               run: |

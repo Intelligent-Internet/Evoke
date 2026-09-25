@@ -52,9 +52,9 @@ jobs:
                     --jq '.[0].conclusion')"
                   test "${conclusion}" = success
                   version="$(sed -n \
-                    "s/^default_version = '\\(.*\\)'$/\\1/p" ii42.control)"
+                    "s/^default_version = '\\(.*\\)'$/\\1/p" evoke.control)"
                   [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
-                  test -s "sql/ii42--${version}.sql"
+                  test -s "sql/evoke--${version}.sql"
                   echo "version=${version}" >> "${GITHUB_OUTPUT}"
 
             - name: Tag the tested source without changing its version
