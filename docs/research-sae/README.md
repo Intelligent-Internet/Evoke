@@ -20,9 +20,10 @@ evaluation sources remain here; actionable follow-up lives in
 - [Artifacts](artifacts/README.md) contains the integrity manifest for external
   JSON, logs, matrices, checkpoints, and other generated model evidence. Large
   artifacts remain outside Git and are restored by manifest identity.
-- [Source](source/README.md) contains the integrity manifest for frozen
-  historical trainers, runners, probes, and their dependency closure. Product
-  code must not import these retired experiment sources.
+- [Source](source/README.md) contains the original external source manifest
+  and newer in-repository snapshots of trainers, runners, and probes, with
+  explicit dependency/replay limits. Product code must not import these
+  experiment sources.
 
 ## Authority
 

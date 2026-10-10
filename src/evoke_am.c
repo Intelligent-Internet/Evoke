@@ -7372,10 +7372,25 @@ evoke_am_semantic_builder_load_contract(
         EVOKE_AM_SEMANTIC_SIGNATURE_LEN + 1
     ] = {0};
     MemoryContext old_context;
+    Oid saved_userid;
+    Oid index_owner = builder->index_relation->rd_rel->relowner;
+    int saved_sec_context;
     bool isnull;
     Datum value;
     int ret;
 
+    if (!superuser_arg(index_owner))
+    {
+        ereport(
+            ERROR,
+            (
+                errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+                errmsg(
+                    "ONNX-backed evoke model index must be owned by a superuser"
+                )
+            )
+        );
+    }
     query = psprintf(
         "SELECT config#>>'{manifest,runtime_abi}', "
         "config->>'model_path', "
@@ -7392,15 +7407,35 @@ evoke_am_semantic_builder_load_contract(
         "$1::oid::regclass) AS config) AS runtime",
         quote_identifier(schema_name)
     );
-    ret = SPI_execute_with_args(
-        query,
-        1,
-        argtypes,
-        values,
-        nulls,
-        true,
-        1
+    /*
+     * PostgreSQL already authorized the table operation. Loading this trusted
+     * index's contract must not require the writer to read model files or
+     * execute private SQL helpers. Elevate only the fixed contract lookup,
+     * never tuple expressions, triggers, or the surrounding INSERT/UPDATE.
+     */
+    GetUserIdAndSecContext(&saved_userid, &saved_sec_context);
+    SetUserIdAndSecContext(
+        index_owner,
+        saved_sec_context | SECURITY_LOCAL_USERID_CHANGE |
+            SECURITY_RESTRICTED_OPERATION
     );
+    PG_TRY();
+    {
+        ret = SPI_execute_with_args(
+            query,
+            1,
+            argtypes,
+            values,
+            nulls,
+            true,
+            1
+        );
+    }
+    PG_FINALLY();
+    {
+        SetUserIdAndSecContext(saved_userid, saved_sec_context);
+    }
+    PG_END_TRY();
     pfree(query);
     if (ret != SPI_OK_SELECT || SPI_processed != 1)
     {

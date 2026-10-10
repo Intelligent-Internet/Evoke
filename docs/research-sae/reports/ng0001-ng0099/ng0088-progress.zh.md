@@ -2,6 +2,14 @@
 
 日期：2026-09-20。協議：[全背景與固定預算](ng0088-execution.zh.md)，研究設計：[品質保留／成本](ng0088-quality-retention-cost-plan.zh.md)。
 
+## 存檔狀態（2026-10-10 核對）
+
+原 `full-background-v1` 已於 **2026-09-20 07:54:23 UTC** 停止，不是仍在運行。2026-10-10 只讀重新核對了遠端 `controller-exit.json`：`passed=false`，僅 `encode-base-0`、`encode-base-1` 完成，原因為 `ResourceBusy: resources busy; no worker started`。Base 共 290,609 篇文件編碼完成；query 編碼、完整排名、A/B 與 terminal review 均未完成。不能用此 attempt 宣稱 NG88 品質／成本結果。
+
+9 月 20 日保留的 admission 快照顯示，切換到 `encode-base-queries` 時 GPU 0 無 compute PID、顯存 1 MiB、瞬時利用率 8%，因必須為 0 的檢查而退出。這符合切換時的暫態採樣問題，但不是已實作或驗證的修復。凍結 controller 不改寫；未來需要另立有界等待／續跑協議。
+
+本次讀回的 manifest SHA 與啟動紀錄相同。兩段 completion receipt 的 SHA256 分別為 `9eba84b35c90127f757eeb9976611f303effd9b7f89419dd54c0c67a09f84275`、`b6da47f28e70c108ac1daca6b5a41cedfe71ea9c5fb63739a6020192a1e3c79f`。本次沒有重新計算全部大型 payload 的 SHA，也沒有啟動／重試任務。下文保留原啟動時快照，不代表目前狀態。
+
 ## 已啟動範圍
 
 使用者指定 II-42 暫時只使用 Lambda2 **實體 GPU 0**。第一階段 evaluation-only campaign 已在 2026-09-20 07:40:13 UTC 啟動，其他 GPU 不使用、不 fallback。並未啟動壓縮訓練、重開 polling 或更改產品／生產服務。

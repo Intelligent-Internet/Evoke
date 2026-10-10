@@ -1,0 +1,9 @@
+{
+    "config.json": "c99f732715e1ea835e97ec3f88a19cd65ed32f25e4bcf546887bc2e2d0d2ff1c",
+    "generation_config.json": "2508095b02ae6e71b162f0a70d3bf5a6ba87b13cc7847eff255ac1d667f768d7",
+    "pytorch_model-00001-of-00002.bin": "de87fbf36fbf4d8f8b61b6455816ff5117f3442841f406df94792068c2405499",
+    "pytorch_model-00002-of-00002.bin": "dfe8db26641d92a5f3541c05863f161eb9c8ca497b5a6bf8ef82a43bb388096c",
+    "pytorch_model.bin.index.json": "2d326a79d5a368552741db8b5567ad266b0a2e51af23b975c6b64f49ccdf521d",
+    "spiece.model": "d60acb128cf7b7f2536e8f38a5b18a05535c9e14c7a355904270e15b0945ea86",
+    "tokenizer_config.json": "bed481694ff89bfa6c35fa9af976a78e32fa2ffabe87bf0172a0009af39ef244"
+}

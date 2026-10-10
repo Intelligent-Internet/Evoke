@@ -1,0 +1,3 @@
+# Overlay on the pinned existing NG9 Torch/Transformers/ClearML runtime.
+sentencepiece==0.2.1
+protobuf==6.33.6

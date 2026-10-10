@@ -1,0 +1,745 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-10",
+  "base_commit": "2b1bd90441893936ea912eeb633bdef853622f6c",
+  "scope": "Previously untracked workspace research; source bytes preserved, not a model or data archive.",
+  "product_runtime_changed": false,
+  "experiments_restarted": false,
+  "files": [
+    {
+      "original_path": "docs/research-sae/reports/m0200-m0299/ii42-m217-rankt5-pseudo-global-head-report.md",
+      "path": "docs/research-sae/reports/m0200-m0299/ii42-m217-rankt5-pseudo-global-head-report.md",
+      "bytes": 5489,
+      "sha256": "f34eaaedfff3b0fc08fa550c32d0dde2f209062ffefb38f769f4dbf1e0cd73a6",
+      "role": "research_report"
+    },
+    {
+      "original_path": "docs/research-sae/reports/m0200-m0299/ii42-m218-safe-rankt5-global-head-report.md",
+      "path": "docs/research-sae/reports/m0200-m0299/ii42-m218-safe-rankt5-global-head-report.md",
+      "bytes": 7360,
+      "sha256": "83e731b6bd5ee0e0a5ad1682b660cf3405427a202802aa35c82953fd052ab12e",
+      "role": "research_report"
+    },
+    {
+      "original_path": "docs/research-sae/reports/m0200-m0299/ii42-m219-rankt5-transfer-global-head-report.md",
+      "path": "docs/research-sae/reports/m0200-m0299/ii42-m219-rankt5-transfer-global-head-report.md",
+      "bytes": 4390,
+      "sha256": "47ebce2952feaf2de30e91c1f208d2d1e0005b40f31ac23c8f9612b0e57cfbaa",
+      "role": "research_report"
+    },
+    {
+      "original_path": "docs/research-sae/reports/m0200-m0299/ii42-m220-runtime-confidence-gate-report.md",
+      "path": "docs/research-sae/reports/m0200-m0299/ii42-m220-runtime-confidence-gate-report.md",
+      "bytes": 10542,
+      "sha256": "ba8c5029ed48b35038d162990b94f0c43ac90d89bf7280fd7158316f21723143",
+      "role": "research_report"
+    },
+    {
+      "original_path": "docs/research-sae/reports/m0200-m0299/ii42-m221-row-aware-router-report.md",
+      "path": "docs/research-sae/reports/m0200-m0299/ii42-m221-row-aware-router-report.md",
+      "bytes": 9250,
+      "sha256": "93882b7107bd5cf69eeb9e546f54a06b3bca8d2d867f4da57763ef5e715c360d",
+      "role": "research_report"
+    },
+    {
+      "original_path": "docs/research-sae/reports/m0200-m0299/ii42-m222-row-risk-pseudolabel-head-report.md",
+      "path": "docs/research-sae/reports/m0200-m0299/ii42-m222-row-risk-pseudolabel-head-report.md",
+      "bytes": 5151,
+      "sha256": "4f739aa7ad484b7da6f3b4c11fb28d600939d6323bd5ea0790d08f02e7d654f6",
+      "role": "research_report"
+    },
+    {
+      "original_path": "docs/research-sae/reports/m0200-m0299/ii42-m223-supervised-teacher-bridge-head-report.md",
+      "path": "docs/research-sae/reports/m0200-m0299/ii42-m223-supervised-teacher-bridge-head-report.md",
+      "bytes": 8723,
+      "sha256": "816438af55b9a9b90db8dcaa6026c72d66cc5e7411e678e97a32c0ddcbd09b4c",
+      "role": "research_report"
+    },
+    {
+      "original_path": "docs/research-sae/reports/m0200-m0299/ii42-m224-teacher-ensemble-bridge-head-report.md",
+      "path": "docs/research-sae/reports/m0200-m0299/ii42-m224-teacher-ensemble-bridge-head-report.md",
+      "bytes": 7719,
+      "sha256": "8e2a9320de31906106606834c25227b8fa8a775753c584c61323fd7861253eae",
+      "role": "research_report"
+    },
+    {
+      "original_path": "docs/research-sae/reports/m0200-m0299/ii42-m225-action-distill-bridge-head-report.md",
+      "path": "docs/research-sae/reports/m0200-m0299/ii42-m225-action-distill-bridge-head-report.md",
+      "bytes": 5537,
+      "sha256": "a2715ad6609ccf74174ee267aa5f548e5d5772e45e53566bfc7bafd2ec557cb3",
+      "role": "research_report"
+    },
+    {
+      "original_path": "docs/research-sae/reports/m0200-m0299/ii42-m226-score-geometry-bridge-head-report.md",
+      "path": "docs/research-sae/reports/m0200-m0299/ii42-m226-score-geometry-bridge-head-report.md",
+      "bytes": 8088,
+      "sha256": "a206a203ec4b401221e0cd8f8768d584d5843859828f3de419b45a9fc7c295fd",
+      "role": "research_report"
+    },
+    {
+      "original_path": "docs/research-sae/reports/m0200-m0299/ii42-m227-qrels-free-geometry-preflight-report.md",
+      "path": "docs/research-sae/reports/m0200-m0299/ii42-m227-qrels-free-geometry-preflight-report.md",
+      "bytes": 4419,
+      "sha256": "2bba5b5ff89a623bf1dd77017236fe492143d9a3b05cdb8c6f6cd7ae23696c97",
+      "role": "research_report"
+    },
+    {
+      "original_path": "docs/research-sae/reports/m0200-m0299/ii42-m228-row-aware-geometry-preflight-report.md",
+      "path": "docs/research-sae/reports/m0200-m0299/ii42-m228-row-aware-geometry-preflight-report.md",
+      "bytes": 4838,
+      "sha256": "303baec2902d7d165b6ebf1bd6c5d2806012dc2b19afc60c9cb1369cf83d7978",
+      "role": "research_report"
+    },
+    {
+      "original_path": "docs/research-sae/reports/m0200-m0299/ii42-m229-query-rich-score-geometry-report.md",
+      "path": "docs/research-sae/reports/m0200-m0299/ii42-m229-query-rich-score-geometry-report.md",
+      "bytes": 7224,
+      "sha256": "cc427917c4457c2cf53a13d20cbc3cba7af077251b2a66c33451436a2dd2b22d",
+      "role": "research_report"
+    },
+    {
+      "original_path": "docs/research-sae/reports/m0200-m0299/ii42-m230-unified-dual-output-model-plan.md",
+      "path": "docs/research-sae/reports/m0200-m0299/ii42-m230-unified-dual-output-model-plan.md",
+      "bytes": 17890,
+      "sha256": "5c3d8566ef19fafb7a23e59ae64fdd441993a5de7092692023f839a0b1eed402",
+      "role": "research_report"
+    },
+    {
+      "original_path": "docs/research-sae/reports/m0200-m0299/ii42-m231-sequence-branch-adapter-report.md",
+      "path": "docs/research-sae/reports/m0200-m0299/ii42-m231-sequence-branch-adapter-report.md",
+      "bytes": 5673,
+      "sha256": "39f9daf00eee3de5fb6ac31d59eb7d0492f154adb9ad81251e23e03935b4af71",
+      "role": "research_report"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/launchers/launch_m228a_row_aware_geometry_preflight.sh",
+      "path": "docs/research-sae/source/m0200-m0299/launchers/launch_m228a_row_aware_geometry_preflight.sh",
+      "bytes": 3420,
+      "sha256": "bf33fff9a45b504c6fcb398ea3320a6f146ddc64f3f07c7f0f93975037e9968b",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/launchers/launch_m229a_query_rich_score_geometry.sh",
+      "path": "docs/research-sae/source/m0200-m0299/launchers/launch_m229a_query_rich_score_geometry.sh",
+      "bytes": 4008,
+      "sha256": "a34b972a7d4d36d09be5d9100ac254b6ae94d84f0b588849fcee033b0100f7a8",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/launchers/launch_m229b_query_rich_seed_stability.sh",
+      "path": "docs/research-sae/source/m0200-m0299/launchers/launch_m229b_query_rich_seed_stability.sh",
+      "bytes": 4494,
+      "sha256": "77b84a45ee7df5936f1cb2d65aefae48bb001dae61f24a76750d067270b2d84b",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/launchers/launch_m230a_unified_dual_output_encoder.sh",
+      "path": "docs/research-sae/source/m0200-m0299/launchers/launch_m230a_unified_dual_output_encoder.sh",
+      "bytes": 4251,
+      "sha256": "4aeccad73c7c4608d4effb6cead75e673d6e1b02afb9ea6db82c4bba6cd70009",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/launchers/launch_m230b_richer_m229_distill.sh",
+      "path": "docs/research-sae/source/m0200-m0299/launchers/launch_m230b_richer_m229_distill.sh",
+      "bytes": 4634,
+      "sha256": "d0ec7c540dde74a1046116a94797d0ef37151672fc161d545f75dbb8cf9e9065",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/launchers/launch_m230c_token_summary_adapter.sh",
+      "path": "docs/research-sae/source/m0200-m0299/launchers/launch_m230c_token_summary_adapter.sh",
+      "bytes": 4674,
+      "sha256": "ac8cc55073f7474ab91684f691396c573b01be5393e0dd5614108316d93e1f11",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/launchers/launch_m231a_sequence_branch_adapter.sh",
+      "path": "docs/research-sae/source/m0200-m0299/launchers/launch_m231a_sequence_branch_adapter.sh",
+      "bytes": 4781,
+      "sha256": "0f8627de1c14b69a56cfceee616b27f8eba5549ca8fb1fd2de72db7c8a50605b",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/research_sae_m218_safe_rankt5_global_head.py",
+      "path": "docs/research-sae/source/m0200-m0299/research_sae_m218_safe_rankt5_global_head.py",
+      "bytes": 27627,
+      "sha256": "db702006b74eaabd80bb64d38d0eaf0cd426d79accbf40ed306c8fae81ee3d8e",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/research_sae_m220_runtime_confidence_gate.py",
+      "path": "docs/research-sae/source/m0200-m0299/research_sae_m220_runtime_confidence_gate.py",
+      "bytes": 17212,
+      "sha256": "d345dbe2596357788bdee1ac545881e32ff4c7a21b741346b4daa725d939483c",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/research_sae_m221_row_aware_router_probe.py",
+      "path": "docs/research-sae/source/m0200-m0299/research_sae_m221_row_aware_router_probe.py",
+      "bytes": 20605,
+      "sha256": "135b70b01a35081f2c46792e516b3fe8795d5b59fce591477e67d266968ccb60",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/research_sae_m222_row_risk_pseudolabel_head.py",
+      "path": "docs/research-sae/source/m0200-m0299/research_sae_m222_row_risk_pseudolabel_head.py",
+      "bytes": 24461,
+      "sha256": "9c25e2068063ba6c67ff9076a3911a23cbab970a2ed72bb84f82a2db0d21eab2",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/research_sae_m223_supervised_teacher_bridge_head.py",
+      "path": "docs/research-sae/source/m0200-m0299/research_sae_m223_supervised_teacher_bridge_head.py",
+      "bytes": 25093,
+      "sha256": "e8c193499883cca0c04a415ba3a7b8b4affcc4b34e5844a747fa627d3591ad34",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/research_sae_m224_teacher_ensemble_bridge_head.py",
+      "path": "docs/research-sae/source/m0200-m0299/research_sae_m224_teacher_ensemble_bridge_head.py",
+      "bytes": 21140,
+      "sha256": "52d0c87ae79944590398f0642b56caf4492304f3dfd168b051d23dbffe85b435",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/research_sae_m225_action_distill_bridge_head.py",
+      "path": "docs/research-sae/source/m0200-m0299/research_sae_m225_action_distill_bridge_head.py",
+      "bytes": 27457,
+      "sha256": "bc2c58d211dda7106a299436bbc9d03aa4c65029fe5bd6c05ff98851a4c0d8b3",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/research_sae_m226_score_geometry_bridge_head.py",
+      "path": "docs/research-sae/source/m0200-m0299/research_sae_m226_score_geometry_bridge_head.py",
+      "bytes": 27550,
+      "sha256": "580c6fb6c84c6da561c2f19400210c36f6290847b0eee747fc37af6f80c835c5",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/research_sae_m227_qrels_free_geometry_preflight.py",
+      "path": "docs/research-sae/source/m0200-m0299/research_sae_m227_qrels_free_geometry_preflight.py",
+      "bytes": 18401,
+      "sha256": "293c91402d130864c0eb9781f3cee04c0fc793b46ccc546adaaba803fd105e1d",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/research_sae_m228_row_aware_geometry_preflight.py",
+      "path": "docs/research-sae/source/m0200-m0299/research_sae_m228_row_aware_geometry_preflight.py",
+      "bytes": 19805,
+      "sha256": "1c6cc05d3806d2dcbea388f0cfdb70e2fddbd636f88f01b719fc1fae87a8a38c",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/research_sae_m229_query_rich_score_geometry_bridge_head.py",
+      "path": "docs/research-sae/source/m0200-m0299/research_sae_m229_query_rich_score_geometry_bridge_head.py",
+      "bytes": 24100,
+      "sha256": "d4b3efd0feaa0ffdab33febedba6b653c8b2afd124a9a2e2e573484bf6da2874",
+      "role": "research_source"
+    },
+    {
+      "original_path": "docs/research-sae/source/m0200-m0299/research_sae_m230_unified_dual_output_encoder.py",
+      "path": "docs/research-sae/source/m0200-m0299/research_sae_m230_unified_dual_output_encoder.py",
+      "bytes": 45909,
+      "sha256": "dce8d207b2e3a4a7cd7bf46755dbdbc29aee99278d1c4622d2599ace13a23ec3",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/launch_m233a_embeddinggemma_teacher_preflight.sh",
+      "path": "docs/research-sae/source/m0200-m0299/launchers/launch_m233a_embeddinggemma_teacher_preflight.sh",
+      "bytes": 3867,
+      "sha256": "b5ede88c733136407c7166efab1d75e96240d3cea8d7e213a210c76b85bccb1e",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng80_campaign.py",
+      "path": "scripts/ng80_campaign.py",
+      "bytes": 20878,
+      "sha256": "1651eb734ac0b07e31f6d2eea707e56073b3437d48be1d2d7d5d9971c4d8b9f6",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng80_data.py",
+      "path": "scripts/ng80_data.py",
+      "bytes": 4400,
+      "sha256": "0d8bab30e55b1fac49634324a32abf29db8230cf496c54046feb31c4424e6df6",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng80_endpoints.py",
+      "path": "scripts/ng80_endpoints.py",
+      "bytes": 20109,
+      "sha256": "c0e63234a5664481d717dd82752a83e5774be42019dd4ed84857fa5245d4baed",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng80_fit.py",
+      "path": "scripts/ng80_fit.py",
+      "bytes": 15861,
+      "sha256": "100867cd3d11fa730ca7cd32722af85a2b660138a6deaa44310a047c7fa46906",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng80_lexical.py",
+      "path": "scripts/ng80_lexical.py",
+      "bytes": 9220,
+      "sha256": "03fc87d8391b3fc23cec8e4fd1d532c7edb7faa64ccade2db8e8a0af927b0b37",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng80_sparse_endpoints.py",
+      "path": "scripts/ng80_sparse_endpoints.py",
+      "bytes": 31155,
+      "sha256": "5faed2779920b164892c050a3d90f8cbe2cbbbff68d450aadae73f4bca224b72",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng80_sparse_fit.py",
+      "path": "scripts/ng80_sparse_fit.py",
+      "bytes": 16361,
+      "sha256": "dd939b9c551c325c122ba997ac43c26c7952c683b2aa62b2557efc6f71460f33",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng80_sparse_numeric_probe.py",
+      "path": "scripts/ng80_sparse_numeric_probe.py",
+      "bytes": 5380,
+      "sha256": "3cc4fe3b772a7c9321ae6b9d779a5eedf07c9caef1957800b44899caa753da83",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng80_sparse_preflight.py",
+      "path": "scripts/ng80_sparse_preflight.py",
+      "bytes": 25713,
+      "sha256": "bf31c770f94e861b2e5050d790a1fed17a5b0bc27b2d16ba977cf12db5342c94",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng80_supervision.py",
+      "path": "scripts/ng80_supervision.py",
+      "bytes": 11551,
+      "sha256": "9d0dbb4b84185efe06e415d6d98390556a02b1e0657f9d38c87729a82eb7784a",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng80_training.py",
+      "path": "scripts/ng80_training.py",
+      "bytes": 6658,
+      "sha256": "3d2b614ef6c79b318c4a8a474d5b1958c0bccdbe8cdee72b1b7942b3367a257b",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng81_fusion.py",
+      "path": "scripts/ng81_fusion.py",
+      "bytes": 23245,
+      "sha256": "8bb56b69778b92f35831d7766df3ad01b50220f4b077492d7b6c19d3d4f15825",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng82_diagnostics.py",
+      "path": "scripts/ng82_diagnostics.py",
+      "bytes": 24938,
+      "sha256": "e8d3abf3e6cf8649f0d95c4a28d2482db9622dbf3be93cdf86cb442ccdcd3c86",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng83_audit.py",
+      "path": "scripts/ng83_audit.py",
+      "bytes": 14408,
+      "sha256": "29fc4decd1513d05a73c16bb0c9127dfa0b670768f6d190b4ef1fc4fd7e64105",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng83_operator.py",
+      "path": "scripts/ng83_operator.py",
+      "bytes": 20327,
+      "sha256": "f731d4e98a7c661bd81fbd6fe704938262649d2543dcc6b8ddde4e5662e28cd5",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng84-rankt5-sha256.json",
+      "path": "scripts/ng84-rankt5-sha256.json",
+      "bytes": 693,
+      "sha256": "d5473dcbe69fdcb1f9b72182b96b47aa30d3c4cd59c83b80fc411c23d7e1bc7a",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng84_prepare_fiqa.py",
+      "path": "scripts/ng84_prepare_fiqa.py",
+      "bytes": 5742,
+      "sha256": "49afbec922f60e8d7ee832d45936d8ab5a1a2f42718e1dd472326eb14380b8d4",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng84_teacher.py",
+      "path": "scripts/ng84_teacher.py",
+      "bytes": 22630,
+      "sha256": "9776320b831f524087b410ec1e7adf94a906bff0a5c686d972f9780fa858ee4a",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng85_data.py",
+      "path": "scripts/ng85_data.py",
+      "bytes": 10579,
+      "sha256": "053973cb91060a335275426b55d700c05e0676c8fc177719dfc20a0d6b64dc62",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng85_diagnose.py",
+      "path": "scripts/ng85_diagnose.py",
+      "bytes": 30559,
+      "sha256": "55cf67374634dc62d6edced54fd5378e1ae5d08640ace4e9dc344ac25b287a31",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng85_queue.py",
+      "path": "scripts/ng85_queue.py",
+      "bytes": 5040,
+      "sha256": "5f2e9935bd89cdb8ff4b4e37edec876ea4fc919f7fcfb1fc35399dac7112d75d",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng85_run.py",
+      "path": "scripts/ng85_run.py",
+      "bytes": 16887,
+      "sha256": "b34077de371242733b3d7de32ecddf2ff9af68bdb6709f8dfc8c0f8463ee27a0",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng85_targets.py",
+      "path": "scripts/ng85_targets.py",
+      "bytes": 15056,
+      "sha256": "1fd971f9f0f39e434373245b84ed9e43be268e1b12334df2cb74350cdda865b8",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng85_teacher_batch_probe.py",
+      "path": "scripts/ng85_teacher_batch_probe.py",
+      "bytes": 5916,
+      "sha256": "9764031515006dd23d4ea6290b5157c91766cdb87732aa33e774ca168f4cf7f3",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng85_train.py",
+      "path": "scripts/ng85_train.py",
+      "bytes": 10298,
+      "sha256": "a8ebe79350f38f35f31e9874b1a484b927221d82119b3b269d281fae408582e6",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng86_evaluation.py",
+      "path": "scripts/ng86_evaluation.py",
+      "bytes": 19659,
+      "sha256": "d78c61071f36c7ded9c2f628a3ce7981676d9120ecd6cb4c965ac5e5d64c8737",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng86_intervention.py",
+      "path": "scripts/ng86_intervention.py",
+      "bytes": 22719,
+      "sha256": "cb207edf81fd357ee79613821f4da52845e2559f665429d0e3dbe7325a6b7dcd",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng87_run.py",
+      "path": "scripts/ng87_run.py",
+      "bytes": 14022,
+      "sha256": "3e86136bda0bd04e20c3e8d6507328ab357dbf1c1c072bc988a0c6244c442d74",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng87_train.py",
+      "path": "scripts/ng87_train.py",
+      "bytes": 10347,
+      "sha256": "89d049dcd2d67654d5f232f43ccdc94573a949c13a3e0286c8894973a9bbbb5e",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng88_eval.py",
+      "path": "scripts/ng88_eval.py",
+      "bytes": 26904,
+      "sha256": "e2217372873fd85bcb7396b4dcd0e9e262da6e07961c461d9a256a4d823d2a5c",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/ng88_math.py",
+      "path": "scripts/ng88_math.py",
+      "bytes": 6248,
+      "sha256": "6035105831aa39969ab48b8403f9f41f7376206a3361b7d8fb913a1b92308def",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/poc_block_max_wand.py",
+      "path": "docs/research-sae/source/prototypes/poc_block_max_wand.py",
+      "bytes": 4364,
+      "sha256": "2ff4b25831a044ea0664b5290d355434405a19345fdabecb521bec917b3eb8af",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/requirements-ng84-teacher.txt",
+      "path": "scripts/requirements-ng84-teacher.txt",
+      "bytes": 111,
+      "sha256": "0fb4c13613719cf9f443bf2cc3cd786d0a5dd72ad80adda0c4da62f9d86ef5ac",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/research_sae_m233_embeddinggemma_teacher_preflight.py",
+      "path": "docs/research-sae/source/m0200-m0299/research_sae_m233_embeddinggemma_teacher_preflight.py",
+      "bytes": 21573,
+      "sha256": "e8be7473f2bb7da5e2d044536d983a8f331da5529da48822a8bf3296a08bb015",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/review_ng80_fit.py",
+      "path": "scripts/review_ng80_fit.py",
+      "bytes": 9839,
+      "sha256": "f1e35b551ccb12c6870fbf19a3f7740cc8d36401267e6dad2ef75d745f1127d0",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/review_ng80_sparse_fit.py",
+      "path": "scripts/review_ng80_sparse_fit.py",
+      "bytes": 13723,
+      "sha256": "41e227aa08bc6758ec515dc9675e54dfe70385b75d33b1f8f8eb96f4834d0015",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/review_ng82_diagnostics.py",
+      "path": "scripts/review_ng82_diagnostics.py",
+      "bytes": 6880,
+      "sha256": "7a7d2d07b7bd9ba2695b019319a294d718a9c903934378187e3260fa6173b06c",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/review_ng83.py",
+      "path": "scripts/review_ng83.py",
+      "bytes": 9866,
+      "sha256": "c67c9137a2002d6830aca94198140a2e6e79615ae41b72a7fab132d90940e169",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/review_ng84_teacher.py",
+      "path": "scripts/review_ng84_teacher.py",
+      "bytes": 6672,
+      "sha256": "2aa95612c9ca5266ce9d28b830c19866d820cacce9447ee5eaf98bb3096b221e",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/review_ng85_diagnose.py",
+      "path": "scripts/review_ng85_diagnose.py",
+      "bytes": 7572,
+      "sha256": "bbd68c8561bbf9feb6d0b4bd3053d901f27fb7383ddf5f1b08a40b42995c1f9f",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/review_ng86_intervention.py",
+      "path": "scripts/review_ng86_intervention.py",
+      "bytes": 6518,
+      "sha256": "58095ad77fd4e1f6aa9441e16badffd10861d38db310652c8a65b869bd588940",
+      "role": "research_source"
+    },
+    {
+      "original_path": "scripts/review_ng87.py",
+      "path": "scripts/review_ng87.py",
+      "bytes": 7080,
+      "sha256": "30cf0abb7c8cbdaf86bc23c4033fb473a376225d51a7a40caa63c3bbf117c721",
+      "role": "research_source"
+    },
+    {
+      "original_path": "tests/test_ng80_campaign.py",
+      "path": "tests/test_ng80_campaign.py",
+      "bytes": 3709,
+      "sha256": "e429bc7d37f52274e4650f836741ec00b479e39aa72c38b6236ab4958598f57b",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng80_endpoints.py",
+      "path": "tests/test_ng80_endpoints.py",
+      "bytes": 3790,
+      "sha256": "4ba5e1edf279498e39d0b48a5e6fdac90d995d5aa81feeb7e58a325227feb2cd",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng80_fit.py",
+      "path": "tests/test_ng80_fit.py",
+      "bytes": 2188,
+      "sha256": "9ec3717dfaa6c6331b0660b9ca8fa9abd0d292e99ba8d7db950db660086a839b",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng80_sparse_endpoints.py",
+      "path": "tests/test_ng80_sparse_endpoints.py",
+      "bytes": 9701,
+      "sha256": "fd1b5461fb4d8795a0e3757c930925a4230911b625383ea99e755661e26fdfef",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng80_sparse_fit.py",
+      "path": "tests/test_ng80_sparse_fit.py",
+      "bytes": 11409,
+      "sha256": "1c5f4af525c4ece331eee71d74aac6af4b4f9bc9756565b1698e01eca2b60a65",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng80_sparse_preflight.py",
+      "path": "tests/test_ng80_sparse_preflight.py",
+      "bytes": 9233,
+      "sha256": "c86fd8a4e5adae4b46d3823dd09b0aa2cbebb23c5b5ecf7b33b4f47759d7c7f3",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng80_sparse_review.py",
+      "path": "tests/test_ng80_sparse_review.py",
+      "bytes": 4028,
+      "sha256": "7b01ea04c9b5eeb08003a0545c2d362ff8b4517acaf99c7b662fe79e8a8cca8c",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng80_supervision.py",
+      "path": "tests/test_ng80_supervision.py",
+      "bytes": 2031,
+      "sha256": "fc4b0557a7e9c0d953965538ab8eaf5d6912be22fe21e992af4d927655aa4d2d",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng80_training.py",
+      "path": "tests/test_ng80_training.py",
+      "bytes": 4588,
+      "sha256": "c3c039e2f9424a7e94b3f86951edbf658ae71803c4a8b6449727270e0a923df2",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng81_fusion.py",
+      "path": "tests/test_ng81_fusion.py",
+      "bytes": 6033,
+      "sha256": "9274f21a48be69fab01546edbc0fdbefeb0cec1ff6ea18803b2735349535b0a2",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng82_diagnostics.py",
+      "path": "tests/test_ng82_diagnostics.py",
+      "bytes": 5095,
+      "sha256": "15bd107ca2b3e6c0e05111e357a9c2185b7a77842a58b15d4a03b57d9c7e89c4",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng83_audit.py",
+      "path": "tests/test_ng83_audit.py",
+      "bytes": 2615,
+      "sha256": "d983cf7cf27146c8683c247c522cc2e6b777179d3a58bf772143688f6ef5101a",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng83_operator.py",
+      "path": "tests/test_ng83_operator.py",
+      "bytes": 3291,
+      "sha256": "805575993ce7d8a46731d8cef313dc13c92018c342c7afcedb0171ea03b36f1a",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng84_prepare_fiqa.py",
+      "path": "tests/test_ng84_prepare_fiqa.py",
+      "bytes": 1451,
+      "sha256": "1dd663daecbd28f699a4248a11f6aae1b988fd4a91d1bddcd62c919b1408b22d",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng84_teacher.py",
+      "path": "tests/test_ng84_teacher.py",
+      "bytes": 4269,
+      "sha256": "d5011ecbbc58deedabb7f763281e01e376a6f07d876fe8bd1cc0b2163f74ca02",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng85_data.py",
+      "path": "tests/test_ng85_data.py",
+      "bytes": 2751,
+      "sha256": "cda6e26741fa4cffb2cf193ae6fc886ac12ea6fa8ad85f2119ef25c6877663ff",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng85_diagnose.py",
+      "path": "tests/test_ng85_diagnose.py",
+      "bytes": 8562,
+      "sha256": "d66cfd952592bd663bd4d762e2e673966b3d9852a788c03f909d01c8d8549871",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng85_queue.py",
+      "path": "tests/test_ng85_queue.py",
+      "bytes": 4902,
+      "sha256": "5275f884a0fc57d5c8ef0e201270895d30732b0f337f7b6835787c85393589b3",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng85_run.py",
+      "path": "tests/test_ng85_run.py",
+      "bytes": 4683,
+      "sha256": "eb12414d7e55d3241b3c18f81415c09b8e17b85a00c5cd2e17a16e84084e5352",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng85_targets.py",
+      "path": "tests/test_ng85_targets.py",
+      "bytes": 1789,
+      "sha256": "336ac9546bbcd1d0ba22b0bb5e8a8ccbcd2a40bb195eabc4763118b1f8db6d0e",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng85_train.py",
+      "path": "tests/test_ng85_train.py",
+      "bytes": 1816,
+      "sha256": "5551877ec1d5a66d68ccf9221dd0032a7a5e02f241ec23eb16a8b1a5d99ece57",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng86_evaluation.py",
+      "path": "tests/test_ng86_evaluation.py",
+      "bytes": 2596,
+      "sha256": "95ea808a6d72f8ca089188cb25861104459d0e9656de5107856d182d9c69ff11",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng86_intervention.py",
+      "path": "tests/test_ng86_intervention.py",
+      "bytes": 4489,
+      "sha256": "db6b668d1ed99c55aa8bdf74cb1d730eee75b019349181308afb5360b50dd722",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng87.py",
+      "path": "tests/test_ng87.py",
+      "bytes": 5470,
+      "sha256": "770028ecabcf328a3b9df046b0842068b793b05f8d036a0dc4246d682f67884d",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_ng88.py",
+      "path": "tests/test_ng88.py",
+      "bytes": 8859,
+      "sha256": "9addf91f80486d538a1101b4d02a2efb15aed6f1bce4e12c4891620d46c2223f",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_review_ng82_diagnostics.py",
+      "path": "tests/test_review_ng82_diagnostics.py",
+      "bytes": 1124,
+      "sha256": "70e530bb6cc6d50f31d0a9c7b609207ee4164dc194dc19d74535fd2f5902388c",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_review_ng83.py",
+      "path": "tests/test_review_ng83.py",
+      "bytes": 1158,
+      "sha256": "409148c14b58191b10f925fdccb36fd9e6e66fc738161e1b1677f8cf60253112",
+      "role": "research_test"
+    },
+    {
+      "original_path": "tests/test_review_ng84_teacher.py",
+      "path": "tests/test_review_ng84_teacher.py",
+      "bytes": 2146,
+      "sha256": "370c6e6c85fcd83bce3c758c22fb453f3258cd25e494fdc01a86102a777ab989",
+      "role": "research_test"
+    }
+  ]
+}

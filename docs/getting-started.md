@@ -147,6 +147,17 @@ DELETE FROM docs WHERE id = 3;
 VACUUM docs;
 ```
 
+For an administrator-owned semantic index, application roles need only the
+normal PostgreSQL privileges for their `INSERT`, `UPDATE`, and `DELETE`
+statements (including `SELECT` where the SQL statement requires it). They do
+not need superuser, index ownership, or access to private model functions.
+The index loads its administrator-approved model contract internally; table
+ACLs, row-level write policies, and user triggers retain the caller's identity.
+This does not relax existing semantic-index restrictions on RLS tables.
+Model provisioning and direct server-local model-path APIs remain restricted
+to administrators. Model files must be readable by the PostgreSQL OS account,
+not by the application's OS account.
+
 Use `REINDEX` after changing a physical index option or model contract, or for
 an explicit whole-corpus rebuild:
 

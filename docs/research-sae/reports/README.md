@@ -1,6 +1,6 @@
 # SAE / II-42 Research Report Archive
 
-Updated: 2026-09-20
+Updated: 2026-10-10
 
 This directory is the canonical archive for research plans, experiment reports,
 design notes, milestone summaries, and route-closure documents. Research
@@ -32,15 +32,22 @@ belongs under the ignored `runs/` directory.
 
 ## Numbered Stages
 
-Latest completed work: [NG87 terminal review](ng0001-ng0099/ng0087-terminal-review.zh.md).
+The [October 10 workspace archive](milestones/research-workspace-archive-2026-10-10.md)
+indexes newly committed NG80-NG88 code/tests and M217-M231 reports. It separates
+completed research findings, failed/incomplete attempts, proposed work, and
+source-only prototypes. M229's retained sidecar milestone is not a product
+promotion; M230/M231 retain the unsuccessful unified-encoder compression work.
+
+Latest completed NG work: [NG87 terminal review](ng0001-ng0099/ng0087-terminal-review.zh.md).
 Both clean-base, full-std arms completed their frozen 8192-update endpoints;
 candidate quality improved, but document NNZ grew 5.44x/2.79x and both cost
 screens failed. The [original protocol](ng0001-ng0099/ng0087-clean-base-teacher-ab.zh.md)
 and [execution record](ng0001-ng0099/ng0087-progress.zh.md) remain preserved.
 The next [NG88 quality-retention/cost design](ng0001-ng0099/ng0088-quality-retention-cost-plan.zh.md)
 now has a frozen [first-stage protocol](ng0001-ng0099/ng0088-execution.zh.md)
-and [running full-background evaluation](ng0001-ng0099/ng0088-progress.zh.md),
-on Lambda2 GPU 0 only. The equal-budget training comparison remains conditional;
+and a [stopped, partial full-background evaluation](ng0001-ng0099/ng0088-progress.zh.md).
+Only the two Base document shards finished before resource admission stopped
+the GPU 0-only controller. The equal-budget training comparison remains conditional;
 no optimizer updates or product qualification are implied. Earlier records
 below are preserved history.
 
@@ -268,7 +275,7 @@ records547 shared positive documents and preserves the exposed diagnostic bounda
 | --- | ---: |
 | [NG0001-NG0099](ng0001-ng0099/) | 62 |
 | [M0100-M0199](m0100-m0199/) | 51 |
-| [M0200-M0299](m0200-m0299/) | 19 |
+| [M0200-M0299](m0200-m0299/) | 34 |
 | [M0300-M0399](m0300-m0399/) | 76 |
 | [M0400-M0499](m0400-m0499/) | 30 |
 | [M0500-M0599](m0500-m0599/) | 77 |

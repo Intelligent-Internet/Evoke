@@ -13,6 +13,17 @@ library, SQL namespace, and configuration namespace changed from
 `psql_bm25s` to `evoke`. Intermediate Evoke tags belong to the development of
 the second generation; they are not separate product baselines in this file.
 
+## Unreleased
+
+### Fixed
+
+- Allow ordinary application roles to INSERT and UPDATE tables with
+  administrator-owned semantic indexes. Internal model-contract loading no
+  longer requires the writer to be a superuser or execute private model
+  helpers. Normal table permissions and RLS write checks still apply; direct
+  server-local model-path APIs remain administrator-only. This is a binary
+  fix with no SQL grant changes, on-disk format changes, or index rebuild.
+
 ## [Evoke 0.2.5] - 2026-09-04
 
 Status: published as Beta 1 under the `v0.2.5` tag and promoted to the default

@@ -1,6 +1,28 @@
 # Historical SAE Research Source Archive
 
-Updated: 2026-07-26
+Updated: 2026-10-10
+
+## New Repository Snapshots
+
+The [October 10 workspace archive](../reports/milestones/research-workspace-archive-2026-10-10.md)
+adds small research sources and conclusions to Git without changing the older
+external archives below. Its [checksum inventory](snapshots/2026-10-10-workspace.json)
+records original and retained paths for all 105 previously untracked files.
+
+- [M217-M233 source notes](m0200-m0299/README.md) describe the retained
+  trainers/launchers, incomplete external dependency closure, and replay limits.
+- [Standalone prototypes](prototypes/README.md) preserve illustrative code,
+  not validated product implementations.
+- NG80-NG88 runners remain under `scripts/`, with matching `test_ng*` and
+  `test_review_ng*` files under `tests/`. Existing imports and frozen-run
+  source-copy conventions rely on these paths. CI excludes those research
+  tests from the product unit-test selection; they are not product entrypoints.
+
+Archiving does not authorize running a launcher, installing its dependencies,
+accessing locked test data, resuming an interrupted run, or deploying a model.
+New work must use a separately reviewed run, not mutate an archived attempt.
+
+## Original External Archives
 
 The public source tree contains supported product, release, benchmark, and
 validation tooling. Historical M-series experiments remain reproducible
@@ -48,6 +70,6 @@ To restore a historical experiment, select the original paths from the
 manifest, copy their `archive_key` entries into a separate research checkout,
 and verify every digest. Do not restore M-series scripts to the product tree.
 
-The archive includes the source dependency closure and its matching research
+The original external archive includes the source dependency closure and its matching research
 tests, so retained production scripts and tests do not import or invoke removed
 research sources. Current CI enforces that boundary.

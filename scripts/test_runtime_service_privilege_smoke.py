@@ -31,6 +31,7 @@ def parse_args() -> argparse.Namespace:
         help='Production model checkout using the current runtime contract.',
     )
     parser.add_argument('--extension-libdir', type=Path)
+    parser.add_argument('--extension-schema', default='public')
     parser.add_argument(
         '--extension-control-dir',
         type=Path,
@@ -60,7 +61,14 @@ def run(cmd: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
     return result
 
 
-def psql(psql_bin: Path, socket_dir: Path, port: int, sql: str) -> str:
+def psql(
+    psql_bin: Path,
+    socket_dir: Path,
+    port: int,
+    sql: str,
+    *,
+    user: str | None = None,
+) -> str:
     result = run(
         [
             str(psql_bin),
@@ -76,18 +84,205 @@ def psql(psql_bin: Path, socket_dir: Path, port: int, sql: str) -> str:
             'postgres',
             '-v',
             'ON_ERROR_STOP=1',
+            *(['-U', user] if user is not None else []),
         ],
         input=sql,
     )
     return result.stdout.strip()
 
 
-def privilege_sql(model_path: Path) -> str:
+def write_privilege_sql(
+    model_path: Path, extension_schema: str = 'public',
+) -> str:
     escaped_path = str(model_path).replace("'", "''")
+    schema = '"' + extension_schema.replace('"', '""') + '"'
     return f'''
-    CREATE EXTENSION evoke;
+    CREATE ROLE evoke_insert_only LOGIN;
+    GRANT USAGE ON SCHEMA {schema} TO evoke_insert_only;
+    CREATE TABLE write_docs (id int PRIMARY KEY, body text NOT NULL);
+    CREATE INDEX write_docs_idx ON write_docs USING evoke (body)
+        WITH (sae = true, model_path = '{escaped_path}');
+    GRANT SELECT, INSERT, UPDATE, DELETE ON write_docs TO evoke_product_app;
+    GRANT INSERT (id, body) ON write_docs TO evoke_insert_only;
+
+    CREATE FUNCTION check_write_identity() RETURNS trigger
+    LANGUAGE plpgsql AS $$
+    BEGIN
+        IF current_user NOT IN ('evoke_product_app', 'evoke_insert_only')
+            OR (SELECT rolsuper FROM pg_roles WHERE rolname = current_user)
+        THEN
+            RAISE EXCEPTION 'index maintenance leaked privileged identity';
+        END IF;
+        RETURN NEW;
+    END;
+    $$;
+    CREATE TRIGGER write_identity AFTER INSERT OR UPDATE ON write_docs
+        FOR EACH ROW EXECUTE FUNCTION check_write_identity();
+
+    -- This is the first access to the empty index in this backend. A writer
+    -- with only column INSERT privileges must not need SELECT or index ACLs.
+    SET ROLE evoke_insert_only;
+    INSERT INTO write_docs VALUES (10, 'alpha semantic writer');
+    RESET ROLE;
+    SET ROLE evoke_product_app;
+    INSERT INTO write_docs VALUES (20, 'beta semantic writer') RETURNING id;
+    UPDATE write_docs SET body = 'updated alpha semantic writer' WHERE id = 10;
+    DELETE FROM write_docs WHERE id = 20;
+    DO $$
+    BEGIN
+        IF current_user <> 'evoke_product_app'
+            OR (SELECT count(*) FROM write_docs) <> 1
+            OR (SELECT body FROM write_docs WHERE id = 10)
+                IS DISTINCT FROM 'updated alpha semantic writer' THEN
+            RAISE EXCEPTION 'restricted-role CRUD failed';
+        END IF;
+        BEGIN
+            PERFORM evoke_index_runtime_options_internal(
+                'write_docs_idx'::regclass
+            );
+            RAISE EXCEPTION 'writer can directly call internal model lookup';
+        EXCEPTION WHEN insufficient_privilege THEN
+            NULL;
+        END;
+        BEGIN
+            EXECUTE 'ALTER INDEX write_docs_idx SET (model_path = ''/tmp'')';
+            RAISE EXCEPTION 'writer can replace the approved model';
+        EXCEPTION WHEN insufficient_privilege THEN
+            NULL;
+        END;
+    END;
+    $$;
+    RESET ROLE;
+
+    -- Even an explicit EXECUTE grant must not expose arbitrary model paths.
+    GRANT EXECUTE ON FUNCTION evoke_index_checkout_manifest_internal(text)
+        TO evoke_product_app;
+    SET ROLE evoke_product_app;
+    DO $$
+    BEGIN
+        BEGIN
+            PERFORM evoke_index_checkout_manifest_internal('{escaped_path}');
+            RAISE EXCEPTION 'writer can read raw server-local model paths';
+        EXCEPTION WHEN insufficient_privilege THEN
+            IF position(
+                'model checkout access requires superuser' IN SQLERRM
+            ) = 0 THEN
+                RAISE;
+            END IF;
+        END;
+    END;
+    $$;
+    RESET ROLE;
+    REVOKE EXECUTE ON FUNCTION evoke_index_checkout_manifest_internal(text)
+        FROM evoke_product_app;
+
+    ALTER TABLE write_docs ENABLE ROW LEVEL SECURITY;
+    CREATE POLICY write_docs_policy ON write_docs
+        USING (id >= 10) WITH CHECK (id >= 10);
+    SET ROLE evoke_product_app;
+    DO $$
+    BEGIN
+        BEGIN
+            INSERT INTO write_docs VALUES (1, 'outside RLS policy');
+            RAISE EXCEPTION 'index maintenance bypassed INSERT RLS';
+        EXCEPTION WHEN insufficient_privilege THEN
+            NULL;
+        END;
+        BEGIN
+            UPDATE write_docs SET id = 1, body = 'outside RLS policy'
+                WHERE id = 10;
+            RAISE EXCEPTION 'index maintenance bypassed UPDATE RLS';
+        EXCEPTION WHEN insufficient_privilege THEN
+            NULL;
+        END;
+    END;
+    $$;
+    RESET ROLE;
+    -- Semantic contract loading still rejects RLS tables. The checks above
+    -- only prove denied writes cannot bypass PostgreSQL's RLS enforcement.
+    ALTER TABLE write_docs DISABLE ROW LEVEL SECURITY;
+    SET ROLE evoke_no_table_access;
+    DO $$
+    BEGIN
+        BEGIN
+            INSERT INTO write_docs VALUES (30, 'unauthorized insert');
+            RAISE EXCEPTION 'write bypassed table INSERT privileges';
+        EXCEPTION WHEN insufficient_privilege THEN
+            NULL;
+        END;
+        BEGIN
+            UPDATE write_docs SET body = 'unauthorized update';
+            RAISE EXCEPTION 'write bypassed table UPDATE privileges';
+        EXCEPTION WHEN insufficient_privilege THEN
+            NULL;
+        END;
+    END;
+    $$;
+    RESET ROLE;
+
+    -- Force an error inside the privileged lookup on a different, cold index.
+    -- Only this isolated test database's function definition is replaced.
+    CREATE TABLE write_failure_docs (id int PRIMARY KEY, body text NOT NULL);
+    CREATE INDEX write_failure_idx ON write_failure_docs USING evoke (body)
+        WITH (sae = true, model_path = '{escaped_path}');
+    GRANT INSERT ON write_failure_docs TO evoke_product_app;
+    CREATE TEMP TABLE saved_runtime_function AS
+        SELECT pg_get_functiondef(
+            'evoke_index_runtime_options_internal(regclass)'::regprocedure
+        ) AS definition;
+    CREATE OR REPLACE FUNCTION {schema}.evoke_index_runtime_options_internal(
+        index_name regclass
+    ) RETURNS jsonb LANGUAGE plpgsql AS $$
+    BEGIN
+        RAISE EXCEPTION 'injected model contract failure'
+            USING ERRCODE = 'check_violation';
+    END;
+    $$;
+    SET ROLE evoke_product_app;
+    DO $$
+    BEGIN
+        BEGIN
+            INSERT INTO write_failure_docs VALUES (1, 'failure sentinel');
+            RAISE EXCEPTION 'model contract error was swallowed';
+        EXCEPTION WHEN check_violation THEN
+            IF SQLERRM <> 'injected model contract failure' THEN
+                RAISE;
+            END IF;
+        END;
+        IF current_user <> 'evoke_product_app'
+            OR (SELECT rolsuper FROM pg_roles WHERE rolname = current_user)
+        THEN
+            RAISE EXCEPTION 'model lookup error leaked privileged identity';
+        END IF;
+    END;
+    $$;
+    RESET ROLE;
+    DO $$
+    BEGIN
+        EXECUTE (SELECT definition FROM saved_runtime_function);
+        IF EXISTS (SELECT FROM write_failure_docs) THEN
+            RAISE EXCEPTION 'failed write did not roll back';
+        END IF;
+    END;
+    $$;
+    DROP TABLE saved_runtime_function;
+    SET ROLE evoke_product_app;
+    INSERT INTO write_failure_docs VALUES (2, 'retry after contract failure');
+    RESET ROLE;
+    '''
+
+
+def privilege_sql(model_path: Path, extension_schema: str = 'public') -> str:
+    escaped_path = str(model_path).replace("'", "''")
+    schema = '"' + extension_schema.replace('"', '""') + '"'
+    return f'''
+    CREATE SCHEMA IF NOT EXISTS {schema};
+    CREATE EXTENSION evoke WITH SCHEMA {schema};
+    SET search_path = public, {schema};
     CREATE ROLE evoke_product_app LOGIN;
     CREATE ROLE evoke_no_table_access LOGIN;
+    GRANT USAGE ON SCHEMA {schema}
+        TO evoke_product_app, evoke_no_table_access;
 
     CREATE TABLE docs (
         id int PRIMARY KEY,
@@ -384,6 +579,8 @@ def privilege_sql(model_path: Path) -> str:
     $$;
 
     RESET ROLE;
+
+    {write_privilege_sql(model_path, extension_schema)}
 
     SET ROLE evoke_product_app;
 
@@ -1120,7 +1317,45 @@ def main() -> None:
             ])
             started = True
             try:
-                psql(psql_bin, socket_dir, port, privilege_sql(model_path))
+                psql(
+                    psql_bin, socket_dir, port,
+                    privilege_sql(model_path, args.extension_schema),
+                )
+                # Real login sessions have no superuser session_user and no
+                # model cache inherited from the setup connection.
+                psql(
+                    psql_bin, socket_dir, port,
+                    '''
+                    INSERT INTO public.write_docs
+                        VALUES (40, 'fresh insert-only login');
+                    DO $$ BEGIN
+                        IF current_user <> 'evoke_insert_only'
+                            OR session_user <> 'evoke_insert_only' THEN
+                            RAISE EXCEPTION 'insert-only login identity changed';
+                        END IF;
+                    END $$;
+                    ''',
+                    user='evoke_insert_only',
+                )
+                psql(
+                    psql_bin, socket_dir, port,
+                    '''
+                    UPDATE public.write_docs SET body = 'fresh login update'
+                        WHERE id = 40;
+                    INSERT INTO public.write_docs
+                        VALUES (50, 'fresh application login') RETURNING id;
+                    DELETE FROM public.write_docs WHERE id = 50;
+                    DO $$ BEGIN
+                        IF current_user <> 'evoke_product_app'
+                            OR session_user <> 'evoke_product_app'
+                            OR (SELECT body FROM public.write_docs WHERE id = 40)
+                                IS DISTINCT FROM 'fresh login update' THEN
+                            RAISE EXCEPTION 'application login CRUD failed';
+                        END IF;
+                    END $$;
+                    ''',
+                    user='evoke_product_app',
+                )
             except Exception:
                 if log_path.exists():
                     print(log_path.read_text(encoding='utf-8'), file=sys.stderr)

@@ -239,6 +239,16 @@ runtime, enforce privilege boundaries, validate worker restart/liveness, warm
 relation pages through PostgreSQL shared buffers, and retain only bounded
 markers or derived residency in the Evoke arena.
 
+Run the privilege gate with `--model-path /path/to/model-checkout`; optionally
+pass `--extension-schema search_ext` to check a non-public installation. It
+tests cold and cached semantic-index writes with an INSERT-only role and an
+ordinary application role, including fresh login connections. Negative gates
+retain table ACLs, RLS write checks, private-function restrictions, and the
+raw model-path superuser guard even with an explicit EXECUTE grant. Trigger
+identity and an injected contract-lookup failure check that internal elevated
+privileges never escape into application SQL and that failed writes roll back.
+These use disposable PostgreSQL clusters, never a production database.
+
 ## Schema And Package Boundaries
 
 ```bash

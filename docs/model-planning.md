@@ -3,7 +3,7 @@
 Status: active model follow-up plan subordinate to the
 [Product Roadmap](product-roadmap.md), the current engineering planning authority.
 
-Updated: 2026-09-20
+Updated: 2026-10-10
 
 This document owns the detailed follow-up work removed from the Beta 1 model
 technical reports ([English](technical-report-evoke-model.md),
@@ -15,6 +15,12 @@ or change to default approximation policy.
 
 ## Active NG Research
 
+October 10 archival review: the [workspace research snapshot](research-sae/reports/milestones/research-workspace-archive-2026-10-10.md)
+preserves NG80-NG88 implementation/tests and the M217-M231 reports, plus M233
+preflight source without a completion claim. The M229 sidecar milestone and
+M230/M231 compression negatives are research evidence, not shipped product
+changes. No experiment is resumed by this documentation/archive update.
+
 September 20: [NG87 terminal review](research-sae/reports/ng0001-ng0099/ng0087-terminal-review.zh.md)
 confirms both 8192-update arms and all candidate profiles are complete.
 A/PPLX improves exposed-validation hybrid nDCG from 0.670314 to 0.693741,
@@ -25,8 +31,9 @@ first checks full-background transfer, then conditionally compares frozen-A
 retention with PPLX continuation at the same actual output budget. Historical
 compression and DF-mask failures remain explicit. Its
 [first-stage execution](research-sae/reports/ng0001-ng0099/ng0088-execution.zh.md)
-is now frozen and [running](research-sae/reports/ng0001-ng0099/ng0088-progress.zh.md)
-sequentially on Lambda2 physical GPU 0 only. No new optimizer updates,
+remains frozen but [stopped at resource admission](research-sae/reports/ng0001-ng0099/ng0088-progress.zh.md)
+after its two Base document-encoding phases. Full-background rankings and the
+conditional equal-budget training are incomplete. No new optimizer updates,
 locked-test access, deployment or polling have been started. Earlier launch
 records below are history; their GPU assignments do not override GPU 0 only.
 
