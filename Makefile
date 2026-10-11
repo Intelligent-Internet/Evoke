@@ -176,7 +176,8 @@ src/evoke_term_cow.o: \
 
 EVOKE_EXTENSION_VERSION := $(shell sed -n \
     "s/^default_version = '\(.*\)'$$/\1/p" evoke.control)
-DATA = sql/evoke--$(EVOKE_EXTENSION_VERSION).sql
+DATA = sql/evoke--$(EVOKE_EXTENSION_VERSION).sql \
+    sql/evoke--0.2.5--0.2.6.sql
 REGRESS = evoke_integration
 
 EVOKE_RUNTIME_SERVER := build/evoke-runtime-server

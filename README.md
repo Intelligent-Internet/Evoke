@@ -143,7 +143,7 @@ is required.
 
 ### Release package
 
-Download the [v0.2.5 Beta release](https://github.com/Intelligent-Internet/Evoke/releases/tag/v0.2.5).
+Download the [v0.2.6 Beta release](https://github.com/Intelligent-Internet/Evoke/releases/tag/v0.2.6).
 Linux x86-64 ZIPs are available for PostgreSQL 17 and 18, each with a SHA-256
 checksum file. They include ONNX Runtime 1.29.0 and the frozen default model;
 no separate model checkout is needed to install a release package.
@@ -176,6 +176,9 @@ optional and is mainly useful for custom schema placement or a side-by-side
 [`psql_bm25s` migration](docs/upgrading.md). Evoke is intentionally not
 relocatable after creation.
 
+Existing published `0.2.5` installations can [upgrade to `0.2.6` without
+rebuilding indexes](docs/upgrading.md#upgrade-025-to-026).
+
 ### Docker
 
 The public PostgreSQL 18 image includes Evoke, ONNX Runtime 1.29.0, and the
@@ -189,7 +192,7 @@ the Beta 1 designation describes its product maturity, not a separate GitHub
 pre-release channel.
 
 ```bash
-docker pull ghcr.io/intelligent-internet/evoke:pg18-v0.2.5
+docker pull ghcr.io/intelligent-internet/evoke:pg18-v0.2.6
 
 read -r -s -p 'PostgreSQL password: ' POSTGRES_PASSWORD
 printf '\n'
@@ -199,7 +202,7 @@ docker run -d \
     -e POSTGRES_PASSWORD \
     -p 127.0.0.1:5432:5432 \
     -v evoke-pg18-data:/var/lib/postgresql \
-    ghcr.io/intelligent-internet/evoke:pg18-v0.2.5
+    ghcr.io/intelligent-internet/evoke:pg18-v0.2.6
 unset POSTGRES_PASSWORD
 ```
 
@@ -216,7 +219,7 @@ checkout path:
 
 ```bash
 scripts/build_release_docker_image.sh \
-    --version 0.2.5 \
+    --version 0.2.6 \
     --image-tag evoke:local-pg18
 ```
 

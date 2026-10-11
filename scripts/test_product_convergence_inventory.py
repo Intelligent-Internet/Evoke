@@ -856,11 +856,14 @@ def check_install_contract(errors: list[str]) -> None:
         errors.append(
             f'sql/: missing current install SQL {CURRENT_SQL_PATH.name}'
         )
-    expected_sql = {CURRENT_SQL_PATH.name}
+    expected_sql = {
+        CURRENT_SQL_PATH.name,
+        'evoke--0.2.5--0.2.6.sql',
+    }
     if versioned_sql != expected_sql:
         errors.append(
-            'sql/: expected exactly one current install SQL and no beta '
-            'upgrade scripts; found '
+            'sql/: expected one current install SQL and only the reviewed '
+            '0.2.5-to-0.2.6 patch upgrade; found '
             f'{sorted(versioned_sql)}'
         )
 

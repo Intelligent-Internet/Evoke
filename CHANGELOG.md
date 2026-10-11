@@ -13,7 +13,10 @@ library, SQL namespace, and configuration namespace changed from
 `psql_bm25s` to `evoke`. Intermediate Evoke tags belong to the development of
 the second generation; they are not separate product baselines in this file.
 
-## Unreleased
+## [Evoke 0.2.6] - 2026-10-10
+
+Patch release of Beta 1. ONNX Runtime 1.29.0, the frozen default model,
+SQL APIs, and on-disk formats are unchanged.
 
 ### Fixed
 
@@ -23,6 +26,14 @@ the second generation; they are not separate product baselines in this file.
   helpers. Normal table permissions and RLS write checks still apply; direct
   server-local model-path APIs remain administrator-only. This is a binary
   fix with no SQL grant changes, on-disk format changes, or index rebuild.
+
+### Upgrade
+
+- After installing the new package with PostgreSQL stopped on every node,
+  restart and run `ALTER EXTENSION evoke UPDATE TO '0.2.6'` in each database
+  on the primary. The published `0.2.5` and `0.2.6` install catalogs are
+  identical; the patch upgrade changes only the extension version. Physical
+  standbys receive the catalog update through WAL. See [Upgrading](docs/upgrading.md).
 
 ## [Evoke 0.2.5] - 2026-09-04
 
@@ -349,6 +360,7 @@ The upstream `v0.4.11` release is the authoritative baseline. The generated
 tagged package is the source-package baseline used by the Evoke migration
 smoke.
 
+[Evoke 0.2.6]: https://github.com/Intelligent-Internet/Evoke/releases/tag/v0.2.6
 [Evoke 0.2.5]: https://github.com/Intelligent-Internet/Evoke/releases/tag/v0.2.5
 [`psql_bm25s` 0.4.11]: https://github.com/Intelligent-Internet/Evoke/releases/tag/v0.4.11
 [`psql_bm25s` `v0.4.11`]: https://github.com/Intelligent-Internet/Evoke/releases/tag/v0.4.11

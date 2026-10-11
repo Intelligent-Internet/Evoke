@@ -378,7 +378,7 @@ codecs, selection, locking, and execution components.
 
 | Concern | Source | Entry point |
 | --- | --- | --- |
-| Installed overloads and SQL dispatch | [Extension SQL](../sql/evoke--0.2.5.sql) | `evoke_query` |
+| Installed overloads and SQL dispatch | [Extension SQL](../sql/evoke--0.2.6.sql) | `evoke_query` |
 | PostgreSQL build and mutation callbacks | [AM orchestration](../src/evoke_am.c) | `evoke_ambuild`, `evoke_aminsert` |
 | Immutable manifest and accelerator eligibility | [Segment contract](../src/evoke_segments.c) | `evoke_segment_manifest_validate`, `evoke_segment_manifest_semantic_accelerator_eligible` |
 | Relation-backed COW object writes | [Page storage](../src/evoke_segment_pages.c) | `evoke_segment_pages_write_lexicon_cow_objects` |

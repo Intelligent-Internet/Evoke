@@ -261,7 +261,7 @@ def test_resident_fold_materialization_budget_keeps_scratch_headroom() -> None:
 
 
 def test_semantic_readiness_requires_a_current_fast_path() -> None:
-    sql = (ROOT / 'sql' / 'evoke--0.2.5.sql').read_text(encoding='utf-8')
+    sql = INSTALL_SQL
     start = sql.index('CREATE FUNCTION evoke_index_status(index_name regclass)')
     end = sql.index('\nCOMMENT ON FUNCTION evoke_index_status(regclass)', start)
     status = sql[start:end]

@@ -407,10 +407,13 @@ def extension_sql_artifacts(
     install_sql = extension_dir / f'evoke--{version}.sql'
     actual_sql = sorted(extension_dir.glob('evoke--*.sql'))
     expected_sql = [install_sql]
+    if version == '0.2.6':
+        expected_sql.append(extension_dir / 'evoke--0.2.5--0.2.6.sql')
+    expected_sql.sort()
     if actual_sql != expected_sql:
         raise ValueError(
             'staged extension directory must contain exactly one current '
-            'install SQL and no Evoke beta upgrade scripts; expected '
+            'install SQL and only reviewed patch upgrade scripts; expected '
             f'{[path.name for path in expected_sql]}, found '
             f'{[path.name for path in actual_sql]}'
         )

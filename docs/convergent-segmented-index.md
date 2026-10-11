@@ -778,4 +778,4 @@ even if a document describes the intended design correctly.
 | Accelerator preparation and compatibility | [accelerator](../src/evoke_am_accelerator.c) |
 | Predicate routing and heap scope capture | [planner](../src/evoke_planner.c), [filter](../src/evoke_filter.c), [scope](../src/evoke_scope_pg.c) |
 | Warm images and reclamation | [preload](../src/evoke_am_preload.c), [resident fold](../src/evoke_am_resident_fold.c), [hot fold](../src/evoke_am_hot_fold.c), [reclamation](../src/evoke_am_reclamation.c) |
-| Installed public API | [extension SQL](../sql/evoke--0.2.5.sql) |
+| Installed public API | [extension SQL](../sql/evoke--0.2.6.sql) |

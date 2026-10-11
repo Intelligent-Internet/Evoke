@@ -1,4 +1,35 @@
-# Migrate To Evoke
+# Upgrade Or Migrate To Evoke
+
+## Upgrade 0.2.5 To 0.2.6
+
+The published Evoke `0.2.5` release supports an in-place patch upgrade to
+`0.2.6`. This fixes ordinary-role semantic-index INSERT/UPDATE without
+changing SQL objects, ACLs, models, or on-disk index formats. No `REINDEX`
+or extra application-role grants are required.
+
+1. Verify that the source is the published `0.2.5` package, not an
+   experimental catalog or a legacy `ii42` deployment.
+2. Follow the [deployment boundary](#deployment-boundary): drain maintenance,
+   stop PostgreSQL, and install the complete `0.2.6` package on the primary
+   and every physical standby before restarting. Do not change the PostgreSQL
+   major version as part of this patch upgrade.
+3. As an administrator, run the following in every database containing Evoke
+   on the primary. Physical standbys replay the catalog change through WAL.
+
+```sql
+ALTER EXTENSION evoke UPDATE TO '0.2.6';
+SELECT extversion FROM pg_extension WHERE extname = 'evoke';
+```
+
+4. Verify ordinary-role INSERT/UPDATE, representative queries, and index
+   validity; restore maintenance admission and confirm standby replay.
+
+The `0.2.5` and `0.2.6` install SQL is byte-identical. The update script is
+deliberately metadata-only: PostgreSQL advances `extversion` without
+recreating functions or indexes. This narrow published-patch path does not
+add support for historical experimental catalogs or retired storage formats.
+
+## Migrate From Earlier Products
 
 Evoke supports source-preserving migrations from `psql_bm25s` and from the
 legacy beta `ii42` package: keep the table as the authority and rebuild a
@@ -9,7 +40,8 @@ access method, function namespace, GUC namespace, and on-disk compatibility
 identity remain `evoke` for this release, so migration SQL still creates
 `CREATE EXTENSION evoke` and `USING evoke` indexes.
 
-Evoke does not ship beta-to-beta `ALTER EXTENSION` scripts, retired physical
+Except for the reviewed published-patch path above, Evoke does not ship
+experimental beta-to-beta `ALTER EXTENSION` scripts, retired physical
 format readers, compatibility aliases, or a chain of intermediate catalog
 transitions. A current package installs one current catalog. An unsupported
 legacy beta deployment must preserve its source tables, remove its old indexes
